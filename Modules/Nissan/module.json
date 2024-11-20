@@ -1,0 +1,11 @@
+{
+    "name": "Nissan",
+    "alias": "nissan",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Nissan\\Providers\\NissanServiceProvider"
+    ],
+    "files": []
+}

@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/renault",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Renault\\": "app/",
+            "Modules\\Renault\\Database\\Factories\\": "database/factories/",
+            "Modules\\Renault\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Renault\\Tests\\": "tests/"
+        }
+    }
+}

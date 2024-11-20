@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/compras",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Compras\\": "app/",
+            "Modules\\Compras\\Database\\Factories\\": "database/factories/",
+            "Modules\\Compras\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Compras\\Tests\\": "tests/"
+        }
+    }
+}

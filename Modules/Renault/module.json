@@ -1,0 +1,11 @@
+{
+    "name": "Renault",
+    "alias": "renault",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Renault\\Providers\\RenaultServiceProvider"
+    ],
+    "files": []
+}

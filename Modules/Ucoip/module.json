@@ -1,0 +1,11 @@
+{
+    "name": "Ucoip",
+    "alias": "ucoip",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Ucoip\\Providers\\UcoipServiceProvider"
+    ],
+    "files": []
+}
