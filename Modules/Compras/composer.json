@@ -12,7 +12,10 @@
             "providers": [],
             "aliases": {
 
-            }
+            },
+            "dont-discover": [
+            "laravel/telescope"
+        ]
         }
     },
     "autoload": {

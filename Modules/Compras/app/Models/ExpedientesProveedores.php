@@ -32,14 +32,14 @@ class expedientesProveedores extends Model
      |--------------------------------------------------------------------------
      */
     /**
-     * Una proveedor tiene varios documentos
+     * Un proveedor tiene varios documentos
      */
     public function Datos() {
         $this->hasMany(proveedores::class);
     }
 
-    protected static function newFactory(): ExpedientesProveedoresFactory
-    {
-        //return ExpedientesProveedoresFactory::new();
-    }
+    // protected static function newFactory(): ExpedientesProveedoresFactory
+    // {
+    //     //return ExpedientesProveedoresFactory::new();
+    // }
 }

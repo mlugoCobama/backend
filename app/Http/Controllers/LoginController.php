@@ -39,7 +39,7 @@ class LoginController extends Controller
             'success' => true,
             'token' => $token,
             'Type' => 'Bearer',
-            'role' => $user->role // include user role in response
+            'role' => $user // include user role in response
         ]);
     }
 

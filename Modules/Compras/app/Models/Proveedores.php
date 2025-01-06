@@ -14,26 +14,51 @@ class proveedores extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        //este id no va porque se me paso poer el AI en la bd
+        'id',
         'nombre',
         'contacto',
         'telefono',
         'localidad',
         'condiciones',
-        'servicios'
+        'servicios',
+        'correo',
+        'dias_credito',
+        'activo',
+
     ];
     /**
      * Nombre de la tabla
      */
     protected $table = 'proveedores';
-    /**
-     * Función para obtener los datos activos
-     */
+    
     public function scopeActive ($query) {
         return $query->where('activo', 1);
     }
+    
+    /*Función para obtener los datos activos
+     */
+    
+    /*
+     |--------------------------------------------------------------------------
+     | RELACIONES DE BASE DE DATOS
+     |--------------------------------------------------------------------------
+     */
 
-    protected static function newFactory(): ProveedoresFactory
-    {
-        //return ProveedoresFactory::new();
+    /**
+     * Un proveedor tiene varias cotizaciones
+     */
+    public function Cotizaciones() {
+        $this->hasMany(Cotizaciones::class);
+    }
+    /**
+     * Un proveedor pertenece a un expediente
+     */
+    public function Expediente(){
+        $this->belongsTo(expedientesProveedores::class);
+    }
+
+    public function CotizacionesProveedores(){
+        $this->hasMany(CotizacionesProveedores::class);
     }
 }
