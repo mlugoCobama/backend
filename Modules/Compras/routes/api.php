@@ -1,9 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Compras\Http\Controllers\ComprasController;
 
-use App\Http\Controllers\CatEmpresasController;
 use Modules\Compras\Http\Controllers\CatUnidadesMedidaController;
 use Modules\Compras\Http\Controllers\ProveedoresController;
 use Modules\Compras\Http\Controllers\SolicitudesCompraController;
@@ -37,3 +35,4 @@ Route::prefix('compras')->group(function () {
     //*Ruta para enviar un email de prueba, no funciona :( pero va funcionar
     Route::post('/enviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'enviarSolicitudCotizacion']);
 });
+

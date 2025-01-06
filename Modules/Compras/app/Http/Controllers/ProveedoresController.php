@@ -3,16 +3,17 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
+
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Modules\Compras\Http\Requests\ProveedoresRequest;
 
 use Illuminate\Support\Facades\Storage;
 
-use Modules\Compras\Models\proveedores;
 use Modules\Compras\Models\expedientesProveedores;
 
+use Modules\Compras\Models\proveedores;
+/**
+ * Resources
+ */
 use Modules\Compras\Transformers\ProveedoresResource;
 
 class ProveedoresController extends Controller

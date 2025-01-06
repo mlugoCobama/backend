@@ -3,14 +3,16 @@
 namespace Modules\Renault\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 use Modules\Renault\Transformers\CitasServicioResource;
 
 use Modules\Renault\Models\RenCitasServicio;
+use Modules\Renault\Models\RenEntradaVehiculo;
+use Modules\Renault\Models\RenInventarioVehiculo;
+use Modules\Renault\Models\RenTestigosFotograficos;
 
 class VisorCitasController extends Controller
 {
@@ -80,15 +82,10 @@ class VisorCitasController extends Controller
                 $citaCita->observaciones = $citas[$i]->citas_observaciones;
                 $citaCita->tipo_cita = $citas[$i]->citas_TipoCita;
                 $citaCita->estatus = $citas[$i]->citas_status;
+                $citaCita->agencia_id = 3;
                 $citaCita->save();
             }
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => '',
-            'data' =>  CitasServicioResource::collection($citas)
-        ]);
     }
 
     /**
@@ -104,8 +101,57 @@ class VisorCitasController extends Controller
      */
     public function store(Request $request)
     {
-        return "<img src='blob:http://localhost:8100/0df8dce1-6b74-43ae-8202-3c553e89bc58'>";
-        return $request->fotos;
+
+        /**
+         * Insertamos la entrada
+         */
+        $entrada = RenEntradaVehiculo::create([
+            "fecha" => date('Y-m-d H:i:s'),
+            "folio" => $request->form['num_entrada'],
+            "num_entrada" => $request->form['num_entrada'],
+            "ren_citas_servicio_id" => $request->form['citas_servicio_id'],
+        ]);
+        /**
+         * Insertamos el inventario del vehiculo
+         */
+        RenInventarioVehiculo::create([
+            'antena' => $request->form['antena'],
+            'espejo' => $request->form['espejo'],
+            'tapones' => $request->form['tapones'],
+            'rines' => $request->form['rines'],
+            'tapon_gasolina' => $request->form['tapon_gasolina'],
+            'radio' => $request->form['radio'],
+            'encendedor' => $request->form['encendedor'],
+            'tapetes' => $request->form['tapetes'],
+            'llanta_refaccion' => $request->form['llanta_refaccion'],
+            'herramientas' => $request->form['herramientas'],
+            'reflejantes' => $request->form['reflejantes'],
+            'extinguidor' => $request->form['extinguidor'],
+            'cables_corriente' => $request->form['cables_corriente'],
+            'gato' => $request->form['gato'],
+            'objetos_valor' => $request->form['objetos_valor'],
+            'otros' => $request->form['otros'],
+            'vestiduras' => $request->form['vestiduras'],
+            'cristales' => $request->form['cristales'],
+            'ren_entrada_vehiculo_id' => $entrada->id
+        ]);
+
+        foreach( $request->fotos as $foto) {
+
+            $image = $foto['webviewPath'];  // your base64 encoded
+            $image = str_replace('data:image/jpeg;base64,', '', $image);
+            $image = str_replace(' ', '+', $image);
+            Storage::disk('local')->put("renault/citas_servicio/".$foto['filepath'], base64_decode($image));
+            /**
+             * Insertamos los testigos fotograficos
+             */
+            RenTestigosFotograficos::create([
+                "folio" => $request->form['folio'],
+                "ruta" => "renault/citas_servicio/",
+                "nombre" => $foto['filepath'],
+                'ren_entrada_vehiculo_id' => $entrada->id
+            ]);
+        }
     }
 
     /**
@@ -113,7 +159,16 @@ class VisorCitasController extends Controller
      */
     public function show($id)
     {
-        return view('renault::show');
+
+        $date = date('Y-m-d');
+
+        $citas = RenCitasServicio::where('agencia_id', $id)->where('fecha', 'like', $date."%" )->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => '',
+            'data' =>  CitasServicioResource::collection($citas)
+        ]);
     }
 
     /**
@@ -127,7 +182,7 @@ class VisorCitasController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id): RedirectResponse
+    public function update(Request $request, $id)
     {
         //
     }

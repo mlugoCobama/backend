@@ -11,6 +11,8 @@ use App\Http\Controllers\LoginController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -43,3 +45,5 @@ Route::get('balanza/{empresa_id}/{mes}/{anio}', [BalanzasController::class, 'sho
 Route::get('ingresos-gastos/{empresa_id}/{mes}/{anio}', [IngresosGastosController::class, 'show'])->name('ingresos-gastos.mostrar');
 
 Route::get('search-cp/{cp}', [ApiCodigoPostalController::class, 'index'])->name('apiCP.index');
+
+
