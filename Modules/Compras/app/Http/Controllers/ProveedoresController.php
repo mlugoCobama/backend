@@ -7,6 +7,20 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
+use Illuminate\Support\Facades\Validator;
+/**
+ * Modelos
+ */
+use Modules\Compras\Models\proveedores;
+/**
+ * Resources
+ */
+use Modules\Compras\Transformers\ProveedoresResource;
+/**
+ * Request
+ */
+use Modules\Compras\Http\Requests\ProveedoresRequest;
+
 class ProveedoresController extends Controller
 {
     /**
@@ -14,7 +28,11 @@ class ProveedoresController extends Controller
      */
     public function index()
     {
-        return view('compras::index');
+       return response()->json([
+            'success' => true,
+            'message' => '',
+            'data' =>  ProveedoresResource::collection( proveedores::all() )
+        ]);
     }
 
     /**
@@ -28,9 +46,41 @@ class ProveedoresController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        //
+
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'required',
+            'contacto' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            dd($validator->getMessageBag()->all());
+        }
+
+        /*
+        $flight = new proveedores();
+
+        $flight->nombre = $request->nombre;
+        $flight->contacto = $request->contacto;
+        $flight->telefono = $request->telefono;
+        $flight->localidad = $request->estado;
+        $flight->condiciones = $request->condiciones;
+        $flight->servicios = $request->servicios;
+
+        $flight->save();
+        */
+
+        proveedores::create([
+            "nombre" => $request->nombre,
+            "contacto" => $request->contacto,
+            "telefono" => $request->telefono,
+            "localidad" => $request->estado,
+            "condiciones" => $request->condiciones,
+            "servicios" => $request->servicios,
+        ]);
+
+
     }
 
     /**
@@ -38,7 +88,9 @@ class ProveedoresController extends Controller
      */
     public function show($id)
     {
-        return view('compras::show');
+        $proveedores =  ProveedoresResource::collection( proveedores::where('id', $id)->get() );
+
+        return $proveedores;
     }
 
     /**
@@ -52,7 +104,7 @@ class ProveedoresController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id): RedirectResponse
+    public function update(Request $request, $id)
     {
         //
     }

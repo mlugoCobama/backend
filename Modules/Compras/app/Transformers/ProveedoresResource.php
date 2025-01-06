@@ -12,6 +12,14 @@ class ProveedoresResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'nombre' => $this->nombre,
+            'contacto' => $this->contacto,
+            'telefono' => $this->telefono,
+            'estado' => $this->localidad,
+            'condiciones' => $this->condiciones,
+            'servicios' => $this->servicios,
+        ];
     }
 }

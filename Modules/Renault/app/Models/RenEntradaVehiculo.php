@@ -4,11 +4,10 @@ namespace Modules\Renault\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-
-class RenCitasServicio extends Model
+class RenEntradaVehiculo extends Model
 {
     use HasFactory;
 
@@ -17,32 +16,14 @@ class RenCitasServicio extends Model
      */
     protected $fillable = [
         'folio',
-        'empleado_id',
         'fecha',
-        'nombre',
-        'apellido_paterno',
-        'apellido_materno',
-        'rfc',
-        'telefono',
-        'domicilio',
-        'email',
-        'vin',
-        'modelo',
-        'placas',
-        'color',
-        'tipo',
-        'anio',
-        'kilometraje',
-        'observaciones',
-        'tipo_cita',
-        'estatus',
-        'agencia_id',
+        'num_entrada',
+        'ren_citas_servicio_id'
     ];
-
-    /**
+     /**
      * Nombre de la tabla
      */
-    protected $table = 'ren_citas_servicio';
+    protected $table = 'ren_entrada_vehiculo';
     /**
      * Conexion que se utilizara
      */
@@ -53,9 +34,16 @@ class RenCitasServicio extends Model
      |--------------------------------------------------------------------------
      */
     /**
-     * Una proveedor tiene varios documentos
+     * Una entrada de vehiculo tiene un inventario
      */
-    public function Datos(): HasOne {
-        return $this->hasOne(RenEntradaVehiculo::class);
+    public function Inventario(): HasOne {
+        return $this->hasOne(RenInventarioVehiculo::class);
     }
+    /**
+     * Una entrada de vehiculo tiene varios testigos fotograficos
+     */
+    public function TestigosFotograficos(): HasMany {
+        return $this->hasMany(RenTestigosFotograficos::class);
+    }
+
 }

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Compras\Http\Controllers\ComprasController;
 
+use Modules\Compras\Http\Controllers\ProveedoresController;
 /*
  *--------------------------------------------------------------------------
  * API Routes
@@ -14,6 +15,9 @@ use Modules\Compras\Http\Controllers\ComprasController;
  *
 */
 
-Route::middleware(['auth:sanctum'])->group(function () {
+//Route::middleware(['auth:sanctum'])->group(function () {
+Route::prefix('compras')->group(function () {
     Route::apiResource('compras', ComprasController::class)->names('compras');
+    Route::apiResource('proveedores', ProveedoresController::class)->names('proveedores');
 });
+
