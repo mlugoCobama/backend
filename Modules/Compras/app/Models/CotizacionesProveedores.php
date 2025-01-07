@@ -31,7 +31,7 @@ class CotizacionesProveedores extends Model
      * Un registro pertenece a un proveedor.
      */
     public function DatosProveedor(){
-        return $this->belongsTo(proveedores::class,'proveedores_id' ,'id');
+        return $this->belongsTo(Proveedores::class,'proveedores_id' ,'id');
     }
     /**
      * Un registro pertenece a una cotización.

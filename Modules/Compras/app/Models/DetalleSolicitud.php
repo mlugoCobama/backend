@@ -33,7 +33,7 @@ class DetalleSolicitud extends Model
      */
     public function CatUnidades()
     {
-        return $this->hasOne(catUnidadesMedidas::class, 'id', 'cat_unidades_medida_id');
+        return $this->hasOne(CatUnidadesMedidas::class, 'id', 'cat_unidades_medida_id');
     }
     /**
      * Un detalle tiene varias detalles de cotizacion

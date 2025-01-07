@@ -55,7 +55,7 @@ class Proveedores extends Model
      * Un proveedor pertenece a un expediente
      */
     public function Expediente(){
-        $this->belongsTo(expedientesProveedores::class);
+        $this->belongsTo(ExpedientesProveedores::class);
     }
 
     public function CotizacionesProveedores(){
