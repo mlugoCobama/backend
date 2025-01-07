@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Compras\Database\Factories\CatalogoUnidadesMedidasFactory;
 
-class catUnidadesMedidas extends Model
+class CatUnidadesMedidas extends Model
 {
     use HasFactory;
 

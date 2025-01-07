@@ -7,7 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-use Modules\Compras\Models\catUnidadesMedidas;
+use Modules\Compras\Models\CatUnidadesMedidas;
 use Modules\Compras\Transformers\CatUnidadesMedidaResource;
 
 class CatUnidadesMedidaController extends Controller
@@ -19,7 +19,7 @@ class CatUnidadesMedidaController extends Controller
      */
     public function index()
     {
-        return CatUnidadesMedidaResource::collection((catUnidadesMedidas::active()->get()));
+        return CatUnidadesMedidaResource::collection((CatUnidadesMedidas::active()->get()));
     }
 
     /**
@@ -35,7 +35,7 @@ class CatUnidadesMedidaController extends Controller
      */
     public function store(Request $request)
     {
-        $unidadMedida = catUnidadesMedidas::create($request->all());
+        $unidadMedida = CatUnidadesMedidas::create($request->all());
         
         return response()->json([
             'status' => 'success',
@@ -49,7 +49,7 @@ class CatUnidadesMedidaController extends Controller
      */
     public function show($id)
     {
-        return catUnidadesMedidas::where('id', $id)->get();
+        return CatUnidadesMedidas::where('id', $id)->get();
     }
 
     /**
@@ -65,7 +65,7 @@ class CatUnidadesMedidaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        catUnidadesMedidas::where('id', $id)
+        CatUnidadesMedidas::where('id', $id)
             ->update(['nombre' => $request->nombre,
                       'abreviatura' => $request->abreviatura
         ]);
@@ -81,7 +81,7 @@ class CatUnidadesMedidaController extends Controller
      */
     public function destroy($id)
     {
-        catUnidadesMedidas::where('id', $id)->update(['activo' => 0]);
+        CatUnidadesMedidas::where('id', $id)->update(['activo' => 0]);
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha eliminado correctamente',

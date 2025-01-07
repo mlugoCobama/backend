@@ -8,9 +8,9 @@ use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Storage;
 
-use Modules\Compras\Models\expedientesProveedores;
+use Modules\Compras\Models\ExpedientesProveedores;
 
-use Modules\Compras\Models\proveedores;
+use Modules\Compras\Models\Proveedores;
 /**
  * Resources
  */
@@ -23,7 +23,7 @@ class ProveedoresController extends Controller
      */
     public function index()
     {
-        return ProveedoresResource::collection((proveedores::active()->get()));
+        return ProveedoresResource::collection((Proveedores::active()->get()));
     }
 
 
@@ -41,7 +41,7 @@ class ProveedoresController extends Controller
     public function store(Request $request)
     {
         //  $proveedor = proveedores::create($request->all());
-        //  $expediente = expedientesProveedores::create($request->all(), $proveedor);
+        //  $expediente = ExpedientesProveedores::create($request->all(), $proveedor);
 
          $idProveedor =  $this->storeProveedor($request);
 
@@ -61,7 +61,7 @@ class ProveedoresController extends Controller
      */
     public function show($id)
     {   
-        $expediente = expedientesProveedores::where('proveedores_id', $id)->first(); 
+        $expediente = ExpedientesProveedores::where('proveedores_id', $id)->first(); 
         return response()->json($expediente);
     }
 
@@ -96,7 +96,7 @@ class ProveedoresController extends Controller
      */
     public function destroy($id)
     {
-        proveedores::where('id', $id)->update(['activo' => 0]);
+        Proveedores::where('id', $id)->update(['activo' => 0]);
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha eliminado correctamente',
@@ -108,7 +108,7 @@ class ProveedoresController extends Controller
 
 private function storeProveedor($data)
 {
-    $dataProveedor = new proveedores();
+    $dataProveedor = new Proveedores();
     $dataProveedor->nombre = $data["nombre"];
     $dataProveedor->contacto = $data["contacto"];
     $dataProveedor->telefono = $data["telefono"];
@@ -125,7 +125,7 @@ private function storeProveedor($data)
 
 private function storeExpedienteProveedor($data, $idProveedor)
 {
-    $expedienteSolicitud = new expedientesProveedores();
+    $expedienteSolicitud = new ExpedientesProveedores();
     $carpetaProveedor = 'expedientes/'. $idProveedor;
         Storage::makeDirectory($carpetaProveedor);
 
@@ -161,7 +161,7 @@ private function storeExpedienteProveedor($data, $idProveedor)
 
 private function updateProveedor($data, $id)
 {
-    $proveedor = proveedores::find($id); 
+    $proveedor = Proveedores::find($id); 
     $proveedor->nombre = $data->nombre; 
     $proveedor->contacto = $data->contacto; 
     $proveedor->telefono = $data->telefono; 
@@ -186,7 +186,7 @@ private function updateProveedor($data, $id)
 */
  private function updateExpedienteProveedor($data, $idProveedor)
  {
-    $expediente = expedientesProveedores::where('proveedores_id', $idProveedor)->first();
+    $expediente = ExpedientesProveedores::where('proveedores_id', $idProveedor)->first();
     $carpetaProveedor = 'expedientes/' . $idProveedor; Storage::makeDirectory($carpetaProveedor); 
     if ($data->hasFile('constancia_fiscal'))
        { 

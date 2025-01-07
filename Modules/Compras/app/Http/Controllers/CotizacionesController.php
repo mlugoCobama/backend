@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\File;
 
 use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
-use Modules\Compras\Models\proveedores;
+use Modules\Compras\Models\Proveedores;
 use Modules\Compras\Models\DetallesCotizacion;
 use Modules\Compras\Transformers\CotizacionesProveedoresResource;
 
@@ -102,7 +102,7 @@ class CotizacionesController extends Controller
         foreach ($proveedores as $proveedor) {
             $proveedorId = $proveedor->id;
             $detalles = DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $proveedorId)->get();
-            $nombreProveedor = proveedores::where('id', $proveedor->proveedores_id)->get();
+            $nombreProveedor = Proveedores::where('id', $proveedor->proveedores_id)->get();
             $proveedor->proveedores_id = $nombreProveedor;
             $proveedor['detalles'] = $detalles;
 
