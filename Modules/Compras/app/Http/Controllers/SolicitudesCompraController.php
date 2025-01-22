@@ -34,12 +34,27 @@ use Modules\Compras\Transformers\SolicitudesComprasResource;
 
 class SolicitudesCompraController extends Controller
 {
+
+    //Genera un nuevo folio consecutivo en base al ultimo folio
+    public function generarFolioSc()
+    {
+        $ultimaOrden = SolicitudesCompra::orderBy('id', 'desc')->first('folio');
+        if ($ultimaOrden) {
+            $ultimoFolio = $ultimaOrden->folio;
+            $numero = intval(substr($ultimoFolio, 3)) + 1;
+        } else {
+            $numero = 1;
+        }
+        $nuevoFolio = 'SC-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
+        return response()->json(['nuevoFolio' => $nuevoFolio]);
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return SolicitudesComprasResource::collection((SolicitudesCompra::active()->get()));
+        return SolicitudesComprasResource::collection((SolicitudesCompra::active()->orderBy('fecha', 'desc')->get()));
     }
 
     /**
@@ -185,10 +200,9 @@ class SolicitudesCompraController extends Controller
     {
         $data = $request->all();
         $idCotizacion = $this->storeCotizacion($data);
-        // $idDataCotProv = 
         $this->storeCotizacionProveedores($data, $idCotizacion);
-        // $this->storeDetallesCotizacion($data, $idDataCotProv);
-        //!Habiltar para que se envien los correos $this->enviaCorreoProveedores($data);
+        //!Habiltar para que se envíen los correos 
+        //$this->enviaCorreoProveedores($data);
 
         $idSolicitudC = $data['solicitudes_compra_id'];
         SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => 2]);
@@ -210,6 +224,7 @@ class SolicitudesCompraController extends Controller
         $dataCotizacion->save();
         return $dataCotizacion->id;
     }
+    
     public function storeCotizacionProveedores($data, $idCotizacion)
     {
         $proveedores = [$data['0'], $data['1'], $data['2']];
@@ -225,6 +240,7 @@ class SolicitudesCompraController extends Controller
 
         return $idsCotProv;
     }
+
     public function enviaCorreoProveedores($data)
     {
         $proveedores = [$data['0'], $data['1'], $data['2']];
@@ -233,7 +249,6 @@ class SolicitudesCompraController extends Controller
             Notification::route('mail', $proveedor['correo'])->notify(new SolicitudCotizacionNotification($data));
         }
     }
-
 
     public function storeDetallesCotizacion($data, $idsCotProv)
     {

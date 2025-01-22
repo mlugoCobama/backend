@@ -12,6 +12,12 @@ class CotizacionesResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return[
+            'id'=>$this->id,
+            'folio'=>$this->folio,
+            'fecha'=>$this->fecha,
+            'consideraciones'=>$this->consideraciones,
+            'solicitudes_compra_id'=>$this->solicitudes_compra_id,
+        ];
     }
 }

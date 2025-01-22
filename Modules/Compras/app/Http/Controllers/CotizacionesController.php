@@ -12,12 +12,26 @@ use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\Proveedores;
 use Modules\Compras\Models\DetallesCotizacion;
+use Modules\Compras\Models\OrdenCompra;
 use Modules\Compras\Transformers\CotizacionesProveedoresResource;
 
 use Modules\Compras\Models\SolicitudesCompra;
 
 class CotizacionesController extends Controller
 {
+    public function generarFolioCo()
+    {
+        $ultimaCotizacion = Cotizaciones::orderBy('id', 'desc')->first('folio');
+        if ($ultimaCotizacion) {
+            $ultimoFolio = $ultimaCotizacion->folio;
+            $numero = intval(substr($ultimoFolio, 3)) + 1;
+        } else {
+            $numero = 1;
+        }
+        $nuevoFolio = 'CO-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
+        return response()->json(['nuevoFolio' => $nuevoFolio]);
+    }
+
     //  Función para recuperar archivos del servidor 
     public function getFile($id, $file)
     {
@@ -51,7 +65,6 @@ class CotizacionesController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
-
         foreach ($data['precios'] as $detalleId => $proveedores) {
             foreach ($proveedores as $proveedorId => $precio) {
                 DetallesCotizacion::create([
@@ -61,7 +74,6 @@ class CotizacionesController extends Controller
                 ]);
             }
         }
-
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $cotizacionProveedorId => $file) {
                 $cotizacionProveedor = CotizacionesProveedores::find($cotizacionProveedorId);
@@ -76,7 +88,6 @@ class CotizacionesController extends Controller
                 }
             }
         }
-
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha guardado correctamente',
@@ -88,29 +99,34 @@ class CotizacionesController extends Controller
     /**
      * Show the specified resource.
      */
-
-    // Recupera lel contenido de la tabla cotizaciones proveedores a través de solicitud de compra
-    // DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->get()));
     public function show($id)
     {
-        $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
+        $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)
+        ->first(['id','consideraciones', 'solicitudes_compra_id']);
+
         if ($cotizacion) {
-            $proveedores = ((CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->get()));
+            $proveedores = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
+            ->get([ 'id','proveedores_id', 'cotizaciones_id', 'ruta', 'seleccionado']);
             $data = [];
             foreach ($proveedores as $proveedor) {
                 $proveedorId = $proveedor->id;
-                $detalles = DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $proveedorId)->get();
-                $nombreProveedor = Proveedores::where('id', $proveedor->proveedores_id)->get();
+
+                $detalles = DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $proveedorId)
+                ->get([ 'id','importe_unitario', 'detalle_solicitud_id', 'cotizaciones_proveedores_proveedores_id']);
+
+                $nombreProveedor = Proveedores::where('id', $proveedor->proveedores_id)->get([ 'id','nombre', 'correo' ]);
                 $proveedor->proveedores_id = $nombreProveedor;
                 $proveedor['detalles'] = $detalles;
 
                 $data[] = $proveedor;
             }
+            
             return response()->json([
                 'status' => 'success',
                 'data' => $data,
                 'dataCotizacion' => $cotizacion
             ]);
+
         } else {
             return response()->json([
                 'status' => 'error',
@@ -119,13 +135,6 @@ class CotizacionesController extends Controller
             ]);
         }
     }
-
-
-
-    //  foreach($proveedores as $data){
-    //     $detalles[] = DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $data)->get();
-    //  }
-
 
     /**
      * Show the form for editing the specified resource.
@@ -139,7 +148,7 @@ class CotizacionesController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, $id)
-    {
+    {   
         $data = $request->all();
         $idSc = $data['0'];
         CotizacionesProveedores::where('id', $id)->update(['seleccionado' => 1]);

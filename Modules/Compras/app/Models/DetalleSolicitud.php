@@ -31,7 +31,7 @@ class DetalleSolicitud extends Model
     /**
      * Un detalle tiene una unidad de medida
      */
-    public function CatUnidades()
+    public function unidadMedida()
     {
         return $this->hasOne(CatUnidadesMedidas::class, 'id', 'cat_unidades_medida_id');
     }
@@ -46,7 +46,7 @@ class DetalleSolicitud extends Model
      * Un detalle de solicitud pertenece a una solicitud de compra
      */
     public function SolicitudCompra(){
-        $this->belongsTo(SolicitudesCompra::class, 'id');
+        return $this->belongsTo(SolicitudesCompra::class, 'id');
     }
 
 }
