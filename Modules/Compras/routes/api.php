@@ -8,6 +8,7 @@ use Modules\Compras\Http\Controllers\SolicitudesCompraController;
 use Modules\Compras\Http\Controllers\ExpedientesProveedoresController;
 use Modules\Compras\Http\Controllers\CotizacionesController;
 use Modules\Compras\Http\Controllers\OrdenesComprasController;
+use Modules\Compras\Http\Controllers\DocumentosOrdenesComprasController;
 use Modules\Compras\Models\Cotizaciones;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Modules\Compras\Models\SolicitudesCompra;
@@ -31,20 +32,31 @@ Route::prefix('compras')->group(function () {
     Route::resource('ExpedientesProveedores', ExpedientesProveedoresController::class);
     Route::resource('Cotizaciones', CotizacionesController::class);
     Route::resource('OrdenesCompras', OrdenesComprasController::class);
+    Route::resource('DocumentosOrdenesCompras', DocumentosOrdenesComprasController::class);
     //aqui van los resouce de de compras
+    Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores']);
 
     //*Ruta para mostra archivos 
     Route::get('expedientes/{id}/{file}', [ExpedientesProveedoresController::class, 'getFile']);
     Route::get('cotizaciones/{id}/{file}', [CotizacionesController::class, 'getFile']);
-    //*Ruta para enviar un email de prueba, no funciona :( pero va funcionar
+    Route::get('docsOrdenCompra/{id}/{file}', [DocumentosOrdenesComprasController::class, 'getFile']);
+
+    //*Ruta para enviar un email de prueba, no funciona pero va funcionar
     Route::post('/enviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'enviarSolicitudCotizacion']);
     Route::post('/enviar-solicitud-surtido', [OrdenesComprasController::class, 'enviarSolicitudSurtido']);
+    Route::post('/autorizar-orden-compra', [OrdenesComprasController::class, 'autorizarOrden']);
 
-    // Ruta para generar pdf
+    //*Ruta para generar pdf
     Route::get('/consulta-datos-pdf/{id}',[OrdenesComprasController::class, 'consultaDatosPDF']);
-    Route::post('/descargar-pdf',[OrdenesComprasController::class, 'generarPDFOc']);
 
+    //*Ruta para leer el XML
+    Route::get('/leer-xml/{id}',[OrdenesComprasController::class, 'leerXML']);
 
+    //*Rutas descarga zip
+    Route::get('/descargar-facturas/{id}',[DocumentosOrdenesComprasController::class, 'downloadFacturas']);
+    Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente']);
+
+    //*Ruta para generar folios consecutivos
     Route::get('/generar-folio',[OrdenesComprasController::class, 'generarFolio']);
     Route::get('/generar-folio-sc',[SolicitudesCompraController::class, 'generarFolioSc']);
     Route::get('/generar-folio-co',[CotizacionesController::class, 'generarFolioCo']);

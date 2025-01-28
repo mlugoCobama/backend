@@ -28,6 +28,21 @@ class ProveedoresController extends Controller
         return ProveedoresResource::collection((Proveedores::active()->get()));
     }
 
+    public function getProveedores()
+    {
+       $data = (Proveedores::active()
+       ->get([
+        'id',
+        'nombre',
+        'correo'
+        ]));
+       return response()->json([
+        'status' => 'success',
+        'message' => 'Se ha realizado correctamente',
+        'data' => $data
+    ]);
+    }
+
 
     /**
      * Show the form for creating a new resource.

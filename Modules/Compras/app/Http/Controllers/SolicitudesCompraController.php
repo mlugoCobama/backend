@@ -2,11 +2,13 @@
 
 namespace Modules\Compras\Http\Controllers;
 
+use App\Jobs\EnviarCorreoSolicitudCotizacion;
 use App\Http\Controllers\Controller;
 // use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 // use Illuminate\Http\Response;
 // use League\CommonMark\Extension\Attributes\Node\Attributes;
+
 
 use App\Mail\SolicitudCotizacion;
 use Illuminate\Support\Facades\Mail;
@@ -50,13 +52,51 @@ class SolicitudesCompraController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Recupera todos los registros de la base de datos
      */
-    public function index()
-    {
-        return SolicitudesComprasResource::collection((SolicitudesCompra::active()->orderBy('fecha', 'desc')->get()));
-    }
+     public function index()
+     {
+        //  return SolicitudesComprasResource::collection((SolicitudesCompra::active()->orderBy('fecha', 'desc')->get()));
+         $data = (SolicitudesCompra::active()->orderBy('fecha', 'desc')
+         ->get([
+            'id',
+            'folio',
+            'usuario_destino',
+            'motivo',
+            'fecha',
+            'users_id',
+            'usuario_solicita',
+            'estatus',
+        ]));
 
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Consulta generada correctamente',
+            'data' => $data
+            // 'data' => new SolicitudesComprasResource($solicitudCompra)
+        ]);
+     }
+
+     /**
+     * Recupera todos los registros de la base de datos
+     * *Con paginacion (30 registros por pagina)
+     */
+     public function index1(Request $request)
+     {
+         $perPage = $request->input('perPage', 30);
+
+         $solicitudes = (SolicitudesCompra::active()
+                         ->paginate($perPage));
+         return response()->json([
+            'data'=> $solicitudes->items(),
+            'pagination' => [
+                 'current_page' => $solicitudes->currentPage(),
+                 'last_page' => $solicitudes->lastPage(),
+                 'per_page' => $solicitudes->perPage(),
+                 'total'=>$solicitudes->total(),
+             ]
+            ]);
+     }
     /**
      * Show the form for creating a new resource.
      */
@@ -202,7 +242,9 @@ class SolicitudesCompraController extends Controller
         $idCotizacion = $this->storeCotizacion($data);
         $this->storeCotizacionProveedores($data, $idCotizacion);
         //!Habiltar para que se envíen los correos 
-        //$this->enviaCorreoProveedores($data);
+        //Queue para despachar el correo
+        EnviarCorreoSolicitudCotizacion::dispatch($data); 
+        // $this->enviaCorreoProveedores($data);
 
         $idSolicitudC = $data['solicitudes_compra_id'];
         SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => 2]);

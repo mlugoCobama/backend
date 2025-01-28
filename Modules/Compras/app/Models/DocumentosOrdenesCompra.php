@@ -18,11 +18,12 @@ class DocumentosOrdenesCompra extends Model
         'ruta_xml_factura',
         'ruta_pdf_factura',
         'comprobante_pago',
+        'orden_compra_id',
     ];
     /**
      * Nombre de la tabla
      */
-    protected $table = 'documentos_ordenes_compras';
+    protected $table = 'documentos_ordenes_compra';
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS
@@ -32,7 +33,7 @@ class DocumentosOrdenesCompra extends Model
      * Una documento de compra tiene un oreden de compra
      */
     public function OrdenesCompra() {
-        $this->hasOne(OrdenCompra::class);
+        $this->belongsTo(OrdenCompra::class);
     }
     
 }
