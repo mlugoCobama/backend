@@ -40,8 +40,13 @@ class CotizacionesController extends Controller
             abort(404);
         }
         $fileContent = File::get($path);
-        $type = File::mimeType($path);
-        return response($fileContent, 200)->header("Content-Type", $type);
+
+          $type = File::mimeType($path);
+          return response($fileContent, 200)->header("Content-Type", $type);
+
+        // Convertir en base 64
+        // $binaryContent = base64_encode($fileContent);
+        // return response($binaryContent, 200)->header("Content-Type", 'application/octet-stream');
     }
     /**
      * Display a listing of the resource.
@@ -60,7 +65,8 @@ class CotizacionesController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Guarda los importes unitarios de la cotización.
+     *  Si tiene archivos los guarda en la base de datos.
      */
     public function store(Request $request)
     {
@@ -101,9 +107,11 @@ class CotizacionesController extends Controller
      */
     public function show($id)
     {
+        //recupera datos de la cotización
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)
         ->first(['id','consideraciones', 'solicitudes_compra_id']);
 
+        // Recupera los detalles de las cotizaciones-proveedores asociadas a la cotización
         if ($cotizacion) {
             $proveedores = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
             ->get([ 'id','proveedores_id', 'cotizaciones_id', 'ruta', 'seleccionado']);
@@ -121,6 +129,8 @@ class CotizacionesController extends Controller
                 $data[] = $proveedor;
             }
             
+            // Regreso el objeto data con los detalles y 
+            //data cotización con la información de la cotización.
             return response()->json([
                 'status' => 'success',
                 'data' => $data,
@@ -149,6 +159,8 @@ class CotizacionesController extends Controller
      */
     public function update(Request $request, $id)
     {   
+        //Actualiza el estatus de la cotización seleccionada
+        //Actualiza el status de la solicitud de compra
         $data = $request->all();
         $idSc = $data['0'];
         CotizacionesProveedores::where('id', $id)->update(['seleccionado' => 1]);

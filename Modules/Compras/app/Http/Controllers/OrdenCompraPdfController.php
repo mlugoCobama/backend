@@ -65,7 +65,7 @@ class OrdenCompraPdfController extends Controller
     {
         //
     }
-
+    //Código que genera el formato de orden de compra
     public function OrdenCompraFormatoInterno($data)
     {
 

@@ -127,6 +127,48 @@ class SolicitudesCompraController extends Controller
     }
 
     /*---------------------------------------------------------------------
+*POSIBLE SOLUCIÓN
+*Primero genero una solicitud de compra
+*Después almaceno los detalles de la solicitud
+*---------------------------------------------------------------------
+*/
+
+private function storeSolicitudCompra($data)
+{
+    $dataSolicitud = new SolicitudesCompra();
+    $dataSolicitud->folio = $data["folio"];
+    // $dataSolicitud-> folio = $data["folio"] ;
+    $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
+    $dataSolicitud->usuario_destino = $data["usuario_destino"];
+    $dataSolicitud->motivo = $data["motivo"];
+    $dataSolicitud->fecha = $data["fecha"];
+    $dataSolicitud->users_id = $data["users_id"];
+    $dataSolicitud->save();
+    return $dataSolicitud->id;
+}
+
+private function storeDetalleSolicitudCompra($detalles, $idSolicitud, $files)
+{
+    foreach ($detalles as $index => $detalle) {
+        $detalleSolicitud = new DetalleSolicitud();
+        $detalleSolicitud->cantidad = $detalle["cantidad"];
+        $detalleSolicitud->descripcion = $detalle["descripcion"];
+        $detalleSolicitud->observaciones = $detalle["observaciones"];
+        $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
+
+        // Maneja el archivo de imagen
+        $fileKey = "img_referencia_" . $index;
+        if (isset($files[$fileKey]) && $files[$fileKey]->isValid()) {
+            $path = $files[$fileKey]->store('referencias', 'public');
+            $detalleSolicitud->img_referencia = $path;
+        }
+
+        $detalleSolicitud->solicitudes_compra_id = $idSolicitud;
+        $detalleSolicitud->save();
+    }
+}
+
+    /*---------------------------------------------------------------------
     *POSIBLE SOLUCIÓN
     *Obtener todos lo datos de la consulta
     *Dividir en dos arreglos distintos la solicitud y el detalle 
@@ -185,48 +227,6 @@ class SolicitudesCompraController extends Controller
         ]);
     }
 
-
-/*---------------------------------------------------------------------
-*POSIBLE SOLUCIÓN
-*Primero genero una solicitud de compra
-*Después almaceno los detalles de la solicitud
-*---------------------------------------------------------------------
-*/
-
-    private function storeSolicitudCompra($data)
-    {
-        $dataSolicitud = new SolicitudesCompra();
-        $dataSolicitud->folio = $data["folio"];
-        // $dataSolicitud-> folio = $data["folio"] ;
-        $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
-        $dataSolicitud->usuario_destino = $data["usuario_destino"];
-        $dataSolicitud->motivo = $data["motivo"];
-        $dataSolicitud->fecha = $data["fecha"];
-        $dataSolicitud->users_id = $data["users_id"];
-        $dataSolicitud->save();
-        return $dataSolicitud->id;
-    }
-
-    private function storeDetalleSolicitudCompra($detalles, $idSolicitud, $files)
-    {
-        foreach ($detalles as $index => $detalle) {
-            $detalleSolicitud = new DetalleSolicitud();
-            $detalleSolicitud->cantidad = $detalle["cantidad"];
-            $detalleSolicitud->descripcion = $detalle["descripcion"];
-            $detalleSolicitud->observaciones = $detalle["observaciones"];
-            $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
-
-            // Maneja el archivo de imagen
-            $fileKey = "img_referencia_" . $index;
-            if (isset($files[$fileKey]) && $files[$fileKey]->isValid()) {
-                $path = $files[$fileKey]->store('referencias', 'public');
-                $detalleSolicitud->img_referencia = $path;
-            }
-
-            $detalleSolicitud->solicitudes_compra_id = $idSolicitud;
-            $detalleSolicitud->save();
-        }
-    }
 /**
 * SOLUCIÓN PARA GUARDAR LA COTIZACIÓN
 * Generar una función que ejecute lo siguiente
@@ -241,10 +241,10 @@ class SolicitudesCompraController extends Controller
         $data = $request->all();
         $idCotizacion = $this->storeCotizacion($data);
         $this->storeCotizacionProveedores($data, $idCotizacion);
-        //!Habiltar para que se envíen los correos 
+        //!Habiltar para que se envíen los correos $this->enviaCorreoProveedores($data);
         //Queue para despachar el correo
-        EnviarCorreoSolicitudCotizacion::dispatch($data); 
-        // $this->enviaCorreoProveedores($data);
+        //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
+        // 
 
         $idSolicitudC = $data['solicitudes_compra_id'];
         SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => 2]);

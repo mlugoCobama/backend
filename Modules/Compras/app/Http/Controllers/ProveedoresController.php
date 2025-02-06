@@ -197,8 +197,7 @@ class ProveedoresController extends Controller
     *Primero busco al proveedor
     *Elimino el anterior archivo
     *Almaceno los archivos 
-    *Despues almaceno las rutas del expediente
-    *Finalemnte mostramos la solicitud con los detalles
+    *Después almaceno las rutas del expediente
 *---------------------------------------------------------------------
 */
     private function updateExpedienteProveedor($data, $idProveedor)

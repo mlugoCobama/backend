@@ -15,7 +15,7 @@ class CatUnidadesMedidaController extends Controller
 {
 
     /**
-     * Display a listing of the resource.
+     * Recupera todos los registros de catalaogos unidades medidas
      */
     public function index()
     {
@@ -31,7 +31,7 @@ class CatUnidadesMedidaController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Guarda un nuevo registro
      */
     public function store(Request $request)
     {
@@ -45,7 +45,7 @@ class CatUnidadesMedidaController extends Controller
     }
 
     /**
-     * Show the specified resource.
+     * Recupera una unidad de medida por id
      */
     public function show($id)
     {
@@ -61,7 +61,7 @@ class CatUnidadesMedidaController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Actualiza un registro especifico
      */
     public function update(Request $request, $id)
     {
@@ -77,7 +77,7 @@ class CatUnidadesMedidaController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Actualiza el status a 0 (inactivo) del registro
      */
     public function destroy($id)
     {

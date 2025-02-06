@@ -39,7 +39,7 @@ class OrdenCompra extends Model
      * Una orden de compra pertenece a un documento de orden de compra
      */
     public function documentos() {
-       return $this->hasOne(DocumentosOrdenesCompra::class);
+       return $this->hasMany(DocumentosOrdenesCompra::class);
     }
     
 }

@@ -7,8 +7,7 @@ use App\Mail\SolicitudSurtido as MailSolicitudSurtido;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-
-
+use Illuminate\Support\Facades\DB;
 
 use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\OrdenCompra;
@@ -23,9 +22,6 @@ use Modules\Compras\Models\Proveedores;
 use Modules\Compras\Transformers\DetallesCotizacionResource;
 use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
 
-
-use App\Notifications\SolicitudSurtido;
-use Illuminate\Support\Facades\Notification;
 
 class OrdenesComprasController extends Controller
 {
@@ -75,11 +71,11 @@ class OrdenesComprasController extends Controller
 
         CotizacionesProveedores::where('id', $request->input('id_cotizacion_prov'))->update(['seleccionado' => 1]);
         SolicitudesCompra::where('id', $request->input('id_solicitud_compra'))->update(['estatus' => 3]);
-        
+
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha actualizado correctamente',
-            'data' => ''
+            'data' => []
         ]);
     }
 
@@ -87,7 +83,7 @@ class OrdenesComprasController extends Controller
     {
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
         $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->with('documentos')
-        ->first(['id','folio_oc', 'fecha', 'observaciones', 'estatus', 'cotizaciones_id']);
+            ->first(['id', 'folio_oc', 'fecha', 'observaciones', 'estatus', 'cotizaciones_id']);
         return $ordenCompra;
     }
 
@@ -96,7 +92,8 @@ class OrdenesComprasController extends Controller
         $solicitudCompra = SolicitudesCompra::where('id', $id)->first();
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
         $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
-        $cotizacionProveedor = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->where('seleccionado', 1)->first();
+        $cotizacionProveedor = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
+            ->where('seleccionado', 1)->first();
         $proveedor = Proveedores::where('id', $cotizacionProveedor->proveedores_id)->first();
         $detalleCotizacion = DetallesCotizacionResource::collection((DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $cotizacionProveedor->id)->get()));
         $data =  [
@@ -122,14 +119,18 @@ class OrdenesComprasController extends Controller
         return view('compras::edit');
     }
 
-    
+    //Actualiza el estatus de Orden compra a 5 (Pagado)
+    //Actualiza el estatus de Solicitud Compra a 7 (Pagado)
     public function update(Request $request, $id)
     {
+        $idSc = $request->all();
+        OrdenCompra::where('id', $id)->update(['estatus' => 5]);
+        SolicitudesCompra::where('id', $idSc)->update(['estatus' => 7]);
+
         return response()->json([
             'status' => 'success',
-            'message' => 'Se ha actualizado correctamente',
-            'data' => '',
-            'id' => $id,
+            'message' => 'Se ha realizado correctamente',
+            'data' => $idSc
         ]);
     }
 
@@ -138,7 +139,6 @@ class OrdenesComprasController extends Controller
      */
     public function destroy($id) // Actualiza el estatus de solicitud y orden de compra a cancelado
     {
-        
         SolicitudesCompra::where('id', $id)->update(['estatus' => 5]);
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
         OrdenCompra::where('cotizaciones_id', $cotizacion->id)->update(['estatus' => 0]);
@@ -149,7 +149,7 @@ class OrdenesComprasController extends Controller
         ]);
     }
 
-    /** ?POSIBLE SOLUCION->
+    /**
      * 
      * 1.- Recupero los datos (id solicitud de compra, id de orden de compra)
      * 2.- Actualizo el Actualizar el estatus de la solicitud de compra a 6 (En surtido)
@@ -159,7 +159,8 @@ class OrdenesComprasController extends Controller
      * 6.- Preparo los datos del correo
      * 7.- Mando el correo 
      */
-    public function enviarSolicitudSurtido(Request $request){
+    public function enviarSolicitudSurtido1(Request $request)
+    {
         $data = $request->all();
 
         $idOc = $data['idOrdenCompra'];
@@ -167,29 +168,29 @@ class OrdenesComprasController extends Controller
 
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $idSc)->first('id');
         $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->where('seleccionado', 1)
-        ->with(['datos_proveedor' => function($query) {
-          $query->select('id', 'nombre', 'correo');
-         }])
-        ->first(['id','proveedores_id', 'seleccionado']);
+            ->with(['datos_proveedor' => function ($query) {
+                $query->select('id', 'nombre', 'correo');
+            }])
+            ->first(['id', 'proveedores_id', 'seleccionado']);
         $detallesSC = DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $idSc)->get()));
-        
+
         $datos =  [
             'cotizacion' => $cotizacion,
-             'proveedor' => $proveedorSeleccionado,
-             'detalles' => $detallesSC,
-         ];
+            'proveedor' => $proveedorSeleccionado,
+            'detalles' => $detallesSC,
+        ];
 
-         //* Habilitar para envío de correo a proveedor 
+        //* Habilitar para envío de correo a proveedor 
         //  Notification::route('mail',
         //                 $datos['proveedor']['datos_proveedor']['correo'])
         //                 ->notify(new SolicitudSurtido($datos));
-         
+
         SolicitudesCompra::where('id', $idSc)->update(['estatus' => 6]);
         OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
 
         DocumentosOrdenesCompra::create(['orden_compra_id' => $idOc]);
 
-         return response()->json([
+        return response()->json([
             'status' => 'success',
             'message' => 'Se ha autorizado y enviado el correo
                          al proveedor correctamente',
@@ -197,43 +198,108 @@ class OrdenesComprasController extends Controller
         ]);
     }
 
-    /** ?POSIBLE SOLUCION->
-     * 
+    /**
      * 1.- Recuperar los datos (id solicitud de compra, id de orden de compra,)
      * 2.- Actualizar el estatus de la orden de compra a 4 (Autorizada)
      * 4.- Actualizar el estatus de la orden de compra a 2
      * 3.- Generar el registro en documentos compras
      */
-    public function autorizarOrden(Request $request){
+    public function autorizarOrden(Request $request)
+    {
         $data = $request->all();
 
         $idOc = $data['idOrdenCompra'];
         $idSc = $data['idSolicituCompra'];
 
-        SolicitudesCompra::where('id', $idSc)->update(['estatus' => 6]);
+        SolicitudesCompra::where('id', $idSc)->update(['estatus' => 4]);
         OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
 
-        DocumentosOrdenesCompra::create(['orden_compra_id' => $idOc]);
-         return response()->json([
+        // DocumentosOrdenesCompra::create(['orden_compra_id' => $idOc]);
+        return response()->json([
             'status' => 'success',
             'message' => 'Se ha autorizado correctamente',
             'data' => []
         ]);
     }
 
-    public function leerXML($id){
-        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get();
-        
-        $rutaXML =  storage_path('app/'.$rutas[0]['ruta_xml_factura']);
+    /**
+     * Recupera las ruta del xml en el servidor
+     * Recupera los contenido de los XML
+     * Envía el contenido hacia el fronted en json 
+     */
 
-        if(!file_exists($rutaXML)){
-            return response()->json(['message' => 'Archivo no encontrado']);
+    public function leerXML($id)
+    {
+        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get('ruta_xml_factura');
+
+        $contenidosXML = [];
+         foreach($rutas as $ruta){
+            $rutaXML =  storage_path('app/' . $ruta['ruta_xml_factura']);
+            if (file_exists($rutaXML)) {
+                $contenidoXML = file_get_contents($rutaXML);
+                $contenidosXML[] = $contenidoXML; 
+            }
+            else{
+                return response()->json(['message' => 'Archivo no encontrado']);
+            }
+         }
+          return response()->json(['contenidos' => $contenidosXML], 200)
+              ->header('Content-Type', 'application/json');
+        // return $contenidosXML;
+
+    }
+
+    public function enviarSolicitudSurtido(Request $request)
+    {
+        $data = $request->all();
+        $idOc = $data['idOrdenCompra'];
+        $idSc = $data['idSolicituCompra'];
+
+        DB::beginTransaction();
+
+        try {
+            $cotizacion = Cotizaciones::where('solicitudes_compra_id', $idSc)->first('id');
+            $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
+                ->where('seleccionado', 1)
+                ->with(['datos_proveedor' => function ($query) {
+                    $query->select('id', 'nombre', 'correo');
+                }])
+                ->first(['id', 'proveedores_id', 'seleccionado']);
+
+            $detallesSC = DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $idSc)->get()));
+
+            $datos = [
+                'cotizacion' => $cotizacion,
+                'proveedor' => $proveedorSeleccionado,
+                'detalles' => $detallesSC,
+            ];
+
+            //* Habilitar para envío de correo a proveedor 
+            // Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
+            //             ->notify(new SolicitudSurtido($datos));
+
+            SolicitudesCompra::where('id', $idSc)->update(['estatus' => 6]);
+            OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
+
+            // DocumentosOrdenesCompra::create(['orden_compra_id' => $idOc]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha autorizado y enviado el correo al proveedor correctamente',
+                'data' => []
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error y la operación fue revertida',
+                'error' => $e->getMessage()
+
+            ]);
         }
-        
-        $contenidoXML = file_get_contents($rutaXML);
-
-         return response($contenidoXML, 200)
-         ->header('Content-Type', 'application/xml');
-
     }
 }
