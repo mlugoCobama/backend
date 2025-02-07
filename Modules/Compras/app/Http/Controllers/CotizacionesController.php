@@ -3,11 +3,13 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\File;
-
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\Proveedores;
@@ -16,6 +18,8 @@ use Modules\Compras\Models\OrdenCompra;
 use Modules\Compras\Transformers\CotizacionesProveedoresResource;
 
 use Modules\Compras\Models\SolicitudesCompra;
+
+use function Laravel\Prompts\error;
 
 class CotizacionesController extends Controller
 {
@@ -71,34 +75,82 @@ class CotizacionesController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
-        foreach ($data['precios'] as $detalleId => $proveedores) {
-            foreach ($proveedores as $proveedorId => $precio) {
-                DetallesCotizacion::create([
-                    'detalle_solicitud_id' => $detalleId,
-                    'cotizaciones_proveedores_proveedores_id' => $proveedorId,
-                    'importe_unitario' => $precio,
-                ]);
-            }
+        
+
+        $validacion = Validator::make($data,[
+            'precios' => 'required|array|min:1',
+            'precios.*' => 'array|min:1',
+            'precios.*.*' => 'required|numeric|min:0.00',
+
+            'files' => 'required|array',
+            'files.*' => 'file|mimes:pdf|max:2048'
+        ]);
+
+        if($validacion->fails()){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos no validos o incompletos',
+                'errors' => $validacion->errors()
+            ]);
         }
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $cotizacionProveedorId => $file) {
-                $cotizacionProveedor = CotizacionesProveedores::find($cotizacionProveedorId);
 
-                if ($cotizacionProveedor) {
-                    $folderPath = 'cotizaciones/' . $cotizacionProveedor->cotizaciones_id;
-                    $fileName = $cotizacionProveedor->proveedores_id . '.' . $file->getClientOriginalExtension();
+        // $tamPrcios = count($data['precios']);
+        // $tamFiles = $request->hasFile('files') ? count($request->file('files')) : 0;
+        // if($tamPrcios !== $tamFiles){
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Faltan precios o archivos',
+        //         'errors' => []
+        //     ]);
+        // }
 
-                    $path = $file->storeAs($folderPath, $fileName);
+        try{
+            DB::beginTransaction();
 
-                    $cotizacionProveedor->update(['ruta' => $path]);
+            foreach ($data['precios'] as $detalleId => $proveedores) {
+                foreach ($proveedores as $proveedorId => $precio) {
+
+                    //validar que la relación sea valida
+                    
+                    DetallesCotizacion::create([
+                        'detalle_solicitud_id' => $detalleId,
+                        'cotizaciones_proveedores_proveedores_id' => $proveedorId,
+                        'importe_unitario' => $precio,
+                    ]);
                 }
             }
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $cotizacionProveedorId => $file) {
+                    $cotizacionProveedor = CotizacionesProveedores::find($cotizacionProveedorId);
+    
+                    if ($cotizacionProveedor) {
+                        $folderPath = 'cotizaciones/' . $cotizacionProveedor->cotizaciones_id;
+                        $fileName = $cotizacionProveedor->proveedores_id . '.' . $file->getClientOriginalExtension();
+    
+                        $path = $file->storeAs($folderPath, $fileName);
+    
+                        $cotizacionProveedor->update(['ruta' => $path]);
+                    }else{
+                        throw new Exception("Cotizacion-Proveedor con ID {$cotizacionProveedorId} no encontrada");
+                    }
+                }
+            }
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha guardado correctamente',
+                'data' => []
+            ]);
+
+        }catch(\Exception $e){
+            DB::rollback();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al guardar los datos',
+                'error'=>$e->getMessage()
+            ]);
         }
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha guardado correctamente',
-            'data' => []
-        ]);
     }
 
 

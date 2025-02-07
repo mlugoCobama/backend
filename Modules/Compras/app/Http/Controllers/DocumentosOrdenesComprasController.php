@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use ZipArchive;
 
 use Modules\Compras\Models\DocumentosOrdenesCompra;
@@ -82,38 +83,64 @@ class DocumentosOrdenesComprasController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request;
-        $hoy = date("jnY");
-        $time = time();
-        $docsOrdenCompra = new DocumentosOrdenesCompra();
+        $validacion = Validator::make($request->all(),[
+            'orden_compra_id' => 'required|exists:orden_compra,id',
+            'fecha' => 'required|date',
+            'factura_xml' => 'required|file|mimes:xml|max:2048',
+            'factura_pdf' => 'required|file|mimes:pdf|max:2048',
+            'comprobante_pago' => 'nullable|file|mimes:pdf|max:2048',
 
-        $carpetaOrdenCompra = 'docsOrdenCompra/' . $data['orden_compra_id'];
-        Storage::makeDirectory($carpetaOrdenCompra);
-
-        if ($data->hasFile('factura_xml')) {
-            $nombreArchivo = "factura_xml" . $hoy .$time ."." . $data->file('factura_xml')->getClientOriginalExtension(); 
-            $docsOrdenCompra->ruta_xml_factura = $data->file('factura_xml')->storeAs($carpetaOrdenCompra, $nombreArchivo); 
-        }
-        if ($data->hasFile('factura_pdf')) {
-            $nombreArchivo = "factura_pdf" . $hoy . $time . "." . $data->file('factura_pdf')->getClientOriginalExtension();
-            $docsOrdenCompra->ruta_pdf_factura = $data->file('factura_pdf')->storeAs($carpetaOrdenCompra, $nombreArchivo);
-        }
-        if ($data->hasFile('comprobante_pago')) {
-
-            $nombreArchivo = "comprobante_pago" . $hoy . $time . "." . $data->file('comprobante_pago')->getClientOriginalExtension();
-            $docsOrdenCompra->comprobante_pago = $data->file('comprobante_pago')->storeAs($carpetaOrdenCompra, $nombreArchivo);
-        }
-        $docsOrdenCompra->orden_compra_id = $data["orden_compra_id"];
-        $docsOrdenCompra->fecha = $data["fecha"];
-
-        $docsOrdenCompra->save();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha guardado correctamente',
-            //'data' => new ProveedoresResource($proveedor),
-            'data' => []
         ]);
+
+        if($validacion->fails()){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error de validacion',
+                'errror' => $validacion->errors()
+            ]);
+        }
+
+        try {
+            $data = $request;
+            $hoy = date("jnY");
+            $time = time();
+            $docsOrdenCompra = new DocumentosOrdenesCompra();
+    
+            $carpetaOrdenCompra = 'docsOrdenCompra/' . $data['orden_compra_id'];
+            Storage::makeDirectory($carpetaOrdenCompra);
+    
+            if ($data->hasFile('factura_xml')) {
+                $nombreArchivo = "factura_xml" . $hoy .$time ."." . $data->file('factura_xml')->getClientOriginalExtension(); 
+                $docsOrdenCompra->ruta_xml_factura = $data->file('factura_xml')->storeAs($carpetaOrdenCompra, $nombreArchivo); 
+            }
+            if ($data->hasFile('factura_pdf')) {
+                $nombreArchivo = "factura_pdf" . $hoy . $time . "." . $data->file('factura_pdf')->getClientOriginalExtension();
+                $docsOrdenCompra->ruta_pdf_factura = $data->file('factura_pdf')->storeAs($carpetaOrdenCompra, $nombreArchivo);
+            }
+            if ($data->hasFile('comprobante_pago')) {
+    
+                $nombreArchivo = "comprobante_pago" . $hoy . $time . "." . $data->file('comprobante_pago')->getClientOriginalExtension();
+                $docsOrdenCompra->comprobante_pago = $data->file('comprobante_pago')->storeAs($carpetaOrdenCompra, $nombreArchivo);
+            }
+            $docsOrdenCompra->orden_compra_id = $data["orden_compra_id"];
+            $docsOrdenCompra->fecha = $data["fecha"];
+    
+            $docsOrdenCompra->save();
+    
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha guardado correctamente',
+                'data' => []
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error al guardar los documentos',
+                'error' => $e->getMessage()
+            ]);
+        }
+
+
 
         // return $carpetaOrdenCompra;
     }
@@ -140,52 +167,88 @@ class DocumentosOrdenesComprasController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $data = $request;
-        $hoy = date("jnY"); //Recuperar la fecha del dia de hoy para diferenciar el registro nuevo
-        $registro = DocumentosOrdenesCompra::where('id', $id)->first();
 
-        $carpetaOrdenCompra = 'docsOrdenCompra/' . $id;
-        Storage::makeDirectory($carpetaOrdenCompra);
+        $validacion = Validator::make($request->all(),[
+            'orden_compra_id' => 'required|exists:orden_compra,id',
+            'fecha' => 'required|date',
+            'factura_xml' => 'nullable|file|mimes:xml|max:2048',
+            'factura_pdf' => 'nullable|file|mimes:pdf|max:2048',
+            'comprobante_pago' => 'required|file|mimes:pdf|max:2048',
 
-        if ($data->hasFile('factura_xml')) {
-
-            $archivoEliminar = $registro->ruta_xml_factura; //Recupera el anterior ruta del archivo al a eliminar
-            if ($archivoEliminar) {
-                Storage::delete($archivoEliminar);
-            }
-            $nombreArchivo = "factura_xml" . $hoy . "." . $data->file('factura_xml')->getClientOriginalExtension(); //Asigna un nuevo nombre al archivo
-            $registro->ruta_xml_factura = $data->file('factura_xml')->storeAs($carpetaOrdenCompra, $nombreArchivo); //Actualiza la ruta y el archivo
-        }
-        if ($data->hasFile('factura_pdf')) {
-
-            $archivoEliminar = $registro->ruta_pdf_factura;
-
-            if ($archivoEliminar) {
-                Storage::delete($archivoEliminar);
-            }
-
-            $nombreArchivo = "factura_pdf" . $hoy . "." . $data->file('factura_pdf')->getClientOriginalExtension();
-            $registro->ruta_pdf_factura = $data->file('factura_pdf')->storeAs($carpetaOrdenCompra, $nombreArchivo);
-        }
-        if ($data->hasFile('comprobante_pago')) {
-
-            $archivoEliminar = $registro->comprobante_pago;
-
-            if ($archivoEliminar) {
-                Storage::delete($archivoEliminar);
-            }
-
-            $nombreArchivo = "comprobante_pago" . $hoy . "." . $data->file('comprobante_pago')->getClientOriginalExtension();
-            $registro->comprobante_pago = $data->file('comprobante_pago')->storeAs($carpetaOrdenCompra, $nombreArchivo);
-        }
-
-        $registro->save();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha actualizado correctamente',
-            'data' => $registro
         ]);
+
+        if($validacion->fails()){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error de validacion',
+                'errror' => $validacion->errors()
+            ]);
+        }
+
+        $registro = DocumentosOrdenesCompra::where('id', $id)->first();
+        if(!$registro){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error de validacion',
+                'errror' => 'El registro al que se intenta acceder no existe'
+            ]);
+        }
+        try {
+            $data = $request;
+            $hoy = date("jnY"); //Recuperar la fecha del dia de hoy para diferenciar el registro nuevo
+            $time = time();
+            
+    
+            $carpetaOrdenCompra = 'docsOrdenCompra/' . $data['orden_compra_id'];
+            Storage::makeDirectory($carpetaOrdenCompra);
+    
+            if ($data->hasFile('factura_xml')) {
+    
+                $archivoEliminar = $registro->ruta_xml_factura; //Recupera el anterior ruta del archivo al a eliminar
+                if ($archivoEliminar) {
+                    Storage::delete($archivoEliminar);
+                }
+                $nombreArchivo = "factura_xml" . $hoy . $time . "." . $data->file('factura_xml')->getClientOriginalExtension(); //Asigna un nuevo nombre al archivo
+                $registro->ruta_xml_factura = $data->file('factura_xml')->storeAs($carpetaOrdenCompra, $nombreArchivo); //Actualiza la ruta y el archivo
+            }
+            if ($data->hasFile('factura_pdf')) {
+    
+                $archivoEliminar = $registro->ruta_pdf_factura;
+    
+                if ($archivoEliminar) {
+                    Storage::delete($archivoEliminar);
+                }
+    
+                $nombreArchivo = "factura_pdf" . $hoy . $time . "." . $data->file('factura_pdf')->getClientOriginalExtension();
+                $registro->ruta_pdf_factura = $data->file('factura_pdf')->storeAs($carpetaOrdenCompra, $nombreArchivo);
+            }
+            if ($data->hasFile('comprobante_pago')) {
+    
+                $archivoEliminar = $registro->comprobante_pago;
+    
+                if ($archivoEliminar) {
+                    Storage::delete($archivoEliminar);
+                }
+    
+                $nombreArchivo = "comprobante_pago" . $hoy . $time . "." .  $data->file('comprobante_pago')->getClientOriginalExtension();
+                $registro->comprobante_pago = $data->file('comprobante_pago')->storeAs($carpetaOrdenCompra, $nombreArchivo);
+            }
+    
+            $registro->save();
+    
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha actualizado correctamente',
+                'data' => $registro
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrio un error al guardar el archivo',
+                'error' => $e->getMessage()
+            ]);
+        }
+
     }
 
     /**

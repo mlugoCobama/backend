@@ -3,13 +3,15 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Mail\SolicitudSurtido as MailSolicitudSurtido;
+use App\Notifications\SolicitudSurtido;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Validator as ValidationValidator;
 use Modules\Compras\Models\Cotizaciones;
+use Illuminate\Support\Facades\Notification;
 use Modules\Compras\Models\OrdenCompra;
 use Modules\Compras\Models\DocumentosOrdenesCompra;
 use Modules\Compras\Models\SolicitudesCompra;
@@ -62,21 +64,50 @@ class OrdenesComprasController extends Controller
      */
     public function store(Request $request)
     {
-        OrdenCompra::create([
-            'folio_oc' => $request->input('folio_oc'),
-            'fecha' => $request->input('fecha'),
-            'observaciones' => $request->input('observaciones'),
-            'cotizaciones_id' => $request->input('cotizaciones_id'),
+
+        $validacion = Validator::make($request->all(),[
+            'folio_oc' => 'required|string|max:50',
+            'fecha' => 'required|date',
+            'observaciones' => 'nullable|string|max:150',
+            'cotizaciones_id' => 'required',
+            'id_cotizacion_prov' => 'required',
+            'id_solicitud_compra' => 'required',
         ]);
 
-        CotizacionesProveedores::where('id', $request->input('id_cotizacion_prov'))->update(['seleccionado' => 1]);
-        SolicitudesCompra::where('id', $request->input('id_solicitud_compra'))->update(['estatus' => 3]);
+        if($validacion->fails()){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos incompletos o no validos',
+                'errors' => $validacion->errors()
+            ]);
+        }
+        try{
+            DB::beginTransaction();
+            OrdenCompra::create([
+                'folio_oc' => $request->input('folio_oc'),
+                'fecha' => $request->input('fecha'),
+                'observaciones' => $request->input('observaciones'),
+                'cotizaciones_id' => $request->input('cotizaciones_id'),
+            ]);
+    
+            CotizacionesProveedores::where('id', $request->input('id_cotizacion_prov'))->update(['seleccionado' => 1]);
+            SolicitudesCompra::where('id', $request->input('id_solicitud_compra'))->update(['estatus' => 3]);
+            DB::commit();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha actualizado correctamente',
-            'data' => []
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha actualizado correctamente',
+                'data' => []
+            ]);
+
+        }catch(\Exception $e){
+            DB::rollback();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error inesperado',
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     public function show($id) // Recupera la orden de compra en base al idCompra
@@ -124,14 +155,26 @@ class OrdenesComprasController extends Controller
     public function update(Request $request, $id)
     {
         $idSc = $request->all();
-        OrdenCompra::where('id', $id)->update(['estatus' => 5]);
-        SolicitudesCompra::where('id', $idSc)->update(['estatus' => 7]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha realizado correctamente',
-            'data' => $idSc
-        ]);
+        try {
+            DB::beginTransaction();
+                OrdenCompra::where('id', $id)->update(['estatus' => 5]);
+                SolicitudesCompra::where('id', $idSc)->update(['estatus' => 7]);
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha realizado correctamente',
+                'data' => $idSc
+            ]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error inesperado',
+                'error' => $e->getMessage()
+            ]);
+        }
+        
     }
 
     /**
@@ -139,14 +182,31 @@ class OrdenesComprasController extends Controller
      */
     public function destroy($id) // Actualiza el estatus de solicitud y orden de compra a cancelado
     {
-        SolicitudesCompra::where('id', $id)->update(['estatus' => 5]);
-        $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
-        OrdenCompra::where('cotizaciones_id', $cotizacion->id)->update(['estatus' => 0]);
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha realizado correctamente',
-            'data' => []
-        ]);
+
+        try {
+            DB::beginTransaction();
+                SolicitudesCompra::where('id', $id)->update(['estatus' => 5]);
+                $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
+                OrdenCompra::where('cotizaciones_id', $cotizacion->id)->update(['estatus' => 0]);
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha realizado correctamente',
+                'data' => []
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error inesperado',
+                'error' => $e->getMessage()
+            ]);
+
+        }
+
+        
+        
     }
 
     /**
@@ -211,15 +271,31 @@ class OrdenesComprasController extends Controller
         $idOc = $data['idOrdenCompra'];
         $idSc = $data['idSolicituCompra'];
 
-        SolicitudesCompra::where('id', $idSc)->update(['estatus' => 4]);
-        OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
+        try {
+            DB::beginTransaction();
+            SolicitudesCompra::where('id', $idSc)->update(['estatus' => 4]);
+            OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
+            // DocumentosOrdenesCompra::create(['orden_compra_id' => $idOc]);
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha autorizado correctamente',
+                'data' => []
+            ]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error inesperado',
+                'error' => $e->getMessage()
+            ]);
+        }
+        
 
-        // DocumentosOrdenesCompra::create(['orden_compra_id' => $idOc]);
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha autorizado correctamente',
-            'data' => []
-        ]);
+        
+
+        
+        
     }
 
     /**
@@ -252,6 +328,21 @@ class OrdenesComprasController extends Controller
     public function enviarSolicitudSurtido(Request $request)
     {
         $data = $request->all();
+
+        $validacion =  Validator::make($data,[
+            'idOrdenCompra' => 'required|exists:orden_compra,id',
+            'idSolicituCompra' => 'required|exists:solicitudes_compra,id'
+
+        ]);
+
+        if($validacion->fails()){
+            return response()->json([
+                "status" => "error",
+                "message" => "Datos no validos o incorrectos",
+                "errors" => $validacion->errors()
+            ]);
+        }
+
         $idOc = $data['idOrdenCompra'];
         $idSc = $data['idSolicituCompra'];
 
@@ -259,6 +350,11 @@ class OrdenesComprasController extends Controller
 
         try {
             $cotizacion = Cotizaciones::where('solicitudes_compra_id', $idSc)->first('id');
+
+            if(!$cotizacion){
+                throw new \Exception('No se encontro la cotizacion asociada');
+            }
+
             $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
                 ->where('seleccionado', 1)
                 ->with(['datos_proveedor' => function ($query) {
@@ -266,7 +362,16 @@ class OrdenesComprasController extends Controller
                 }])
                 ->first(['id', 'proveedores_id', 'seleccionado']);
 
+                if(!$proveedorSeleccionado){
+                    throw new \Exception('No hay un proveedor seleccionado para esta cotizacion');
+                }
+
+
             $detallesSC = DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $idSc)->get()));
+
+            if($detallesSC->isEmpty()){
+                throw new \Exception('No se encontraron detalles');
+            }
 
             $datos = [
                 'cotizacion' => $cotizacion,
@@ -275,8 +380,8 @@ class OrdenesComprasController extends Controller
             ];
 
             //* Habilitar para envío de correo a proveedor 
-            // Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
-            //             ->notify(new SolicitudSurtido($datos));
+            //  Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
+            //              ->notify(new SolicitudSurtido($datos));
 
             SolicitudesCompra::where('id', $idSc)->update(['estatus' => 6]);
             OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
@@ -298,7 +403,6 @@ class OrdenesComprasController extends Controller
                 'status' => 'error',
                 'message' => 'Ocurrió un error y la operación fue revertida',
                 'error' => $e->getMessage()
-
             ]);
         }
     }

@@ -7,7 +7,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Storage;
-
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Modules\Compras\Models\ExpedientesProveedores;
 
 use Modules\Compras\Models\Proveedores;
@@ -31,11 +32,13 @@ class ProveedoresController extends Controller
     public function getProveedores()
     {
        $data = (Proveedores::active()
+       
        ->get([
         'id',
         'nombre',
         'correo'
         ]));
+
        return response()->json([
         'status' => 'success',
         'message' => 'Se ha realizado correctamente',
@@ -60,68 +63,54 @@ class ProveedoresController extends Controller
         //  $proveedor = proveedores::create($request->all());
         //  $expediente = ExpedientesProveedores::create($request->all(), $proveedor);
 
-        $idProveedor =  $this->storeProveedor($request);
+        $validacion =  Validator::make($request->all(), [
+            'nombre' => 'required|string|max:45',
+            'contacto' => 'required|string|max:45',
+            'telefono' => 'required|string|max:45',
+            'localidad' => 'required|string|max:45',
+            'condiciones' => 'required|string|max:45',
+            'servicios' => 'required|string|max:200',
+            'correo' => 'required|email|max:45',
+            'dias_credito' => 'nullable|integer|max:45',
+            'horario_atencion' => 'required|string|max:45',
+            'tiempo_entrega' => 'required|string|max:45',
+            //Validacion para archivos
+            'constancia_fiscal' => 'nullable|file|mimes:pdf|max:5120',
+            'ine' => 'nullable|file|mimes:pdf|max:5120',
+            'comprobante_domicilio' => 'nullable|file|mimes:pdf|max:5120',
+            'estado_cuenta' => 'nullable|file|mimes:pdf|max:5120',
+            'acta_constitutiva' => 'nullable|file|mimes:pdf|max:5120',
+            'poder_notarial' => 'nullable|file|mimes:pdf|max:5120',
+        ]);
 
-        $this->storeExpedienteProveedor($request, $idProveedor);
+        if($validacion->fails()){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Los datos ingresados no son validos o están incompletos',
+                'errors'=> $validacion->errors()
+            ]);
+        }
 
+       try{
+        DB::beginTransaction();
+            $idProveedor =  $this->storeProveedor($request);
+            $this->storeExpedienteProveedor($request, $idProveedor);
+        DB::commit();
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha guardado correctamente',
-            //'data' => new ProveedoresResource($proveedor),
             'data' => []
         ]);
-    }
-
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
-    {
-        $expediente = ExpedientesProveedores::where('proveedores_id', $id)->first();
-        return response()->json($expediente);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('compras::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id)
-    {
-
-        $this->updateProveedor($request, $id);
-
-        $this->updateExpedienteProveedor($request, $id);
-
+       }
+       catch(\Exception $e){
+        DB::rollBack();
         return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha actualizado correctamente',
-            'data' => '',
-            'id' => $id,
+            'status' => 'error',
+            'message' => 'Algo salio mal, intente nuevamente',
+            'error' => $e->getMessage()
         ]);
+       }
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        Proveedores::where('id', $id)->update(['activo' => 0]);
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha eliminado correctamente',
-            'data' => ''
-        ]);
-    }
-
-
 
     private function storeProveedor($data)
     {
@@ -176,21 +165,110 @@ class ProveedoresController extends Controller
         $expedienteSolicitud->save();
     }
 
+    /**
+     * Show the specified resource.
+     */
+    public function show($id)
+    {
+        $expediente = ExpedientesProveedores::where('proveedores_id', $id)->first();
+        return response()->json($expediente);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
+    {
+        return view('compras::edit');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        $validacion =  Validator::make($request->all(), [
+            'nombre' => 'required|string|max:45',
+            'contacto' => 'required|string|max:45',
+            'telefono' => 'required|string|max:45',
+            'localidad' => 'required|string|max:45',
+            'condiciones' => 'required|string|max:45',
+            'servicios' => 'required|string|max:200',
+            'correo' => 'required|email|max:45',
+            'dias_credito' => 'nullable|integer|max:45',
+            'horario_atencion' => 'required|string|max:45',
+            'tiempo_entrega' => 'required|string|max:45',
+            //Validacion para archivos
+            'constancia_fiscal' => 'nullable|file|mimes:pdf|max:5120',
+            'ine' => 'nullable|file|mimes:pdf|max:5120',
+            'comprobante_domicilio' => 'nullable|file|mimes:pdf|max:5120',
+            'estado_cuenta' => 'nullable|file|mimes:pdf|max:5120',
+            'acta_constitutiva' => 'nullable|file|mimes:pdf|max:5120',
+            'poder_notarial' => 'nullable|file|mimes:pdf|max:5120',
+        ]);
+
+        if($validacion->fails()){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Los datos ingresados no son validos o están incompletos',
+                'errors'=> $validacion->errors()
+            ]);
+        }
+
+        try{
+            DB::beginTransaction();
+
+            $this->updateProveedor($request, $id);
+            $this->updateExpedienteProveedor($request, $id);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha actualizado correctamente',
+                'data' => [],
+                'id' => $id,
+            ]);
+
+        }catch(\Exception $e){
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al actualizar proveedor',
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        
+
+        
+    }
+
     private function updateProveedor($data, $id)
     {
         $proveedor = Proveedores::find($id);
-        $proveedor->nombre = $data->nombre;
-        $proveedor->contacto = $data->contacto;
-        $proveedor->telefono = $data->telefono;
-        $proveedor->localidad = $data->localidad;
-        $proveedor->condiciones = $data->condiciones;
-        $proveedor->servicios = $data->servicios;
-        $proveedor->correo = $data->correo;
-        $proveedor->dias_credito = $data->dias_credito;
-        $proveedor->horario_atencion = $data->horario_atencion;
-        $proveedor->tiempo_entrega = $data->tiempo_entrega;
+        if(!$proveedor){
+            throw new \Exception("Proveedor no encontrado");
+            
+        }
 
-        $proveedor->save();
+        $proveedor->update([
+
+            'nombre' => $data->nombre,
+            'contacto' => $data->contacto,
+            'telefono' => $data->telefono,
+            'localidad' => $data->localidad,
+            'condiciones' => $data->condiciones,
+            'servicios' => $data->servicios,
+            'correo' => $data->correo,
+            'dias_credito' => $data->dias_credito,
+            'horario_atencion '=> $data->horario_atencion,
+            'tiempo_entrega' => $data->tiempo_entrega,
+
+        ]);
+        
+
+        
     }
     /*---------------------------------------------------------------------
 *
@@ -261,4 +339,36 @@ class ProveedoresController extends Controller
         $expediente->save();
 
     }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
+        $proveedor = Proveedores::where('id', $id);
+
+        if(!$proveedor ){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El registro que intentas eliminar no existe',
+                'data' => []
+            ]);
+        }
+
+        $proveedor->update([
+            'activo' => 0
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Se ha eliminado correctamente',
+            'data' => []
+        ]);
+    }
+
+
+
+
+
+
 }

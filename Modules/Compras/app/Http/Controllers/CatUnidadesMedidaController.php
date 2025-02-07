@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-
+use Illuminate\Support\Facades\Validator;
 use Modules\Compras\Models\CatUnidadesMedidas;
 use Modules\Compras\Transformers\CatUnidadesMedidaResource;
 
@@ -35,13 +35,27 @@ class CatUnidadesMedidaController extends Controller
      */
     public function store(Request $request)
     {
-        $unidadMedida = CatUnidadesMedidas::create($request->all());
-        
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha guardado correctamente',
-            'data' => new CatUnidadesMedidaResource($unidadMedida)
+        $valiadcion  = Validator::make($request->all(),[
+            'nombre' => 'required|string|max:45',
+            'abreviatura' => 'required|string|max:45'
         ]);
+
+        if($valiadcion->fails()){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos inválidos',
+                'errors' => $valiadcion->errors()
+            ]);
+        }
+
+        $unidadMedida = CatUnidadesMedidas::create($request->all());
+        return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha guardado correctamente',
+                // 'data' => $datosValidos
+                'data' => new CatUnidadesMedidaResource($unidadMedida)
+            ]);
+        
     }
 
     /**
@@ -65,10 +79,34 @@ class CatUnidadesMedidaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        CatUnidadesMedidas::where('id', $id)
-            ->update(['nombre' => $request->nombre,
-                      'abreviatura' => $request->abreviatura
+        $unidadMedida = CatUnidadesMedidas::find($id);
+        
+        if(!$unidadMedida){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El registro que intentas modificar no existe',
+                'data' => ''
+            ]);
+        }
+
+        $validacion  = Validator::make($request->all(),[
+            'nombre' => 'required|string|max:45',
+            'abreviatura' => 'required|string|max:45'
         ]);
+
+        if($validacion->fails()){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos inválidos',
+                'errors' => $validacion->errors()
+            ]);
+        }
+        
+        $unidadMedida->update([
+            'nombre' => $request->nombre,
+            'abreviatura' => $request->abreviatura,
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha actualizado correctamente',
@@ -81,7 +119,20 @@ class CatUnidadesMedidaController extends Controller
      */
     public function destroy($id)
     {
-        CatUnidadesMedidas::where('id', $id)->update(['activo' => 0]);
+        $unidadMedida = CatUnidadesMedidas::where('id', $id);
+        
+        if(!$unidadMedida){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El registro que intentas eliminar no existe',
+                'data' => ''
+            ]);
+        }
+
+        $unidadMedida->update([
+            'activo' => 0
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha eliminado correctamente',
