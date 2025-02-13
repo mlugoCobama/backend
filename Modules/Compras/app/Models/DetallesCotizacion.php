@@ -30,6 +30,13 @@ class DetallesCotizacion extends Model
     /**
      * Un detalle de cotizacionn 
      */
+
+     public function detalle_solicitud(){
+        return $this->belongsTo(DetalleSolicitud::class);
+    }
+    public function CotizacionesProveedores(){
+        $this->belongsTo(CotizacionesProveedores::class);
+    }
     
     protected static function newFactory(): DetallesCotizacionFactory
     {

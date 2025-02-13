@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Compras\Database\Factories\ProveedoresFactory;
 
-class proveedores extends Model
+class Proveedores extends Model
 {
     use HasFactory;
 
@@ -55,7 +55,7 @@ class proveedores extends Model
      * Un proveedor pertenece a un expediente
      */
     public function Expediente(){
-        $this->belongsTo(expedientesProveedores::class);
+        $this->belongsTo(ExpedientesProveedores::class);
     }
 
     public function CotizacionesProveedores(){

@@ -63,7 +63,7 @@ class CompraSeminuevosPDFController extends Controller
         $template = $pdf->importPage(1);
         $pdf->useImportedPage($template);
 
-        $pdf->SetFont('Helvetica','',8);
+        $pdf->SetFont('Helvetica','bold',8);
         $pdf->SetTextColor(0,0,0);
 
 

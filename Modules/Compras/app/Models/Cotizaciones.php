@@ -57,8 +57,8 @@ class Cotizaciones extends Model
     /**
      * Una cotizacion pertenece a una orden de compra
      */
-    public function OrdenCompra(){
-        $this->belongsTo(OrdenCompra::class);
+    public function orden_compra(){
+        return $this->belongsTo(OrdenCompra::class, 'cotizaciones_id', 'id');
     }
 
     /**

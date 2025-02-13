@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 // use Illuminate\Http\Response;
-use ZipArchive;
 
 class DetalleSolicitudController extends Controller
 {
@@ -39,36 +38,7 @@ class DetalleSolicitudController extends Controller
      */
     public function show($id)
     {
-    $folderPath = public_path(".expedientes/$id");
-    $zipFileName = "expedientes_proveedor_$id.zip";
-
-    // Verifica si la carpeta existe
-    if (!file_exists($folderPath)) {
-        return response()->json(['error' => 'Carpeta no encontrada'], 404);
-    }
-
-    // Crear archivo ZIP en una ubicación temporal
-    $zip = new ZipArchive;
-    $zipFilePath = public_path($zipFileName);
-
-    if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-        $files = scandir($folderPath);
-
-        foreach ($files as $file) {
-            $filePath = "$folderPath/$file";
-
-            if (is_file($filePath)) {
-                $zip->addFile($filePath, $file);
-            }
-        }
-
-          $zip->close();
-
-    } else {
-        return response()->json(['error' => 'No se pudo crear el archivo ZIP'], 500);
-    }
-    return response()->download($zipFilePath)->deleteFileAfterSend(true);
-
+        
     }
 
     /**

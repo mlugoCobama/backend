@@ -11,20 +11,25 @@ class DatosGenerales extends Model
     /**
      * Campos que pueden ser alterados
      */
-    protected $filleable = [
+    protected $fillable = [
         'uno',
         'gasto',
         'ventas',
-        'ventas_litros',
+        'venta_litros',
         'utilidad_bruta',
+        'ubo',
+        'eficiencia',
         'personal',
         'fecha',
+        'sucursales_id'
     ];
 
     public $timestamps = false;
     /**
      * Nombre de la tabla
      */
+    // protected $connection = 'dashboard';
+
     protected $table = 'datos_generales';
     /**
      * Función para obtener los datos activos
@@ -37,9 +42,9 @@ class DatosGenerales extends Model
         return $query->where('fecha', 1);
     }
 
-    public function scopeSucursal ($query) {
-        return $query->where('sucursales_id', 1);
-    }
+    // public function scopeSucursal ($query) {
+    //     return $query->where('sucursales_id', 1);
+    // }
      /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

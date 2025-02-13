@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Compras\Database\Factories\ExpedientesProveedoresFactory;
 
-class expedientesProveedores extends Model
+class ExpedientesProveedores extends Model
 {
     use HasFactory;
 
@@ -35,7 +35,7 @@ class expedientesProveedores extends Model
      * Un proveedor tiene varios documentos
      */
     public function Datos() {
-        $this->hasMany(proveedores::class);
+        $this->hasMany(Proveedores::class);
     }
 
     // protected static function newFactory(): ExpedientesProveedoresFactory

@@ -7,19 +7,24 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-use Modules\Compras\Models\catUnidadesMedidas;
+
+//Models
+use Modules\Compras\Models\CatUnidadesMedidas;
+//Transformers
 use Modules\Compras\Transformers\CatUnidadesMedidaResource;
+// Utilities
+use Illuminate\Support\Facades\Validator;
 
 class CatUnidadesMedidaController extends Controller
 
 {
 
     /**
-     * Display a listing of the resource.
+     * Recupera todos los registros de catálogos unidades medidas
      */
     public function index()
     {
-        return CatUnidadesMedidaResource::collection((catUnidadesMedidas::active()->get()));
+        return CatUnidadesMedidaResource::collection((CatUnidadesMedidas::active()->get()));
     }
 
     /**
@@ -31,25 +36,39 @@ class CatUnidadesMedidaController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Guarda un nuevo registro
      */
     public function store(Request $request)
     {
-        $unidadMedida = catUnidadesMedidas::create($request->all());
-        
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha guardado correctamente',
-            'data' => new CatUnidadesMedidaResource($unidadMedida)
+        $valiadcion  = Validator::make($request->all(),[
+            'nombre' => 'required|string|max:45',
+            'abreviatura' => 'required|string|max:45'
         ]);
+
+        if($valiadcion->fails()){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos inválidos',
+                'errors' => $valiadcion->errors()
+            ]);
+        }
+
+        $unidadMedida = CatUnidadesMedidas::create($request->all());
+        return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha guardado correctamente',
+                // 'data' => $datosValidos
+                'data' => new CatUnidadesMedidaResource($unidadMedida)
+            ]);
+        
     }
 
     /**
-     * Show the specified resource.
+     * Recupera una unidad de medida por id
      */
     public function show($id)
     {
-        return catUnidadesMedidas::where('id', $id)->get();
+        return CatUnidadesMedidas::where('id', $id)->get();
     }
 
     /**
@@ -61,14 +80,38 @@ class CatUnidadesMedidaController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Actualiza un registro especifico
      */
     public function update(Request $request, $id)
     {
-        catUnidadesMedidas::where('id', $id)
-            ->update(['nombre' => $request->nombre,
-                      'abreviatura' => $request->abreviatura
+        $unidadMedida = CatUnidadesMedidas::find($id);
+        
+        if(!$unidadMedida){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El registro que intentas modificar no existe',
+                'data' => ''
+            ]);
+        }
+
+        $validacion  = Validator::make($request->all(),[
+            'nombre' => 'required|string|max:45',
+            'abreviatura' => 'required|string|max:45'
         ]);
+
+        if($validacion->fails()){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos inválidos',
+                'errors' => $validacion->errors()
+            ]);
+        }
+        
+        $unidadMedida->update([
+            'nombre' => $request->nombre,
+            'abreviatura' => $request->abreviatura,
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha actualizado correctamente',
@@ -77,11 +120,24 @@ class CatUnidadesMedidaController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Actualiza el status a 0 (inactivo) del registro
      */
     public function destroy($id)
     {
-        catUnidadesMedidas::where('id', $id)->update(['activo' => 0]);
+        $unidadMedida = CatUnidadesMedidas::where('id', $id);
+        
+        if(!$unidadMedida){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El registro que intentas eliminar no existe',
+                'data' => ''
+            ]);
+        }
+
+        $unidadMedida->update([
+            'activo' => 0
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha eliminado correctamente',
