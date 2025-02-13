@@ -1,23 +1,19 @@
 <?php
 
 namespace Modules\Compras\Http\Controllers;
-
 use App\Http\Controllers\Controller;
-
 use Illuminate\Http\Request;
 
+//Models 
+use Modules\Compras\Models\ExpedientesProveedores;
+use Modules\Compras\Models\Proveedores;
+//Transformers
+use Modules\Compras\Transformers\ProveedoresResource;
+//Utilities 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use Modules\Compras\Models\ExpedientesProveedores;
 
-use Modules\Compras\Models\Proveedores;
-
-/**
- * Resources
- */
-
-use Modules\Compras\Transformers\ProveedoresResource;
 
 class ProveedoresController extends Controller
 {
@@ -32,7 +28,7 @@ class ProveedoresController extends Controller
     public function getProveedores()
     {
        $data = (Proveedores::active()
-       
+
        ->get([
         'id',
         'nombre',

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 // use Illuminate\Http\Response;
-use ZipArchive;
 
 class DetalleSolicitudController extends Controller
 {

@@ -7,6 +7,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
+use App\Models\DatosGenerales;
+
 use App\Http\Resources\GasolineriaMesResource;
 use Modules\Dashboard\Transformers\EnergeticosMensualResource;
 
@@ -67,9 +69,54 @@ class EnergeticosController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        //
+        $datos = $request->all();
+
+        foreach($datos as $dato){
+            if(isset($dato['isNew']) && $dato['isNew']){
+                DB::connection('dashboard1')->table('datos_generales')->
+                // // DatosGenerales::create
+                insert([
+                    'sucursales_id' => $dato['sucursales_id'],
+                    'fecha' => $dato['fecha'],
+                    'personal' => $dato['personal'] ?? 0,
+                    'eficiencia' => $dato['eficiencia'] ?? 0,
+                    'ubo' => $dato['ubo'] ?? 0,
+                    'utilidad_bruta' => $dato['utilidad_bruta'] ?? 0,
+                    'venta_litros' => $dato['venta_litros'] ?? 0,
+                    'ventas' => $dato['ventas'] ??  0,
+                    'gasto' => $dato['gasto'] ?? 0,
+                    'uno' => $dato['gasto'] ?? 0,
+                ]);
+
+            }else{
+                DB::connection('dashboard1')->table('datos_generales')->
+                // DatosGenerales::
+                where('sucursales_id', $dato['sucursales_id'] )->
+                where('fecha', $dato['fecha'] )->
+                update([
+                    'sucursales_id' => $dato['sucursales_id'],
+                    'fecha' => $dato['fecha'],
+                    'personal' => $dato['personal'] ?? 0,
+                    'eficiencia' => $dato['eficiencia'] ?? 0,
+                    'ubo' => $dato['ubo'] ?? 0,
+                    'utilidad_bruta' => $dato['utilidad_bruta'] ?? 0,
+                    'venta_litros' => $dato['venta_litros'] ?? 0,
+                    'ventas' => $dato['ventas'] ?? 0,
+                    'gasto' => $dato['gasto'] ?? 0,
+                    'uno' => $dato['uno'] ?? 0,
+
+                ]);
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Los datos llegaron al server',
+            'dataNueva' => $datos
+            
+        ]);
     }
 
     /**
@@ -77,7 +124,18 @@ class EnergeticosController extends Controller
      */
     public function show($mes,$anio)
     {
-        $data =  EnergeticosMensualResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos('.$mes.','.$anio.',1)') );
+        $data =  EnergeticosMensualResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos('.$mes.','.$anio.',1)'));
+
+        return response()->json([
+            'success' => true,
+            'message' => '',
+            'data' => $data
+        ]);
+    }
+
+    public function showGasolinerias($mes,$anio)
+    {
+        $data =  EnergeticosMensualResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias('.$mes.','.$anio.',2)'));
 
         return response()->json([
             'success' => true,

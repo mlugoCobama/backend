@@ -6,16 +6,21 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Validator;
+
+
+//Models
 use Modules\Compras\Models\CatUnidadesMedidas;
+//Transformers
 use Modules\Compras\Transformers\CatUnidadesMedidaResource;
+// Utilities
+use Illuminate\Support\Facades\Validator;
 
 class CatUnidadesMedidaController extends Controller
 
 {
 
     /**
-     * Recupera todos los registros de catalaogos unidades medidas
+     * Recupera todos los registros de catálogos unidades medidas
      */
     public function index()
     {

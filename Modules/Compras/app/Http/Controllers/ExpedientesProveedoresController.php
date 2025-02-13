@@ -1,17 +1,19 @@
 <?php
 
 namespace Modules\Compras\Http\Controllers;
-use Illuminate\Support\Facades\File;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
+//Model
 use Modules\Compras\Models\ExpedientesProveedores;
 
+//Transformers
+
+//Utilities 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
-use Modules\Compras\Models\Proveedores;
 use ZipArchive;
 
 

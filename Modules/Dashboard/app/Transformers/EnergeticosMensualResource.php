@@ -21,9 +21,9 @@ class EnergeticosMensualResource extends JsonResource
             'ventas' => $this->ventas,
             'venta_litros' => $this->venta_litros,
             'utilidad_bruta' => $this->utilidad_bruta,
-            'personal' => $this->personal,
-            'ubo' => $this->ubo,
-            'eficiencia' => $this->eficiencia,
+            'personal' => $this->personal ?? 0,
+            'ubo' => $this->ubo ?? 0,
+            'eficiencia' => $this->eficiencia ?? 0,
         ];
     }
 }

@@ -3,19 +3,23 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Exception;
+
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
+
+//Models
 use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\Proveedores;
 use Modules\Compras\Models\DetallesCotizacion;
-use Modules\Compras\Models\OrdenCompra;
-use Modules\Compras\Transformers\CotizacionesProveedoresResource;
+//Transformers
+
+//Utilities
+use Exception;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 use Modules\Compras\Models\SolicitudesCompra;
 

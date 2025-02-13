@@ -1,28 +1,30 @@
 <?php
 
 namespace Modules\Compras\Http\Controllers;
-
 use App\Http\Controllers\Controller;
-use App\Notifications\SolicitudSurtido;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Validator as ValidationValidator;
-use Modules\Compras\Models\Cotizaciones;
-use Illuminate\Support\Facades\Notification;
+
+//Models
 use Modules\Compras\Models\OrdenCompra;
 use Modules\Compras\Models\DocumentosOrdenesCompra;
 use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\DetallesCotizacion;
 use Modules\Compras\Models\DetalleSolicitud;
-
 use Modules\Compras\Models\Proveedores;
-
+use Modules\Compras\Models\Cotizaciones;
+//Transformers
 use Modules\Compras\Transformers\DetallesCotizacionResource;
 use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
+//Utilities
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Notification;
+//Mailables
+use App\Notifications\SolicitudSurtido;
+
 
 
 class OrdenesComprasController extends Controller
@@ -290,12 +292,6 @@ class OrdenesComprasController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
-        
-
-        
-
-        
-        
     }
 
     /**

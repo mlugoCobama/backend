@@ -2,14 +2,19 @@
 
 namespace Modules\Compras\Http\Controllers;
 
-use Illuminate\Support\Facades\File;
+
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-
 use Illuminate\Http\Response;
 
+//Model
+
+//Transformers
+
+//Utilities 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use ZipArchive;

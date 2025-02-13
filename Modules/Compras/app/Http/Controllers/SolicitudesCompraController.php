@@ -2,39 +2,31 @@
 
 namespace Modules\Compras\Http\Controllers;
 
-use App\Jobs\EnviarCorreoSolicitudCotizacion;
+
 use App\Http\Controllers\Controller;
 // use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 // use Illuminate\Http\Response;
 // use League\CommonMark\Extension\Attributes\Node\Attributes;
-
-
-use App\Mail\SolicitudCotizacion;
-use Illuminate\Support\Facades\Mail;
-
-use App\Notifications\SolicitudCotizacionNotification;
-use Illuminate\Auth\Events\Validated;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
-
-/**
- * Modelos
- */
-
+//Models
 use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Models\DetalleSolicitud;
 use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
 use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\DetallesCotizacion;
-
-/**
- * Resources
- */
-
+//Transformers
 use Modules\Compras\Transformers\SolicitudesComprasResource;
+//Utilities
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+// Mailiables
+use App\Mail\SolicitudCotizacion;
+use App\Notifications\SolicitudCotizacionNotification;
+// Jobs
+use App\Jobs\EnviarCorreoSolicitudCotizacion;
 
 
 class SolicitudesCompraController extends Controller
@@ -327,7 +319,7 @@ class SolicitudesCompraController extends Controller
         }
 
         try {
-            
+
             DB::beginTransaction();
             $idCotizacion = $this->storeCotizacion($data);
             $this->storeCotizacionProveedores($data['proveedores'], $idCotizacion);
