@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
+use Throwable;
+
 use Modules\Renault\Transformers\CitasServicioResource;
 
 use Modules\Renault\Models\RenCitasServicio;
@@ -101,57 +103,85 @@ class VisorCitasController extends Controller
      */
     public function store(Request $request)
     {
-
-        /**
-         * Insertamos la entrada
-         */
-        $entrada = RenEntradaVehiculo::create([
-            "fecha" => date('Y-m-d H:i:s'),
-            "folio" => $request->form['num_entrada'],
-            "num_entrada" => $request->form['num_entrada'],
-            "ren_citas_servicio_id" => $request->form['citas_servicio_id'],
-        ]);
-        /**
-         * Insertamos el inventario del vehiculo
-         */
-        RenInventarioVehiculo::create([
-            'antena' => $request->form['antena'],
-            'espejo' => $request->form['espejo'],
-            'tapones' => $request->form['tapones'],
-            'rines' => $request->form['rines'],
-            'tapon_gasolina' => $request->form['tapon_gasolina'],
-            'radio' => $request->form['radio'],
-            'encendedor' => $request->form['encendedor'],
-            'tapetes' => $request->form['tapetes'],
-            'llanta_refaccion' => $request->form['llanta_refaccion'],
-            'herramientas' => $request->form['herramientas'],
-            'reflejantes' => $request->form['reflejantes'],
-            'extinguidor' => $request->form['extinguidor'],
-            'cables_corriente' => $request->form['cables_corriente'],
-            'gato' => $request->form['gato'],
-            'objetos_valor' => $request->form['objetos_valor'],
-            'otros' => $request->form['otros'],
-            'vestiduras' => $request->form['vestiduras'],
-            'cristales' => $request->form['cristales'],
-            'ren_entrada_vehiculo_id' => $entrada->id
-        ]);
-
-        foreach( $request->fotos as $foto) {
-
-            $image = $foto['webviewPath'];  // your base64 encoded
-            $image = str_replace('data:image/jpeg;base64,', '', $image);
-            $image = str_replace(' ', '+', $image);
-            Storage::disk('local')->put("renault/citas_servicio/".$foto['filepath'], base64_decode($image));
+        try {
             /**
-             * Insertamos los testigos fotograficos
+             * Insertamos la entrada
              */
-            RenTestigosFotograficos::create([
-                "folio" => $request->form['folio'],
-                "ruta" => "renault/citas_servicio/",
-                "nombre" => $foto['filepath'],
+            $entrada = RenEntradaVehiculo::create([
+                "fecha" => date('Y-m-d H:i:s'),
+                "folio" => $request->form['num_entrada'],
+                "num_entrada" => $request->form['num_entrada'],
+                "ren_citas_servicio_id" => $request->form['citas_servicio_id'],
+            ]);
+            /**
+             * Insertamos el inventario del vehiculo
+             */
+            RenInventarioVehiculo::create([
+                'antena' => $request->form['antena'],
+                'espejo' => $request->form['espejo'],
+                'tapones' => $request->form['tapones'],
+                'rines' => $request->form['rines'],
+                'tapon_gasolina' => $request->form['tapon_gasolina'],
+                'radio' => $request->form['radio'],
+                'encendedor' => $request->form['encendedor'],
+                'tapetes' => $request->form['tapetes'],
+                'llanta_refaccion' => $request->form['llanta_refaccion'],
+                'herramientas' => $request->form['herramientas'],
+                'reflejantes' => $request->form['reflejantes'],
+                'extinguidor' => $request->form['extinguidor'],
+                'cables_corriente' => $request->form['cables_corriente'],
+                'gato' => $request->form['gato'],
+                'objetos_valor' => $request->form['objetos_valor'],
+                'otros' => $request->form['otros'],
+                'vestiduras' => $request->form['vestiduras'],
+                'cristales' => $request->form['cristales'],
                 'ren_entrada_vehiculo_id' => $entrada->id
             ]);
+
+            foreach( $request->fotos as $foto) {
+
+                $image = $foto['webviewPath'];  // your base64 encoded
+                $image = str_replace('data:image/jpeg;base64,', '', $image);
+                $image = str_replace(' ', '+', $image);
+                Storage::disk('local')->put("renault/citas_servicio/".$foto['filepath'], base64_decode($image));
+                /**
+                 * Insertamos los testigos fotograficos
+                 */
+                RenTestigosFotograficos::create([
+                    "folio" => $request->form['folio'],
+                    "ruta" => "renault/citas_servicio/",
+                    "nombre" => $foto['filepath'],
+                    'ren_entrada_vehiculo_id' => $entrada->id
+                ]);
+
+            }
+            /**
+             * Guardarmos la firma
+             */
+            $image = str_replace('data:image/png;base64,', '', $request->firma);
+            $image = str_replace(' ', '+', $image);
+            Storage::disk('local')->put("renault/citas_servicio/".$request->form['folio']."_firma.png", base64_decode($image));
+
+            RenCitasServicio::where('id', $request->form['citas_servicio_id'])->update(['estatus' => 'AT']);
+
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Se ha guardado correctamente la información',
+                'data' => []
+            ]);
+
+        } catch (Throwable $e) {
+            report($e);
+     
+            return response()->json([
+                'status' => false,
+                'message' => 'Se ha presentado un problema al guardar la información',
+                'data' => []
+            ]);
         }
+        
+
     }
 
     /**
@@ -165,7 +195,7 @@ class VisorCitasController extends Controller
         $citas = RenCitasServicio::where('agencia_id', $id)->where('fecha', 'like', $date."%" )->get();
 
         return response()->json([
-            'success' => true,
+            'status' => true,
             'message' => '',
             'data' =>  CitasServicioResource::collection($citas)
         ]);

@@ -25,4 +25,4 @@ Route::apiResources([
 
 Route::get('energeticos-gaseras/{mes}/{anio}', [EnergeticosController::class, 'show'])->name('energeticos-gaseras.show');
 Route::get('energeticos/{sub_division}', [EnergeticosController::class, 'index'])->name('subdivision.index');
-Route::get('energeticos/anual/{id}', [EnergeticosController::class, 'show'])->name('energeticos_anual.index');
+Route::get('energeticos/anual/{id}/{anio}', [EnergeticosController::class, 'showAnual'])->name('energeticos_anual.index');

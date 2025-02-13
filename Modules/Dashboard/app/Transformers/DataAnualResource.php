@@ -1,30 +1,27 @@
 <?php
 
-namespace App\Http\Resources;
+namespace Modules\Dashboard\Transformers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class GasolineriaMesResource extends JsonResource
+class DataAnualResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
      */
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'entidad' => $this->entidad,
-            'estacion' => $this->estacion,
-            'fecha' => date_format( date_create( $this->fecha ), 'd-m-Y' ),
+            'fecha' => $this->fecha,
             'uno' => $this->uno,
             'gasto' => $this->gasto,
             'ventas' => $this->ventas,
             'venta_litros' => $this->venta_litros,
             'utilidad_bruta' => $this->utilidad_bruta,
             'personal' => $this->personal,
+            'ubo' => $this->ubo,
+            'eficiencia' => $this->eficiencia,
         ];
     }
 }
