@@ -34,9 +34,9 @@ class AgenciasController extends Controller
         //$anioAnt = $this->monthYear->getYearPrev();
         $anioAnt = '2023';
 
-        $nissanMes =  NissanMesResource::collection( DB::select('call SP_GetDataMesNissan('.$mes.','.$anio.')') );
-        $nissanMesAnt =  NissanMesResource::collection( DB::select('call SP_GetDataMesNissan('.$mesAnt.','.$anio.')') );
-        $nissanAnioAnt =  NissanMesResource::collection( DB::select('call SP_GetDataMesNissan('.$mes.','.$anioAnt.')') );
+        $nissanMes =  NissanMesResource::collection( DB::select('call Dashboard.SP_GetDataMesNissan('.$mes.','.$anio.')') );
+        $nissanMesAnt =  NissanMesResource::collection( DB::select('call Dashboard.SP_GetDataMesNissan('.$mesAnt.','.$anio.')') );
+        $nissanAnioAnt =  NissanMesResource::collection( DB::select('call Dashboard.SP_GetDataMesNissan('.$mes.','.$anioAnt.')') );
 
         $data = [
             'mes' => $nissanMes,
@@ -106,5 +106,16 @@ class AgenciasController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function showAgenciasNissan($mes,$anio)
+    {
+        $data =  NissanMesResource::collection( DB::select('call Dashboard.SP_GetDataMesNissan('.$mes.','.$anio.')') );
+
+        return response()->json([
+            'success' => true,
+            'message' => '',
+            'data' => $data
+        ]);
     }
 }

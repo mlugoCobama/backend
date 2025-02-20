@@ -27,3 +27,5 @@ Route::get('energeticos-gaseras/{mes}/{anio}', [EnergeticosController::class, 's
 Route::get('energeticos-gasolineras/{mes}/{anio}', [EnergeticosController::class, 'showGasolinerias'])->name('energeticos-gaseras.showGasolinerias');
 Route::get('energeticos/{sub_division}', [EnergeticosController::class, 'index'])->name('subdivision.index');
 Route::get('energeticos/anual/{id}', [EnergeticosController::class, 'show'])->name('energeticos_anual.index');
+
+Route::get('agencia-nissan/{mes}/{anio}', [AgenciasController::class, 'showAgenciasNissan'])->name('agencia-nissan.showAgenciasNissan');

@@ -285,7 +285,10 @@ class ProveedoresController extends Controller
         if ($data->hasFile('constancia_fiscal')) {
 
             $archivoEliminar = $expediente->constancia_fiscal; //Recuperarla anterior ruta del archivo al a eliminar
-            Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+            if($archivoEliminar){// verificar si existe la ruta
+                Storage::delete($archivoEliminar);//Borrar el antiguo archivo
+            }
+             
 
             $constancia_fiscal = "constancia_fiscal" . $hoy . "." . $data->file('constancia_fiscal')->getClientOriginalExtension(); //Asignar un nombre al archivo
             //$constancia_fiscal = "constancia_fiscal.". $data->file('constancia_fiscal')->getClientOriginalExtension();
@@ -294,7 +297,9 @@ class ProveedoresController extends Controller
         if ($data->hasFile('ine')) {
 
             $archivoEliminar = $expediente->ine;
-            Storage::delete($archivoEliminar);
+            if($archivoEliminar){// verificar si existe la ruta
+                Storage::delete($archivoEliminar);//Borrar el antiguo archivo
+            }
 
                 $nombreArchivo = "ine". $hoy . "." . $data->file('ine')->getClientOriginalExtension();
                 $expediente->ine = $data->file('ine')->storeAs($carpetaProveedor, $nombreArchivo);
@@ -302,7 +307,9 @@ class ProveedoresController extends Controller
         if ($data->hasFile('comprobante_domicilio')) {
 
             $archivoEliminar = $expediente->comprobante_domicilio;
-            Storage::delete($archivoEliminar);
+            if($archivoEliminar){// verificar si existe la ruta
+                Storage::delete($archivoEliminar);//Borrar el antiguo archivo
+            }
 
                 $nombreArchivo = "comprobante_domicilio" . $hoy . ".". $data->file('comprobante_domicilio')->getClientOriginalExtension();
                 $expediente->comprobante_domicilio = $data->file('comprobante_domicilio')->storeAs($carpetaProveedor, $nombreArchivo);
@@ -310,7 +317,9 @@ class ProveedoresController extends Controller
         if ($data->hasFile('estado_cuenta')) {
 
             $archivoEliminar = $expediente->estado_cuenta;
-            Storage::delete($archivoEliminar);
+            if($archivoEliminar){// verificar si existe la ruta
+                Storage::delete($archivoEliminar);//Borrar el antiguo archivo
+            }
 
                 $nombreArchivo = "estado_cuenta" . $hoy . ".". $data->file('estado_cuenta')->getClientOriginalExtension();
                 $expediente->estado_cuenta = $data->file('estado_cuenta')->storeAs($carpetaProveedor, $nombreArchivo);
@@ -318,7 +327,9 @@ class ProveedoresController extends Controller
         if ($data->hasFile('acta_constitutiva')) {
 
             $archivoEliminar = $expediente->acta_constitutiva;
-            Storage::delete($archivoEliminar);
+            if($archivoEliminar){// verificar si existe la ruta
+                Storage::delete($archivoEliminar);//Borrar el antiguo archivo
+            }
 
                 $nombreArchivo = "acta_constitutiva". $hoy . "." . $data->file('acta_constitutiva')->getClientOriginalExtension();
                 $expediente->acta_constitutiva = $data->file('acta_constitutiva')->storeAs($carpetaProveedor, $nombreArchivo);
@@ -326,7 +337,9 @@ class ProveedoresController extends Controller
         if ($data->hasFile('poder_notarial')) {
 
             $archivoEliminar = $expediente->poder_notarial;
-            Storage::delete($archivoEliminar);
+            if($archivoEliminar){// verificar si existe la ruta
+                Storage::delete($archivoEliminar);//Borrar el antiguo archivo
+            }
             
                 $nombreArchivo = "poder_notarial" . $hoy . ".". $data->file('poder_notarial')->getClientOriginalExtension();
                 $expediente->poder_notarial = $data->file('poder_notarial')->storeAs($carpetaProveedor, $nombreArchivo);
