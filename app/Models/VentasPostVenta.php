@@ -5,46 +5,30 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class UtilidadArea extends Model
+class VentasPostVenta extends Model
 {
     use HasFactory;
     /**
      * Campos que pueden ser alterados
      */
     protected $fillable = [
-        'nuevos',
-        'flotillas',
-        'seminuevos',
-        'servicio',
-        'refacciones',
-        'hyp',
-        'area_comercial',
-        'area_postventa',
+        'ventas_servicio',
+        'total_ventas_ref',
+        'refacciones_servicio',
+        'refacciones_hyp',
+        'refacciones_mostrador',
         'fecha',
         'sucursales_id'
     ];
 
-    public $timestamps = false;
     /**
      * Nombre de la tabla
      */
+    // protected $connection = 'dashboard';
     protected $connection = 'dashboard1';
-    protected $table = 'utilidad_area';
-    /**
-     * Función para obtener los datos activos
-     */
-    public function scopeActive ($query) {
-        return $query->where('estatus', 1);
-    }
+    protected $table = 'ventas_post_venta';
 
-    public function scopeDate ($query) {
-        return $query->where('fecha', 1);
-    }
-
-    public function scopeSucursal ($query) {
-        return $query->where('sucursales_id', 1);
-    }
-    /*
+         /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS
      |--------------------------------------------------------------------------

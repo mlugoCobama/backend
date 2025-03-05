@@ -3,16 +3,14 @@
 namespace Modules\Dashboard\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
-
-use App\Http\Resources\NissanMesResource;
-
-use App\Http\Controllers\GetMonthYearController;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 /**
  * Modelos
  */
+
 use App\Models\VentasPostVenta;
 use App\Models\DatosGenerales;
 use App\Models\CostosFinancierosPrestamos;
@@ -20,52 +18,14 @@ use App\Models\Complementos;
 use App\Models\UtilidadArea;
 use App\Models\OrdenesUnidades;
 
-
-class AgenciasController extends Controller
+class AgenciasRenaultController extends Controller
 {
-    private $monthYear;
-
-    public function __construct(GetMonthYearController $monthYear)
-    {
-        $this->monthYear = $monthYear;
-    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //$mes = $this->monthYear->getMonth();
-        $mes = '05';
-        //$mesAnt = $this->monthYear->getMonthPrev();
-        $mesAnt = '04';
-        //$anio = $this->monthYear->getYear();
-        $anio = '2024';
-        //$anioAnt = $this->monthYear->getYearPrev();
-        $anioAnt = '2023';
-
-        $nissanMes =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anio . ')'));
-        $nissanMesAnt =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mesAnt . ',' . $anio . ')'));
-        $nissanAnioAnt =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anioAnt . ')'));
-
-        $data = [
-            'mes' => $nissanMes,
-            'mesAnt' => $nissanMesAnt,
-            'anioAnt' => $nissanAnioAnt
-        ];
-
-        if (count($nissanMes) > 0) {
-            return response()->json([
-                'success' => true,
-                'message' => '',
-                'data' => $data
-            ]);
-        } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'No se tiene información captura.',
-                'data' => []
-            ]);
-        }
+        return view('dashboard::index');
     }
 
     /**
@@ -76,10 +36,12 @@ class AgenciasController extends Controller
         return view('dashboard::create');
     }
 
+
     /**
-     * Guarda los registros de la tabla captura Nissan
+     * Guarda los registros de la tabla captura Renault
+     * -------------------------------------------------------
      * Tablas que afecta
-     * ------------------------------------------------
+     * -------------------------------------------------------
      * ordenes_unidades, ventas_post_venta, datos_generales
      * costos_financieros_prestamos, complementos, utilidad_area
      */
@@ -139,7 +101,7 @@ class AgenciasController extends Controller
     }
 
 
-    public function updateAgenciaNissan(Request $request)
+    public function updateAgenciaRenault(Request $request)
     {
         $data = $request->all();
 
@@ -223,7 +185,7 @@ class AgenciasController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function updateB(Request $request, $id)
+    public function update(Request $request, $id): RedirectResponse
     {
         //
     }
@@ -236,17 +198,6 @@ class AgenciasController extends Controller
         //
     }
 
-    public function showAgenciasNissan($mes, $anio)
-    {
-        $data =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anio . ')'));
-
-
-        return response()->json([
-            'success' => true,
-            'message' => '',
-            'data' => $data
-        ]);
-    }
 
     /**
      * Recupera los datos del Store Procedure
@@ -255,7 +206,10 @@ class AgenciasController extends Controller
      */
     public function getDataGridAgencia($mes, $anio)
     {
-        $datos = DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anio . ')');
+        /**-----------------------------------------------------------------
+         * !NOTA: CAMBIAR STORE PROCEDURE PARA QUE COINCIDA CON LA AGENCIA
+         -------------------------------------------------------------------*/
+        $datos = DB::select('call Dashboard.SP_GetDataMesRenault(' . $mes . ',' . $anio . ')');
         // Convierte $datos a un arreglo
         $datos = json_decode(json_encode($datos), true);
         $tamanioDatos = count($datos);
@@ -297,8 +251,8 @@ class AgenciasController extends Controller
                     ['value' => "gasto", 'colspan' => 1],
                 ],
                 "COSTO FINANCIERO CONSOLIDADO" => [
-                    ['value' => "nuevos", 'colspan' => 1],
-                    ['value' => "flotillas", 'colspan' => 1],
+                    ['value' => "cnuevos", 'colspan' => 1],
+                    ['value' => "cflotillas", 'colspan' => 1],
                     ['value' => "refacciones", 'colspan' => 1],
                     ['value' => "bajio", 'colspan' => 1],
                     ['value' => "intercias", 'colspan' => 1],
@@ -320,11 +274,13 @@ class AgenciasController extends Controller
             ];
             //Relación campos devueltos por la bd y 
             //nombres visuales de los campos
+            //campoBD->TextoMostrado
             $mapaCampos = [
                 "nuevos" => "Nuevos",
-                "utilidad_nuevos" => "UB Nuevos",
+                "cnuevos" => "Nuevos",
                 "utilidad_nuevos" => "UB Nuevos",
                 "flotillas" => "Flotillas",
+                "cflotillas" => "Flotillas",
                 "utilidad_flotillas" => "UB Flotillas",
                 "seminuevos" => "Seminuevos",
                 "utilidad_seminuevos" => "UB Seminuevos",
@@ -341,7 +297,7 @@ class AgenciasController extends Controller
                 "refacciones" => "Refacciones",
                 "bajio" => "Bajio",
                 "intercias" => "Intercias",
-                "bonos" => "BONOS MARCA",
+                "bonos" => "Bonos Marca",
                 "uno" => "UNO",
                 "personal" => "Personal",
                 "area_comercial" => "Area Comercial",
@@ -370,6 +326,7 @@ class AgenciasController extends Controller
                 'message' => '',
                 'data' => $resultado, //Data que se ve en fronted
                 'size' => $tamanioDatos, //Tamaño para validar
+                'datos' =>  $datos
             ]);
         } else {
             return response()->json([
@@ -377,6 +334,7 @@ class AgenciasController extends Controller
                 'message' => '',
                 'data' => $datos, //Data que se ve en fronted
                 'size' => $tamanioDatos, //Tamaño para validar
+                'datos' =>  $datos
             ]);
         }
     }

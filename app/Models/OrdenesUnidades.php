@@ -11,7 +11,7 @@ class OrdenesUnidades extends Model
     /**
      * Campos que pueden ser alterados
      */
-    protected $filleable = [
+    protected $fillable = [
         'servicio',
         'utilidad_servicio',
         'hyp',
@@ -23,12 +23,14 @@ class OrdenesUnidades extends Model
         'seminuevos',
         'utilidad_seminuevos',
         'fecha',
+        'sucursales_id'
     ];
 
     public $timestamps = false;
     /**
      * Nombre de la tabla
      */
+    protected $connection = 'dashboard1';
     protected $table = 'ordenes_unidades';
     /**
      * Función para obtener los datos activos

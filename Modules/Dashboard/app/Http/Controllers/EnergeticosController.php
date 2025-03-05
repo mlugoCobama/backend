@@ -1,11 +1,8 @@
 <?php
 
 namespace Modules\Dashboard\Http\Controllers;
-
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 use App\Models\DatosGenerales;
 
@@ -38,11 +35,11 @@ class EnergeticosController extends Controller
         //$anioAnt = $this->monthYear->getYearPrev();
         $anioAnt = '2023';
 
-        $gasolineriaMes =  GasolineriaMesResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos('.$mes.','.$anio.','.$sub_division.')') );
-        $gasolineriaMesAnt =  GasolineriaMesResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos('.$mesAnt.','.$anio.','.$sub_division.')') );
-        $gasolineriaAnioAnt =  GasolineriaMesResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos('.$mes.','.$anioAnt.','.$sub_division.')') );
-        $totalAnio = DataAnualResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision('.$anio.','.$sub_division.')') );
-        $totalAnioAnt = DataAnualResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision('.$anioAnt.','.$sub_division.')') );;
+        $gasolineriaMes =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos(' . $mes . ',' . $anio . ',' . $sub_division . ')'));
+        $gasolineriaMesAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos(' . $mesAnt . ',' . $anio . ',' . $sub_division . ')'));
+        $gasolineriaAnioAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos(' . $mes . ',' . $anioAnt . ',' . $sub_division . ')'));
+        $totalAnio = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anio . ',' . $sub_division . ')'));
+        $totalAnioAnt = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anioAnt . ',' . $sub_division . ')'));;
 
         $data = [
             'mes' => $gasolineriaMes,
@@ -76,47 +73,50 @@ class EnergeticosController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Almacena los datos de captura gaseras/gasolineras
+     * en 'datos_generales'
      */
     public function store(Request $request)
     {
         $datos = $request->all();
 
-        foreach($datos as $dato){
-            if(isset($dato['isNew']) && $dato['isNew']){
+        foreach ($datos as $dato) {
+            // Verifica si el dato es un nuevo registro
+            if (isset($dato['isNew']) && $dato['isNew']) {
                 DB::connection('dashboard1')->table('datos_generales')->
-                // // DatosGenerales::create
-                insert([
-                    'sucursales_id' => $dato['sucursales_id'],
-                    'fecha' => $dato['fecha'],
-                    'personal' => $dato['personal'] ?? 0,
-                    'eficiencia' => $dato['eficiencia'] ?? 0,
-                    'ubo' => $dato['ubo'] ?? 0,
-                    'utilidad_bruta' => $dato['utilidad_bruta'] ?? 0,
-                    'venta_litros' => $dato['venta_litros'] ?? 0,
-                    'ventas' => $dato['ventas'] ??  0,
-                    'gasto' => $dato['gasto'] ?? 0,
-                    'uno' => $dato['gasto'] ?? 0,
-                ]);
-
-            }else{
+                    // // DatosGenerales::create
+                    insert([
+                        'sucursales_id' => $dato['sucursales_id'],
+                        'fecha' => $dato['fecha'],
+                        'personal' => $dato['personal'] ?? 0,
+                        'eficiencia' => $dato['eficiencia'] ?? 0,
+                        'ubo' => $dato['ubo'] ?? 0,
+                        'utilidad_bruta' => $dato['utilidad_bruta'] ?? 0,
+                        'venta_litros' => $dato['venta_litros'] ?? 0,
+                        'ventas' => $dato['ventas'] ??  0,
+                        'gasto' => $dato['gasto'] ?? 0,
+                        'uno' => $dato['gasto'] ?? 0,
+                    ]);
+                /**
+                 * Si no contiene "isNew" actualiza el registro 
+                 * Usando como clave el id de sucursal y la fecha del periodo
+                 */
+            } else {
                 DB::connection('dashboard1')->table('datos_generales')->
-                // DatosGenerales::
-                where('sucursales_id', $dato['sucursales_id'] )->
-                where('fecha', $dato['fecha'] )->
-                update([
-                    'sucursales_id' => $dato['sucursales_id'],
-                    'fecha' => $dato['fecha'],
-                    'personal' => $dato['personal'] ?? 0,
-                    'eficiencia' => $dato['eficiencia'] ?? 0,
-                    'ubo' => $dato['ubo'] ?? 0,
-                    'utilidad_bruta' => $dato['utilidad_bruta'] ?? 0,
-                    'venta_litros' => $dato['venta_litros'] ?? 0,
-                    'ventas' => $dato['ventas'] ?? 0,
-                    'gasto' => $dato['gasto'] ?? 0,
-                    'uno' => $dato['uno'] ?? 0,
+                    // DatosGenerales::
+                    where('sucursales_id', $dato['sucursales_id'])->where('fecha', $dato['fecha'])->update([
+                        'sucursales_id' => $dato['sucursales_id'],
+                        'fecha' => $dato['fecha'],
+                        'personal' => $dato['personal'] ?? 0,
+                        'eficiencia' => $dato['eficiencia'] ?? 0,
+                        'ubo' => $dato['ubo'] ?? 0,
+                        'utilidad_bruta' => $dato['utilidad_bruta'] ?? 0,
+                        'venta_litros' => $dato['venta_litros'] ?? 0,
+                        'ventas' => $dato['ventas'] ?? 0,
+                        'gasto' => $dato['gasto'] ?? 0,
+                        'uno' => $dato['uno'] ?? 0,
 
-                ]);
+                    ]);
             }
         }
 
@@ -124,16 +124,16 @@ class EnergeticosController extends Controller
             'status' => 'success',
             'message' => 'Los datos llegaron al server',
             'dataNueva' => $datos
-            
+
         ]);
     }
 
     /**
-     * Show the specified resource.
+     * Función que recupera datos por mes de gaseras
      */
-    public function show($mes,$anio)
+    public function show($mes, $anio)
     {
-        $data =  EnergeticosMensualResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos('.$mes.','.$anio.',1)'));
+        $data =  EnergeticosMensualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGaseras(' . $mes . ',' . $anio . ',\'all\')'));
 
         return response()->json([
             'success' => true,
@@ -142,21 +142,10 @@ class EnergeticosController extends Controller
         ]);
     }
 
-    public function showGasolinerias($mes,$anio)
+
+    public function showAnual($sub_division, $anio)
     {
-        $data =  EnergeticosMensualResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias('.$mes.','.$anio.',2)'));
-
-        return response()->json([
-            'success' => true,
-            'message' => '',
-            'data' => $data
-        ]);
-    }
-
-    public function showAnual($sub_division,$anio)
-    {
-        $data =  DataAnualResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision('.$anio.','.$sub_division.')') );
-
+        $data =  DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anio . ',' . $sub_division . ')'));
         return response()->json([
             'success' => true,
             'message' => '',

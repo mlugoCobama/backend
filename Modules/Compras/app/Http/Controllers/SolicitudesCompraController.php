@@ -327,6 +327,7 @@ class SolicitudesCompraController extends Controller
             //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
             // 
             // !Habiltar para que se envíen los correos $this->enviaCorreoProveedores($data['proveedores'], $data);
+            
 
             $idSolicitudC = $data['solicitudes_compra_id'];
             SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => 2]);

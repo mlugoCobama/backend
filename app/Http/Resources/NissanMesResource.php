@@ -49,7 +49,7 @@ class NissanMesResource extends JsonResource
             'descuentos' => $this->descuentos,
             'nuevos' => $this->nuevos,
             'refacciones' => $this->refacciones,
-            'seminuevo' => $this->seminuevos
+            // 'seminuevo' => $this->seminuevos
         ];
     }
 }
