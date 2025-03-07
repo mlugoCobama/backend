@@ -19,7 +19,7 @@ use App\Models\CostosFinancierosPrestamos;
 use App\Models\Complementos;
 use App\Models\UtilidadArea;
 use App\Models\OrdenesUnidades;
-
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class AgenciasController extends Controller
 {
@@ -85,44 +85,110 @@ class AgenciasController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->all();
+        $dataMesAgencias = $request->input('dataMesAgencias'); // Recibe datos en crudo
+        $anio = $request->input('anio');
+        $mes = $request->input('mes');
+        $fecha = sprintf('%s-%02d-01', $anio, $mes);
 
-        $sizePayload = count($data);
-        //Valida que se hallan recibido datos
-        if ($sizePayload < 1) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Debes pegar los datos en la zona indicada',
-                'error' => 'No se agregaron datos'
-            ]);
+        // Relación tablas sección
+        $relTablas = [
+            "UNIDADES VENDIDAS" => "ordenes_unidades",
+            "ORDENES DE SERVICIO" => "ordenes_unidades",
+            "VENTAS DE POST VENTA" => "ventas_post_venta",
+            "TOTAL DE GASTOS OPERATIVOS" => "datos_generales",
+            "COSTO FINANCIERO CONSOLIDADO" => "costos_financieros_prestamos",
+            "BONOS MARCA" => "complementos",
+            "UNO" => "datos_generales",
+            "ACUMULADO PERSONAL CONSOLIDADO" => "datos_generales",
+            "UTILIDAD POR AREA" => "utilidad_area",
+        ];
+
+        $relCampos = [
+            "Nuevos" => "nuevos",
+            "UB Nuevos" => "utilidad_nuevos",
+            "Flotillas" => "flotillas",
+            "UB Flotillas" => "utilidad_flotillas",
+            "Seminuevos" => "seminuevos",
+            "UB Seminuevos" => "utilidad_seminuevos",
+            "Ordenes de servicios" => "servicio",
+            "UB O. servicios" => "utilidad_servicio",
+            "Ordenes de HyP" => "hyp",
+            "UB Ordenes de HyP" => "utilidad_hyp",
+            "Ventas Servicio" => "ventas_servicio",
+            "Total Ventas Refacciones" => "total_ventas_ref",
+            "Refacciones Servicio" => "refacciones_servicio",
+            "Refacciones HyP" => "refacciones_hyp",
+            "Refacciones Mostrador" => "refacciones_mostrador",
+            "Total de Gastos Operativos" => "gasto",
+            "CNuevos" => "nuevos",
+            "CFlotillas" => "utilidad_nuevos",
+            "Refacciones" => "refacciones",
+            "Bajio" => "bajio",
+            "Intercias" => "intercias",
+            "Bonos Marca" => "bonos",
+            "UNO" => "uno",
+            "Personal" => "personal",
+            "Area Comercial" => "area_comercial",
+            "Area Postventa" => "area_postventa",
+        ];
+
+        $relAgencias = [
+            "Campestre" => 22,
+            "'Automotriz'" => 23,
+            "Insurgentes" => 24,
+            "Universidad" => 25,
+        ];
+
+        // Procesamiento del array a json
+        $jsonData = [];
+        $seccion = "";
+
+        foreach ($dataMesAgencias as $row) {
+            if (count($row) === 1) {
+                $seccion = trim($row[0]['value']);
+            } elseif ($seccion) {
+                $concepto = trim($row[0]['value']);
+
+                foreach (array_slice($row, 1) as $index => $cell) {
+                    $agencia = trim($request->input('headers')[$index + 1]);
+
+                    if (strtolower($agencia) !== "total") {
+                        $dbAgencia = $relAgencias[$agencia] ?? $agencia;
+                        $dbSeccion = $relTablas[$seccion] ?? $seccion;
+                        $dbCampos = $relCampos[$concepto] ?? $concepto;
+                        $value = trim($cell['value'] ?? "");
+
+                        if (!isset($jsonData[$dbAgencia])) {
+                            $jsonData[$dbAgencia] = [];
+                        }
+                        if (!isset($jsonData[$dbAgencia][$dbSeccion])) {
+                            $jsonData[$dbAgencia][$dbSeccion] = ["fecha" => $fecha];
+                        }
+
+                        $jsonData[$dbAgencia][$dbSeccion][$dbCampos] = $value;
+                    }
+                }
+            }
         }
 
-
-        foreach ($data as $agenciaId => $secciones) {
-            // Selecciona el modelo correspondiente a la sección
+        // Insertar los datos en la base de datos
+        foreach ($jsonData as $agenciaId => $secciones) {
             foreach ($secciones as $seccion => $valores) {
                 switch ($seccion) {
                     case 'ordenes_unidades':
-                        /**
-                         * Modelo::operacion(combinamos el valor de agenciasId como sucursales_id 
-                         * dentro del array a guardar, junto con sus valores)
-                         */
                         OrdenesUnidades::create(array_merge(['sucursales_id' => $agenciaId], $valores));
                         break;
                     case 'ventas_post_venta':
                         VentasPostVenta::create(array_merge(['sucursales_id' => $agenciaId], $valores));
-
                         break;
                     case 'datos_generales':
                         DatosGenerales::create(array_merge(['sucursales_id' => $agenciaId], $valores));
-
                         break;
                     case 'costos_financieros_prestamos':
                         CostosFinancierosPrestamos::create(array_merge(['sucursales_id' => $agenciaId], $valores));
                         break;
                     case 'complementos':
                         Complementos::create(array_merge(['sucursales_id' => $agenciaId], $valores));
-
                         break;
                     case 'utilidad_area':
                         UtilidadArea::create(array_merge(['sucursales_id' => $agenciaId], $valores));
@@ -132,66 +198,134 @@ class AgenciasController extends Controller
         }
 
         return response()->json([
-            'status' =>  'success',
+            'status' => 'success',
             'message' => 'Registros guardados correctamente',
             'data' => []
         ]);
     }
 
-
+    /**
+     * Actualiza los datos si existen y los crea si no existen
+     */
     public function updateAgenciaNissan(Request $request)
     {
-        $data = $request->all();
+        $dataMesAgencias = $request->input('dataMesAgencias');
+        $anio = $request->input('anio');
+        $mes = $request->input('mes');
+        $fecha = sprintf('%s-%02d-01', $anio, $mes);
 
-        // Valida que se hayan recibido datos
-        if (empty($data)) {
+        if (empty($dataMesAgencias)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'No se recibieron datos para actualizar',
             ]);
         }
 
-        foreach ($data as $agenciaId => $secciones) {
-            foreach ($secciones as $seccion => $valores) {
-                $model = null;
+        /**-------------------------------------------------------------
+         * Inicia proceso de formateo de datos
+        ---------------------------------------------------------------- */
+        // Relacion seccion->tabla
+        $relTablas = [
+            "UNIDADES VENDIDAS" => "ordenes_unidades",
+            "ORDENES DE SERVICIO" => "ordenes_unidades",
+            "VENTAS DE POST VENTA" => "ventas_post_venta",
+            "TOTAL DE GASTOS OPERATIVOS" => "datos_generales",
+            "COSTO FINANCIERO CONSOLIDADO" => "costos_financieros_prestamos",
+            "BONOS MARCA" => "complementos",
+            "UNO" => "datos_generales",
+            "ACUMULADO PERSONAL CONSOLIDADO" => "datos_generales",
+            "UTILIDAD POR AREA" => "utilidad_area",
+        ];
+         //Relacion campo->campo_tabla
+        $relCampos = [
+            "Nuevos" => "nuevos",
+            "UB Nuevos" => "utilidad_nuevos",
+            "Flotillas" => "flotillas",
+            "UB Flotillas" => "utilidad_flotillas",
+            "Seminuevos" => "seminuevos",
+            "UB Seminuevos" => "utilidad_seminuevos",
+            "Ordenes de servicios" => "servicio",
+            "UB O. servicios" => "utilidad_servicio",
+            "Ordenes de HyP" => "hyp",
+            "UB Ordenes de HyP" => "utilidad_hyp",
+            "Ventas Servicio" => "ventas_servicio",
+            "Total Ventas Refacciones" => "total_ventas_ref",
+            "Refacciones Servicio" => "refacciones_servicio",
+            "Refacciones HyP" => "refacciones_hyp",
+            "Refacciones Mostrador" => "refacciones_mostrador",
+            "Total de Gastos Operativos" => "gasto",
+            "CNuevos" => "nuevos",
+            "CFlotillas" => "utilidad_nuevos",
+            "Refacciones" => "refacciones",
+            "Bajio" => "bajio",
+            "Intercias" => "intercias",
+            "Bonos Marca" => "bonos",
+            "UNO" => "uno",
+            "Personal" => "personal",
+            "Area Comercial" => "area_comercial",
+            "Area Postventa" => "area_postventa",
+        ];
+        //Relacion agencia->id_agencia
+        $relAgencias = [
+            "Campestre" => 22,
+            "'Automotriz'" => 23,
+            "Insurgentes" => 24,
+            "Universidad" => 25,
+        ];
 
-                // Selecciona el modelo correspondiente a la sección
-                switch ($seccion) {
-                    case 'ordenes_unidades':
-                        $model = OrdenesUnidades::where('sucursales_id', $agenciaId)->where('fecha', $valores['fecha'])->first();
-                        break;
-                    case 'ventas_post_venta':
-                        $model = VentasPostVenta::where('sucursales_id', $agenciaId)->where('fecha', $valores['fecha'])->first();
-                        break;
-                    case 'datos_generales':
-                        $model = DatosGenerales::where('sucursales_id', $agenciaId)->where('fecha', $valores['fecha'])->first();
-                        break;
-                    case 'costos_financieros_prestamos':
-                        $model = CostosFinancierosPrestamos::where('sucursales_id', $agenciaId)->where('fecha', $valores['fecha'])->first();
-                        break;
-                    case 'complementos':
-                        $model = Complementos::where('sucursales_id', $agenciaId)->where('fecha', $valores['fecha'])->first();
-                        break;
-                    case 'utilidad_area':
-                        $model = UtilidadArea::where('sucursales_id', $agenciaId)->where('fecha', $valores['fecha'])->first();
-                        break;
+        // Procesamiento del array a json
+        $jsonData = [];
+        $seccion = "";
+
+        foreach ($dataMesAgencias as $row) {
+            if (count($row) === 1) {
+                $seccion = trim($row[0]['value']);
+            } elseif ($seccion) {
+                $concepto = trim($row[0]['value']);
+
+                foreach (array_slice($row, 1) as $index => $cell) {
+                    $agencia = trim($request->input('headers')[$index + 1]);
+
+                    if (strtolower($agencia) !== "total") {
+                        $dbAgencia = $relAgencias[$agencia] ?? $agencia;
+                        $dbSeccion = $relTablas[$seccion] ?? $seccion;
+                        $dbCampos = $relCampos[$concepto] ?? $concepto;
+                        $value = trim($cell['value'] ?? "");
+
+                        if (!isset($jsonData[$dbAgencia])) {
+                            $jsonData[$dbAgencia] = [];
+                        }
+                        if (!isset($jsonData[$dbAgencia][$dbSeccion])) {
+                            $jsonData[$dbAgencia][$dbSeccion] = ["fecha" => $fecha];
+                        }
+
+                        $jsonData[$dbAgencia][$dbSeccion][$dbCampos] = $value;
+                    }
                 }
+            }
+        }
+        /**-------------------------------------------------------------
+         * Finaliza el proceso de formateo de datos
+         * Inicia proceso actualizar o insertar los datos en la base de datos
+        ---------------------------------------------------------------- */
+        foreach ($jsonData as $agenciaId => $secciones) {
+            foreach ($secciones as $seccion => $valores) {
+                $modelClass = match ($seccion) {
+                    'ordenes_unidades' => OrdenesUnidades::class,
+                    'ventas_post_venta' => VentasPostVenta::class,
+                    'datos_generales' => DatosGenerales::class,
+                    'costos_financieros_prestamos' => CostosFinancierosPrestamos::class,
+                    'complementos' => Complementos::class,
+                    'utilidad_area' => UtilidadArea::class,
+                    default => null
+                };
 
-                // Si el registro existe, se actualiza; si no, se crea uno nuevo
-                if ($model) {
-                    $model->update($valores);
-                } else {
-                    $modelClass = match ($seccion) {
-                        'ordenes_unidades' => OrdenesUnidades::class,
-                        'ventas_post_venta' => VentasPostVenta::class,
-                        'datos_generales' => DatosGenerales::class,
-                        'costos_financieros_prestamos' => CostosFinancierosPrestamos::class,
-                        'complementos' => Complementos::class,
-                        'utilidad_area' => UtilidadArea::class,
-                        default => null
-                    };
+                if ($modelClass) {
+                    $model = $modelClass::where('sucursales_id', $agenciaId)->where('fecha', $valores['fecha'])->first();
 
-                    if ($modelClass) {
+                    if ($model) {
+                        $model->update($valores);
+                    } else {
                         $modelClass::create(array_merge(['sucursales_id' => $agenciaId], $valores));
                     }
                 }
@@ -201,6 +335,7 @@ class AgenciasController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Registros actualizados correctamente',
+            'data' => []
         ]);
     }
 
@@ -223,7 +358,7 @@ class AgenciasController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function updateB(Request $request, $id)
+    public function update(Request $request, $id)
     {
         //
     }
@@ -297,8 +432,8 @@ class AgenciasController extends Controller
                     ['value' => "gasto", 'colspan' => 1],
                 ],
                 "COSTO FINANCIERO CONSOLIDADO" => [
-                    ['value' => "nuevos", 'colspan' => 1],
-                    ['value' => "flotillas", 'colspan' => 1],
+                    ['value' => "nuevos", 'colspan' => 1],//Cambiar el valor que regresa de la bd
+                    ['value' => "flotillas", 'colspan' => 1],//Cambiar el valor que regresa de la bd
                     ['value' => "refacciones", 'colspan' => 1],
                     ['value' => "bajio", 'colspan' => 1],
                     ['value' => "intercias", 'colspan' => 1],
