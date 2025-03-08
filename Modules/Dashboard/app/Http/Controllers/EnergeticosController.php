@@ -88,14 +88,14 @@ class EnergeticosController extends Controller
                     insert([
                         'sucursales_id' => $dato['sucursales_id'],
                         'fecha' => $dato['fecha'],
-                        'personal' => $dato['personal'] ?? 0,
-                        'eficiencia' => $dato['eficiencia'] ?? 0,
-                        'ubo' => $dato['ubo'] ?? 0,
-                        'utilidad_bruta' => $dato['utilidad_bruta'] ?? 0,
-                        'venta_litros' => $dato['venta_litros'] ?? 0,
-                        'ventas' => $dato['ventas'] ??  0,
-                        'gasto' => $dato['gasto'] ?? 0,
-                        'uno' => $dato['gasto'] ?? 0,
+                        'personal' => $dato['Acumulado Personal'] ?? 0,
+                        'eficiencia' => $dato['Eficiencia'] ?? 0,
+                        'ubo' => $dato['UBO'] ?? 0,
+                        'utilidad_bruta' => $dato['UB'] ?? 0,
+                        'venta_litros' => $dato['Venta Litros'] ?? 0,
+                        'ventas' => $dato['Ventas'] ??  0,
+                        'gasto' => $dato['Gasto'] ?? 0,
+                        'uno' => $dato['UNO'] ?? 0,
                     ]);
                 /**
                  * Si no contiene "isNew" actualiza el registro 
@@ -107,14 +107,14 @@ class EnergeticosController extends Controller
                     where('sucursales_id', $dato['sucursales_id'])->where('fecha', $dato['fecha'])->update([
                         'sucursales_id' => $dato['sucursales_id'],
                         'fecha' => $dato['fecha'],
-                        'personal' => $dato['personal'] ?? 0,
-                        'eficiencia' => $dato['eficiencia'] ?? 0,
-                        'ubo' => $dato['ubo'] ?? 0,
-                        'utilidad_bruta' => $dato['utilidad_bruta'] ?? 0,
-                        'venta_litros' => $dato['venta_litros'] ?? 0,
-                        'ventas' => $dato['ventas'] ?? 0,
-                        'gasto' => $dato['gasto'] ?? 0,
-                        'uno' => $dato['uno'] ?? 0,
+                        'personal' => $dato['Acumulado Personal'] ?? 0,
+                        'eficiencia' => $dato['Eficiencia'] ?? 0,
+                        'ubo' => $dato['UBO'] ?? 0,
+                        'utilidad_bruta' => $dato['UB'] ?? 0,
+                        'venta_litros' => $dato['Venta Litros'] ?? 0,
+                        'ventas' => $dato['Ventas'] ??  0,
+                        'gasto' => $dato['Gasto'] ?? 0,
+                        'uno' => $dato['UNO'] ?? 0,
 
                     ]);
             }
@@ -122,8 +122,8 @@ class EnergeticosController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Los datos llegaron al server',
-            'dataNueva' => $datos
+            'message' => 'Datos guardados correctamente',
+            'data' => []
 
         ]);
     }
