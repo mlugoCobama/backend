@@ -134,7 +134,7 @@ class AgenciasController extends Controller
 
         $relAgencias = [
             "Campestre" => 22,
-            "'Automotriz'" => 23,
+            "Automotriz" => 23,
             "Insurgentes" => 24,
             "Universidad" => 25,
         ];
@@ -268,7 +268,7 @@ class AgenciasController extends Controller
         //Relacion agencia->id_agencia
         $relAgencias = [
             "Campestre" => 22,
-            "'Automotriz'" => 23,
+            "Automotriz" => 23,
             "Insurgentes" => 24,
             "Universidad" => 25,
         ];
@@ -432,8 +432,8 @@ class AgenciasController extends Controller
                     ['value' => "gasto", 'colspan' => 1],
                 ],
                 "COSTO FINANCIERO CONSOLIDADO" => [
-                    ['value' => "nuevos", 'colspan' => 1],//Cambiar el valor que regresa de la bd
-                    ['value' => "flotillas", 'colspan' => 1],//Cambiar el valor que regresa de la bd
+                    ['value' => "cnuevos", 'colspan' => 1],//Cambiar el valor que regresa de la bd
+                    ['value' => "cflotillas", 'colspan' => 1],//Cambiar el valor que regresa de la bd
                     ['value' => "refacciones", 'colspan' => 1],
                     ['value' => "bajio", 'colspan' => 1],
                     ['value' => "intercias", 'colspan' => 1],
