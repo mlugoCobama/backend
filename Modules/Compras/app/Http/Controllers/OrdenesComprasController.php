@@ -180,9 +180,9 @@ class OrdenesComprasController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Actualiza el estatus de solicitud y orden de compra a cancelado
      */
-    public function destroy($id) // Actualiza el estatus de solicitud y orden de compra a cancelado
+    public function destroy($id)
     {
 
         try {
@@ -242,7 +242,7 @@ class OrdenesComprasController extends Controller
             'detalles' => $detallesSC,
         ];
 
-        //* Habilitar para envío de correo a proveedor 
+        //! Habilitar para envío de correo a proveedor 
         //  Notification::route('mail',
         //                 $datos['proveedor']['datos_proveedor']['correo'])
         //                 ->notify(new SolicitudSurtido($datos));
@@ -375,7 +375,7 @@ class OrdenesComprasController extends Controller
                 'detalles' => $detallesSC,
             ];
 
-            //* Habilitar para envío de correo a proveedor 
+            //! Habilitar para envío de correo a proveedor 
             //  Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
             //              ->notify(new SolicitudSurtido($datos));
 

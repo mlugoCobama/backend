@@ -11,7 +11,7 @@ class CostosFinancierosPrestamos extends Model
     /**
      * Campos que pueden ser alterados
      */
-    protected $filleable = [
+    protected $fillable = [
         'nuevos',
         'flotillas',
         'refacciones',
@@ -22,12 +22,14 @@ class CostosFinancierosPrestamos extends Model
         'nrf',
         'nrf_interes',
         'fecha',
+        'sucursales_id'
     ];
 
     public $timestamps = false;
     /**
      * Nombre de la tabla
      */
+    protected $connection = 'dashboard1';
     protected $table = 'costos_financieros_prestamos';
     /**
      * Función para obtener los datos activos

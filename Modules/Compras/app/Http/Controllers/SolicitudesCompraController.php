@@ -101,7 +101,8 @@ class SolicitudesCompraController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Genera un el registro de la solicitud de compra junto con sus detallas
+     * Valida y coordina el funcionamiento de storeSolicitudCOmpra y storeDetallesSolicitud
      */
     public function store(Request $request)
     {
@@ -170,10 +171,10 @@ class SolicitudesCompraController extends Controller
     }
 
     /*---------------------------------------------------------------------
-*Primero genero una solicitud de compra
-*Después almaceno los detalles de la solicitud
-*---------------------------------------------------------------------
-*/
+    *Primero genero una solicitud de compra
+    *Después almaceno los detalles de la solicitud
+    *---------------------------------------------------------------------
+    */
 
     private function storeSolicitudCompra($data)
     {
@@ -188,7 +189,9 @@ class SolicitudesCompraController extends Controller
         $dataSolicitud->save();
         return $dataSolicitud->id;
     }
-
+    /**
+     * Amacena los detalles de la solicitud
+    */
     private function storeDetalleSolicitudCompra($detalles, $idSolicitud, $files)
     {
         foreach ($detalles as $index => $detalle) {
@@ -210,15 +213,8 @@ class SolicitudesCompraController extends Controller
         }
     }
 
-    /*---------------------------------------------------------------------
-    *POSIBLE SOLUCIÓN
-    *Obtener todos lo datos de la consulta
-    *Dividir en dos arreglos distintos la solicitud y el detalle 
-    *Finalmente mostramos la solicitud con los detalles
-    *---------------------------------------------------------------------
-    */
     /**
-     * Show the specified resource.
+     * Recupera los detalles de la solicitudd
      */
     public function show($id)
     {
@@ -235,9 +231,8 @@ class SolicitudesCompraController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Esto no se ocupa
      */
-
     public function update(Request $request, $id)
     {
         SolicitudesCompra::where('id', $id)
@@ -291,9 +286,6 @@ class SolicitudesCompraController extends Controller
      * ?Almacenar la relación entre detalles y cotizacionProveedores
      * Actualiza el estatus de la Solicitud a 2
      */
-    //Queue para despachar el correo
-    //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
-    // 
 
     public function enviarSolicitudCotizacion(Request $request)
     {
@@ -328,6 +320,7 @@ class SolicitudesCompraController extends Controller
             // 
             // !Habiltar para que se envíen los correos $this->enviaCorreoProveedores($data['proveedores'], $data);
 
+
             $idSolicitudC = $data['solicitudes_compra_id'];
             SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => 2]);
             DB::commit();
@@ -337,7 +330,6 @@ class SolicitudesCompraController extends Controller
                 'message' => 'Correos enviados correctamente',
                 'data' => []
             ]);
-
         } catch (\Exception $e) {
             DB::rollback();
 
@@ -353,6 +345,9 @@ class SolicitudesCompraController extends Controller
             'message' => 'Correos enviados correctamente'
         ]);
     }
+    /**
+     * Función que almacena los detalles principales de la cotizaciones 
+     */
 
     public function storeCotizacion($data)
     {
@@ -366,6 +361,9 @@ class SolicitudesCompraController extends Controller
         return $dataCotizacion->id;
     }
 
+    /**
+     * Función que almacena la relación entre cotización y proveedores
+     */
     public function storeCotizacionProveedores($proveedores, $idCotizacion)
     {
         $idsCotProv = [];
@@ -381,6 +379,9 @@ class SolicitudesCompraController extends Controller
         return $idsCotProv;
     }
 
+    /**
+     * Función que  envia el correo de solicitud de cotización a los proveedores
+     */
     public function enviaCorreoProveedores($proveedores, $data)
     {
         foreach ($proveedores as $proveedor) {

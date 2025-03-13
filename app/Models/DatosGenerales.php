@@ -29,7 +29,7 @@ class DatosGenerales extends Model
      * Nombre de la tabla
      */
     // protected $connection = 'dashboard';
-
+    protected $connection = 'dashboard1';
     protected $table = 'datos_generales';
     /**
      * Función para obtener los datos activos

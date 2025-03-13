@@ -2,15 +2,10 @@
 
 namespace Modules\Compras\Http\Controllers;
 
-
-
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-
 //Model
-
+use Modules\Compras\Models\DocumentosOrdenesCompra;
 //Transformers
 
 //Utilities 
@@ -19,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use ZipArchive;
 
-use Modules\Compras\Models\DocumentosOrdenesCompra;
+
 
 class DocumentosOrdenesComprasController extends Controller
 {
@@ -151,7 +146,8 @@ class DocumentosOrdenesComprasController extends Controller
     }
 
     /**
-     * Show the specified resource.
+     * Recupera los documentos de orden de compra 
+     * en base al id de orden de compra
      */
     public function show($id)
     {
@@ -169,6 +165,7 @@ class DocumentosOrdenesComprasController extends Controller
 
     /**
      * Guarda los documentos de orden de compra
+     * Facturas XML, Facturas PDF, Comprobantes de pago
      */
     public function update(Request $request, $id)
     {
@@ -201,7 +198,7 @@ class DocumentosOrdenesComprasController extends Controller
         try {
             $data = $request;
             $hoy = date("jnY"); //Recuperar la fecha del dia de hoy para diferenciar el registro nuevo
-            $time = time();
+            $time = time();//Marca temporal del momento en el que se subió
             
     
             $carpetaOrdenCompra = 'docsOrdenCompra/' . $data['orden_compra_id'];

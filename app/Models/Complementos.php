@@ -11,7 +11,7 @@ class Complementos extends Model
     /**
      * Campos que pueden ser alterados
      */
-    protected $filleable = [
+    protected $fillable = [
         'objetivo',
         'cumplimiento',
         'porcentaje',
@@ -21,12 +21,14 @@ class Complementos extends Model
         'otros',
         'descuentos',
         'fecha',
+        'sucursales_id',
     ];
 
     public $timestamps = false;
     /**
      * Nombre de la tabla
      */
+    protected $connection = 'dashboard1';
     protected $table = 'complementos';
     /**
      * Función para obtener los datos activos
