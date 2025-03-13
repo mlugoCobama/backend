@@ -30,6 +30,7 @@ class Inventarios extends Model
     /**
      * Nombre de la tabla
      */
+    protected $connection = 'dashboard1';
     protected $table = 'inventarios';
     /**
      * Función para obtener los datos activos

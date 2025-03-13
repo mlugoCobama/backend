@@ -71,4 +71,10 @@ class Sucursales extends Model
     public function VentasPostVenta() {
         $this->hasMany(VentasPostVenta::class);
     }
+    /**
+     *
+     */
+    public function Personal() {
+        $this->hasMany(Personal::class);
+    }
 }

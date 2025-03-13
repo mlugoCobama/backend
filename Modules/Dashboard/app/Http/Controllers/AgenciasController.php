@@ -483,10 +483,15 @@ class AgenciasController extends Controller
                 "area_postventa" => "Area Postventa",
             ];
 
-            $resultado = [];
+            $encabezados = [];
+            foreach ($datos as $estacion) {
+                $encabezados[] = ['sucursal' => $estacion['estacion'], 'sub_division' => 'Nissan'];
+            }
 
+            $resultado = [];
+            $calcSpan = count($encabezados)+1;
             foreach ($estructura as $seccion => $filas) {
-                $resultado[] = [['value' => $seccion, 'colspan' => 6]];
+                $resultado[] = [['value' => $seccion, 'colspan' => $calcSpan]];
                 foreach ($filas as $fila) {
                     $nombreCampo = $mapaCampos[$fila['value']] ?? $fila['value'];
                     // $row = [$fila];
@@ -500,11 +505,14 @@ class AgenciasController extends Controller
                 }
             }
 
+            
+
             return response()->json([
                 'success' => true,
                 'message' => '',
                 'data' => $resultado, //Data que se ve en fronted
                 'size' => $tamanioDatos, //Tamaño para validar
+                'encabezados' => $encabezados,
             ]);
         } else {
             return response()->json([
