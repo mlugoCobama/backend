@@ -30,29 +30,29 @@ class EnergeticosController extends Controller
     public function index(string $sub_division)
     {
         //$mes = $this->monthYear->getMonth();
-        $mes = '03';
+        $mes = '02';
         //$mesAnt = $this->monthYear->getMonthPrev();
-        $mesAnt = '02';
+        $mesAnt = '01';
         //$anio = $this->monthYear->getYear();
-        $anio = '2024';
+        $anio = '2025';
         //$anioAnt = $this->monthYear->getYearPrev();
-        $anioAnt = '2023';
+        $anioAnt = '2024';
 
-        $gasolineriaMes =  GasolineriaMesResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos('.$mes.','.$anio.','.$sub_division.')') );
-        $gasolineriaMesAnt =  GasolineriaMesResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos('.$mesAnt.','.$anio.','.$sub_division.')') );
-        $gasolineriaAnioAnt =  GasolineriaMesResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos('.$mes.','.$anioAnt.','.$sub_division.')') );
+        $dataMes =  GasolineriaMesResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGaseras('.$mes.','.$anio.',"all")') );
+        $dataMesAnt =  GasolineriaMesResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGaseras('.$mesAnt.','.$anio.',"all")') );
+        $dataAnioAnt =  GasolineriaMesResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGaseras('.$mes.','.$anioAnt.',"all")') );
         $totalAnio = DataAnualResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision('.$anio.','.$sub_division.')') );
-        $totalAnioAnt = DataAnualResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision('.$anioAnt.','.$sub_division.')') );;
+        $totalAnioAnt = DataAnualResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision('.$anioAnt.','.$sub_division.')') );        
 
         $data = [
-            'mes' => $gasolineriaMes,
-            'mesAnt' => $gasolineriaMesAnt,
-            'anioAnt' => $gasolineriaAnioAnt,
+            'mes' => $dataMes,
+            'mesAnt' => $dataMesAnt,
+            'anioAnt' => $dataAnioAnt,
             'totalAnio' => $totalAnio,
             'totalAnioAnt' => $totalAnioAnt,
         ];
 
-        if (count($gasolineriaMes) > 0) {
+        if (count($dataMes) > 0) {
             return response()->json([
                 'success' => true,
                 'message' => '',
