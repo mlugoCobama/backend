@@ -22,7 +22,7 @@ class DetalleSolicitud extends Model
     /**
      * Nombre de la tabla
      */
-    protected $table = 'detalle_solicitud';
+    protected $table = 'com_detalle_solicitud';
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

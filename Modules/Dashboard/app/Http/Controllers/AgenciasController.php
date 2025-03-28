@@ -457,9 +457,10 @@ class AgenciasController extends Controller
             //nombres visuales de los campos
             $mapaCampos = [
                 "nuevos" => "Nuevos",
-                "utilidad_nuevos" => "UB Nuevos",
+                "cnuevos" => "Nuevos",
                 "utilidad_nuevos" => "UB Nuevos",
                 "flotillas" => "Flotillas",
+                "cflotillas" => "Flotillas",
                 "utilidad_flotillas" => "UB Flotillas",
                 "seminuevos" => "Seminuevos",
                 "utilidad_seminuevos" => "UB Seminuevos",

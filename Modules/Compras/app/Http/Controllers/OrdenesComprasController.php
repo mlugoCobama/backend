@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use DateTime;
 
 //Models
 use Modules\Compras\Models\OrdenCompra;
@@ -40,7 +41,8 @@ class OrdenesComprasController extends Controller
             $numero = 1;
         }
         $nuevoFolio = 'OC-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
-        return response()->json(['nuevoFolio' => $nuevoFolio]);
+        // return response()->json(['nuevoFolio' => $nuevoFolio]);
+        return $nuevoFolio;
     }
 
     /**
@@ -68,8 +70,8 @@ class OrdenesComprasController extends Controller
     {
 
         $validacion = Validator::make($request->all(),[
-            'folio_oc' => 'required|string|max:50',
-            'fecha' => 'required|date',
+            // 'folio_oc' => 'required|string|max:50',
+            // 'fecha' => 'required|date',
             'observaciones' => 'nullable|string|max:150',
             'cotizaciones_id' => 'required',
             'id_cotizacion_prov' => 'required',
@@ -86,8 +88,8 @@ class OrdenesComprasController extends Controller
         try{
             DB::beginTransaction();
             OrdenCompra::create([
-                'folio_oc' => $request->input('folio_oc'),
-                'fecha' => $request->input('fecha'),
+                'folio_oc' => $this->generarFolio(),
+                'fecha' => $this->getFecha() ?? now(),
                 'observaciones' => $request->input('observaciones'),
                 'cotizaciones_id' => $request->input('cotizaciones_id'),
             ]);
@@ -401,5 +403,11 @@ class OrdenesComprasController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    public function getFecha(){
+        $fecha = new DateTime();
+        $fecha = $fecha->format('Y-m-d H:i:s');
+        return $fecha;
     }
 }

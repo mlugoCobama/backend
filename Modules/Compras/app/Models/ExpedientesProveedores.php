@@ -25,7 +25,7 @@ class ExpedientesProveedores extends Model
     /**
      * Nombre de la tabla
      */
-    protected $table = 'expedientes_proveedor';
+    protected $table = 'com_expedientes_proveedor';
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

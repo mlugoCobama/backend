@@ -23,7 +23,7 @@ class DocumentosOrdenesCompra extends Model
     /**
      * Nombre de la tabla
      */
-    protected $table = 'documentos_ordenes_compra';
+    protected $table = 'com_documentos_ordenes_compra';
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

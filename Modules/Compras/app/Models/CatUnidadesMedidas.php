@@ -21,7 +21,7 @@ class CatUnidadesMedidas extends Model
     /**
      * Nombre de la tabla
      */
-    protected $table = 'cat_unidades_medida';
+    protected $table = 'com_cat_unidades_medida';
     /**
      * Función para obtener los datos activos
      */

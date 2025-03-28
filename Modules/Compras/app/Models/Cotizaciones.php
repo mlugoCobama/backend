@@ -23,7 +23,7 @@ class Cotizaciones extends Model
     /**
      * Nombre de la tabla
      */
-    protected $table = 'cotizaciones';
+    protected $table = 'com_cotizaciones';
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

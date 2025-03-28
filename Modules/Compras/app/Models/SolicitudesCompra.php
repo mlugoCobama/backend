@@ -27,7 +27,7 @@ class SolicitudesCompra extends Model
     /**
      * Nombre de la tabla
      */
-    protected $table = 'solicitudes_compra';
+    protected $table = 'com_solicitudes_compra';
     /**
      * Función para obtener los datos activos
      */

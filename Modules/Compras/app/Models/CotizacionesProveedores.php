@@ -21,7 +21,7 @@ class CotizacionesProveedores extends Model
     /**
      * Nombre de la tabla
      */
-    protected $table = 'cotizaciones_proveedores';
+    protected $table = 'com_cotizaciones_proveedores';
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

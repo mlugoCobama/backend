@@ -30,7 +30,7 @@ class Proveedores extends Model
     /**
      * Nombre de la tabla
      */
-    protected $table = 'proveedores';
+    protected $table = 'com_proveedores';
     
     public function scopeActive ($query) {
         return $query->where('activo', 1);

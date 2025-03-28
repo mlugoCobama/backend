@@ -56,11 +56,6 @@ Route::prefix('compras')->group(function () {
     Route::get('/descargar-facturas/{id}',[DocumentosOrdenesComprasController::class, 'downloadFacturas']);
     Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente']);
 
-    //*Ruta para generar folios consecutivos
-    Route::get('/generar-folio',[OrdenesComprasController::class, 'generarFolio']);
-    Route::get('/generar-folio-sc',[SolicitudesCompraController::class, 'generarFolioSc']);
-    Route::get('/generar-folio-co',[CotizacionesController::class, 'generarFolioCo']);
-
 
 });
 

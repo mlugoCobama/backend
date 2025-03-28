@@ -21,7 +21,7 @@ class DetallesCotizacion extends Model
     /**
      * Nombre de la tabla
      */
-    protected $table = 'detalles_cotizacion';
+    protected $table = 'com_detalles_cotizacion';
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

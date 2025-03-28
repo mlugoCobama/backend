@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class GasolineriaMesResource extends JsonResource
+class GaseraMesResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,8 +16,8 @@ class GasolineriaMesResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'entidad' => $this->estacion,
-            'estacion' => $this->entidad,
+            'entidad' => $this->entidad,
+            'estacion' => $this->estacion,
             'fecha' => date_format( date_create( $this->fecha ), 'd-m-Y' ),
             'uno' => $this->uno,
             'ubo' => $this->ubo,

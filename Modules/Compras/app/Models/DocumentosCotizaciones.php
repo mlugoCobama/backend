@@ -19,7 +19,7 @@ class DocumentosCotizaciones extends Model
     /**
      * Nombre de la tabla
      */
-    protected $table = 'DocumentosCotizaciones';
+    protected $table = 'com_DocumentosCotizaciones';
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

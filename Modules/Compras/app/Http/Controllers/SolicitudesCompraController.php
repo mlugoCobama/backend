@@ -22,12 +22,12 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use DateTime;
 // Mailiables
 use App\Mail\SolicitudCotizacion;
 use App\Notifications\SolicitudCotizacionNotification;
 // Jobs
 use App\Jobs\EnviarCorreoSolicitudCotizacion;
-
 
 class SolicitudesCompraController extends Controller
 {
@@ -43,7 +43,8 @@ class SolicitudesCompraController extends Controller
             $numero = 1;
         }
         $nuevoFolio = 'SC-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
-        return response()->json(['nuevoFolio' => $nuevoFolio]);
+        // return response()->json(['nuevoFolio' => $nuevoFolio]);
+        return  $nuevoFolio;
     }
 
     /**
@@ -51,6 +52,15 @@ class SolicitudesCompraController extends Controller
      */
     public function index()
     {
+        //Catalogo de estados
+        $solictado = 1;
+        $enCotizacion = 2;
+        $enOrdenCompra = 3;
+        $autorizada = 4;
+        $cancelada = 5;
+        $enSurtido = 6;
+        $pagada = 7;
+
         //  return SolicitudesComprasResource::collection((SolicitudesCompra::active()->orderBy('fecha', 'desc')->get()));
         $data = (SolicitudesCompra::active()->orderBy('fecha', 'desc')
             ->get([
@@ -63,6 +73,40 @@ class SolicitudesCompraController extends Controller
                 'usuario_solicita',
                 'estatus',
             ]));
+
+        foreach($data as $item){
+            switch ($item->estatus){
+                case $solictado:
+                    $item["estado"] = "SOLICITADO";
+                    $item["claseEstado"] = "bg-primary";
+                    break;
+                case $enCotizacion:
+                    $item["estado"] = "EN COTIZACIÓN";
+                    $item["claseEstado"] = "bg-info";
+                    break;
+                case $enOrdenCompra:
+                    $item["estado"] = "ORDEN DE COMPRA";
+                    $item["claseEstado"] = "bg-warning";
+                    break;
+                case $autorizada:
+                    $item["estado"] = "AUTORIZADA";
+                    $item["claseEstado"] = "badge-soft-success";
+                    break;
+                case $cancelada:
+                    $item["estado"] = "CANCELADA";
+                    $item["claseEstado"] = "bg-danger";
+                    break;
+                case $enSurtido:
+                    $item["estado"] = "EN SURTIDO";
+                    $item["claseEstado"] = "badge-soft-warning";
+                    break;
+                case $pagada:
+                    $item["estado"] = "PAGADA";
+                    $item["claseEstado"] = "bg-success";
+                    break;
+                }
+
+        }
 
         return response()->json([
             'status' => 'success',
@@ -114,11 +158,11 @@ class SolicitudesCompraController extends Controller
         $files =  $request->allFiles();
 
         $validador = Validator::make($data, [
-            'folio' => 'required|string|max:50',
+            // 'folio' => 'required|string|max:50',
             'usuario_solicita' => 'required|integer',
             'usuario_destino' => 'required|integer',
             'motivo' => 'required|string|max:50',
-            'fecha' => 'required|string|max:50',
+            // 'fecha' => 'required|string|max:50',
             'users_id' => 'required||integer',
             //validación de los detalles
             'detalles' => 'required|array|min:1',
@@ -179,12 +223,12 @@ class SolicitudesCompraController extends Controller
     private function storeSolicitudCompra($data)
     {
         $dataSolicitud = new SolicitudesCompra();
-        $dataSolicitud->folio = $data["folio"];
+        $dataSolicitud->folio = $this->generarFolioSc();
         // $dataSolicitud-> folio = $data["folio"] ;
         $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
         $dataSolicitud->usuario_destino = $data["usuario_destino"];
         $dataSolicitud->motivo = $data["motivo"];
-        $dataSolicitud->fecha = $data["fecha"];
+        $dataSolicitud->fecha = $this->getFecha() ?? now();
         $dataSolicitud->users_id = $data["users_id"];
         $dataSolicitud->save();
         return $dataSolicitud->id;
@@ -292,14 +336,14 @@ class SolicitudesCompraController extends Controller
         $data = $request->all();
 
         $validacion = Validator::make($data, [
-            'folioCo' => 'required|string|max:50',
-            'fecha' => 'required|date',
+            // 'folioCo' => 'required|string|max:50',
+            // 'fecha' => 'required|date',
             'consideraciones' => 'nullable|string|max:150',
             'solicitudes_compra_id' => 'required|integer',
             'proveedores' => 'required|array|min:1',
             'proveedores.*.id' => 'required|integer',
             'proveedores.*.correo' => 'required|email|max:50|distinct',
-            'folioCo' => 'required|string|max:50',
+            // 'folioCo' => 'required|string|max:50',
         ]);
 
         if ($validacion->fails()) {
@@ -349,11 +393,31 @@ class SolicitudesCompraController extends Controller
      * Función que almacena los detalles principales de la cotizaciones 
      */
 
+    public function generarFolioCo()
+    {
+        $ultimaCotizacion = Cotizaciones::orderBy('id', 'desc')->first('folio');
+        if ($ultimaCotizacion) {
+            $ultimoFolio = $ultimaCotizacion->folio;
+            $numero = intval(substr($ultimoFolio, 3)) + 1;
+        } else {
+            $numero = 1;
+        }
+        $nuevoFolio = 'CO-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
+
+        return $nuevoFolio;
+    }
+
+    public function getFecha(){
+        $fecha = new DateTime();
+        $fecha = $fecha->format('Y-m-d H:i:s');
+        return $fecha;
+    }
+
     public function storeCotizacion($data)
     {
         $dataCotizacion = new Cotizaciones();
-        $dataCotizacion->folio = $data["folioCo"];
-        $dataCotizacion->fecha = $data["fecha"] ?? now();
+        $dataCotizacion->folio = $this->generarFolioCo();
+        $dataCotizacion->fecha = $this->getFecha() ?? now();
         $dataCotizacion->consideraciones = $data["consideraciones"];
         $dataCotizacion->solicitudes_compra_id = $data["solicitudes_compra_id"];
 
