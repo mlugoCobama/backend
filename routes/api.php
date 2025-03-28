@@ -8,6 +8,7 @@ use App\Http\Controllers\DatosAcumuladosController;
 use App\Http\Controllers\EnergeticosController;
 use App\Http\Controllers\IngresosGastosController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\MigracionUcoipController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,8 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+Route::get('/migracion-ucoip', [MigracionUcoipController::class, 'index'])->name('migracion-ucoip');
+
 Route::post('/auth/login', [LoginController::class, 'login']);
 Route::get('/auth/login', [LoginController::class, 'loginValidate'])->name('login');
 
