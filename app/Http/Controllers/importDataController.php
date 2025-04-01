@@ -21,10 +21,10 @@ class importDataController extends Controller
     {
         $content = File::get(base_path('/data.json'));
         $json = json_decode(json: $content, associative: true);
-        $data = $json['nissan'];//Sudvision 
+        $data = $json['lille'];//Sudvision 
 
-        $idSucursal = 34; //Id de la sucursal
-        $anio = '2024'; //año a registrar 
+        $idSucursal = 26; //Id de la sucursal
+        $anio = '2023'; //año a registrar 
         $serie = "serie$anio";
 
         $agencias = [
@@ -43,14 +43,14 @@ class importDataController extends Controller
             'patriotismo'//12->34
         ];
 
-        $sucursal = $data['insugentes'][$agencias[$idSucursal-22]];
+        $sucursal = $data['generales'];
         $nombreSucursal = $agencias[$idSucursal-22];
         
         //*Modelo utlidadArea
         // $utlidad_area_comercial = $sucursal['departamentos']['comercial'];
         // $utlidad_area_postventa = $sucursal['departamentos']['postventa'];
-        $area_comercial = $sucursal['areaComercial'];
-        $area_postventa = $sucursal['areaPostventa'];
+        // $area_comercial = $sucursal['areaComercial'];
+        // $area_postventa = $sucursal['areaPostventa'];
         //*Modelo Datos Generales 
         // $gastos = $sucursal['totalGastos'];
         // $uno = $sucursal['uno'];
@@ -74,7 +74,7 @@ class importDataController extends Controller
         //*Ventas post venta
         // $ventas = $sucursal['ventas'];
         //* Modelo Personal
-        //$personal = $sucursal['acumuladoPersonal'];
+        $personal = $sucursal['acumuladoPersonal2'];
 
         
         $fechas = [
@@ -93,7 +93,7 @@ class importDataController extends Controller
         ];
 
         
-        for ($i = 0; $i < 9; $i++) {
+        for ($i = 0; $i < 12; $i++) {
         //for ($i=0; $i < 2; $i++) {
           //TODO MODELO DATOS GENERALES
             //   $datosGenerales = new DatosGenerales();
@@ -141,29 +141,29 @@ class importDataController extends Controller
             //  $tOrdenesUnidades->save();
 
             //TODO MODELO UTILIDAD AREA
-              $tUtilidadArea =  new UtilidadArea();
-              $tUtilidadArea->nuevos = $area_comercial['nuevos'][$serie][$i] ?? 0;
-              $tUtilidadArea->flotillas = $area_comercial['flotillas'][$serie][$i] ?? 0;
-              $tUtilidadArea->seminuevos = $area_comercial['seminuevos'][$serie][$i] ?? 0;
-              $tUtilidadArea->servicio  = $area_postventa['servicio'][$serie][$i] ?? 0;
-              $tUtilidadArea->refacciones  = $area_postventa['refacciones'][$serie][$i] ?? 0;
+            //   $tUtilidadArea =  new UtilidadArea();
+            //   $tUtilidadArea->nuevos = $area_comercial['nuevos'][$serie][$i] ?? 0;
+            //   $tUtilidadArea->flotillas = $area_comercial['flotillas'][$serie][$i] ?? 0;
+            //   $tUtilidadArea->seminuevos = $area_comercial['seminuevos'][$serie][$i] ?? 0;
+            //   $tUtilidadArea->servicio  = $area_postventa['servicio'][$serie][$i] ?? 0;
+            //   $tUtilidadArea->refacciones  = $area_postventa['refacciones'][$serie][$i] ?? 0;
             //   $tUtilidadArea->hyp  = $area_postventa['hyp'][$serie][$i] ?? 0;
             //   $tUtilidadArea->area_comercial  = $utlidad_area_comercial[$serie][$i] ?? 0;
             //   $tUtilidadArea->area_postventa  = $utlidad_area_postventa[$serie][$i] ?? 0;
-              $tUtilidadArea->fecha = $fechas[$i];
-              $tUtilidadArea->sucursales_id = $idSucursal;
-              $tUtilidadArea->save();
+            //   $tUtilidadArea->fecha = $fechas[$i];
+            //   $tUtilidadArea->sucursales_id = $idSucursal;
+            //   $tUtilidadArea->save();
             //TODO MODELO PERSONAL
-            //   $tPersonal =  new Personal();
-            //   $tPersonal->ventas = $personal['ventas'][$serie][$i] ?? 0;
-            //   $tPersonal->usados = $personal['usados'][$serie][$i] ?? 0;
-            //   $tPersonal->refacciones = $personal['refacciones'][$serie][$i] ?? 0;
-            //   $tPersonal->servicios  = $personal['servicios'][$serie][$i] ?? 0;
-            //   $tPersonal->admin  = $personal['admin'][$serie][$i] ?? 0;
-            //   $tPersonal->apvs  = $personal['apvs'][$serie][$i] ?? 0;
-            //   $tPersonal->fecha = $fechas[$i];
-            //   $tPersonal->sucursales_id = $idSucursal;
-            //   $tPersonal->save();
+               $tPersonal =  new Personal();
+               $tPersonal->ventas = $personal['ventas'][$serie][$i] ?? 0;
+               $tPersonal->usados = $personal['usados'][$serie][$i] ?? 0;
+               $tPersonal->refacciones = $personal['refacciones'][$serie][$i] ?? 0;
+               $tPersonal->servicios  = $personal['servicios'][$serie][$i] ?? 0;
+               $tPersonal->admin  = $personal['admin'][$serie][$i] ?? 0;
+               $tPersonal->apvs  = $personal['apvs'][$serie][$i] ?? 0;
+               $tPersonal->fecha = $fechas[$i];
+               $tPersonal->sucursales_id = $idSucursal;
+               $tPersonal->save();
             //TODO MODELO VENTAS POST VENTA 
             //   $tVentaPostVenta =  new VentasPostVenta();
             //   $tVentaPostVenta->ventas_servicio = $ventas['servicio'][$serie][$i] ?? 0;

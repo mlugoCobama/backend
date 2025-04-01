@@ -34,7 +34,12 @@ class EnergeticosController extends Controller
     // $anio = '2025';
     //$anioAnt = $this->monthYear->getYearPrev();
     public function index(string $sub_division, $mes, $anio, string $titular)
-    {
+    {   
+        $meses = array(
+            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril', 
+            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto', 
+            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
+        );
         /**
          * Cuando el mes es diciembre (12 + 1)
          * Simulamos enero del año siguiente
@@ -84,12 +89,22 @@ class EnergeticosController extends Controller
             ];
 
             $intento++;
-            
-            if (count($dataMes) > 1) {
+
+            if (count($dataMes) > 1 && $intento == 1) {
+                $nombreMes = $meses[intval($mes)];
                 return response()->json([
                     'success' => true,
-                    'message' => '',
-                    'data' => $data
+                    'message' => "Mostrando datos de $nombreMes $anio",
+                    'data' => $data,
+                ]);
+            }
+
+            if (count($dataMes) > 1 && $intento > 1) {
+                $nombreMes = $meses[intval($mes)];
+                return response()->json([
+                    'success' => true,
+                    'message' => "No hay datos del mes actual, en su lugar se muestran los de $nombreMes $anio",
+                    'data' => $data,
                 ]);
             }
         } while (count($dataMes) <= 1 && $intento < $maxIntentos); 
