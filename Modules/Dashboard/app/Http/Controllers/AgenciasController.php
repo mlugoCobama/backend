@@ -6,10 +6,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 use App\Http\Resources\NissanMesResource;
+use App\Http\Resources;
 
 use App\Http\Controllers\GetMonthYearController;
 use App\Http\Controllers\Controller;
-
+use Modules\Dashboard\Transformers\DataAnualAgenciasResource;
 /**
  * Modelos
  */
@@ -43,14 +44,20 @@ class AgenciasController extends Controller
         //$anioAnt = $this->monthYear->getYearPrev();
         $anioAnt = '2023';
 
+        $sub_division = '3';
+
         $nissanMes =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anio . ')'));
         $nissanMesAnt =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mesAnt . ',' . $anio . ')'));
         $nissanAnioAnt =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anioAnt . ')'));
 
+        $totalAnio = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anio . ',' . $sub_division . ')'));
+        $totalAnioAnt = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anioAnt . ',' . $sub_division . ')'));
         $data = [
             'mes' => $nissanMes,
             'mesAnt' => $nissanMesAnt,
-            'anioAnt' => $nissanAnioAnt
+            'anioAnt' => $nissanAnioAnt,
+            'totalAnio' => $totalAnio,
+            'totalAnioAnt' => $totalAnioAnt,
         ];
 
         if (count($nissanMes) > 0) {
