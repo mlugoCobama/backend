@@ -21,6 +21,7 @@ use App\Models\Complementos;
 use App\Models\UtilidadArea;
 use App\Models\OrdenesUnidades;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use DateTime;
 
 class AgenciasController extends Controller
 {
@@ -52,12 +53,16 @@ class AgenciasController extends Controller
 
         $totalAnio = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anio . ',' . $sub_division . ')'));
         $totalAnioAnt = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anioAnt . ',' . $sub_division . ')'));
+        $antInventarios = DB::connection('dashboard')->select('call Dashboard.SP_GetDataAntSemestralInventarios(' . $mes . ',' . $anio . ',' . $sub_division . ')');
+        
+
         $data = [
             'mes' => $nissanMes,
             'mesAnt' => $nissanMesAnt,
             'anioAnt' => $nissanAnioAnt,
             'totalAnio' => $totalAnio,
             'totalAnioAnt' => $totalAnioAnt,
+            'antInventarios' => $antInventarios,
         ];
 
         if (count($nissanMes) > 0) {
@@ -73,6 +78,21 @@ class AgenciasController extends Controller
                 'data' => []
             ]);
         }
+    }
+
+    public function SemestreAntiguedadInventarios(string $mes, $anio)
+    {       
+            $fechaInicial = new DateTime("$anio-$mes-01");
+
+            $fechaMes = new DateTime("$anio-$mes-01");
+            $fechaMes->modify('-5 month'); 
+            $mes = $fechaMes->format('m');
+            $anio = $fechaMes->format('Y');
+
+            return response()->json([
+                'fechaInicial' => $fechaInicial,
+                'fechaFinal' => "$anio-$mes-01"
+            ]);
     }
 
     /**

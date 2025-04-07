@@ -43,6 +43,9 @@ Route::get('energeticos/anual/{id}/{anio}', [EnergeticosController::class, 'show
 Route::get('show-agencia-nissan/{mes}/{anio}', [AgenciasController::class, 'getDataGridAgencia'])->name('agencia-renault.getDataGridAgencia-2');
 Route::put('dashboard/edit-agencia-nissan', [AgenciasController::class, 'updateAgenciaNissan'])->name('agencia-renault.updateAgenciaNissan');
 
+//Ruta de prueba
+Route::get('antiguedad-inventarios-nissan/{mes}/{anio}', [AgenciasController::class, 'SemestreAntiguedadInventarios'])->name('agencia-nissan.SemestreAntiguedadInventarios');
+
 /**--------------------------------------
  * Rutas Agencias Renault
  -----------------------------------------*/
