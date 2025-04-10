@@ -23,11 +23,13 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use DateTime;
+use DateTimeZone;
 // Mailiables
 use App\Mail\SolicitudCotizacion;
 use App\Notifications\SolicitudCotizacionNotification;
 // Jobs
 use App\Jobs\EnviarCorreoSolicitudCotizacion;
+use App\Models\User;
 
 class SolicitudesCompraController extends Controller
 {
@@ -75,6 +77,11 @@ class SolicitudesCompraController extends Controller
             ]));
 
         foreach($data as $item){
+            $user = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $item->usuario_destino . ')');
+            $usuarioSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $item->usuario_solicita . ')');
+            $item["usuario_solicita"] = ''.$usuarioSolicita[0]->firstname.' '.$usuarioSolicita[0]->realname.'' ?? 'No asignado';
+            $item["usuario_destino"] = ''.$user[0]->firstname.' '.$user[0]->realname.'';
+            $item["empresa"] = $user[0]->empresa; 
             switch ($item->estatus){
                 case $solictado:
                     $item["estado"] = "SOLICITADO";
@@ -408,7 +415,7 @@ class SolicitudesCompraController extends Controller
     }
 
     public function getFecha(){
-        $fecha = new DateTime();
+        $fecha = new DateTime('now', new DateTimeZone('America/Mexico_City'));
         $fecha = $fecha->format('Y-m-d H:i:s');
         return $fecha;
     }

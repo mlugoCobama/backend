@@ -6,6 +6,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use DateTime;
+use DateTimeZone;
 
 //Models
 use Modules\Compras\Models\OrdenCompra;
@@ -125,6 +126,8 @@ class OrdenesComprasController extends Controller
     public function consultaDatosPDF($id) // Consulta, genera el PDF y envía el PDF ORDEN DE COMPRA
     {
         $solicitudCompra = SolicitudesCompra::where('id', $id)->first();
+        $user = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')');
+        $userSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_solicita . ')');
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
         $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
         $cotizacionProveedor = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
@@ -138,12 +141,17 @@ class OrdenesComprasController extends Controller
             'proveedor' => $proveedor,
             'detallesCotizacion' => $detalleCotizacion,
             'solicitudCompra' => $solicitudCompra,
+            'destino' => $user,
+            'solicita' => $userSolicita
         ];
-        $pdf = new OrdenCompraPdfController();
-        $file = $pdf->OrdenCompraFormatoInterno($data);
-        return response($file, 200)
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
+
+         $pdf = new OrdenCompraPdfController();
+         $file = $pdf->OrdenCompraFormatoInterno($data);
+         return response($file, 200)
+             ->header('Content-Type', 'application/pdf')
+             ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
+        
+
     }
 
     /**
@@ -328,8 +336,8 @@ class OrdenesComprasController extends Controller
         $data = $request->all();
 
         $validacion =  Validator::make($data,[
-            'idOrdenCompra' => 'required|exists:orden_compra,id',
-            'idSolicituCompra' => 'required|exists:solicitudes_compra,id'
+            'idOrdenCompra' => 'required|exists:com_orden_compra,id',
+            'idSolicituCompra' => 'required|exists:com_solicitudes_compra,id'
 
         ]);
 
@@ -406,7 +414,7 @@ class OrdenesComprasController extends Controller
     }
 
     public function getFecha(){
-        $fecha = new DateTime();
+        $fecha = new DateTime('now', new DateTimeZone('America/Mexico_City'));
         $fecha = $fecha->format('Y-m-d H:i:s');
         return $fecha;
     }

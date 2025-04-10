@@ -84,7 +84,7 @@ class DocumentosOrdenesComprasController extends Controller
     public function store(Request $request)
     {
         $validacion = Validator::make($request->all(),[
-            'orden_compra_id' => 'required|exists:orden_compra,id',
+            'orden_compra_id' => 'required|exists:com_orden_compra,id',
             'fecha' => 'required|date',
             'factura_xml' => 'required|file|mimes:xml|max:2048',
             'factura_pdf' => 'required|file|mimes:pdf|max:2048',
@@ -171,7 +171,7 @@ class DocumentosOrdenesComprasController extends Controller
     {
 
         $validacion = Validator::make($request->all(),[
-            'orden_compra_id' => 'required|exists:orden_compra,id',
+            // 'com_orden_compra_id' => 'required|exists:orden_compra,id',
             'fecha' => 'required|date',
             'factura_xml' => 'nullable|file|mimes:xml|max:2048',
             'factura_pdf' => 'nullable|file|mimes:pdf|max:2048',

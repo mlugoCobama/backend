@@ -11,6 +11,7 @@ use Modules\Compras\Http\Controllers\OrdenesComprasController;
 use Modules\Compras\Http\Controllers\DocumentosOrdenesComprasController;
 use Modules\Compras\Models\Cotizaciones;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Modules\Compras\Http\Controllers\UsuariosController;
 use Modules\Compras\Models\SolicitudesCompra;
 
 /*
@@ -33,7 +34,8 @@ Route::prefix('compras')->group(function () {
     Route::resource('Cotizaciones', CotizacionesController::class);
     Route::resource('OrdenesCompras', OrdenesComprasController::class);
     Route::resource('DocumentosOrdenesCompras', DocumentosOrdenesComprasController::class);
-    //aqui van los resouce de de compras
+    Route::resource('Usuarios', UsuariosController::class);
+    
     Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores']);
 
     //*Ruta para mostra archivos 
@@ -56,6 +58,7 @@ Route::prefix('compras')->group(function () {
     Route::get('/descargar-facturas/{id}',[DocumentosOrdenesComprasController::class, 'downloadFacturas']);
     Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente']);
 
+    Route::get('/getUserByEmail/{correo}', [UsuariosController::class, 'getDataUsuario']);
 
 });
 
