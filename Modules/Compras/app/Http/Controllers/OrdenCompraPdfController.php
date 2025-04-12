@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use setasign\Fpdi\Fpdi;
 use Illuminate\Support\Facades\File;
-use Psy\Readline\Hoa\Console;
 
 class OrdenCompraPdfController extends Controller
 {
@@ -55,7 +54,8 @@ class OrdenCompraPdfController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         //
     }
 
@@ -78,7 +78,7 @@ class OrdenCompraPdfController extends Controller
         $pdf->AddPage();
 
         $pdf->setSourceFile(__DIR__ . "/../../../../../storage/app/modules/compras/orden_compra/formato_compras_v1.pdf");
-        
+
 
         $template = $pdf->importPage(1);
         $pdf->useImportedPage($template);
@@ -90,15 +90,15 @@ class OrdenCompraPdfController extends Controller
         $pdf->SetXY(172, 15.5);
         $pdf->Write(0, $data['ordenCompra']['folio_oc']);
 
-        $pdf->SetFont('Arial', 'B', 5); 
+        $pdf->SetFont('Arial', 'B', 5);
         $pdf->SetXY(24.5, 24);
-        $pdf->Write(0, utf8_decode(' ('.$data['solicita'][0]->area.')'));
+        $pdf->Write(0, utf8_decode(' (' . $data['solicita'][0]->area . ')'));
 
-        $pdf->SetFont('Arial', 'B', 6);        
+        $pdf->SetFont('Arial', 'B', 6);
         $pdf->SetXY(65, 24);
         $pdf->Write(0, $data['ordenCompra']['id']);
         $pdf->SetXY(80, 24);
-        $pdf->Write(0, utf8_decode(''.$data['solicita'][0]->firstname.' '.$data['solicita'][0]->realname.''));
+        $pdf->Write(0, utf8_decode('' . $data['solicita'][0]->firstname . ' ' . $data['solicita'][0]->realname . ''));
 
         $fechaOriginal = $data['ordenCompra']['fecha'];
         $fecha = date("d/m/Y", strtotime($fechaOriginal));
@@ -112,13 +112,13 @@ class OrdenCompraPdfController extends Controller
         $pdf->Write(0, strtoupper(utf8_decode($data['solicitudCompra']['motivo'])));
 
         $pdf->SetXY(57.5, 42.8);
-        $pdf->Write(0, utf8_decode(''.$data['destino'][0]->firstname.' '.$data['destino'][0]->realname.''));
+        $pdf->Write(0, utf8_decode('' . $data['destino'][0]->firstname . ' ' . $data['destino'][0]->realname . ''));
         $pdf->SetXY(57.5, 45.4);
         $pdf->Write(0, utf8_decode($data['destino'][0]->puesto));
         $pdf->SetXY(57.5, 48);
         $pdf->Write(0, strtoupper(utf8_decode($data['destino'][0]->empresa)));
         $pdf->SetXY(57.5, 50.6);
-        $pdf->Write(0,utf8_decode($data['solicitudCompra']['motivo']));
+        $pdf->Write(0, utf8_decode($data['solicitudCompra']['motivo']));
 
         $pdf->SetXY(57.5, 58.9);
         $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['nombre'])));
@@ -179,6 +179,8 @@ class OrdenCompraPdfController extends Controller
 
         $y = 107;
         $totalImporte = 0;
+
+        //Manejo de tabla detalles con multi lineas para textos largos
         foreach ($data['detallesCotizacion'] as $detalle) {
             $cantidad = $detalle->detalle_solicitud->cantidad;
             $precio_unitario = $detalle->importe_unitario;
@@ -187,18 +189,66 @@ class OrdenCompraPdfController extends Controller
             $observaciones = $detalle->detalle_solicitud->observaciones;
             $importe = $cantidad * $precio_unitario;
 
+            // Guardar la posición actual
             $pdf->SetXY(17.5, $y);
-            $pdf->Cell(12, 5, $cantidad, 0, '0', $align = 'C');
-            $pdf->Cell(28, 5, $tipo, 0, '0', $align = 'C');
-            $pdf->Cell(21, 5, $descripcion, 0, '0', $align = 'C');
-            $pdf->Cell(24.2, 5, $descripcion, 0, '0', $align = 'C');
-            $pdf->Cell(54, 5, utf8_decode($observaciones), 0, '0', $align = 'C');
-            $pdf->Cell(16, 5, "$ " . number_format($precio_unitario, 2), 0, '0', $align = 'C');
-            $pdf->Cell(25.5, 5, "$ " . number_format($importe, 2), 0, '0', $align = 'C');
-            $pdf->Ln();
-            $y += 5;
+            $pdf->Cell(12, 5, $cantidad, 0, 0, 'C');
+            $pdf->Cell(28, 5, $tipo, 0, 0, 'C');
+
+            
+            $x = $pdf->GetX();
+            $yBefore = $pdf->GetY();
+
+            // Multicel: Se utiliza para campos con textos largos
+            $pdf->MultiCell(21, 5, utf8_decode($descripcion), 0, 'C'); 
+            
+            // Ancho y alto de línea
+            $descLineHeight = $pdf->GetY() - $yBefore;
+
+            // Posición siguiente celda
+            $pdf->SetXY($x + 21, $yBefore); 
+            $pdf->MultiCell(24.5, 5, utf8_decode($observaciones), 0, 'C');
+            
+            //Posición siguiente celda
+            $pdf->SetXY($x + 45.5, $yBefore); 
+            $pdf->MultiCell(53, 5, utf8_decode($observaciones), 0,'C');
+
+            $obsLineHeight = $pdf->GetY() - $yBefore;
+            
+            //Alto de las siguiente celdas
+            $lineHeight = max($descLineHeight, $obsLineHeight);
+
+            $pdf->SetXY(157, $y);
+            $pdf->Cell(16, $lineHeight, "$ " . number_format($precio_unitario, 2), 0, 0, 'C');
+            $pdf->Cell(25.5, $lineHeight, "$ " . number_format($importe, 2), 0, 0, 'C');
+
+            // actualizar para siguiente fila
+            $y += $lineHeight;
+            $pdf->SetY($y); 
             $totalImporte += $importe;
         }
+
+        // $y = 107;
+        // $totalImporte = 0;
+        // foreach ($data['detallesCotizacion'] as $detalle) {
+        //     $cantidad = $detalle->detalle_solicitud->cantidad;
+        //     $precio_unitario = $detalle->importe_unitario;
+        //     $tipo = $detalle->detalle_solicitud->unidadMedida->nombre;
+        //     $descripcion = $detalle->detalle_solicitud->descripcion;
+        //     $observaciones = $detalle->detalle_solicitud->observaciones;
+        //     $importe = $cantidad * $precio_unitario;
+
+        //     $pdf->SetXY(17.5, $y);
+        //     $pdf->Cell(12, 5, $cantidad, 0, '0', $align = 'C');
+        //     $pdf->Cell(28, 5, $tipo, 0, '0', $align = 'C');
+        //     $pdf->Cell(21, 5, $descripcion, 0, '0', $align = 'C');
+        //     $pdf->Cell(24.2, 5, $descripcion, 0, '0', $align = 'C');
+        //     $pdf->MultiCell(54, 5, utf8_decode($observaciones), 0, '0', $align = 'C');
+        //     $pdf->Cell(16, 5, "$ " . number_format($precio_unitario, 2), 0, '0', $align = 'C');
+        //     $pdf->Cell(25.5, 5, "$ " . number_format($importe, 2), 0, '0', $align = 'C');
+        //     $pdf->Ln();
+        //     $y += 5;
+        //     $totalImporte += $importe;
+        // }
 
         $tipoCambio = 1.00;
         $pdf->SetXY(63, 219);
@@ -258,6 +308,4 @@ class OrdenCompraPdfController extends Controller
         return $pdf->Output('S');
         // $pdf->Output();
     }
-
-    
 }

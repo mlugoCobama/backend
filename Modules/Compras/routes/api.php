@@ -37,6 +37,7 @@ Route::prefix('compras')->group(function () {
     Route::resource('Usuarios', UsuariosController::class);
     
     Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores']);
+    Route::get('/SolicitudCompra/{id}',[SolicitudesCompraController::class, 'getSolicitud']);
 
     //*Ruta para mostra archivos 
     Route::get('expedientes/{id}/{file}', [ExpedientesProveedoresController::class, 'getFile']);

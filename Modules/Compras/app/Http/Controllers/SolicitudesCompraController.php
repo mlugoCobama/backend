@@ -15,6 +15,7 @@ use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
 use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\DetallesCotizacion;
+
 //Transformers
 use Modules\Compras\Transformers\SolicitudesComprasResource;
 //Utilities
@@ -30,6 +31,7 @@ use App\Notifications\SolicitudCotizacionNotification;
 // Jobs
 use App\Jobs\EnviarCorreoSolicitudCotizacion;
 use App\Models\User;
+use Modules\Compras\Models\Proveedores;
 
 class SolicitudesCompraController extends Controller
 {
@@ -76,13 +78,13 @@ class SolicitudesCompraController extends Controller
                 'estatus',
             ]));
 
-        foreach($data as $item){
+        foreach ($data as $item) {
             $user = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $item->usuario_destino . ')');
             $usuarioSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $item->usuario_solicita . ')');
-            $item["usuario_solicita"] = ''.$usuarioSolicita[0]->firstname.' '.$usuarioSolicita[0]->realname.'' ?? 'No asignado';
-            $item["usuario_destino"] = ''.$user[0]->firstname.' '.$user[0]->realname.'';
-            $item["empresa"] = $user[0]->empresa; 
-            switch ($item->estatus){
+            $item["usuario_solicita"] = '' . $usuarioSolicita[0]->firstname . ' ' . $usuarioSolicita[0]->realname . '' ?? 'No asignado';
+            $item["usuario_destino"] = '' . $user[0]->firstname . ' ' . $user[0]->realname . '';
+            $item["empresa"] = $user[0]->empresa;
+            switch ($item->estatus) {
                 case $solictado:
                     $item["estado"] = "SOLICITADO";
                     $item["claseEstado"] = "bg-primary";
@@ -111,8 +113,7 @@ class SolicitudesCompraController extends Controller
                     $item["estado"] = "PAGADA";
                     $item["claseEstado"] = "bg-success";
                     break;
-                }
-
+            }
         }
 
         return response()->json([
@@ -129,6 +130,7 @@ class SolicitudesCompraController extends Controller
      */
     public function index1(Request $request)
     {
+
         $perPage = $request->input('perPage', 30);
 
         $solicitudes = (SolicitudesCompra::active()
@@ -242,7 +244,7 @@ class SolicitudesCompraController extends Controller
     }
     /**
      * Amacena los detalles de la solicitud
-    */
+     */
     private function storeDetalleSolicitudCompra($detalles, $idSolicitud, $files)
     {
         foreach ($detalles as $index => $detalle) {
@@ -270,6 +272,61 @@ class SolicitudesCompraController extends Controller
     public function show($id)
     {
         return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->get()));
+    }
+
+    public function getSolicitud($id)
+    {
+        //Catalogo de estados
+        $solictado = 1;
+        $enCotizacion = 2;
+        $enOrdenCompra = 3;
+        $autorizada = 4;
+        $cancelada = 5;
+        $enSurtido = 6;
+        $pagada = 7;
+
+        $data = SolicitudesCompra::where("id", $id)->first();
+
+        $user = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $data->usuario_destino . ')');
+        $usuarioSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $data->usuario_solicita . ')');
+        $data["usuario_solicita"] = '' . $usuarioSolicita[0]->firstname . ' ' . $usuarioSolicita[0]->realname . '' ?? 'No asignado';
+        $data["usuario_destino"] = '' . $user[0]->firstname . ' ' . $user[0]->realname . '';
+        $data["empresa"] = $user[0]->empresa;
+        switch ($data->estatus) {
+            case $solictado:
+                $data["estado"] = "SOLICITADO";
+                $data["claseEstado"] = "bg-primary";
+                break;
+            case $enCotizacion:
+                $data["estado"] = "EN COTIZACIÓN";
+                $data["claseEstado"] = "bg-info";
+                break;
+            case $enOrdenCompra:
+                $data["estado"] = "ORDEN DE COMPRA";
+                $data["claseEstado"] = "bg-warning";
+                break;
+            case $autorizada:
+                $data["estado"] = "AUTORIZADA";
+                $data["claseEstado"] = "badge-soft-success";
+                break;
+            case $cancelada:
+                $data["estado"] = "CANCELADA";
+                $data["claseEstado"] = "bg-danger";
+                break;
+            case $enSurtido:
+                $data["estado"] = "EN SURTIDO";
+                $data["claseEstado"] = "badge-soft-warning";
+                break;
+            case $pagada:
+                $data["estado"] = "PAGADA";
+                $data["claseEstado"] = "bg-success";
+                break;
+        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Consulta generada correctamente',
+            'data' => $data
+        ]);
     }
 
 
@@ -337,8 +394,72 @@ class SolicitudesCompraController extends Controller
      * ?Almacenar la relación entre detalles y cotizacionProveedores
      * Actualiza el estatus de la Solicitud a 2
      */
-
     public function enviarSolicitudCotizacion(Request $request)
+    {
+        $data = $request->all();
+
+        $validacion = Validator::make($data, [
+            'consideraciones' => 'nullable|string|max:150',
+            'proveedor1' => 'required|integer',
+            'proveedor2' => 'required|integer',
+            'proveedor3' => 'required|integer',
+            'solicitudes_compra_id' => 'required|integer',
+        ]);
+
+        if ($validacion->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos no validos o incompletos',
+                'errors' => $validacion->errors()
+            ]);
+        }
+
+        try {
+            DB::beginTransaction();
+
+
+
+
+            $idCotizacion = $this->storeCotizacion($data);
+
+            //Adecuación nuevo front
+            $idsProv = [$data['proveedor1'], $data['proveedor2'], $data['proveedor3']];
+            $data['proveedores'] = [];
+            foreach ($idsProv as $id) {
+                $proveedor = Proveedores::where("id", $id)->first();
+                $data['proveedores'][] =  $proveedor;
+            }
+
+            $this->storeCotizacionProveedores($data['proveedores'], $idCotizacion);
+            //Queue para despachar el correo
+            //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
+            // 
+            // !Habiltar para que se envíen los correos $this->enviaCorreoProveedores($data['proveedores'], $data);
+
+
+            $idSolicitudC = $data['solicitudes_compra_id'];
+            SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => 2]);
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Correos enviados correctamente',
+                'data' => []
+            ]);
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Algo fallo',
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+        }
+    }
+
+
+    public function enviarSolicitudCotizacion1(Request $request)
     {
         $data = $request->all();
 
@@ -362,9 +483,12 @@ class SolicitudesCompraController extends Controller
         }
 
         try {
-
             DB::beginTransaction();
+
             $idCotizacion = $this->storeCotizacion($data);
+
+
+
             $this->storeCotizacionProveedores($data['proveedores'], $idCotizacion);
             //Queue para despachar el correo
             //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
@@ -414,7 +538,8 @@ class SolicitudesCompraController extends Controller
         return $nuevoFolio;
     }
 
-    public function getFecha(){
+    public function getFecha()
+    {
         $fecha = new DateTime('now', new DateTimeZone('America/Mexico_City'));
         $fecha = $fecha->format('Y-m-d H:i:s');
         return $fecha;

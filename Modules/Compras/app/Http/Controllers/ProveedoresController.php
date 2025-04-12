@@ -33,13 +33,20 @@ class ProveedoresController extends Controller
     public function getProveedores()
     {
         $data = (Proveedores::active()
-
             ->get([
                 'id',
                 'nombre',
-                'correo'
+                // 'correo'
             ]));
 
+        // $opcionPrdeterminada = collect([
+        //     (object)[
+        //         'id' => 0,
+        //         'nombre' => 'Selecciona una opcion'
+        //     ]
+        //     ]);
+
+        // $data = $opcionPrdeterminada->merge($data);
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha realizado correctamente',

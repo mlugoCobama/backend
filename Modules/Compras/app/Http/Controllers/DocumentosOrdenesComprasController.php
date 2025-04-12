@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use ZipArchive;
+use DateTime;
+use DateTimeZone;
 
 
 
@@ -85,7 +87,7 @@ class DocumentosOrdenesComprasController extends Controller
     {
         $validacion = Validator::make($request->all(),[
             'orden_compra_id' => 'required|exists:com_orden_compra,id',
-            'fecha' => 'required|date',
+            // 'fecha' => 'required|date',
             'factura_xml' => 'required|file|mimes:xml|max:2048',
             'factura_pdf' => 'required|file|mimes:pdf|max:2048',
             'comprobante_pago' => 'nullable|file|mimes:pdf|max:2048',
@@ -123,7 +125,7 @@ class DocumentosOrdenesComprasController extends Controller
                 $docsOrdenCompra->comprobante_pago = $data->file('comprobante_pago')->storeAs($carpetaOrdenCompra, $nombreArchivo);
             }
             $docsOrdenCompra->orden_compra_id = $data["orden_compra_id"];
-            $docsOrdenCompra->fecha = $data["fecha"];
+            $docsOrdenCompra->fecha = $this->getFecha();
     
             $docsOrdenCompra->save();
     
@@ -172,7 +174,7 @@ class DocumentosOrdenesComprasController extends Controller
 
         $validacion = Validator::make($request->all(),[
             // 'com_orden_compra_id' => 'required|exists:orden_compra,id',
-            'fecha' => 'required|date',
+            // 'fecha' => 'required|date',
             'factura_xml' => 'nullable|file|mimes:xml|max:2048',
             'factura_pdf' => 'nullable|file|mimes:pdf|max:2048',
             'comprobante_pago' => 'required|file|mimes:pdf|max:2048',
@@ -259,5 +261,12 @@ class DocumentosOrdenesComprasController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function getFecha()
+    {
+        $fecha = new DateTime('now', new DateTimeZone('America/Mexico_City'));
+        $fecha = $fecha->format('Y-m-d H:i:s');
+        return $fecha;
     }
 }
