@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\DB;
 
 class UsuariosController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    /********************************************************************
+     * Recupera el catalogo de empresa y num_intercompania
+     *******************************************************************/
     public function index()
     {
         $data = DB::connection('intranet')->table('glpi_entities')->select('name','intercompania')->where('intercompania', '>', '0')->get();
@@ -24,25 +24,21 @@ class UsuariosController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+
     public function create()
     {
         return view('compras::create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+
     public function store(Request $request)
     {
         //
     }
 
-    /**
-     * Show the specified resource.
-     */
+    /*************************************************************
+     * Recupera un usuario DEL INTRANET especifico por su id
+     ************************************************************/
     public function show($id)
     {
         $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetDataUsuarios(' . $id . ')');
@@ -54,6 +50,9 @@ class UsuariosController extends Controller
         ]);
     }
 
+    /*************************************************************
+     * Recupera un usuario especifico DEL INTRANET por su correo
+     ************************************************************/
     public function getDataUsuario($correo)
     {
         $data = DB::connection('intranet')->table('glpi_users')->select('*')->where('name', $correo)->get();
@@ -64,25 +63,16 @@ class UsuariosController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('compras::edit');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         //

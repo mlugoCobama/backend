@@ -1,5 +1,5 @@
 {
-    "AGRUPAMIENTO":{
+    "201":{
         "EMPRESA": "AGRUPAMIENTO",
         "RAZON SOCIAL": "AGRUPAMIENTO S.A. DE C.V. ",
         "RFC": "AGR9705204D4",
@@ -10,7 +10,7 @@
         "CONTACTO PAGOS": "MIREYA SANTIAGO RODRIGUEZ",
         "TELS.": "55 26296470 EXT 6437"
     },
-    "AZTECA GAS": {
+    "131": {
         "EMPRESA": "AZTECA GAS",
         "RAZON SOCIAL": "AZTECA GAS S.A. DE C.V.",
         "RFC": "AGA971202SX3",
@@ -21,7 +21,7 @@
         "CONTACTO PAGOS": "LUIS CORONA",
         "TELS.": "5526296470 EXT 6429"
     },
-    "BARAGAS": {
+    "191": {
         "EMPRESA": "BARAGAS",
         "RAZON SOCIAL": "BARAGAS SA DE CV",
         "RFC": "BAR190515NC0",
@@ -32,7 +32,7 @@
         "CONTACTO PAGOS": "C.P. LUIS DAVID CORONA BAEZ",
         "TELS.": "26296470 EXT. 6429"
     },
-    "CORPORACION ADMINISTRATIVA DEL SUR": {
+    "333": {
         "EMPRESA": "CORPORACION ADMINISTRATIVA DEL SUR",
         "RAZON SOCIAL": "CORPORACION ADMINSTRATIVA DEL SUR SC",
         "RFC": "CAS081119D49",
@@ -40,10 +40,10 @@
         "COLONIA": "COLONIA IRRIGACION ",
         "CIUDAD/DELEG/ESTADO": "MIGUEL HIDALGO",
         "C.P.": "11500",
-        "CONTACTO PAGOS": "MIREYA SANTIAGO",
-        "TELS.": "(55) 2629 6470 Ext. 6437"
+        "CONTACTO PAGOS": "ELVIRA AVILA LUA",
+        "TELS.": "(55) 2629 6470 Ext. 33312"
     },
-    "CORPORACION ADMINISTRATIVA DE EMPRESAS": {
+    "1": {
         "EMPRESA": "CORPORACION ADMINISTRATIVA DE EMPRESAS",
         "RAZON SOCIAL": "CORPORACION ADMINISTRATIVA DE EMPRESAS SC",
         "RFC": "CAE 9405067N2",
@@ -54,7 +54,7 @@
         "CONTACTO PAGOS": "C.P. MARTHA URZUA",
         "TELS.": " 01 (477) 104 1000 ext. 1011 "
     },
-    "CORPORATIVOAUTOSSONI": {
+    "700": {
         "EMPRESA": "CORPORACION AUTOS SONI",
         "RAZON SOCIAL": "CORPORATIVO AUTOS SONI SC",
         "RFC": "COB020315DZ8",
@@ -65,7 +65,7 @@
         "CONTACTO PAGOS": "JUANA ESTEVA",
         "TELS.": "552629000"
     },
-    "FLAMAMEX": {
+    "251": {
         "EMPRESA": "FLAMAMEX",
         "RAZON SOCIAL": "FLAMAMEX SA DE CV ",
         "RFC": "FLA000430N35",
@@ -76,7 +76,7 @@
         "CONTACTO PAGOS": "SILVIA PEREZ IBARRA",
         "TELS.": "(55) 2629 6470 Ext. 6429"
     },
-    "FLAMAZUL": {
+    "250": {
         "EMPRESA": "FLAMAZUL",
         "RAZON SOCIAL": "GAS  FLAMAZUL SA DE CV ",
         "RFC": "GFL800621BK0",
@@ -87,7 +87,7 @@
         "CONTACTO PAGOS": "ANA LAURA JUAREZ CANO",
         "TELS.": "(55) 2629 6470 Ext. 6459"
     },
-    "GARZA GAS": {
+    "110": {
         "EMPRESA": "GARZA GAS",
         "RAZON SOCIAL": "GARZA GAS SA DE CV",
         "RFC": "GGA8306134F4",
@@ -98,7 +98,7 @@
         "CONTACTO PAGOS": "SHEILA MARCELA VALENCIA BELTRAN",
         "TELS.": "(55) 2629 6470 Ext. 6459"
     },
-    "GARZA SUR": {
+    "111": {
         "EMPRESA": "GARZA SUR",
         "RAZON SOCIAL": "GARZA SUR SA DE CV",
         "RFC": "GSU010924DS9",
@@ -109,7 +109,7 @@
         "CONTACTO PAGOS": "ANGELICA SOLANO SANCHEZ",
         "TELS.": "(55) 2629 6470 Ext. 6459"
     },
-    "GAS MODELO": {
+    "0": {
         "EMPRESA": "GAS MODELO",
         "RAZON SOCIAL": "",
         "RFC": "",
@@ -120,7 +120,7 @@
         "CONTACTO PAGOS": "",
         "TELS.": ""
     },
-    "GAS PREMIO": {
+    "132": {
         "EMPRESA": "GAS PREMIO",
         "RAZON SOCIAL": "GAS PREMIO S.A. DE C.V. ",
         "RFC": "GPR100420Q60",
@@ -131,7 +131,7 @@
         "CONTACTO PAGOS": "ZULEYMA GARCIA",
         "TELS.": "55 26296470 EXT 6459"
     },
-    "GAS URBANO": {
+    "353": {
         "EMPRESA": "GAS URBANO",
         "RAZON SOCIAL": "GAS URBANO SA DECV ",
         "RFC": "GUR080409BCA",
@@ -142,7 +142,7 @@
         "CONTACTO PAGOS": "ANA LAURA JUAREZ CANO",
         "TELS.": "5526296470 EXT 6429"
     },
-    "GASAMEX": {
+    "155": {
         "EMPRESA": "GASAMEX",
         "RAZON SOCIAL": "GASAMEX SA DE CV ",
         "RFC": "GAS011009I69",
@@ -153,7 +153,7 @@
         "CONTACTO PAGOS": "ANGELICA SOLANO",
         "TELS.": "(55) 2629 6470 Ext. 6429"
     },
-    "IZTAGAS": {
+    "354": {
         "EMPRESA": "IZTAGAS",
         "RAZON SOCIAL": "IZTAGAS Y ENERGIA SA DE CV ",
         "RFC": "IEN20012636WA",
@@ -164,7 +164,7 @@
         "CONTACTO PAGOS": "ANA LAURA JUAREZ CANO",
         "TELS.": "5526296470 EXT 6429"
     },
-    "MULTIREGIONAL": {
+    "133": {
         "EMPRESA": "MULTIREGIONAL",
         "RAZON SOCIAL": "GASERA MULTIREGIONAL S.A. DE C.V.",
         "RFC": "GMU100310HA3",
@@ -175,7 +175,7 @@
         "CONTACTO PAGOS": "LUIS DAVID CORONA BAEZ",
         "TELS.": "55 26296470 EXT 6469"
     },
-    "NISSAN AZCAPOTZALCO": {
+    "7051": {
         "EMPRESA": "NISSAN AZCAPOTZALCO",
         "RAZON SOCIAL": "SONI AUTOMOTRIZ  SA DE CV ",
         "RFC": "SAU860515TJA",
@@ -186,7 +186,7 @@
         "CONTACTO PAGOS": "ELVIRA AVILA LUA",
         "TELS.": "2629000"
     },
-    "SONI CAMPESTRE": {
+    "712": {
         "EMPRESA": "NISSAN CAMPESTRE",
         "RAZON SOCIAL": "SONI CAMPESTRE SA DE CV ",
         "RFC": "NSB121211V23",
@@ -197,7 +197,7 @@
         "CONTACTO PAGOS": "MOISES ARENAS",
         "TELS.": "4777176000 EXT 168"
     },
-    "SONI INSURGENTES": {
+    "7071": {
         "EMPRESA": "NISSAN DETROIT",
         "RAZON SOCIAL": "SONI INSURGENTES SA DE CV ",
         "RFC": "SIN100826617",
@@ -208,7 +208,7 @@
         "CONTACTO PAGOS": "FERNANDO LOPEZ",
         "TELS.": "(55) 54809000"
     },
-    "MIXCOAC": {
+    "7074": {
         "EMPRESA": "NISSAN MIXCOAC",
         "RAZON SOCIAL": "SONI INSURGENTES SA DE CV ",
         "RFC": "SIN100826617",
@@ -219,7 +219,7 @@
         "CONTACTO PAGOS": "FERNANDO LOPEZ",
         "TELS.": "(55) 54809000"
     },
-    "PATRIOTISMO": {
+    "7072": {
         "EMPRESA": "NISSAN PATRIOTISMO",
         "RAZON SOCIAL": "SONI INSURGENTES SA DE CV ",
         "RFC": "SIN100826617",
@@ -230,7 +230,7 @@
         "CONTACTO PAGOS": "FERNANDO LOPEZ",
         "TELS.": "(55) 54809000"
     },
-    "REVOLUCION": {
+    "7075": {
         "EMPRESA": "NISSAN REVOLUCION",
         "RAZON SOCIAL": "SONI INSURGENTES SA DE CV ",
         "RFC": "SIN100826617",
@@ -241,7 +241,7 @@
         "CONTACTO PAGOS": "FERNANDO LOPEZ",
         "TELS.": "(55) 54809000"
     },
-    "SONI UNIVERSIDAD": {
+    "710": {
         "EMPRESA": "NISSAN UNIVERSIDAD",
         "RAZON SOCIAL": "SONI UNIVERSIDAD SA DE CV ",
         "RFC": "OGU080722SN7",
@@ -252,7 +252,7 @@
         "CONTACTO PAGOS": "ANTONIO SANCHEZ",
         "TELS.": "91836000"
     },
-    "Renault Azcapotzalco": {
+    "7064": {
         "EMPRESA": "RENAULT AZCAPOTZALCO",
         "RAZON SOCIAL": "LILLE MOTORS SA DE CV",
         "RFC": "LMO0050726TI7",
@@ -263,7 +263,7 @@
         "CONTACTO PAGOS": "FIDEL MONTERO",
         "TELS.": "53188750"
     },
-    "Renault Ecatepec": {
+    "7062": {
         "EMPRESA": "RENAULT ECATEPEC",
         "RAZON SOCIAL": "LILLE MOTORS SA DE CV",
         "RFC": "LMO0050726TI7",
@@ -274,7 +274,7 @@
         "CONTACTO PAGOS": "FIDEL MONTERO",
         "TELS.": "53188750"
     },
-    "Renault Pachuca": {
+    "7061": {
         "EMPRESA": "RENAULT PACHUCA",
         "RAZON SOCIAL": "LILLE MOTORS SA DE CV",
         "RFC": "LMO0050726TI7",
@@ -285,7 +285,7 @@
         "CONTACTO PAGOS": "FIDEL MONTERO",
         "TELS.": "53188750"
     },
-    "Renault Vallejo": {
+    "7063": {
         "EMPRESA": "RENAULT VALLEJO",
         "RAZON SOCIAL": "LILLE MOTORS SA DE CV",
         "RFC": "LMO0050726TI7",
@@ -296,7 +296,7 @@
         "CONTACTO PAGOS": "FIDEL MONTERO",
         "TELS.": "53188750"
     },
-    "REYES GAS": {
+    "210": {
         "EMPRESA": "REYES GAS",
         "RAZON SOCIAL": "REYES GAS SA DE CV ",
         "RFC": "RGA860630613",
@@ -307,7 +307,7 @@
         "CONTACTO PAGOS": "ANA LAURA JUAREZ CANO",
         "TELS.": "5526296470 EXT 6429"
     },
-    "SATELITE GAS": {
+    "130": {
         "EMPRESA": "SATELITE GAS",
         "RAZON SOCIAL": "SATELITE GAS SA DE CV ",
         "RFC": "SGA931013440",
@@ -318,7 +318,7 @@
         "CONTACTO PAGOS": "ANA CANO",
         "TELS.": "5526296470 EXT 6459"
     },
-    "SEGAS": {
+    "135": {
         "EMPRESA": "SEGAS",
         "RAZON SOCIAL": "SERVICIOS ESPECIALES DE GAS LP SA DE CV ",
         "RFC": "SEG15022DR0",
@@ -329,7 +329,7 @@
         "CONTACTO PAGOS": "ANA LAURA JUAREZ CANO",
         "TELS.": "(55) 2629 6470 Ext. 6429"
     },
-    "SERVICIO EL ONCE": {
+    "2000": {
         "EMPRESA": "SERVICIO EL ONCE",
         "RAZON SOCIAL": "SERVICIO EL ONCE SA DE CV ",
         "RFC": "SON080721MN7",
@@ -340,7 +340,7 @@
         "CONTACTO PAGOS": "C.P. OSCAR  ROBLES RUIZ",
         "TELS.": " 01 (55) 2629 6470 ext. 6473"
     },
-    "SERVIGAS DEL VALLE": {
+    "240": {
         "EMPRESA": "SERVIGAS DEL VALLE",
         "RAZON SOCIAL": "SERVIGAS DEL VALLE SA DE CV ",
         "RFC": "SVA790523IN5",
@@ -351,7 +351,7 @@
         "CONTACTO PAGOS": "JOSE ANTONIO RESENDIZ",
         "TELS.": "55 26296470 EXT 6469"
     },
-    "TANQUES GARZA GAS": {
+    "199": {
         "EMPRESA": "TANQUES GARZA GAS",
         "RAZON SOCIAL": "TANQUES GARZA GAS SA DE CV ",
         "RFC": "TGG960125RT1",
@@ -362,7 +362,7 @@
         "CONTACTO PAGOS": "SHEILA MARCELA VALENCIA",
         "TELS.": "26296470 EXT 6459"
     },
-    "TANQUES SONI": {
+    "200": {
         "EMPRESA": "TANQUES SONI",
         "RAZON SOCIAL": "TANQUES SONI S.A. DE C.V. ",
         "RFC": "TSO990518L87",
@@ -373,7 +373,7 @@
         "CONTACTO PAGOS": "MARCO ANTONIO RAMIREZ RIVERA ",
         "TELS.": "5760 5474   "
     },
-    "ZUGAS": {
+    "190": {
         "EMPRESA": "ZUGAS",
         "RAZON SOCIAL": "ZUGAS SA DE CV ",
         "RFC": "ZGA7202096G9",
@@ -384,7 +384,7 @@
         "CONTACTO PAGOS": "ANA CANO",
         "TELS.": "5526296470 EXT 6429"
     },
-    "ESTACION DE SERVICIO ARIEL": {
+    "2": {
         "EMPRESA": "",
         "RAZON SOCIAL": "ESTACION DE SERVICIO ARIEL",
         "RFC": "ESA1103229X5",

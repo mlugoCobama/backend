@@ -18,35 +18,26 @@ use Illuminate\Support\Facades\DB;
 
 class ProveedoresController extends Controller
 {
-    /**
-     * Recupera todos los datos para servir 
-     * a la vista principal de proveedores
-     */
+    /***************************************************************************
+     * Recupera todos los datos de proveedores
+     ***************************************************************************/
     public function index()
     {
         return ProveedoresResource::collection((Proveedores::active()->get()));
     }
 
-    /**
+    /****************************************************************************
      * Recupera unicamente tres datos para llenar los select
-     */
+     *****************************************************************************/
     public function getProveedores()
     {
         $data = (Proveedores::active()
             ->get([
                 'id',
                 'nombre',
-                // 'correo'
+               
             ]));
 
-        // $opcionPrdeterminada = collect([
-        //     (object)[
-        //         'id' => 0,
-        //         'nombre' => 'Selecciona una opcion'
-        //     ]
-        //     ]);
-
-        // $data = $opcionPrdeterminada->merge($data);
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha realizado correctamente',
@@ -55,22 +46,18 @@ class ProveedoresController extends Controller
     }
 
 
-    /**
-     * Show the form for creating a new resource.
-     */
+
     public function create()
     {
         return view('compras::create');
     }
 
-    /**
+    /**********************************************************************************
      * Función que valida la información y coordina 
      * storeProveedor y storeExpedienteProveedor
-     */
+     ***********************************************************************************/
     public function store(Request $request)
     {
-        //  $proveedor = proveedores::create($request->all());
-        //  $expediente = ExpedientesProveedores::create($request->all(), $proveedor);
 
         $validacion =  Validator::make($request->all(), [
             'nombre' => 'required|string|max:45',
@@ -102,9 +89,13 @@ class ProveedoresController extends Controller
 
         try {
             DB::beginTransaction();
-            $idProveedor =  $this->storeProveedor($request);
-            $this->storeExpedienteProveedor($request, $idProveedor);
+
+                $idProveedor =  $this->storeProveedor($request);
+
+                $this->storeExpedienteProveedor($request, $idProveedor);
+
             DB::commit();
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha guardado correctamente',
@@ -112,6 +103,7 @@ class ProveedoresController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Algo salio mal, intente nuevamente',
@@ -119,10 +111,10 @@ class ProveedoresController extends Controller
             ]);
         }
     }
-    /**
-     * Función que almacena los datos del proveedor en a base de datos
-     * 
-     */
+
+    /**********************************************************************************
+     * Función que almacena los datos del proveedor en a base de datos 
+     **********************************************************************************/
     private function storeProveedor($data)
     {
         $dataProveedor = new Proveedores();
@@ -140,10 +132,9 @@ class ProveedoresController extends Controller
         return $dataProveedor->id;
     }
 
-    /**
-     * Función que almacena los archivos en el servidor 
-     * y las rutas en la base de datos
-     */
+    /**********************************************************************************
+     * Función que almacena los archivos en el servidor y las rutas en la base de datos
+     **********************************************************************************/
     private function storeExpedienteProveedor($data, $idProveedor)
     {
         $expedienteSolicitud = new ExpedientesProveedores();
@@ -180,27 +171,24 @@ class ProveedoresController extends Controller
         $expedienteSolicitud->save();
     }
 
-    /**
+    /***********************************************************************************
      * Función que recupera las rutas del expediente del proveedor
-     */
+     ***********************************************************************************/
     public function show($id)
     {
         $expediente = ExpedientesProveedores::where('proveedores_id', $id)->first();
         return response()->json($expediente);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('compras::edit');
     }
 
-    /**
+    /************************************************************************************
      * Fucnion que recibe datos y coordina el funcionamiento de
      * updateProveedor y updateExpedietProveedor
-     */
+     **************************************************************************************/
     public function update(Request $request, $id)
     {
         $validacion =  Validator::make($request->all(), [
@@ -234,8 +222,8 @@ class ProveedoresController extends Controller
         try {
             DB::beginTransaction();
 
-            $this->updateProveedor($request, $id);
-            $this->updateExpedienteProveedor($request, $id);
+                $this->updateProveedor($request, $id);
+                $this->updateExpedienteProveedor($request, $id);
 
             DB::commit();
 
@@ -255,9 +243,9 @@ class ProveedoresController extends Controller
         }
     }
 
-    /**
+    /***********************************************************************
      * Función para actualizar UNICAMENTE los datos del proveedor
-     */
+     *************************************************************************/
     private function updateProveedor($data, $id)
     {
         $proveedor = Proveedores::find($id);
@@ -280,14 +268,9 @@ class ProveedoresController extends Controller
 
         ]);
     }
-    /*---------------------------------------------------------------------
+    /*************************************************************************
     *FUNCIÓN QUE ACTUALIZA LOS ARCHIVOS DEL EXPEDIENTE DEL PROVEEDOR
-    *Primero busco al proveedor
-    *Elimino el anterior archivo
-    *Almaceno los archivos 
-    *Después almaceno las rutas del expediente
-    *---------------------------------------------------------------------
-    */
+    **************************************************************************/
     private function updateExpedienteProveedor($data, $idProveedor)
     {
         $hoy = date("jnY"); //Recuperar la fecha del dia de hoy para diferenciar el registro nuevo
@@ -296,75 +279,73 @@ class ProveedoresController extends Controller
         $carpetaProveedor = 'expedientes/' . $idProveedor;
 
         Storage::makeDirectory($carpetaProveedor);
-        if ($data->hasFile('constancia_fiscal')) {
+            if ($data->hasFile('constancia_fiscal')) {
 
-            $archivoEliminar = $expediente->constancia_fiscal; //Recuperarla anterior ruta del archivo al a eliminar
-            if ($archivoEliminar) { // verificar si existe la ruta
-                Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                $archivoEliminar = $expediente->constancia_fiscal; //Recuperarla anterior ruta del archivo al a eliminar
+                if ($archivoEliminar) { // verificar si existe la ruta
+                    Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                }
+
+                $constancia_fiscal = "constancia_fiscal" . $hoy . "." . $data->file('constancia_fiscal')->getClientOriginalExtension(); //Asignar un nombre al archivo
+                $expediente->constancia_fiscal = $data->file('constancia_fiscal')->storeAs($carpetaProveedor, $constancia_fiscal); //Actualiza la ruta y el archivo
             }
+            if ($data->hasFile('ine')) {
 
+                $archivoEliminar = $expediente->ine;
+                if ($archivoEliminar) { // verificar si existe la ruta
+                    Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                }
 
-            $constancia_fiscal = "constancia_fiscal" . $hoy . "." . $data->file('constancia_fiscal')->getClientOriginalExtension(); //Asignar un nombre al archivo
-            //$constancia_fiscal = "constancia_fiscal.". $data->file('constancia_fiscal')->getClientOriginalExtension();
-            $expediente->constancia_fiscal = $data->file('constancia_fiscal')->storeAs($carpetaProveedor, $constancia_fiscal); //Actualiza la ruta y el archivo
-        }
-        if ($data->hasFile('ine')) {
-
-            $archivoEliminar = $expediente->ine;
-            if ($archivoEliminar) { // verificar si existe la ruta
-                Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                $nombreArchivo = "ine" . $hoy . "." . $data->file('ine')->getClientOriginalExtension();
+                $expediente->ine = $data->file('ine')->storeAs($carpetaProveedor, $nombreArchivo);
             }
+            if ($data->hasFile('comprobante_domicilio')) {
 
-            $nombreArchivo = "ine" . $hoy . "." . $data->file('ine')->getClientOriginalExtension();
-            $expediente->ine = $data->file('ine')->storeAs($carpetaProveedor, $nombreArchivo);
-        }
-        if ($data->hasFile('comprobante_domicilio')) {
+                $archivoEliminar = $expediente->comprobante_domicilio;
+                if ($archivoEliminar) { // verificar si existe la ruta
+                    Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                }
 
-            $archivoEliminar = $expediente->comprobante_domicilio;
-            if ($archivoEliminar) { // verificar si existe la ruta
-                Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                $nombreArchivo = "comprobante_domicilio" . $hoy . "." . $data->file('comprobante_domicilio')->getClientOriginalExtension();
+                $expediente->comprobante_domicilio = $data->file('comprobante_domicilio')->storeAs($carpetaProveedor, $nombreArchivo);
             }
+            if ($data->hasFile('estado_cuenta')) {
 
-            $nombreArchivo = "comprobante_domicilio" . $hoy . "." . $data->file('comprobante_domicilio')->getClientOriginalExtension();
-            $expediente->comprobante_domicilio = $data->file('comprobante_domicilio')->storeAs($carpetaProveedor, $nombreArchivo);
-        }
-        if ($data->hasFile('estado_cuenta')) {
+                $archivoEliminar = $expediente->estado_cuenta;
+                if ($archivoEliminar) { // verificar si existe la ruta
+                    Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                }
 
-            $archivoEliminar = $expediente->estado_cuenta;
-            if ($archivoEliminar) { // verificar si existe la ruta
-                Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                $nombreArchivo = "estado_cuenta" . $hoy . "." . $data->file('estado_cuenta')->getClientOriginalExtension();
+                $expediente->estado_cuenta = $data->file('estado_cuenta')->storeAs($carpetaProveedor, $nombreArchivo);
             }
+            if ($data->hasFile('acta_constitutiva')) {
 
-            $nombreArchivo = "estado_cuenta" . $hoy . "." . $data->file('estado_cuenta')->getClientOriginalExtension();
-            $expediente->estado_cuenta = $data->file('estado_cuenta')->storeAs($carpetaProveedor, $nombreArchivo);
-        }
-        if ($data->hasFile('acta_constitutiva')) {
+                $archivoEliminar = $expediente->acta_constitutiva;
+                if ($archivoEliminar) { // verificar si existe la ruta
+                    Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                }
 
-            $archivoEliminar = $expediente->acta_constitutiva;
-            if ($archivoEliminar) { // verificar si existe la ruta
-                Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                $nombreArchivo = "acta_constitutiva" . $hoy . "." . $data->file('acta_constitutiva')->getClientOriginalExtension();
+                $expediente->acta_constitutiva = $data->file('acta_constitutiva')->storeAs($carpetaProveedor, $nombreArchivo);
             }
+            if ($data->hasFile('poder_notarial')) {
 
-            $nombreArchivo = "acta_constitutiva" . $hoy . "." . $data->file('acta_constitutiva')->getClientOriginalExtension();
-            $expediente->acta_constitutiva = $data->file('acta_constitutiva')->storeAs($carpetaProveedor, $nombreArchivo);
-        }
-        if ($data->hasFile('poder_notarial')) {
+                $archivoEliminar = $expediente->poder_notarial;
+                if ($archivoEliminar) { // verificar si existe la ruta
+                    Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                }
 
-            $archivoEliminar = $expediente->poder_notarial;
-            if ($archivoEliminar) { // verificar si existe la ruta
-                Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                $nombreArchivo = "poder_notarial" . $hoy . "." . $data->file('poder_notarial')->getClientOriginalExtension();
+                $expediente->poder_notarial = $data->file('poder_notarial')->storeAs($carpetaProveedor, $nombreArchivo);
             }
-
-            $nombreArchivo = "poder_notarial" . $hoy . "." . $data->file('poder_notarial')->getClientOriginalExtension();
-            $expediente->poder_notarial = $data->file('poder_notarial')->storeAs($carpetaProveedor, $nombreArchivo);
-        }
 
         $expediente->save();
     }
 
-    /**
+    /*********************************************************************************************
      * Actualiza el estatus del proveedor a inactivo
-     */
+     *********************************************************************************************/
     public function destroy($id)
     {
         $proveedor = Proveedores::where('id', $id);

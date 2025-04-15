@@ -36,7 +36,9 @@ use Modules\Compras\Models\Proveedores;
 class SolicitudesCompraController extends Controller
 {
 
-    //Genera un nuevo folio consecutivo en base al ultimo folio
+    /************************************************************* 
+    * Genera un nuevo folio consecutivo en base al ultimo folio
+    *************************************************************/
     public function generarFolioSc()
     {
         $ultimaOrden = SolicitudesCompra::orderBy('id', 'desc')->first('folio');
@@ -51,9 +53,9 @@ class SolicitudesCompraController extends Controller
         return  $nuevoFolio;
     }
 
-    /**
+    /**************************************************************
      * Recupera todos los registros de la base de datos
-     */
+     **************************************************************/
     public function index()
     {
         //Catalogo de estados
@@ -124,10 +126,10 @@ class SolicitudesCompraController extends Controller
         ]);
     }
 
-    /**
+    /**************************************************************
      * Recupera todos los registros de la base de datos
      * *Con paginacion (30 registros por pagina)
-     */
+     ***************************************************************/
     public function index1(Request $request)
     {
 
@@ -145,35 +147,27 @@ class SolicitudesCompraController extends Controller
             ]
         ]);
     }
-    /**
-     * Show the form for creating a new resource.
-     */
+
     public function create()
     {
         return view('compras::create');
     }
 
-    /**
-     * Genera un el registro de la solicitud de compra junto con sus detallas
+    /***************************************************************************************
+     * Genera un el registro de la solicitud de compra junto con sus detalles
      * Valida y coordina el funcionamiento de storeSolicitudCOmpra y storeDetallesSolicitud
-     */
+     ***************************************************************************************/
     public function store(Request $request)
     {
-        // $solicitudCompra = SolicitudesCompra::create($request->all());
-        // $idSolicitud = $this->storeSolicitudCompra($request);
-        // $this->storeDetalleSolicitudCompra($request->detalles, $idSolicitud);
-
         $data = json_decode($request->input('data'), true);
         $files =  $request->allFiles();
 
         $validador = Validator::make($data, [
-            // 'folio' => 'required|string|max:50',
+            
             'usuario_solicita' => 'required|integer',
             'usuario_destino' => 'required|integer',
             'motivo' => 'required|string|max:50',
-            // 'fecha' => 'required|string|max:50',
             'users_id' => 'required||integer',
-            //validación de los detalles
             'detalles' => 'required|array|min:1',
             'detalles.*.cantidad' => 'required|numeric|min:1',
             'detalles.*.descripcion' => 'required|string|max:255',
@@ -205,9 +199,13 @@ class SolicitudesCompraController extends Controller
 
         try {
             DB::beginTransaction();
-            $idSolicitud = $this->storeSolicitudCompra($data);
-            $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
+
+                $idSolicitud = $this->storeSolicitudCompra($data);
+
+                $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
+
             DB::commit();
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha guardado correctamente',
@@ -215,6 +213,7 @@ class SolicitudesCompraController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Ocurrió un error al guardar la solicitud',
@@ -223,17 +222,14 @@ class SolicitudesCompraController extends Controller
         }
     }
 
-    /*---------------------------------------------------------------------
+    /**********************************************************************
     *Primero genero una solicitud de compra
     *Después almaceno los detalles de la solicitud
-    *---------------------------------------------------------------------
-    */
-
+    **********************************************************************/
     private function storeSolicitudCompra($data)
     {
         $dataSolicitud = new SolicitudesCompra();
         $dataSolicitud->folio = $this->generarFolioSc();
-        // $dataSolicitud-> folio = $data["folio"] ;
         $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
         $dataSolicitud->usuario_destino = $data["usuario_destino"];
         $dataSolicitud->motivo = $data["motivo"];
@@ -242,9 +238,10 @@ class SolicitudesCompraController extends Controller
         $dataSolicitud->save();
         return $dataSolicitud->id;
     }
-    /**
+
+    /*****************************************************************************
      * Amacena los detalles de la solicitud
-     */
+     *****************************************************************************/
     private function storeDetalleSolicitudCompra($detalles, $idSolicitud, $files)
     {
         foreach ($detalles as $index => $detalle) {
@@ -266,14 +263,17 @@ class SolicitudesCompraController extends Controller
         }
     }
 
-    /**
-     * Recupera los detalles de la solicitudd
-     */
+    /*********************************************************************
+     * Recupera los detalles de la solicitud
+     *********************************************************************/
     public function show($id)
     {
         return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->get()));
     }
 
+    /*********************************************************************
+     * Recupera las solicitud de compra por id
+     *********************************************************************/
     public function getSolicitud($id)
     {
         //Catalogo de estados
@@ -329,16 +329,12 @@ class SolicitudesCompraController extends Controller
         ]);
     }
 
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('compras::edit');
     }
 
-    /**
+    /*
      * Esto no se ocupa
      */
     public function update(Request $request, $id)
@@ -359,9 +355,9 @@ class SolicitudesCompraController extends Controller
         ]);
     }
 
-    /**
+    /**************************************************************
      * Actualiza el estatus a cancelado
-     */
+     **************************************************************/
     public function destroy($id)
     {
 
@@ -386,14 +382,10 @@ class SolicitudesCompraController extends Controller
         ]);
     }
 
-    /**
-     * SOLUCIÓN PARA GUARDAR LA COTIZACIÓN
-     * Generar una función que ejecute lo siguiente
-     * Almacenar la cotización
-     * Almacenar la relación entre cotización y proveedores
-     * ?Almacenar la relación entre detalles y cotizacionProveedores
-     * Actualiza el estatus de la Solicitud a 2
-     */
+    /********************************************************************
+     * Envía la solicitud de cotización a los proveedores y almacena la 
+     * relación en la BD
+     ********************************************************************/
     public function enviarSolicitudCotizacion(Request $request)
     {
         $data = $request->all();
@@ -416,35 +408,42 @@ class SolicitudesCompraController extends Controller
 
         try {
             DB::beginTransaction();
+                // Almacenar la cotización
+                $idCotizacion = $this->storeCotizacion($data);
 
+                    //Adecuación nuevo front
+                    $idsProv = [$data['proveedor1'], $data['proveedor2'], $data['proveedor3']];
+                    $data['proveedores'] = [];
+                    foreach ($idsProv as $id) {
+                        $proveedor = Proveedores::where("id", $id)->first();
+                        $data['proveedores'][] =  $proveedor;
+                    }
 
+                    $data['detalles'] =  DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])->get();
 
+                // Almacenar la relación entre cotización y proveedores
+                $this->storeCotizacionProveedores($data['proveedores'], $idCotizacion);
+                
+                //Queue para despachar el correo
+                //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
 
-            $idCotizacion = $this->storeCotizacion($data);
+                /*******************************************************************************************
+                 * !Habiltar para que se envíen los correos 
+                 * $this->enviaCorreoProveedores($data['proveedores'], $data);
+                 *******************************************************************************************/ 
+                
+                $idSolicitudC = $data['solicitudes_compra_id'];
 
-            //Adecuación nuevo front
-            $idsProv = [$data['proveedor1'], $data['proveedor2'], $data['proveedor3']];
-            $data['proveedores'] = [];
-            foreach ($idsProv as $id) {
-                $proveedor = Proveedores::where("id", $id)->first();
-                $data['proveedores'][] =  $proveedor;
-            }
+                // Actualiza el estatus de la Solicitud a 2
+                SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => 2]);
 
-            $this->storeCotizacionProveedores($data['proveedores'], $idCotizacion);
-            //Queue para despachar el correo
-            //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
-            // 
-            // !Habiltar para que se envíen los correos $this->enviaCorreoProveedores($data['proveedores'], $data);
-
-
-            $idSolicitudC = $data['solicitudes_compra_id'];
-            SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => 2]);
             DB::commit();
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Correos enviados correctamente',
-                'data' => []
+                // 'data' => []
+                'data' => $data
             ]);
         } catch (\Exception $e) {
             DB::rollback();
@@ -458,72 +457,9 @@ class SolicitudesCompraController extends Controller
         }
     }
 
-
-    public function enviarSolicitudCotizacion1(Request $request)
-    {
-        $data = $request->all();
-
-        $validacion = Validator::make($data, [
-            // 'folioCo' => 'required|string|max:50',
-            // 'fecha' => 'required|date',
-            'consideraciones' => 'nullable|string|max:150',
-            'solicitudes_compra_id' => 'required|integer',
-            'proveedores' => 'required|array|min:1',
-            'proveedores.*.id' => 'required|integer',
-            'proveedores.*.correo' => 'required|email|max:50|distinct',
-            // 'folioCo' => 'required|string|max:50',
-        ]);
-
-        if ($validacion->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Datos no validos o incompletos',
-                'errors' => $validacion->errors()
-            ]);
-        }
-
-        try {
-            DB::beginTransaction();
-
-            $idCotizacion = $this->storeCotizacion($data);
-
-
-
-            $this->storeCotizacionProveedores($data['proveedores'], $idCotizacion);
-            //Queue para despachar el correo
-            //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
-            // 
-            // !Habiltar para que se envíen los correos $this->enviaCorreoProveedores($data['proveedores'], $data);
-
-
-            $idSolicitudC = $data['solicitudes_compra_id'];
-            SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => 2]);
-            DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Correos enviados correctamente',
-                'data' => []
-            ]);
-        } catch (\Exception $e) {
-            DB::rollback();
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Algo fallo',
-                'error' => $e->getMessage()
-            ]);
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Correos enviados correctamente'
-        ]);
-    }
-    /**
-     * Función que almacena los detalles principales de la cotizaciones 
-     */
-
+    /*************************************************************************
+     * Función que genera folios consecutivos de las cotizaciones
+     ************************************************************************/
     public function generarFolioCo()
     {
         $ultimaCotizacion = Cotizaciones::orderBy('id', 'desc')->first('folio');
@@ -538,6 +474,9 @@ class SolicitudesCompraController extends Controller
         return $nuevoFolio;
     }
 
+    /*************************************************************************
+     * Función que genera la fecha actual tiempo de Mexico
+     ************************************************************************/
     public function getFecha()
     {
         $fecha = new DateTime('now', new DateTimeZone('America/Mexico_City'));
@@ -545,6 +484,9 @@ class SolicitudesCompraController extends Controller
         return $fecha;
     }
 
+     /*************************************************************************
+     * Almacena la cotización y devuelve el id del registro creado
+     ************************************************************************/
     public function storeCotizacion($data)
     {
         $dataCotizacion = new Cotizaciones();
@@ -557,9 +499,9 @@ class SolicitudesCompraController extends Controller
         return $dataCotizacion->id;
     }
 
-    /**
+    /*****************************************************************************
      * Función que almacena la relación entre cotización y proveedores
-     */
+     *****************************************************************************/
     public function storeCotizacionProveedores($proveedores, $idCotizacion)
     {
         $idsCotProv = [];
@@ -575,9 +517,9 @@ class SolicitudesCompraController extends Controller
         return $idsCotProv;
     }
 
-    /**
-     * Función que  envia el correo de solicitud de cotización a los proveedores
-     */
+    /*****************************************************************************
+     * Función que  envía el correo de solicitud de cotización a los proveedores
+     ****************************************************************************/
     public function enviaCorreoProveedores($proveedores, $data)
     {
         foreach ($proveedores as $proveedor) {

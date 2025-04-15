@@ -31,42 +31,35 @@ use App\Notifications\SolicitudSurtido;
 
 class OrdenesComprasController extends Controller
 {
-    //Genera un nuevo folio consecutivo en base al ultimo folio
+    /**************************************************************
+     * Genera un nuevo folio consecutivo en base al ultimo folio
+     **************************************************************/
     public function generarFolio()
     {
         $ultimaOrden = OrdenCompra::orderBy('id', 'desc')->first();
-        if ($ultimaOrden) {
-            $ultimoFolio = $ultimaOrden->folio_oc;
-            $numero = intval(substr($ultimoFolio, 3)) + 1;
-        } else {
-            $numero = 1;
-        }
+            if ($ultimaOrden) {
+                $ultimoFolio = $ultimaOrden->folio_oc;
+                $numero = intval(substr($ultimoFolio, 3)) + 1;
+            } else {
+                $numero = 1;
+            }
         $nuevoFolio = 'OC-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
         // return response()->json(['nuevoFolio' => $nuevoFolio]);
         return $nuevoFolio;
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         return view('compras::index');
     }
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('compras::create');
     }
 
-    /**
-     * Genera el registro de orden de compra
-     * Actualiza al proveedor seleccionado
-     * Actualiza estado de la solicitud
-     */
+    /************************************************************
+     * Genera la orden de compra en la BD
+     ************************************************************/
     public function store(Request $request)
     {
 
@@ -86,17 +79,25 @@ class OrdenesComprasController extends Controller
                 'errors' => $validacion->errors()
             ]);
         }
+
         try{
             DB::beginTransaction();
-            OrdenCompra::create([
-                'folio_oc' => $this->generarFolio(),
-                'fecha' => $this->getFecha() ?? now(),
-                'observaciones' => $request->input('observaciones'),
-                'cotizaciones_id' => $request->input('cotizaciones_id'),
-            ]);
-    
-            CotizacionesProveedores::where('id', $request->input('id_cotizacion_prov'))->update(['seleccionado' => 1]);
-            SolicitudesCompra::where('id', $request->input('id_solicitud_compra'))->update(['estatus' => 3]);
+
+                // Genera el registro de orden de compra
+                OrdenCompra::create([
+                    'folio_oc' => $this->generarFolio(),
+                    'fecha' => $this->getFecha() ?? now(),
+                    'observaciones' => $request->input('observaciones'),
+                    'cotizaciones_id' => $request->input('cotizaciones_id'),
+                    'entrega' => $request->input('entrega'),
+                ]);
+
+                // Actualiza al proveedor seleccionado
+                CotizacionesProveedores::where('id', $request->input('id_cotizacion_prov'))->update(['seleccionado' => 1]);
+
+                // Actualiza estado de la solicitud
+                SolicitudesCompra::where('id', $request->input('id_solicitud_compra'))->update(['estatus' => 3]);
+
             DB::commit();
 
             return response()->json([
@@ -106,7 +107,9 @@ class OrdenesComprasController extends Controller
             ]);
 
         }catch(\Exception $e){
+
             DB::rollback();
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Ocurrió un error inesperado',
@@ -115,7 +118,10 @@ class OrdenesComprasController extends Controller
         }
     }
 
-    public function show($id) // Recupera la orden de compra en base al idCompra
+    /************************************************************
+     * Recupera la orden de compra en base al idCompra
+     ************************************************************/
+    public function show($id)
     {
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
         $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->with('documentos')
@@ -123,17 +129,26 @@ class OrdenesComprasController extends Controller
         return $ordenCompra;
     }
 
-    public function consultaDatosPDF($id) // Consulta, genera el PDF y envía el PDF ORDEN DE COMPRA
+    /****************************************************************
+     * Consulta para generar el formato interno de orden de compra
+     ****************************************************************/
+    public function consultaDatosPDF($id)
     {
         $solicitudCompra = SolicitudesCompra::where('id', $id)->first();
+
         $user = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')');
         $userSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_solicita . ')');
+
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
+
         $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
-        $cotizacionProveedor = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
-            ->where('seleccionado', 1)->first();
+
+        $cotizacionProveedor = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id) ->where('seleccionado', 1)->first();
+
         $proveedor = Proveedores::where('id', $cotizacionProveedor->proveedores_id)->first();
+
         $detalleCotizacion = DetallesCotizacionResource::collection((DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $cotizacionProveedor->id)->get()));
+        
         $data =  [
             'ordenCompra' => $ordenCompra,
             'cotizacion' => $cotizacion,
@@ -145,41 +160,54 @@ class OrdenesComprasController extends Controller
             'solicita' => $userSolicita
         ];
 
-         $pdf = new OrdenCompraPdfController();
-         $file = $pdf->OrdenCompraFormatoInterno($data);
-         return response($file, 200)
-             ->header('Content-Type', 'application/pdf')
-             ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
-        
+        //Llamada a la funcion quue genera el formato
+        $pdf = new OrdenCompraPdfController();
+        $file = $pdf->OrdenCompraFormatoInterno($data);
 
+         //Devuelvo el pdf hacia el front
+        return response($file, 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
+
+        // return response()->json(
+        //     [
+        //         'data' => $data
+        //     ]
+        //     );
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('compras::edit');
     }
 
-    //Actualiza el estatus de Orden compra a 5 (Pagado)
-    //Actualiza el estatus de Solicitud Compra a 7 (Pagado)
+    /**************************************************************
+     * Actualiza el estatus a pagado
+     ************************************************************/
     public function update(Request $request, $id)
     {
         $idSc = $request->all();
 
+    
         try {
             DB::beginTransaction();
+                //Actualiza el estatus de Orden compra a 5 (Pagado)
                 OrdenCompra::where('id', $id)->update(['estatus' => 5]);
+
+                //Actualiza el estatus de Solicitud Compra a 7 (Pagado)
                 SolicitudesCompra::where('id', $idSc)->update(['estatus' => 7]);
+
             DB::commit();
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha realizado correctamente',
                 'data' => $idSc
             ]);
+
         } catch (\Exception $e) {
             DB::rollback();
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Ocurrió un error inesperado',
@@ -189,12 +217,11 @@ class OrdenesComprasController extends Controller
         
     }
 
-    /**
+    /********************************************************************
      * Actualiza el estatus de solicitud y orden de compra a cancelado
-     */
+     ********************************************************************/
     public function destroy($id)
     {
-
         try {
             DB::beginTransaction();
                 SolicitudesCompra::where('id', $id)->update(['estatus' => 5]);
@@ -215,126 +242,17 @@ class OrdenesComprasController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-        }
-
-        
-        
+        } 
     }
 
-    /**
-     * 
-     * 1.- Recupero los datos (id solicitud de compra, id de orden de compra)
-     * 2.- Actualizo el Actualizar el estatus de la solicitud de compra a 6 (En surtido)
-     * 3.- Actualizar el estatus de la orden de compra a 3 (En surtido)
-     * 4.- Generar el registro en documentos compras 
-     * 5.- Recupero los datos del proveedor seleccionado para mandarle el correo
-     * 6.- Preparo los datos del correo
-     * 7.- Mando el correo 
-     */
-    public function enviarSolicitudSurtido1(Request $request)
-    {
-        $data = $request->all();
-
-        $idOc = $data['idOrdenCompra'];
-        $idSc = $data['idSolicituCompra'];
-
-        $cotizacion = Cotizaciones::where('solicitudes_compra_id', $idSc)->first('id');
-        $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->where('seleccionado', 1)
-            ->with(['datos_proveedor' => function ($query) {
-                $query->select('id', 'nombre', 'correo');
-            }])
-            ->first(['id', 'proveedores_id', 'seleccionado']);
-        $detallesSC = DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $idSc)->get()));
-
-        $datos =  [
-            'cotizacion' => $cotizacion,
-            'proveedor' => $proveedorSeleccionado,
-            'detalles' => $detallesSC,
-        ];
-
-        //! Habilitar para envío de correo a proveedor 
-        //  Notification::route('mail',
-        //                 $datos['proveedor']['datos_proveedor']['correo'])
-        //                 ->notify(new SolicitudSurtido($datos));
-
-        SolicitudesCompra::where('id', $idSc)->update(['estatus' => 6]);
-        OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
-
-        DocumentosOrdenesCompra::create(['orden_compra_id' => $idOc]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha autorizado y enviado el correo
-                         al proveedor correctamente',
-            'data' => []
-        ]);
-    }
-
-    /**
-     * 1.- Recuperar los datos (id solicitud de compra, id de orden de compra,)
-     * 2.- Actualizar el estatus de la orden de compra a 4 (Autorizada)
-     * 4.- Actualizar el estatus de la orden de compra a 2
-     * 3.- Generar el registro en documentos compras
-     */
-    public function autorizarOrden(Request $request)
-    {
-        $data = $request->all();
-
-        $idOc = $data['idOrdenCompra'];
-        $idSc = $data['idSolicituCompra'];
-
-        try {
-            DB::beginTransaction();
-            SolicitudesCompra::where('id', $idSc)->update(['estatus' => 4]);
-            OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
-            // DocumentosOrdenesCompra::create(['orden_compra_id' => $idOc]);
-            DB::commit();
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Se ha autorizado correctamente',
-                'data' => []
-            ]);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Ocurrió un error inesperado',
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * Recupera las ruta del xml en el servidor
-     * Recupera los contenido de los XML
-     * Envía el contenido hacia el fronted en json 
-     */
-
-    public function leerXML($id)
-    {
-        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get('ruta_xml_factura');
-
-        $contenidosXML = [];
-         foreach($rutas as $ruta){
-            $rutaXML =  storage_path('app/' . $ruta['ruta_xml_factura']);
-            if (file_exists($rutaXML)) {
-                $contenidoXML = file_get_contents($rutaXML);
-                $contenidosXML[] = $contenidoXML; 
-            }
-            else{
-                return response()->json(['message' => 'Archivo no encontrado']);
-            }
-         }
-          return response()->json(['contenidos' => $contenidosXML], 200)
-              ->header('Content-Type', 'application/json');
-        // return $contenidosXML;
-
-    }
-
+    /**********************************************************************************
+     * Marca la solicitud como autorizada y envía un correo al proveedor seleccionado
+     **********************************************************************************/
     public function enviarSolicitudSurtido(Request $request)
     {
         $data = $request->all();
-
+        
+        // Recupero los datos (id solicitud de compra, id de orden de compra)
         $validacion =  Validator::make($data,[
             'idOrdenCompra' => 'required|exists:com_orden_compra,id',
             'idSolicituCompra' => 'required|exists:com_solicitudes_compra,id'
@@ -352,47 +270,51 @@ class OrdenesComprasController extends Controller
         $idOc = $data['idOrdenCompra'];
         $idSc = $data['idSolicituCompra'];
 
-        DB::beginTransaction();
+            DB::beginTransaction();
 
         try {
-            $cotizacion = Cotizaciones::where('solicitudes_compra_id', $idSc)->first('id');
+                $cotizacion = Cotizaciones::where('solicitudes_compra_id', $idSc)->first('id');
 
-            if(!$cotizacion){
-                throw new \Exception('No se encontro la cotizacion asociada');
-            }
+                if(!$cotizacion){
+                    throw new \Exception('No se encontro la cotizacion asociada');
+                }
+                // Recupero los datos del proveedor seleccionado para mandarle el correo
+                $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
+                    ->where('seleccionado', 1)
+                    ->with(['datos_proveedor' => function ($query) {
+                        $query->select('id', 'nombre', 'correo');
+                    }])
+                    ->first(['id', 'proveedores_id', 'seleccionado']);
 
-            $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
-                ->where('seleccionado', 1)
-                ->with(['datos_proveedor' => function ($query) {
-                    $query->select('id', 'nombre', 'correo');
-                }])
-                ->first(['id', 'proveedores_id', 'seleccionado']);
+                    if(!$proveedorSeleccionado){
+                        throw new \Exception('No hay un proveedor seleccionado para esta cotizacion');
+                    }
 
-                if(!$proveedorSeleccionado){
-                    throw new \Exception('No hay un proveedor seleccionado para esta cotizacion');
+                // Recupero los detalles de la cotizacion para el cuerpo del correo
+                $detallesSC = DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $idSc)->get()));
+
+                if($detallesSC->isEmpty()){
+                    throw new \Exception('No se encontraron detalles');
                 }
 
+                // Datos para el correo
+                $datos = [
+                    'cotizacion' => $cotizacion,
+                    'proveedor' => $proveedorSeleccionado,
+                    'detalles' => $detallesSC,
+                ];
 
-            $detallesSC = DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $idSc)->get()));
+                /**********************************************************************************
+                *! Habilitar para envío de correo a proveedor
+                * ********************************************************************************/ 
+                //   Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
+                //               ->notify(new SolicitudSurtido($datos));
 
-            if($detallesSC->isEmpty()){
-                throw new \Exception('No se encontraron detalles');
-            }
+                // Actualizo el Actualizar el estatus de la solicitud de compra a 6 (En surtido)
+                SolicitudesCompra::where('id', $idSc)->update(['estatus' => 6]);
 
-            $datos = [
-                'cotizacion' => $cotizacion,
-                'proveedor' => $proveedorSeleccionado,
-                'detalles' => $detallesSC,
-            ];
-
-            //! Habilitar para envío de correo a proveedor 
-            //  Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
-            //              ->notify(new SolicitudSurtido($datos));
-
-            SolicitudesCompra::where('id', $idSc)->update(['estatus' => 6]);
-            OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
-
-            // DocumentosOrdenesCompra::create(['orden_compra_id' => $idOc]);
+                // Actualizar el estatus de la orden de compra a 3 (En surtido)
+                OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
 
             DB::commit();
 
@@ -413,6 +335,76 @@ class OrdenesComprasController extends Controller
         }
     }
 
+    /**********************************************************************************
+     * Marca la solicitud como autorizada y envía un correo al proveedor seleccionado
+     **********************************************************************************/
+    public function autorizarOrden(Request $request)
+    {
+        $data = $request->all();
+
+        // Recuperar los datos (id solicitud de compra, id de orden de compra,)
+        $idOc = $data['idOrdenCompra'];
+        $idSc = $data['idSolicituCompra'];
+
+        try {
+            DB::beginTransaction();
+                // Actualizar el estatus de la solicitud de compra a 4 (Autorizada)
+                SolicitudesCompra::where('id', $idSc)->update(['estatus' => 4]);
+                
+                // Actualizar el estatus de la orden de compra a 3 (Autorizada)
+                OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha autorizado correctamente',
+                'data' => []
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollback();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error inesperado',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**************************************************************************************
+     * Lee el contenido de archivos xml en el servidor y le envía los datos al frontend
+     **************************************************************************************/
+    public function leerXML($id)
+    {
+        // Recupera las ruta del xml en el servidor
+        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get('ruta_xml_factura');
+
+        $contenidosXML = [];
+        // Recupera los contenido de los XML
+         foreach($rutas as $ruta){
+            $rutaXML =  storage_path('app/' . $ruta['ruta_xml_factura']);
+            if (file_exists($rutaXML)) {
+                $contenidoXML = file_get_contents($rutaXML);
+                $contenidosXML[] = $contenidoXML; 
+            }
+            else{
+                return response()->json(['message' => 'Archivo no encontrado']);
+            }
+         }
+
+        // Envía el contenido hacia el fronted en json 
+          return response()->json(['contenidos' => $contenidosXML], 200)
+              ->header('Content-Type', 'application/json');
+        // return $contenidosXML;
+
+    }
+
+    /**************************************************************************************
+     * Recupera la fecha en un formato que la bd acepte
+     **************************************************************************************/
     public function getFecha(){
         $fecha = new DateTime('now', new DateTimeZone('America/Mexico_City'));
         $fecha = $fecha->format('Y-m-d H:i:s');

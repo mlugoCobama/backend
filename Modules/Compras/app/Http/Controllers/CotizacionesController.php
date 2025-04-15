@@ -24,8 +24,9 @@ use function Laravel\Prompts\error;
 
 class CotizacionesController extends Controller
 {
-    //Función para recuperar el ultimo folio 
-    //y genera un nuevo folio
+    /* *****************************************
+     * Función quu genera folios consecutivos
+     * *****************************************/
     public function generarFolioCo()
     {
         $ultimaCotizacion = Cotizaciones::orderBy('id', 'desc')->first('folio');
@@ -39,7 +40,9 @@ class CotizacionesController extends Controller
         return response()->json(['nuevoFolio' => $nuevoFolio]);
     }
 
-    //  Función para recuperar archivos del servidor 
+    /* ***********************************************
+     * Función para recuperar archivos del servidor  
+     * **********************************************/
     public function getFile($id, $file)
     {
         $path = storage_path("app/cotizaciones/$id/$file");
@@ -55,26 +58,20 @@ class CotizacionesController extends Controller
         // $binaryContent = base64_encode($fileContent);
         // return response($binaryContent, 200)->header("Content-Type", 'application/octet-stream');
     }
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
         return view('compras::index');
     }
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('compras::create');
     }
 
-    /**
+    /*****************************************************
      * Guarda los importes unitarios de la cotización.
-     *  Si tiene archivos los guarda en la base de datos.
-     */
+     * Si tiene archivos los guarda en la base de datos.
+     * ****************************************************/
     public function store(Request $request)
     {
         $data = $request->all();
@@ -157,7 +154,7 @@ class CotizacionesController extends Controller
 
 
     /**
-     * Show the specified resource.
+     * Recupera información de la cotización con sus detalles
      */
     public function show($id)
     {
@@ -199,9 +196,6 @@ class CotizacionesController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('compras::edit');
@@ -224,9 +218,7 @@ class CotizacionesController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+
     public function destroy($id)
     {
         //

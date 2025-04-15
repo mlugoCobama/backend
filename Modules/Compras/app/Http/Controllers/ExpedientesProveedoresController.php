@@ -20,7 +20,9 @@ use ZipArchive;
 class ExpedientesProveedoresController extends Controller
 {
     
-    // Función que recupera archivos 
+    /********************************************************************
+     * Función que recupera archivos 
+     ********************************************************************/
     public function getFile($id, $file) 
     { 
         $path = storage_path("app/expedientes/$id/$file"); 
@@ -32,7 +34,9 @@ class ExpedientesProveedoresController extends Controller
         return response($fileContent, 200)->header("Content-Type", $type); 
     }
 
-    //Genera un Zip con el expediente del proveedor para ser descargado
+    /**********************************************************************
+     * Genera un Zip con el expediente del proveedor para ser descargado
+     *********************************************************************/
     public function downloadExpediente($id)
     {
         $rutas = ExpedientesProveedores::where('proveedores_id', $id)
@@ -87,58 +91,30 @@ class ExpedientesProveedoresController extends Controller
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
-
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         return view('compras::index');
     }
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('compras::create');
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request): RedirectResponse
     {
         //
     }
-    
-    /**
-     * Show the specified resource.
-     */
     public function show($id)
     {
-
+     //
     }
-    
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('compras::edit');
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id): RedirectResponse
     {
         //
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         //

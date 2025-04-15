@@ -11,7 +11,6 @@ use Modules\Compras\Models\CatUnidadesMedidas;
 use Modules\Compras\Transformers\CatUnidadesMedidaResource;
 // Utilities
 use Illuminate\Support\Facades\Validator;
-
 class CatUnidadesMedidaController extends Controller
 
 {
@@ -24,9 +23,7 @@ class CatUnidadesMedidaController extends Controller
         return CatUnidadesMedidaResource::collection((CatUnidadesMedidas::active()->get()));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+
     public function create()
     {
         return view('compras::create');
@@ -54,7 +51,6 @@ class CatUnidadesMedidaController extends Controller
         return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha guardado correctamente',
-                // 'data' => $datosValidos
                 'data' => new CatUnidadesMedidaResource($unidadMedida)
             ]);
         
@@ -68,9 +64,6 @@ class CatUnidadesMedidaController extends Controller
         return CatUnidadesMedidas::where('id', $id)->get();
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('compras::edit');

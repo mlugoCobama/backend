@@ -11,94 +11,90 @@ use Illuminate\Support\Facades\File;
 
 class OrdenCompraPdfController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
         return view('compras::index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('compras::create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         //
     }
 
-    /**
-     * Show the specified resource.
-     */
     public function show($id)
     {
         return view('compras::show');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('compras::edit');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         //
     }
-    //Código que genera el formato de orden de compra
+
+    /***********************************************************************
+    * Código que genera el formato de orden de compra
+    ***********************************************************************/
     public function OrdenCompraFormatoInterno($data)
     {
+        //JSON de donde se obtienen los datos de facturacion
         $content = File::get(base_path('/dataFacturacion.json'));
         $json = json_decode(json: $content, associative: true);
+
+        $contentE = File::get(base_path('/dataEntregas.json'));
+        $jsonE = json_decode(json: $contentE, associative: true);
+
         $dataFacturacion = $json[$data['destino'][0]->empresa];
-        $dataEntrega = $json[$data['solicita'][0]->empresa];
+        $dataEntrega = $jsonE[$data['ordenCompra']['entrega']];
 
         $pdf = new Fpdi();
         $pdf->AddPage();
-
+         
+        //Plantilla PDF: Formato interno de compra
         $pdf->setSourceFile(__DIR__ . "/../../../../../storage/app/modules/compras/orden_compra/formato_compras_v1.pdf");
-
-
         $template = $pdf->importPage(1);
         $pdf->useImportedPage($template);
 
-
+        // Fuente
         $pdf->SetTextColor(0, 0, 0);
-
         $pdf->SetFont('Arial', 'B', 7);
+
+        $folioOC = $data['ordenCompra']['folio_oc'];
         $pdf->SetXY(172, 15.5);
-        $pdf->Write(0, $data['ordenCompra']['folio_oc']);
+        $pdf->Write(0, $folioOC);
 
         $pdf->SetFont('Arial', 'B', 5);
-        $pdf->SetXY(24.5, 24);
-        $pdf->Write(0, utf8_decode(' (' . $data['solicita'][0]->area . ')'));
 
+        $areaSolicita = $data['solicita'][0]->area;
+        $pdf->SetXY(24.5, 24);
+        $pdf->Write(0, utf8_decode(' (' . $areaSolicita . ')'));
+
+        /*-----------------------------------------------------
+         * Inicia datos de usuario solicita
+        -----------------------------------------------------*/
+       
         $pdf->SetFont('Arial', 'B', 6);
+
         $pdf->SetXY(65, 24);
         $pdf->Write(0, $data['ordenCompra']['id']);
+        $usuarioSolicita = utf8_decode('' . $data['solicita'][0]->firstname . ' ' . $data['solicita'][0]->realname . '');
         $pdf->SetXY(80, 24);
-        $pdf->Write(0, utf8_decode('' . $data['solicita'][0]->firstname . ' ' . $data['solicita'][0]->realname . ''));
+        $pdf->Write(0, $usuarioSolicita);
 
         $fechaOriginal = $data['ordenCompra']['fecha'];
         $fecha = date("d/m/Y", strtotime($fechaOriginal));
@@ -107,10 +103,13 @@ class OrdenCompraPdfController extends Controller
 
         $pdf->SetFont('Arial', '', 6);
         $pdf->SetXY(18, 37);
-        $pdf->Write(0, strtoupper('Expliacion random'));
+        $pdf->Write(0, strtoupper(''));
         $pdf->SetXY(119, 37);
         $pdf->Write(0, strtoupper(utf8_decode($data['solicitudCompra']['motivo'])));
 
+        /*-----------------------------------------------------
+         * Inicia datos de usuario destino
+        -----------------------------------------------------*/
         $pdf->SetXY(57.5, 42.8);
         $pdf->Write(0, utf8_decode('' . $data['destino'][0]->firstname . ' ' . $data['destino'][0]->realname . ''));
         $pdf->SetXY(57.5, 45.4);
@@ -120,6 +119,7 @@ class OrdenCompraPdfController extends Controller
         $pdf->SetXY(57.5, 50.6);
         $pdf->Write(0, utf8_decode($data['solicitudCompra']['motivo']));
 
+        
         $pdf->SetXY(57.5, 58.9);
         $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['nombre'])));
         $pdf->SetXY(57.5, 61.4);
@@ -131,15 +131,19 @@ class OrdenCompraPdfController extends Controller
         $pdf->SetXY(57.5, 69.2);
         $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['condiciones'])));
 
+        /*-----------------------------------------------------
+         * Datos de referencia de cotización
+        -----------------------------------------------------*/
         $pdf->SetXY(173, 61.4);
         $pdf->Write(0, utf8_decode($data['cotizacion']['folio']));
-
         $fechaOriginalOc = $data['cotizacion']['fecha'];
         $fechaOc = date("d/m/Y", strtotime($fechaOriginalOc));
-
         $pdf->SetXY(173, 64);
         $pdf->Write(0, $fechaOc);
 
+        /*-----------------------------------------------------
+         * Datos de facturación
+        -----------------------------------------------------*/
         $pdf->SetXY(57.5, 77.75);
         $pdf->Write(0, $dataFacturacion['RAZON SOCIAL']);
         $pdf->SetXY(57.5, 80.3);
@@ -157,6 +161,9 @@ class OrdenCompraPdfController extends Controller
         $pdf->SetXY(57.5, 95.5);
         $pdf->Write(0, $dataFacturacion['TELS.']);
 
+        /*-----------------------------------------------------
+         * Datos de entrega                                    
+         -----------------------------------------------------*/
         $pdf->SetXY(130, 77.75);
         $pdf->Write(0, $dataEntrega['RAZON SOCIAL']);
         $pdf->SetXY(130, 80.3);
@@ -174,7 +181,9 @@ class OrdenCompraPdfController extends Controller
         $pdf->SetXY(130, 95.5);
         $pdf->Write(0, $dataEntrega['TELS.']);
 
-        //Fila tabla detalle detalle
+        /*-----------------------------------------------------
+         * Fila de la tabla  de detalles                                    
+         -----------------------------------------------------*/
         $pdf->SetFont('Arial', 'B', 6);
 
         $y = 107;
@@ -227,36 +236,18 @@ class OrdenCompraPdfController extends Controller
             $totalImporte += $importe;
         }
 
-        // $y = 107;
-        // $totalImporte = 0;
-        // foreach ($data['detallesCotizacion'] as $detalle) {
-        //     $cantidad = $detalle->detalle_solicitud->cantidad;
-        //     $precio_unitario = $detalle->importe_unitario;
-        //     $tipo = $detalle->detalle_solicitud->unidadMedida->nombre;
-        //     $descripcion = $detalle->detalle_solicitud->descripcion;
-        //     $observaciones = $detalle->detalle_solicitud->observaciones;
-        //     $importe = $cantidad * $precio_unitario;
-
-        //     $pdf->SetXY(17.5, $y);
-        //     $pdf->Cell(12, 5, $cantidad, 0, '0', $align = 'C');
-        //     $pdf->Cell(28, 5, $tipo, 0, '0', $align = 'C');
-        //     $pdf->Cell(21, 5, $descripcion, 0, '0', $align = 'C');
-        //     $pdf->Cell(24.2, 5, $descripcion, 0, '0', $align = 'C');
-        //     $pdf->MultiCell(54, 5, utf8_decode($observaciones), 0, '0', $align = 'C');
-        //     $pdf->Cell(16, 5, "$ " . number_format($precio_unitario, 2), 0, '0', $align = 'C');
-        //     $pdf->Cell(25.5, 5, "$ " . number_format($importe, 2), 0, '0', $align = 'C');
-        //     $pdf->Ln();
-        //     $y += 5;
-        //     $totalImporte += $importe;
-        // }
-
+        /*-----------------------------------------------------
+         * Tabla de tipo de cambio                                    
+         -----------------------------------------------------*/
         $tipoCambio = 1.00;
         $pdf->SetXY(63, 219);
         $pdf->Write(0, 'PESOS');
         $pdf->SetXY(65, 221.5);
         $pdf->Write(0, $tipoCambio);
 
-
+        /*-----------------------------------------------------
+         * Fila totales importe                                  
+         -----------------------------------------------------*/
         $pdf->SetXY(142.5, 215.2);
         $pdf->Cell(14, 2,  "$ " . number_format($totalImporte, 2), 0, '0', $align = 'R');
         $pdf->SetXY(156.4, 215.2);
@@ -264,6 +255,9 @@ class OrdenCompraPdfController extends Controller
         $pdf->SetXY(173, 215.2);
         $pdf->Cell(25, 2,  "$ " . number_format($totalImporte, 2), 0, '0', $align = 'R');
 
+        /*-----------------------------------------------------
+         * Fila totales tipo cambio                                
+         -----------------------------------------------------*/
         $pdf->SetXY(142.5, 218.3);
         $pdf->Cell(14, 2,  $tipoCambio, 0, '0', $align = 'R');
         $pdf->SetXY(156.4, 218.3);
@@ -273,6 +267,9 @@ class OrdenCompraPdfController extends Controller
 
         $subtotal = $totalImporte * $tipoCambio;
 
+        /*-----------------------------------------------------
+         * Fila totales subtotal                               
+         -----------------------------------------------------*/
         $pdf->SetXY(142.5, 220.5);
         $pdf->Cell(14, 2,  "$ " . number_format($subtotal, 2), 0, '0', $align = 'R');
         $pdf->SetXY(156.4, 220.5);
@@ -282,6 +279,9 @@ class OrdenCompraPdfController extends Controller
 
         $iva = $subtotal * 0.16;
 
+        /*-----------------------------------------------------
+         * Fila totales %IVA                               
+         -----------------------------------------------------*/
         $pdf->SetXY(142.5, 223);
         $pdf->Cell(14, 2,  " ", 0, '0', $align = 'R');
         $pdf->SetXY(156.4, 223);
@@ -290,6 +290,10 @@ class OrdenCompraPdfController extends Controller
         $pdf->Cell(25, 2,  "", 0, '0', $align = 'R');
 
         $total = $subtotal + $iva;
+
+        /*-----------------------------------------------------
+         * Fila totales IVA                               
+         -----------------------------------------------------*/
         $pdf->SetXY(142.5, 225.5);
         $pdf->Cell(14, 2,  "$ " . number_format($iva, 2), 0, '0', $align = 'R');
         $pdf->SetXY(156.4, 225.5);
@@ -297,7 +301,9 @@ class OrdenCompraPdfController extends Controller
         $pdf->SetXY(173, 225.5);
         $pdf->Cell(25, 2,  "$ " . number_format($iva, 2), 0, '0', $align = 'R');
 
-
+        /*-----------------------------------------------------
+         * Fila totales TOTAL                               
+         -----------------------------------------------------*/
         $pdf->SetXY(142.5, 228);
         $pdf->Cell(14, 2,  "$ " . number_format($total, 2), 0, '0', $align = 'R');
         $pdf->SetXY(156.4, 228);

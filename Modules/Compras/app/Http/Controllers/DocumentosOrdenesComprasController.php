@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 //Model
 use Modules\Compras\Models\DocumentosOrdenesCompra;
-//Transformers
 
 //Utilities 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+
 use ZipArchive;
 use DateTime;
 use DateTimeZone;
@@ -20,7 +20,9 @@ use DateTimeZone;
 
 class DocumentosOrdenesComprasController extends Controller
 {
-    //Recupera documentos de ordenes de compra
+    /******************************************************
+     * Recupera documentos de ordenes de compra
+     ******************************************************/
     public function getFile($id, $file)
     {
         $path = storage_path("app/docsOrdenCompra/$id/$file");
@@ -33,8 +35,10 @@ class DocumentosOrdenesComprasController extends Controller
     }
 
 
-    // Genera un ZIP con la factura en XML y PDF para ser descargado
-    //RECORRE LAS RUTAS Y GUARDAR UNO POR UNO EN EL ZIP
+    /*******************************************************************
+     * Genera un ZIP con la factura en XML y PDF para ser descargado
+     * RECORRE LAS RUTAS Y GUARDAR UNO POR UNO EN EL ZIP
+     *******************************************************************/
     public function downloadFacturas($id)
     {
         $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['ruta_xml_factura', 'ruta_pdf_factura']);
@@ -64,25 +68,21 @@ class DocumentosOrdenesComprasController extends Controller
 
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
-    /**
-     * Display a listing of the resource.
-     */
+
     public function index()
     {
         return view('compras::index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+
     public function create()
     {
         return view('compras::create');
     }
 
-    /**
+    /******************************************************
      * Almacena los archivos de orden compra
-     */
+     ******************************************************/
     public function store(Request $request)
     {
         $validacion = Validator::make($request->all(),[
@@ -147,28 +147,25 @@ class DocumentosOrdenesComprasController extends Controller
         // return $carpetaOrdenCompra;
     }
 
-    /**
+    /*******************************************************
      * Recupera los documentos de orden de compra 
      * en base al id de orden de compra
-     */
+     *******************************************************/
     public function show($id)
     {
         $registro = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get();
         return $registro;
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('compras::edit');
     }
 
-    /**
+    /****************************************************
      * Guarda los documentos de orden de compra
      * Facturas XML, Facturas PDF, Comprobantes de pago
-     */
+     ****************************************************/
     public function update(Request $request, $id)
     {
 
@@ -255,14 +252,14 @@ class DocumentosOrdenesComprasController extends Controller
 
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         //
     }
 
+    /***************************************
+     * Recupera la fecha actual
+     ****************************************/
     public function getFecha()
     {
         $fecha = new DateTime('now', new DateTimeZone('America/Mexico_City'));
