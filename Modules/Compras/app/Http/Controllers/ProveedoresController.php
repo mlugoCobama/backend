@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 class ProveedoresController extends Controller
 {
-    /***************************************************************************
+    /** *************************************************************************
      * Recupera todos los datos de proveedores
      ***************************************************************************/
     public function index()
@@ -26,7 +26,7 @@ class ProveedoresController extends Controller
         return ProveedoresResource::collection((Proveedores::active()->get()));
     }
 
-    /****************************************************************************
+    /** **************************************************************************
      * Recupera unicamente tres datos para llenar los select
      *****************************************************************************/
     public function getProveedores()
@@ -52,7 +52,7 @@ class ProveedoresController extends Controller
         return view('compras::create');
     }
 
-    /**********************************************************************************
+    /** ********************************************************************************
      * Función que valida la información y coordina 
      * storeProveedor y storeExpedienteProveedor
      ***********************************************************************************/
@@ -112,7 +112,7 @@ class ProveedoresController extends Controller
         }
     }
 
-    /**********************************************************************************
+    /** ********************************************************************************
      * Función que almacena los datos del proveedor en a base de datos 
      **********************************************************************************/
     private function storeProveedor($data)
@@ -132,7 +132,7 @@ class ProveedoresController extends Controller
         return $dataProveedor->id;
     }
 
-    /**********************************************************************************
+    /** ********************************************************************************
      * Función que almacena los archivos en el servidor y las rutas en la base de datos
      **********************************************************************************/
     private function storeExpedienteProveedor($data, $idProveedor)
@@ -171,7 +171,7 @@ class ProveedoresController extends Controller
         $expedienteSolicitud->save();
     }
 
-    /***********************************************************************************
+    /** *********************************************************************************
      * Función que recupera las rutas del expediente del proveedor
      ***********************************************************************************/
     public function show($id)
@@ -185,7 +185,7 @@ class ProveedoresController extends Controller
         return view('compras::edit');
     }
 
-    /************************************************************************************
+    /** **********************************************************************************
      * Fucnion que recibe datos y coordina el funcionamiento de
      * updateProveedor y updateExpedietProveedor
      **************************************************************************************/
@@ -243,7 +243,7 @@ class ProveedoresController extends Controller
         }
     }
 
-    /***********************************************************************
+    /** *********************************************************************
      * Función para actualizar UNICAMENTE los datos del proveedor
      *************************************************************************/
     private function updateProveedor($data, $id)
@@ -268,7 +268,7 @@ class ProveedoresController extends Controller
 
         ]);
     }
-    /*************************************************************************
+    /** ***********************************************************************
     *FUNCIÓN QUE ACTUALIZA LOS ARCHIVOS DEL EXPEDIENTE DEL PROVEEDOR
     **************************************************************************/
     private function updateExpedienteProveedor($data, $idProveedor)
@@ -343,7 +343,7 @@ class ProveedoresController extends Controller
         $expediente->save();
     }
 
-    /*********************************************************************************************
+    /** *******************************************************************************************
      * Actualiza el estatus del proveedor a inactivo
      *********************************************************************************************/
     public function destroy($id)

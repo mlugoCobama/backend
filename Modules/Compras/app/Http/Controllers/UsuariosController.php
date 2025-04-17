@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class UsuariosController extends Controller
 {
-    /********************************************************************
+    /** ******************************************************************
      * Recupera el catalogo de empresa y num_intercompania
      *******************************************************************/
     public function index()
@@ -36,7 +36,7 @@ class UsuariosController extends Controller
         //
     }
 
-    /*************************************************************
+    /** ***********************************************************
      * Recupera un usuario DEL INTRANET especifico por su id
      ************************************************************/
     public function show($id)
@@ -50,7 +50,7 @@ class UsuariosController extends Controller
         ]);
     }
 
-    /*************************************************************
+    /** ***********************************************************
      * Recupera un usuario especifico DEL INTRANET por su correo
      ************************************************************/
     public function getDataUsuario($correo)

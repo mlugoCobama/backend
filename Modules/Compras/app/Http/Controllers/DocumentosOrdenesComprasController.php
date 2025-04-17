@@ -20,7 +20,7 @@ use DateTimeZone;
 
 class DocumentosOrdenesComprasController extends Controller
 {
-    /******************************************************
+    /** ****************************************************
      * Recupera documentos de ordenes de compra
      ******************************************************/
     public function getFile($id, $file)
@@ -35,7 +35,7 @@ class DocumentosOrdenesComprasController extends Controller
     }
 
 
-    /*******************************************************************
+    /** *****************************************************************
      * Genera un ZIP con la factura en XML y PDF para ser descargado
      * RECORRE LAS RUTAS Y GUARDAR UNO POR UNO EN EL ZIP
      *******************************************************************/
@@ -80,7 +80,7 @@ class DocumentosOrdenesComprasController extends Controller
         return view('compras::create');
     }
 
-    /******************************************************
+    /** ****************************************************
      * Almacena los archivos de orden compra
      ******************************************************/
     public function store(Request $request)
@@ -147,7 +147,7 @@ class DocumentosOrdenesComprasController extends Controller
         // return $carpetaOrdenCompra;
     }
 
-    /*******************************************************
+    /** *****************************************************
      * Recupera los documentos de orden de compra 
      * en base al id de orden de compra
      *******************************************************/
@@ -162,7 +162,7 @@ class DocumentosOrdenesComprasController extends Controller
         return view('compras::edit');
     }
 
-    /****************************************************
+    /** **************************************************
      * Guarda los documentos de orden de compra
      * Facturas XML, Facturas PDF, Comprobantes de pago
      ****************************************************/
@@ -257,7 +257,7 @@ class DocumentosOrdenesComprasController extends Controller
         //
     }
 
-    /***************************************
+    /** *************************************
      * Recupera la fecha actual
      ****************************************/
     public function getFecha()

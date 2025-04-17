@@ -31,7 +31,7 @@ use App\Notifications\SolicitudSurtido;
 
 class OrdenesComprasController extends Controller
 {
-    /**************************************************************
+    /** ************************************************************
      * Genera un nuevo folio consecutivo en base al ultimo folio
      **************************************************************/
     public function generarFolio()
@@ -57,7 +57,7 @@ class OrdenesComprasController extends Controller
         return view('compras::create');
     }
 
-    /************************************************************
+    /** **********************************************************
      * Genera la orden de compra en la BD
      ************************************************************/
     public function store(Request $request)
@@ -118,7 +118,7 @@ class OrdenesComprasController extends Controller
         }
     }
 
-    /************************************************************
+    /** **********************************************************
      * Recupera la orden de compra en base al idCompra
      ************************************************************/
     public function show($id)
@@ -129,7 +129,7 @@ class OrdenesComprasController extends Controller
         return $ordenCompra;
     }
 
-    /****************************************************************
+    /** **************************************************************
      * Consulta para generar el formato interno de orden de compra
      ****************************************************************/
     public function consultaDatosPDF($id)
@@ -181,7 +181,7 @@ class OrdenesComprasController extends Controller
         return view('compras::edit');
     }
 
-    /**************************************************************
+    /** ************************************************************
      * Actualiza el estatus a pagado
      ************************************************************/
     public function update(Request $request, $id)
@@ -217,7 +217,7 @@ class OrdenesComprasController extends Controller
         
     }
 
-    /********************************************************************
+    /** ******************************************************************
      * Actualiza el estatus de solicitud y orden de compra a cancelado
      ********************************************************************/
     public function destroy($id)
@@ -245,7 +245,7 @@ class OrdenesComprasController extends Controller
         } 
     }
 
-    /**********************************************************************************
+    /** ********************************************************************************
      * Marca la solicitud como autorizada y envía un correo al proveedor seleccionado
      **********************************************************************************/
     public function enviarSolicitudSurtido(Request $request)
@@ -304,7 +304,7 @@ class OrdenesComprasController extends Controller
                     'detalles' => $detallesSC,
                 ];
 
-                /**********************************************************************************
+                /** ********************************************************************************
                 *! Habilitar para envío de correo a proveedor
                 * ********************************************************************************/ 
                 //   Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
@@ -335,7 +335,7 @@ class OrdenesComprasController extends Controller
         }
     }
 
-    /**********************************************************************************
+    /** ********************************************************************************
      * Marca la solicitud como autorizada y envía un correo al proveedor seleccionado
      **********************************************************************************/
     public function autorizarOrden(Request $request)
@@ -374,7 +374,7 @@ class OrdenesComprasController extends Controller
         }
     }
 
-    /**************************************************************************************
+    /** ************************************************************************************
      * Lee el contenido de archivos xml en el servidor y le envía los datos al frontend
      **************************************************************************************/
     public function leerXML($id)
@@ -402,7 +402,7 @@ class OrdenesComprasController extends Controller
 
     }
 
-    /**************************************************************************************
+    /** ************************************************************************************
      * Recupera la fecha en un formato que la bd acepte
      **************************************************************************************/
     public function getFecha(){

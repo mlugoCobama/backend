@@ -36,7 +36,7 @@ use Modules\Compras\Models\Proveedores;
 class SolicitudesCompraController extends Controller
 {
 
-    /************************************************************* 
+    /** *********************************************************** 
     * Genera un nuevo folio consecutivo en base al ultimo folio
     *************************************************************/
     public function generarFolioSc()
@@ -53,7 +53,7 @@ class SolicitudesCompraController extends Controller
         return  $nuevoFolio;
     }
 
-    /**************************************************************
+    /** ************************************************************
      * Recupera todos los registros de la base de datos
      **************************************************************/
     public function index()
@@ -126,9 +126,9 @@ class SolicitudesCompraController extends Controller
         ]);
     }
 
-    /**************************************************************
+    /** ************************************************************
      * Recupera todos los registros de la base de datos
-     * *Con paginacion (30 registros por pagina)
+     * Con paginacion (30 registros por pagina)
      ***************************************************************/
     public function index1(Request $request)
     {
@@ -153,7 +153,7 @@ class SolicitudesCompraController extends Controller
         return view('compras::create');
     }
 
-    /***************************************************************************************
+    /** *************************************************************************************
      * Genera un el registro de la solicitud de compra junto con sus detalles
      * Valida y coordina el funcionamiento de storeSolicitudCOmpra y storeDetallesSolicitud
      ***************************************************************************************/
@@ -222,7 +222,7 @@ class SolicitudesCompraController extends Controller
         }
     }
 
-    /**********************************************************************
+    /** ********************************************************************
     *Primero genero una solicitud de compra
     *Después almaceno los detalles de la solicitud
     **********************************************************************/
@@ -239,7 +239,7 @@ class SolicitudesCompraController extends Controller
         return $dataSolicitud->id;
     }
 
-    /*****************************************************************************
+    /** ***************************************************************************
      * Amacena los detalles de la solicitud
      *****************************************************************************/
     private function storeDetalleSolicitudCompra($detalles, $idSolicitud, $files)
@@ -263,7 +263,7 @@ class SolicitudesCompraController extends Controller
         }
     }
 
-    /*********************************************************************
+    /** *******************************************************************
      * Recupera los detalles de la solicitud
      *********************************************************************/
     public function show($id)
@@ -271,7 +271,7 @@ class SolicitudesCompraController extends Controller
         return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->get()));
     }
 
-    /*********************************************************************
+    /** *******************************************************************
      * Recupera las solicitud de compra por id
      *********************************************************************/
     public function getSolicitud($id)
@@ -355,7 +355,7 @@ class SolicitudesCompraController extends Controller
         ]);
     }
 
-    /**************************************************************
+    /** ************************************************************
      * Actualiza el estatus a cancelado
      **************************************************************/
     public function destroy($id)
@@ -382,7 +382,7 @@ class SolicitudesCompraController extends Controller
         ]);
     }
 
-    /********************************************************************
+    /** ******************************************************************
      * Envía la solicitud de cotización a los proveedores y almacena la 
      * relación en la BD
      ********************************************************************/
@@ -427,7 +427,7 @@ class SolicitudesCompraController extends Controller
                 //Queue para despachar el correo
                 //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
 
-                /*******************************************************************************************
+                /** *****************************************************************************************
                  * !Habiltar para que se envíen los correos 
                  * $this->enviaCorreoProveedores($data['proveedores'], $data);
                  *******************************************************************************************/ 
@@ -457,7 +457,7 @@ class SolicitudesCompraController extends Controller
         }
     }
 
-    /*************************************************************************
+    /** ***********************************************************************
      * Función que genera folios consecutivos de las cotizaciones
      ************************************************************************/
     public function generarFolioCo()
@@ -474,7 +474,7 @@ class SolicitudesCompraController extends Controller
         return $nuevoFolio;
     }
 
-    /*************************************************************************
+    /** ***********************************************************************
      * Función que genera la fecha actual tiempo de Mexico
      ************************************************************************/
     public function getFecha()
@@ -484,7 +484,7 @@ class SolicitudesCompraController extends Controller
         return $fecha;
     }
 
-     /*************************************************************************
+     /** ***********************************************************************
      * Almacena la cotización y devuelve el id del registro creado
      ************************************************************************/
     public function storeCotizacion($data)
@@ -499,7 +499,7 @@ class SolicitudesCompraController extends Controller
         return $dataCotizacion->id;
     }
 
-    /*****************************************************************************
+    /** ***************************************************************************
      * Función que almacena la relación entre cotización y proveedores
      *****************************************************************************/
     public function storeCotizacionProveedores($proveedores, $idCotizacion)
@@ -517,7 +517,7 @@ class SolicitudesCompraController extends Controller
         return $idsCotProv;
     }
 
-    /*****************************************************************************
+    /** ***************************************************************************
      * Función que  envía el correo de solicitud de cotización a los proveedores
      ****************************************************************************/
     public function enviaCorreoProveedores($proveedores, $data)

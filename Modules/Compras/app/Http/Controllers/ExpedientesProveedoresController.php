@@ -20,7 +20,7 @@ use ZipArchive;
 class ExpedientesProveedoresController extends Controller
 {
     
-    /********************************************************************
+    /** ******************************************************************
      * Función que recupera archivos 
      ********************************************************************/
     public function getFile($id, $file) 
@@ -34,7 +34,7 @@ class ExpedientesProveedoresController extends Controller
         return response($fileContent, 200)->header("Content-Type", $type); 
     }
 
-    /**********************************************************************
+    /** ********************************************************************
      * Genera un Zip con el expediente del proveedor para ser descargado
      *********************************************************************/
     public function downloadExpediente($id)
