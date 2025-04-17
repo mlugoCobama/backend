@@ -24,9 +24,9 @@ use function Laravel\Prompts\error;
 
 class CotizacionesController extends Controller
 {
-    /* *****************************************
-     * Función quu genera folios consecutivos
-     * *****************************************/
+    /** ****************************************
+     * Función que genera folios consecutivos
+     ******************************************/
     public function generarFolioCo()
     {
         $ultimaCotizacion = Cotizaciones::orderBy('id', 'desc')->first('folio');
@@ -40,9 +40,9 @@ class CotizacionesController extends Controller
         return response()->json(['nuevoFolio' => $nuevoFolio]);
     }
 
-    /* ***********************************************
+    /** **********************************************
      * Función para recuperar archivos del servidor  
-     * **********************************************/
+     ***********************************************/
     public function getFile($id, $file)
     {
         $path = storage_path("app/cotizaciones/$id/$file");
@@ -68,7 +68,7 @@ class CotizacionesController extends Controller
         return view('compras::create');
     }
 
-    /*****************************************************
+    /** ***************************************************
      * Guarda los importes unitarios de la cotización.
      * Si tiene archivos los guarda en la base de datos.
      * ****************************************************/
