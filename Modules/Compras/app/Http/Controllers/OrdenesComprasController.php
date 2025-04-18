@@ -22,6 +22,7 @@ use Modules\Compras\Transformers\DetallesCotizacionResource;
 use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
 //Utilities
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Notification;
 //Mailables
@@ -119,13 +120,23 @@ class OrdenesComprasController extends Controller
     }
 
     /** **********************************************************
-     * Recupera la orden de compra en base al idCompra
+     * Recupera la orden de compra en base al id de cotización
      ************************************************************/
     public function show($id)
     {
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
         $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->with('documentos')
-            ->first(['id', 'folio_oc', 'fecha', 'observaciones', 'estatus', 'cotizaciones_id']);
+            ->first(['id', 'folio_oc', 'fecha', 'observaciones', 'estatus', 'cotizaciones_id', 'entrega']);
+
+            /**
+             * Json con los datos de entrga de las empresas
+             * @todo modificar los datos de cada empresa
+             */
+            $contentE = File::get(base_path('/dataEntregas.json'));
+            $jsonE = json_decode(json: $contentE, associative: true);
+            $dataEntrega = $jsonE[$ordenCompra->entrega];
+
+            $ordenCompra->entrega = $dataEntrega; 
         return $ordenCompra;
     }
 
