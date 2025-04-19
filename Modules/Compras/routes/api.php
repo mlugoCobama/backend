@@ -43,6 +43,7 @@ Route::prefix('compras')->group(function () {
     Route::get('expedientes/{id}/{file}', [ExpedientesProveedoresController::class, 'getFile']);
     Route::get('cotizaciones/{id}/{file}', [CotizacionesController::class, 'getFile']);
     Route::get('docsOrdenCompra/{id}/{file}', [DocumentosOrdenesComprasController::class, 'getFile']);
+    Route::get('docsOrdenCompra/{id}/{file}', [DocumentosOrdenesComprasController::class, 'getFile']);
 
     //*Ruta para enviar un email de prueba, no funciona pero va funcionar
     Route::post('/enviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'enviarSolicitudCotizacion']);
@@ -54,7 +55,7 @@ Route::prefix('compras')->group(function () {
 
     //*Ruta para leer el XML
     Route::get('/leer-xml/{id}',[OrdenesComprasController::class, 'leerXML']);
-
+    Route::get('/get-data-xml/{id}', [DocumentosOrdenesComprasController::class, 'leerYProcesarXML']);
     //*Rutas descarga zip
     Route::get('/descargar-facturas/{id}',[DocumentosOrdenesComprasController::class, 'downloadFacturas']);
     Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente']);

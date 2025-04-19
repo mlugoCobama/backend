@@ -266,4 +266,119 @@ class DocumentosOrdenesComprasController extends Controller
         $fecha = $fecha->format('Y-m-d H:i:s');
         return $fecha;
     }
+
+    /** 
+     * Recupera los datos del xml y los procesa listos para mostrar en el backend
+     * @param id e de la orden de compra
+     */
+    public function leerYProcesarXML($id)
+    {
+        // Catalogo de códigos SAT
+        $ruta = 'Modules/Compras/resources/assets/json';
+        $catMP = File::get(base_path($ruta . '/catalogoSAT/metodoPago.json'));
+        $catRF = File::get(base_path($ruta . '/catalogoSAT/regimenFiscal.json'));
+        $catUC = File::get(base_path($ruta . '/catalogoSAT/usoCFDI.json'));
+
+        $jsonMP = json_decode(json: $catMP, associative: true);
+        $jsonRF = json_decode(json: $catRF, associative: true);
+        $jsonUCfdi = json_decode(json: $catUC, associative: true);
+
+        // $dataFacturacion = $json[$data['destino'][0]->empresa];
+
+        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get('ruta_xml_factura');
+
+        $factura = [
+            'comprobantes' => [],
+            'impuestos' => [],
+            'emisor' => [],
+            'receptor' => [],
+            'metodoPago' => [],
+            'sumaSubTotal' => 0,
+            'sumaTotal' => 0,
+        ];
+
+        $ns = 'http://www.sat.gob.mx/cfd/4';
+
+        foreach ($rutas as $index => $ruta) {
+            $rutaXML = storage_path('app/' . $ruta['ruta_xml_factura']);
+            if (!file_exists($rutaXML)) {
+                return response()->json(['message' => 'Archivo no encontrado: ' . $ruta['ruta_xml_factura']], 404);
+            }
+
+            $contenidoXML = file_get_contents($rutaXML);
+            $xml = new \SimpleXMLElement($contenidoXML);
+
+            $xml->registerXPathNamespace('cfdi', $ns);
+
+            
+            $comprobante = $xml->xpath('//cfdi:Comprobante')[0] ?? null;
+
+            if ($comprobante) {
+                $subtotal = (float) $comprobante['SubTotal'];
+                $total = (float) $comprobante['Total'];
+                $factura['comprobantes'][] = [
+                    'fecha' => (string) $comprobante['Fecha'],
+                    'folio' => (string) $comprobante['Folio'],
+                    'serie' => (string) $comprobante['Serie'],
+                    'subTotal' => $subtotal,
+                    // 'impuestos' =>  $impuestos['TotalImpuestosTrasladados'],
+                    'moneda' => (string) $comprobante['Moneda'],
+                    'total' => $total,
+                ];
+
+                $factura['sumaSubTotal'] += $subtotal;
+                $factura['sumaTotal'] += $total;
+
+                if ($index === 0) {
+                    $factura['metodoPago'] = [
+                        'metodoPago' => (string) $comprobante['MetodoPago'],
+                        'metodoPagoDesc' => $jsonMP[(string) $comprobante['MetodoPago']]['descripcion'],
+                    ];
+                }
+            }
+
+            $impuestos = $xml->xpath('//cfdi:Impuestos') ?? null;
+            // $factura['impuestos'][] = [$impuestos];
+            
+            foreach ($impuestos as $impuesto) {
+                if (isset($impuesto['TotalImpuestosTrasladados'])) {
+                    $factura['impuestos'][] =  $impuesto['TotalImpuestosTrasladados'];
+                }
+            }
+
+            // if ($impuestos) {
+            //     $factura['impuestos'][] = [
+            //         'data' => 'data',
+            //         'totalImpuestosTrasladados' => (string) $impuestos['TotalImpuestosTrasladados'],
+            //         'totalImpuestosTrasladados' => (string) $impuestos,
+            //     ];
+            // }
+               
+            if ($index === 0) {
+                $emisor = $xml->xpath('//cfdi:Emisor')[0] ?? null;
+                if ($emisor) {
+                    $factura['emisor'] = [
+                        'rfc' => (string) $emisor['Rfc'],
+                        'nombre' => (string) $emisor['Nombre'],
+                        'regimenFiscal' => (string) $emisor['RegimenFiscal'],
+                        'regimenFiscalDesc' => $jsonRF[(string) $emisor['RegimenFiscal']]['descripcion'],
+                    ];
+                }
+
+                $receptor = $xml->xpath('//cfdi:Receptor')[0] ?? null;
+                if ($receptor) {
+                    $factura['receptor'] = [
+                        'rfc' => (string) $receptor['Rfc'],
+                        'nombre' => (string) $receptor['Nombre'],
+                        'usoCFDI' => (string) $receptor['UsoCFDI'],
+                        'usoCFDIDesc' => $jsonUCfdi[(string) $receptor['UsoCFDI']]['descripcion'],
+                        'domicilioFiscalReceptor' => (string) $receptor['DomicilioFiscalReceptor'],
+                    ];
+                }
+            }
+        }
+
+        return response()->json(['factura' => $factura], 200);
+    }
+
 }
