@@ -38,6 +38,7 @@ Route::get('energeticos/anual/{id}', [EnergeticosController::class, 'show'])->na
 /**--------------------------------------
  * Rutas Agencias Nissan
  -----------------------------------------*/
+Route::get('dashboard/agencia-nissan/{sub_division}/{mes}/{anio}', [AgenciasController::class, 'index'])->name('agencia-nissan-anual.index');
 Route::get('agencia-nissan/{mes}/{anio}', [AgenciasController::class, 'showAgenciasNissan'])->name('agencia-nissan.showAgenciasNissan');
 Route::get('energeticos/anual/{id}/{anio}', [EnergeticosController::class, 'showAnual'])->name('energeticos_anual.index-anul');
 Route::get('show-agencia-nissan/{mes}/{anio}', [AgenciasController::class, 'getDataGridAgencia'])->name('agencia-renault.getDataGridAgencia-2');
