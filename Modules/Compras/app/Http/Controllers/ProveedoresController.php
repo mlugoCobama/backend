@@ -59,33 +59,33 @@ class ProveedoresController extends Controller
     public function store(Request $request)
     {
 
-        $validacion =  Validator::make($request->all(), [
-            'nombre' => 'required|string|max:45',
-            'contacto' => 'required|string|max:45',
-            'telefono' => 'required|string|max:45',
-            'localidad' => 'required|string|max:45',
-            'condiciones' => 'required|string|max:45',
-            'servicios' => 'required|string|max:200',
-            'correo' => 'required|email|max:45',
-            'dias_credito' => 'nullable|integer|max:45',
-            'horario_atencion' => 'required|string|max:45',
-            'tiempo_entrega' => 'required|string|max:45',
-            //Validacion para archivos
-            'constancia_fiscal' => 'nullable|file|mimes:pdf|max:5120',
-            'ine' => 'nullable|file|mimes:pdf|max:5120',
-            'comprobante_domicilio' => 'nullable|file|mimes:pdf|max:5120',
-            'estado_cuenta' => 'nullable|file|mimes:pdf|max:5120',
-            'acta_constitutiva' => 'nullable|file|mimes:pdf|max:5120',
-            'poder_notarial' => 'nullable|file|mimes:pdf|max:5120',
-        ]);
+        // $validacion =  Validator::make($request->all(), [
+        //     'nombre' => 'required|string|max:45',
+        //     'contacto' => 'required|string|max:45',
+        //     'telefono' => 'required|string|max:45',
+        //     'localidad' => 'required|string|max:45',
+        //     'condiciones' => 'required|string|max:45',
+        //     'servicios' => 'required|string|max:200',
+        //     'correo' => 'required|email|max:45',
+        //     'dias_credito' => 'nullable|integer|max:45',
+        //     'horario_atencion' => 'required|string|max:45',
+        //     'tiempo_entrega' => 'required|string|max:45',
+        //     //Validacion para archivos
+        //     'constancia_fiscal' => 'nullable|file|mimes:pdf|max:5120',
+        //     'ine' => 'nullable|file|mimes:pdf|max:5120',
+        //     'comprobante_domicilio' => 'nullable|file|mimes:pdf|max:5120',
+        //     'estado_cuenta' => 'nullable|file|mimes:pdf|max:5120',
+        //     'acta_constitutiva' => 'nullable|file|mimes:pdf|max:5120',
+        //     'poder_notarial' => 'nullable|file|mimes:pdf|max:5120',
+        // ]);
 
-        if ($validacion->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Los datos ingresados no son validos o están incompletos',
-                'errors' => $validacion->errors()
-            ]);
-        }
+        // if ($validacion->fails()) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Los datos ingresados no son validos o están incompletos',
+        //         'errors' => $validacion->errors()
+        //     ]);
+        // }
 
         try {
             DB::beginTransaction();
@@ -191,33 +191,33 @@ class ProveedoresController extends Controller
      **************************************************************************************/
     public function update(Request $request, $id)
     {
-        $validacion =  Validator::make($request->all(), [
-            'nombre' => 'required|string|max:45',
-            'contacto' => 'required|string|max:45',
-            'telefono' => 'required|string|max:45',
-            'localidad' => 'required|string|max:45',
-            'condiciones' => 'required|string|max:45',
-            'servicios' => 'required|string|max:200',
-            'correo' => 'required|email|max:45',
-            'dias_credito' => 'nullable|integer|max:45',
-            'horario_atencion' => 'required|string|max:45',
-            'tiempo_entrega' => 'required|string|max:45',
-            //Validacion para archivos
-            'constancia_fiscal' => 'nullable|file|mimes:pdf|max:5120',
-            'ine' => 'nullable|file|mimes:pdf|max:5120',
-            'comprobante_domicilio' => 'nullable|file|mimes:pdf|max:5120',
-            'estado_cuenta' => 'nullable|file|mimes:pdf|max:5120',
-            'acta_constitutiva' => 'nullable|file|mimes:pdf|max:5120',
-            'poder_notarial' => 'nullable|file|mimes:pdf|max:5120',
-        ]);
+        // $validacion =  Validator::make($request->all(), [
+        //     'nombre' => 'required|string|max:45',
+        //     'contacto' => 'required|string|max:45',
+        //     'telefono' => 'required|string|max:45',
+        //     'localidad' => 'required|string|max:45',
+        //     'condiciones' => 'required|string|max:45',
+        //     'servicios' => 'required|string|max:200',
+        //     'correo' => 'required|email|max:45',
+        //     'dias_credito' => 'nullable|integer|max:45',
+        //     'horario_atencion' => 'required|string|max:45',
+        //     'tiempo_entrega' => 'required|string|max:45',
+        //     //Validacion para archivos
+        //     'constancia_fiscal' => 'nullable|file|mimes:pdf|max:5120',
+        //     'ine' => 'nullable|file|mimes:pdf|max:5120',
+        //     'comprobante_domicilio' => 'nullable|file|mimes:pdf|max:5120',
+        //     'estado_cuenta' => 'nullable|file|mimes:pdf|max:5120',
+        //     'acta_constitutiva' => 'nullable|file|mimes:pdf|max:5120',
+        //     'poder_notarial' => 'nullable|file|mimes:pdf|max:5120',
+        // ]);
 
-        if ($validacion->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Los datos ingresados no son validos o están incompletos',
-                'errors' => $validacion->errors()
-            ]);
-        }
+        // if ($validacion->fails()) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Los datos ingresados no son validos o están incompletos',
+        //         'errors' => $validacion->errors()
+        //     ]);
+        // }
 
         try {
             DB::beginTransaction();

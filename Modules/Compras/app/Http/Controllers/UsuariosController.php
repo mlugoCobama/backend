@@ -57,7 +57,7 @@ class UsuariosController extends Controller
     {
         $data = DB::connection('intranet')->table('glpi_users')->select('*')->where('name', $correo)->first();
         
-        if($data == null){
+        if(empty($data)){
              return response()->json([
                  'status' => 'error',
                  'message' => 'El usuario no existe'

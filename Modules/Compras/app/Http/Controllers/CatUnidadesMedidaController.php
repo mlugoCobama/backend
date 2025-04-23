@@ -34,18 +34,18 @@ class CatUnidadesMedidaController extends Controller
      */
     public function store(Request $request)
     {
-        $valiadcion  = Validator::make($request->all(),[
-            'nombre' => 'required|string|max:45',
-            'abreviatura' => 'required|string|max:45'
-        ]);
+        // $valiadcion  = Validator::make($request->all(),[
+        //     'nombre' => 'required|string|max:45',
+        //     'abreviatura' => 'required|string|max:45'
+        // ]);
 
-        if($valiadcion->fails()){
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Datos inválidos',
-                'errors' => $valiadcion->errors()
-            ]);
-        }
+        // if($valiadcion->fails()){
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Datos inválidos',
+        //         'errors' => $valiadcion->errors()
+        //     ]);
+        // }
 
         $unidadMedida = CatUnidadesMedidas::create($request->all());
         return response()->json([
@@ -84,18 +84,18 @@ class CatUnidadesMedidaController extends Controller
             ]);
         }
 
-        $validacion  = Validator::make($request->all(),[
-            'nombre' => 'required|string|max:45',
-            'abreviatura' => 'required|string|max:45'
-        ]);
+        // $validacion  = Validator::make($request->all(),[
+        //     'nombre' => 'required|string|max:45',
+        //     'abreviatura' => 'required|string|max:45'
+        // ]);
 
-        if($validacion->fails()){
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Datos inválidos',
-                'errors' => $validacion->errors()
-            ]);
-        }
+        // if($validacion->fails()){
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Datos inválidos',
+        //         'errors' => $validacion->errors()
+        //     ]);
+        // }
         
         $unidadMedida->update([
             'nombre' => $request->nombre,

@@ -77,22 +77,22 @@ class CotizacionesController extends Controller
         $data = $request->all();
 
 
-        $validacion = Validator::make($data, [
-            'precios' => 'required|array|min:1',
-            'precios.*' => 'array|min:1',
-            'precios.*.*' => 'required|numeric|min:0.00',
+        // $validacion = Validator::make($data, [
+        //     'precios' => 'required|array|min:1',
+        //     'precios.*' => 'array|min:1',
+        //     'precios.*.*' => 'required|numeric|min:0.00',
 
-            'files' => 'required|array',
-            'files.*' => 'file|mimes:pdf|max:2048'
-        ]);
+        //     'files' => 'required|array',
+        //     'files.*' => 'file|mimes:pdf|max:2048'
+        // ]);
 
-        if ($validacion->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Datos no validos o incompletos',
-                'errors' => $validacion->errors()
-            ]);
-        }
+        // if ($validacion->fails()) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Datos no validos o incompletos',
+        //         'errors' => $validacion->errors()
+        //     ]);
+        // }
 
         // $tamPrcios = count($data['precios']);
         // $tamFiles = $request->hasFile('files') ? count($request->file('files')) : 0;

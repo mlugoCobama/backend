@@ -64,22 +64,22 @@ class OrdenesComprasController extends Controller
     public function store(Request $request)
     {
 
-        $validacion = Validator::make($request->all(),[
-            // 'folio_oc' => 'required|string|max:50',
-            // 'fecha' => 'required|date',
-            'observaciones' => 'nullable|string|max:150',
-            'cotizaciones_id' => 'required',
-            'id_cotizacion_prov' => 'required',
-            'id_solicitud_compra' => 'required',
-        ]);
+        // $validacion = Validator::make($request->all(),[
+        //     // 'folio_oc' => 'required|string|max:50',
+        //     // 'fecha' => 'required|date',
+        //     'observaciones' => 'nullable|string|max:150',
+        //     'cotizaciones_id' => 'required',
+        //     'id_cotizacion_prov' => 'required',
+        //     'id_solicitud_compra' => 'required',
+        // ]);
 
-        if($validacion->fails()){
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Datos incompletos o no validos',
-                'errors' => $validacion->errors()
-            ]);
-        }
+        // if($validacion->fails()){
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Datos incompletos o no validos',
+        //         'errors' => $validacion->errors()
+        //     ]);
+        // }
 
         try{
             DB::beginTransaction();

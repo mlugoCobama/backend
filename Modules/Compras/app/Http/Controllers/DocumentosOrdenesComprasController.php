@@ -85,22 +85,22 @@ class DocumentosOrdenesComprasController extends Controller
      ******************************************************/
     public function store(Request $request)
     {
-        $validacion = Validator::make($request->all(),[
-            'orden_compra_id' => 'required|exists:com_orden_compra,id',
-            // 'fecha' => 'required|date',
-            'factura_xml' => 'required|file|mimes:xml|max:2048',
-            'factura_pdf' => 'required|file|mimes:pdf|max:2048',
-            'comprobante_pago' => 'nullable|file|mimes:pdf|max:2048',
+        // $validacion = Validator::make($request->all(),[
+        //     'orden_compra_id' => 'required|exists:com_orden_compra,id',
+        //     // 'fecha' => 'required|date',
+        //     'factura_xml' => 'required|file|mimes:xml|max:2048',
+        //     'factura_pdf' => 'required|file|mimes:pdf|max:2048',
+        //     'comprobante_pago' => 'nullable|file|mimes:pdf|max:2048',
 
-        ]);
+        // ]);
 
-        if($validacion->fails()){
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error de validacion',
-                'errror' => $validacion->errors()
-            ]);
-        }
+        // if($validacion->fails()){
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Error de validacion',
+        //         'errror' => $validacion->errors()
+        //     ]);
+        // }
 
         try {
             $data = $request;
@@ -169,22 +169,22 @@ class DocumentosOrdenesComprasController extends Controller
     public function update(Request $request, $id)
     {
 
-        $validacion = Validator::make($request->all(),[
-            // 'com_orden_compra_id' => 'required|exists:orden_compra,id',
-            // 'fecha' => 'required|date',
-            'factura_xml' => 'nullable|file|mimes:xml|max:2048',
-            'factura_pdf' => 'nullable|file|mimes:pdf|max:2048',
-            'comprobante_pago' => 'required|file|mimes:pdf|max:2048',
+        // $validacion = Validator::make($request->all(),[
+        //     // 'com_orden_compra_id' => 'required|exists:orden_compra,id',
+        //     // 'fecha' => 'required|date',
+        //     'factura_xml' => 'nullable|file|mimes:xml|max:2048',
+        //     'factura_pdf' => 'nullable|file|mimes:pdf|max:2048',
+        //     'comprobante_pago' => 'required|file|mimes:pdf|max:2048',
 
-        ]);
+        // ]);
 
-        if($validacion->fails()){
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error de validacion',
-                'errror' => $validacion->errors()
-            ]);
-        }
+        // if($validacion->fails()){
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Error de validacion',
+        //         'errror' => $validacion->errors()
+        //     ]);
+        // }
 
         $registro = DocumentosOrdenesCompra::where('id', $id)->first();
         if(!$registro){

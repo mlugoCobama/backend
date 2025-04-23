@@ -166,12 +166,12 @@ class SolicitudesCompraController extends Controller
             
             'usuario_solicita' => 'required|integer',
             'usuario_destino' => 'required|integer',
-            'motivo' => 'required|string|max:50',
+            'motivo' => 'required|string',
             'users_id' => 'required||integer',
             'detalles' => 'required|array|min:1',
             'detalles.*.cantidad' => 'required|numeric|min:1',
-            'detalles.*.descripcion' => 'required|string|max:255',
-            'detalles.*.observaciones' => 'nullable|string|max:255',
+            'detalles.*.descripcion' => 'required|string',
+            'detalles.*.observaciones' => 'nullable|string',
             'detalles.*.cat_unidades_medida_id' => 'required|integer',
         ]);
 
@@ -390,21 +390,21 @@ class SolicitudesCompraController extends Controller
     {
         $data = $request->all();
 
-        $validacion = Validator::make($data, [
-            'consideraciones' => 'nullable|string|max:150',
-            'proveedor1' => 'required|integer',
-            'proveedor2' => 'required|integer',
-            'proveedor3' => 'required|integer',
-            'solicitudes_compra_id' => 'required|integer',
-        ]);
+        // $validacion = Validator::make($data, [
+        //     'consideraciones' => 'nullable|string',
+        //     'proveedor1' => 'required|integer',
+        //     'proveedor2' => 'required|integer',
+        //     'proveedor3' => 'required|integer',
+        //     'solicitudes_compra_id' => 'required|integer',
+        // ]);
 
-        if ($validacion->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Datos no validos o incompletos',
-                'errors' => $validacion->errors()
-            ]);
-        }
+        // if ($validacion->fails()) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Datos no validos o incompletos',
+        //         'errors' => $validacion->errors()
+        //     ]);
+        // }
 
         try {
             DB::beginTransaction();
