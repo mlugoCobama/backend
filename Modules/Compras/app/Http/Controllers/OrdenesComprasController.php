@@ -264,19 +264,19 @@ class OrdenesComprasController extends Controller
         $data = $request->all();
         
         // Recupero los datos (id solicitud de compra, id de orden de compra)
-        $validacion =  Validator::make($data,[
-            'idOrdenCompra' => 'required|exists:com_orden_compra,id',
-            'idSolicituCompra' => 'required|exists:com_solicitudes_compra,id'
+        // $validacion =  Validator::make($data,[
+        //     'idOrdenCompra' => 'required|exists:com_orden_compra,id',
+        //     'idSolicituCompra' => 'required|exists:com_solicitudes_compra,id'
 
-        ]);
+        // ]);
 
-        if($validacion->fails()){
-            return response()->json([
-                "status" => "error",
-                "message" => "Datos no validos o incorrectos",
-                "errors" => $validacion->errors()
-            ]);
-        }
+        // if($validacion->fails()){
+        //     return response()->json([
+        //         "status" => "error",
+        //         "message" => "Datos no validos o incorrectos",
+        //         "errors" => $validacion->errors()
+        //     ]);
+        // }
 
         $idOc = $data['idOrdenCompra'];
         $idSc = $data['idSolicituCompra'];

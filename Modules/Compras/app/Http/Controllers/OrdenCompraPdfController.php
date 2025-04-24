@@ -66,7 +66,8 @@ class OrdenCompraPdfController extends Controller
         $pdf->AddPage();
          
         //Plantilla PDF: Formato interno de compra
-        $pdf->setSourceFile(__DIR__ . "/../../../../../storage/app/modules/compras/orden_compra/formato_compras_v1.pdf");
+        // $pdf->setSourceFile(__DIR__ . "/../../../../../storage/app/modules/compras/orden_compra/formato_compras_v1.pdf");
+        $pdf->setSourceFile(__DIR__ . "/../../../resources/assets/formato_compras_v1.pdf");
         $template = $pdf->importPage(1);
         $pdf->useImportedPage($template);
 
@@ -105,7 +106,8 @@ class OrdenCompraPdfController extends Controller
         $pdf->SetXY(18, 37);
         $pdf->Write(0, strtoupper(''));
         $pdf->SetXY(119, 37);
-        $pdf->Write(0, strtoupper(utf8_decode($data['solicitudCompra']['motivo'])));
+        $pdf->Write(0, strtoupper(''));
+        // $pdf->Write(0, strtoupper(utf8_decode($data['solicitudCompra']['motivo'])));
 
         /*-----------------------------------------------------
          * Inicia datos de usuario destino
@@ -116,8 +118,15 @@ class OrdenCompraPdfController extends Controller
         $pdf->Write(0, utf8_decode($data['destino'][0]->puesto));
         $pdf->SetXY(57.5, 48);
         $pdf->Write(0, strtoupper(utf8_decode($data['destino'][0]->empresa)));
-        $pdf->SetXY(57.5, 50.6);
-        $pdf->Write(0, utf8_decode($data['solicitudCompra']['motivo']));
+        $pdf->SetXY(57.5, 50.5);
+        $motivo = utf8_decode($data['solicitudCompra']['motivo']);
+
+        $textoRecortado =  substr($motivo, 0, 102) . (strlen($motivo) > 102? '...':'');
+        $pdf->Write(0, $textoRecortado);
+        // $pdf->MultiCell(100,2, $motivo ,0,'L' );
+        // $pdf->SetXY(57.5, 49);
+        // $pdf->Write(0, utf8_decode($data['solicitudCompra']['motivo']));
+
 
         
         $pdf->SetXY(57.5, 58.9);
