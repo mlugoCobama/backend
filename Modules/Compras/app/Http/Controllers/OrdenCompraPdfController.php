@@ -319,7 +319,7 @@ class OrdenCompraPdfController extends Controller
         $pdf->SetXY(174.5, 234.2);
         $pdf->Cell(26, 2.5,  "$ " . number_format($total, 2), 0, '0', $align = 'R');
 
-        // return $pdf->Output('S');
-        $pdf->Output();
+        return $pdf->Output('S');
+        // $pdf->Output();
     }
 }
