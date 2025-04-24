@@ -162,40 +162,40 @@ class SolicitudesCompraController extends Controller
         $data = json_decode($request->input('data'), true);
         $files =  $request->allFiles();
 
-         $validador = Validator::make($data, [
+        //  $validador = Validator::make($data, [
             
-             'usuario_solicita' => 'required|integer',
-             'usuario_destino' => 'required|integer',
-             'motivo' => 'required|string',
-             'users_id' => 'required||integer',
-             'detalles' => 'required|array|min:1',
-             'detalles.*.cantidad' => 'required|numeric|min:1',
-             'detalles.*.descripcion' => 'required|string',
-             'detalles.*.observaciones' => 'nullable|string',
-             'detalles.*.cat_unidades_medida_id' => 'required|integer',
-         ]);
+        //      'usuario_solicita' => 'required|integer',
+        //      'usuario_destino' => 'required|integer',
+        //      'motivo' => 'required|string',
+        //      'users_id' => 'required||integer',
+        //      'detalles' => 'required|array|min:1',
+        //      'detalles.*.cantidad' => 'required|numeric|min:1',
+        //      'detalles.*.descripcion' => 'required|string',
+        //      'detalles.*.observaciones' => 'nullable|string',
+        //      'detalles.*.cat_unidades_medida_id' => 'required|integer',
+        //  ]);
 
-         //validación archivos
-         foreach ($files as $key => $file) {
-             if (strpos($key, 'img_referencia_') === 0) {
-                 $validador->after(function ($validador) use ($file, $key) {
-                     if (!$file->isValid() || !in_array($file->getClientOriginalExtension(), ['jpg', 'jpeg', 'png'])) {
-                         $validador->errors()->add($key, 'El archivo debe ser una imagen valida');
-                     }
-                     if ($file->getSize() > 5 * 1024 * 1024) {
-                         $validador->errors()->add($key, 'El archivo no puede superar los 5MB');
-                     }
-                 });
-             }
-         }
+        //  //validación archivos
+        //  foreach ($files as $key => $file) {
+        //      if (strpos($key, 'img_referencia_') === 0) {
+        //          $validador->after(function ($validador) use ($file, $key) {
+        //              if (!$file->isValid() || !in_array($file->getClientOriginalExtension(), ['jpg', 'jpeg', 'png'])) {
+        //                  $validador->errors()->add($key, 'El archivo debe ser una imagen valida');
+        //              }
+        //              if ($file->getSize() > 5 * 1024 * 1024) {
+        //                  $validador->errors()->add($key, 'El archivo no puede superar los 5MB');
+        //              }
+        //          });
+        //      }
+        //  }
 
-         if ($validador->fails()) {
-             return response()->json([
-                 'status' => 'error',
-                 'message' => 'Datos no validos',
-                 'errors' => $validador->errors()
-             ]);
-         }
+        //  if ($validador->fails()) {
+        //      return response()->json([
+        //          'status' => 'error',
+        //          'message' => 'Datos no validos',
+        //          'errors' => $validador->errors()
+        //      ]);
+        //  }
 
         try {
             DB::beginTransaction();
@@ -429,9 +429,9 @@ class SolicitudesCompraController extends Controller
 
                 /** *****************************************************************************************
                  * !Habiltar para que se envíen los correos 
-                 * $this->enviaCorreoProveedores($data['proveedores'], $data);
+                 * 
                  *******************************************************************************************/ 
-                
+                $this->enviaCorreoProveedores($data['proveedores'], $data);
                 $idSolicitudC = $data['solicitudes_compra_id'];
 
                 // Actualiza el estatus de la Solicitud a 2
