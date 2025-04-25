@@ -190,8 +190,8 @@ class DocumentosOrdenesComprasController extends Controller
         if(!$registro){
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error de validacion',
-                'errror' => 'El registro al que se intenta acceder no existe'
+                'message' => 'Error de validación',
+                'error' => 'El registro al que se intenta acceder no existe'
             ]);
         }
         try {

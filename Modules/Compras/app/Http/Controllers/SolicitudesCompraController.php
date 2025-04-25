@@ -431,7 +431,7 @@ class SolicitudesCompraController extends Controller
                  * !Habiltar para que se envíen los correos 
                  * 
                  *******************************************************************************************/ 
-                $this->enviaCorreoProveedores($data['proveedores'], $data);
+                //$this->enviaCorreoProveedores($data['proveedores'], $data);
                 $idSolicitudC = $data['solicitudes_compra_id'];
 
                 // Actualiza el estatus de la Solicitud a 2

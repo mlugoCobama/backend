@@ -142,6 +142,7 @@ class CotizacionesController extends Controller
                 'message' => 'Se ha guardado correctamente',
                 'data' => []
             ]);
+            
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([

@@ -58,34 +58,38 @@ class ProveedoresController extends Controller
      ***********************************************************************************/
     public function store(Request $request)
     {
+     $mensajes = [
+        'correo.unique' => 'El correo ya es usado por otro proveedor',
+        'telefono.unique' => 'El telefono ya es usado por otro proveedor'
+     ];
+     
+     $validacion =  Validator::make($request->all(), [
+         'nombre' => 'required|string',
+         'contacto' => 'required|string',
+         'telefono' => 'required|string|unique:com_proveedores,telefono',
+         'localidad' => 'required|string',
+         'condiciones' => 'required|string',
+         'servicios' => 'required|string',
+         'correo' => 'required|email |unique:com_proveedores,correo',
+        'dias_credito' => 'nullable|integer',
+         'horario_atencion' => 'required|string',
+         'tiempo_entrega' => 'required|string',
+         //Validacion para archivos
+         'constancia_fiscal' => 'nullable|file|mimes:pdf',
+         'ine' => 'nullable|file|mimes:pdf',
+         'comprobante_domicilio' => 'nullable|file|mimes:pdf',
+         'estado_cuenta' => 'nullable|file|mimes:pdf',
+         'acta_constitutiva' => 'nullable|file|mimes:pdf',
+         'poder_notarial' => 'nullable|file|mimes:pdf',
+     ], $mensajes);
 
-        // $validacion =  Validator::make($request->all(), [
-        //     'nombre' => 'required|string|max:45',
-        //     'contacto' => 'required|string|max:45',
-        //     'telefono' => 'required|string|max:45',
-        //     'localidad' => 'required|string|max:45',
-        //     'condiciones' => 'required|string|max:45',
-        //     'servicios' => 'required|string|max:200',
-        //     'correo' => 'required|email|max:45',
-        //     'dias_credito' => 'nullable|integer|max:45',
-        //     'horario_atencion' => 'required|string|max:45',
-        //     'tiempo_entrega' => 'required|string|max:45',
-        //     //Validacion para archivos
-        //     'constancia_fiscal' => 'nullable|file|mimes:pdf|max:5120',
-        //     'ine' => 'nullable|file|mimes:pdf|max:5120',
-        //     'comprobante_domicilio' => 'nullable|file|mimes:pdf|max:5120',
-        //     'estado_cuenta' => 'nullable|file|mimes:pdf|max:5120',
-        //     'acta_constitutiva' => 'nullable|file|mimes:pdf|max:5120',
-        //     'poder_notarial' => 'nullable|file|mimes:pdf|max:5120',
-        // ]);
-
-        // if ($validacion->fails()) {
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Los datos ingresados no son validos o están incompletos',
-        //         'errors' => $validacion->errors()
-        //     ]);
-        // }
+     if ($validacion->fails()) {
+         return response()->json([
+             'status' => 'error',
+             'message' => 'Los datos ingresados no son validos o están incompletos',
+             'errors' => $validacion->errors()
+         ]);
+     }
 
         try {
             DB::beginTransaction();
@@ -191,33 +195,38 @@ class ProveedoresController extends Controller
      **************************************************************************************/
     public function update(Request $request, $id)
     {
-        // $validacion =  Validator::make($request->all(), [
-        //     'nombre' => 'required|string|max:45',
-        //     'contacto' => 'required|string|max:45',
-        //     'telefono' => 'required|string|max:45',
-        //     'localidad' => 'required|string|max:45',
-        //     'condiciones' => 'required|string|max:45',
-        //     'servicios' => 'required|string|max:200',
-        //     'correo' => 'required|email|max:45',
-        //     'dias_credito' => 'nullable|integer|max:45',
-        //     'horario_atencion' => 'required|string|max:45',
-        //     'tiempo_entrega' => 'required|string|max:45',
-        //     //Validacion para archivos
-        //     'constancia_fiscal' => 'nullable|file|mimes:pdf|max:5120',
-        //     'ine' => 'nullable|file|mimes:pdf|max:5120',
-        //     'comprobante_domicilio' => 'nullable|file|mimes:pdf|max:5120',
-        //     'estado_cuenta' => 'nullable|file|mimes:pdf|max:5120',
-        //     'acta_constitutiva' => 'nullable|file|mimes:pdf|max:5120',
-        //     'poder_notarial' => 'nullable|file|mimes:pdf|max:5120',
-        // ]);
-
-        // if ($validacion->fails()) {
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Los datos ingresados no son validos o están incompletos',
-        //         'errors' => $validacion->errors()
-        //     ]);
-        // }
+        $mensajes = [
+            'correo.unique' => 'El correo ya es usado por otro proveedor',
+            'telefono.unique' => 'El telefono ya es usado por otro proveedor'
+         ];
+         
+         $validacion =  Validator::make($request->all(), [
+             'nombre' => 'required|string',
+             'contacto' => 'required|string',
+             'telefono' => 'required|string|unique:com_proveedores,telefono'.$id,
+             'localidad' => 'required|string',
+             'condiciones' => 'required|string',
+             'servicios' => 'required|string',
+             'correo' => 'required|email |unique:com_proveedores,correo'.$id,
+            'dias_credito' => 'nullable|integer',
+             'horario_atencion' => 'required|string',
+             'tiempo_entrega' => 'required|string',
+             //Validacion para archivos
+             'constancia_fiscal' => 'nullable|file|mimes:pdf',
+             'ine' => 'nullable|file|mimes:pdf',
+             'comprobante_domicilio' => 'nullable|file|mimes:pdf',
+             'estado_cuenta' => 'nullable|file|mimes:pdf',
+             'acta_constitutiva' => 'nullable|file|mimes:pdf',
+             'poder_notarial' => 'nullable|file|mimes:pdf',
+         ], $mensajes);
+    
+         if ($validacion->fails()) {
+             return response()->json([
+                 'status' => 'error',
+                 'message' => 'Los datos ingresados no son validos o están incompletos',
+                 'errors' => $validacion->errors()
+             ]);
+         }
 
         try {
             DB::beginTransaction();
