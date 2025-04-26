@@ -4,6 +4,7 @@ namespace Modules\Compras\Http\Controllers;
 
 
 use App\Http\Controllers\Controller;
+use App\Enums\EstatusSolicitud;
 // use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 // use Illuminate\Http\Response;
@@ -58,74 +59,28 @@ class SolicitudesCompraController extends Controller
      **************************************************************/
     public function index()
     {
-        //Catalogo de estados
-        $solictado = 1;
-        $enCotizacion = 2;
-        $enOrdenCompra = 3;
-        $autorizada = 4;
-        $cancelada = 5;
-        $enSurtido = 6;
-        $pagada = 7;
-
-        //  return SolicitudesComprasResource::collection((SolicitudesCompra::active()->orderBy('fecha', 'desc')->get()));
-        $data = (SolicitudesCompra::active()->orderBy('fecha', 'desc')
-            ->get([
-                'id',
-                'folio',
-                'usuario_destino',
-                'motivo',
-                'fecha',
-                'users_id',
-                'usuario_solicita',
-                'estatus',
-            ]));
-
-        foreach ($data as $item) {
-            $user = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $item->usuario_destino . ')');
-            $usuarioSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $item->usuario_solicita . ')');
-            $item["usuario_solicita"] = '' . $usuarioSolicita[0]->firstname . ' ' . $usuarioSolicita[0]->realname . '' ?? 'No asignado';
-            $item["usuario_destino"] = '' . $user[0]->firstname . ' ' . $user[0]->realname . '';
-            $item["empresa"] = $user[0]->empresa;
-            switch ($item->estatus) {
-                case $solictado:
-                    $item["estado"] = "SOLICITADO";
-                    $item["claseEstado"] = "bg-primary";
-                    break;
-                case $enCotizacion:
-                    $item["estado"] = "EN COTIZACIÓN";
-                    $item["claseEstado"] = "bg-info";
-                    break;
-                case $enOrdenCompra:
-                    $item["estado"] = "ORDEN DE COMPRA";
-                    $item["claseEstado"] = "bg-warning";
-                    break;
-                case $autorizada:
-                    $item["estado"] = "AUTORIZADA";
-                    $item["claseEstado"] = "badge-soft-success";
-                    break;
-                case $cancelada:
-                    $item["estado"] = "CANCELADA";
-                    $item["claseEstado"] = "bg-danger";
-                    break;
-                case $enSurtido:
-                    $item["estado"] = "EN SURTIDO";
-                    $item["claseEstado"] = "badge-soft-warning";
-                    break;
-                case $pagada:
-                    $item["estado"] = "PAGADA";
-                    $item["claseEstado"] = "bg-success";
-                    break;
-            }
-        }
+        $data =  SolicitudesComprasResource::collection((SolicitudesCompra::active()->orderBy('fecha', 'desc')->get()));
 
         return response()->json([
             'status' => 'success',
             'message' => 'Consulta generada correctamente',
             'data' => $data
-            // 'data' => new SolicitudesComprasResource($solicitudCompra)
         ]);
     }
 
+    /** *******************************************************************
+     * Recupera las solicitud de compra por id
+     *********************************************************************/
+    public function getSolicitud($id)
+    {
+        $data = SolicitudesCompra::findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Consulta generada correctamente',
+            'data' => new SolicitudesComprasResource($data)
+        ]);
+    }
     /** ************************************************************
      * Recupera todos los registros de la base de datos
      * Con paginacion (30 registros por pagina)
@@ -162,40 +117,39 @@ class SolicitudesCompraController extends Controller
         $data = json_decode($request->input('data'), true);
         $files =  $request->allFiles();
 
-        //  $validador = Validator::make($data, [
-            
-        //      'usuario_solicita' => 'required|integer',
-        //      'usuario_destino' => 'required|integer',
-        //      'motivo' => 'required|string',
-        //      'users_id' => 'required||integer',
-        //      'detalles' => 'required|array|min:1',
-        //      'detalles.*.cantidad' => 'required|numeric|min:1',
-        //      'detalles.*.descripcion' => 'required|string',
-        //      'detalles.*.observaciones' => 'nullable|string',
-        //      'detalles.*.cat_unidades_medida_id' => 'required|integer',
-        //  ]);
+          $validador = Validator::make($data, [
+              'usuario_solicita' => 'required|integer',
+              'usuario_destino' => 'required|integer',
+              'motivo' => 'required|string',
+              'users_id' => 'required||integer',
+              'detalles' => 'required|array|min:1',
+              'detalles.*.cantidad' => 'required|numeric|min:1',
+              'detalles.*.descripcion' => 'required|string',
+              'detalles.*.observaciones' => 'nullable|string',
+              'detalles.*.cat_unidades_medida_id' => 'required|integer',
+          ]);
 
-        //  //validación archivos
-        //  foreach ($files as $key => $file) {
-        //      if (strpos($key, 'img_referencia_') === 0) {
-        //          $validador->after(function ($validador) use ($file, $key) {
-        //              if (!$file->isValid() || !in_array($file->getClientOriginalExtension(), ['jpg', 'jpeg', 'png'])) {
-        //                  $validador->errors()->add($key, 'El archivo debe ser una imagen valida');
-        //              }
-        //              if ($file->getSize() > 5 * 1024 * 1024) {
-        //                  $validador->errors()->add($key, 'El archivo no puede superar los 5MB');
-        //              }
-        //          });
-        //      }
-        //  }
+          //validación archivos
+          foreach ($files as $key => $file) {
+              if (strpos($key, 'img_referencia_') === 0) {
+                  $validador->after(function ($validador) use ($file, $key) {
+                      if (!$file->isValid() || !in_array($file->getClientOriginalExtension(), ['jpg', 'jpeg', 'png'])) {
+                          $validador->errors()->add($key, 'El archivo debe ser una imagen valida');
+                      }
+                      if ($file->getSize() > 50 * 1024 * 1024) {
+                          $validador->errors()->add($key, 'El archivo no puede superar los 50MB');
+                      }
+                  });
+              }
+          }
 
-        //  if ($validador->fails()) {
-        //      return response()->json([
-        //          'status' => 'error',
-        //          'message' => 'Datos no validos',
-        //          'errors' => $validador->errors()
-        //      ]);
-        //  }
+          if ($validador->fails()) {
+              return response()->json([
+                  'status' => 'error',
+                  'message' => 'Datos no validos',
+                  'errors' => $validador->errors()
+              ]);
+          }
 
         try {
             DB::beginTransaction();
@@ -271,88 +225,26 @@ class SolicitudesCompraController extends Controller
         return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->get()));
     }
 
-    /** *******************************************************************
-     * Recupera las solicitud de compra por id
-     *********************************************************************/
-    public function getSolicitud($id)
-    {
-        //Catalogo de estados
-        $solictado = 1;
-        $enCotizacion = 2;
-        $enOrdenCompra = 3;
-        $autorizada = 4;
-        $cancelada = 5;
-        $enSurtido = 6;
-        $pagada = 7;
-
-        $data = SolicitudesCompra::where("id", $id)->first();
-
-        $user = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $data->usuario_destino . ')');
-        $usuarioSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $data->usuario_solicita . ')');
-        $data["usuario_solicita"] = '' . $usuarioSolicita[0]->firstname . ' ' . $usuarioSolicita[0]->realname . '' ?? 'No asignado';
-        $data["usuario_destino"] = '' . $user[0]->firstname . ' ' . $user[0]->realname . '';
-        $data["empresa"] = $user[0]->empresa;
-        switch ($data->estatus) {
-            case $solictado:
-                $data["estado"] = "SOLICITADO";
-                $data["claseEstado"] = "bg-primary";
-                break;
-            case $enCotizacion:
-                $data["estado"] = "EN COTIZACIÓN";
-                $data["claseEstado"] = "bg-info";
-                break;
-            case $enOrdenCompra:
-                $data["estado"] = "ORDEN DE COMPRA";
-                $data["claseEstado"] = "bg-warning";
-                break;
-            case $autorizada:
-                $data["estado"] = "AUTORIZADA";
-                $data["claseEstado"] = "badge-soft-success";
-                break;
-            case $cancelada:
-                $data["estado"] = "CANCELADA";
-                $data["claseEstado"] = "bg-danger";
-                break;
-            case $enSurtido:
-                $data["estado"] = "EN SURTIDO";
-                $data["claseEstado"] = "badge-soft-warning";
-                break;
-            case $pagada:
-                $data["estado"] = "PAGADA";
-                $data["claseEstado"] = "bg-success";
-                break;
-        }
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Consulta generada correctamente',
-            'data' => $data
-        ]);
-    }
-
     public function edit($id)
     {
         return view('compras::edit');
     }
 
-    /*
-     * Esto no se ocupa
+    /**
+     * Actualiza los estatus de la solicitud de compra
+     * auto_gg, auto_admin y estatus
      */
     public function update(Request $request, $id)
     {
-        SolicitudesCompra::where('id', $id)
-            ->update([
-                'folio' => $request->folio,
-                'usuario_solicita' => $request->usuario_solicita,
-                'usuario_destino' => $request->usuario_destino,
-                'motivo' => $request->motivo,
-                'fecha' => $request->fecha,
-                'users_id' => $request->users_id
-            ]);
+        SolicitudesCompra::where ('id', $id)->update(
+           [ "$request->campo" => $request->value]
+        );
+
         return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha actualizado correctamente',
-            'data' => ''
-        ]);
+             'status' => 'success',
+             'message' => 'Se ha actualizado correctamente',
+             'data' => ''
+         ]);
     }
 
     /** ************************************************************
@@ -372,7 +264,7 @@ class SolicitudesCompraController extends Controller
         }
 
         $solicitudCompra->update([
-            'estatus' => 5
+            'estatus' => EstatusSolicitud::CANCELADA
         ]);
 
         return response()->json([
@@ -390,21 +282,21 @@ class SolicitudesCompraController extends Controller
     {
         $data = $request->all();
 
-        // $validacion = Validator::make($data, [
-        //     'consideraciones' => 'nullable|string',
-        //     'proveedor1' => 'required|integer',
-        //     'proveedor2' => 'required|integer',
-        //     'proveedor3' => 'required|integer',
-        //     'solicitudes_compra_id' => 'required|integer',
-        // ]);
+        $validacion = Validator::make($data, [
+            'consideraciones' => 'nullable|string',
+            'proveedor1' => 'required|integer',
+            'proveedor2' => 'required|integer',
+            'proveedor3' => 'required|integer',
+            'solicitudes_compra_id' => 'required|integer',
+        ]);
 
-        // if ($validacion->fails()) {
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Datos no validos o incompletos',
-        //         'errors' => $validacion->errors()
-        //     ]);
-        // }
+        if ($validacion->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos no validos o incompletos',
+                'errors' => $validacion->errors()
+            ]);
+        }
 
         try {
             DB::beginTransaction();
@@ -434,8 +326,8 @@ class SolicitudesCompraController extends Controller
                 //$this->enviaCorreoProveedores($data['proveedores'], $data);
                 $idSolicitudC = $data['solicitudes_compra_id'];
 
-                // Actualiza el estatus de la Solicitud a 2
-                SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => 2]);
+                // Actualiza el estatus de la Solicitud a COTIZACION
+                SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => EstatusSolicitud::EN_COTIZACION]);
 
             DB::commit();
 

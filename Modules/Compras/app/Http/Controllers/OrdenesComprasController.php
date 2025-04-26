@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use DateTime;
 use DateTimeZone;
+use App\Enums\EstatusSolicitud;
 
 //Models
 use Modules\Compras\Models\OrdenCompra;
@@ -97,7 +98,7 @@ class OrdenesComprasController extends Controller
                 CotizacionesProveedores::where('id', $request->input('id_cotizacion_prov'))->update(['seleccionado' => 1]);
 
                 // Actualiza estado de la solicitud
-                SolicitudesCompra::where('id', $request->input('id_solicitud_compra'))->update(['estatus' => 3]);
+                SolicitudesCompra::where('id', $request->input('id_solicitud_compra'))->update(['estatus' => EstatusSolicitud::EN_ORDEN_COMPRA]);
 
             DB::commit();
 
@@ -206,7 +207,7 @@ class OrdenesComprasController extends Controller
                 OrdenCompra::where('id', $id)->update(['estatus' => 5]);
 
                 //Actualiza el estatus de Solicitud Compra a 7 (Pagado)
-                SolicitudesCompra::where('id', $idSc)->update(['estatus' => 7]);
+                SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::PAGADA]);
 
             DB::commit();
 
@@ -235,7 +236,7 @@ class OrdenesComprasController extends Controller
     {
         try {
             DB::beginTransaction();
-                SolicitudesCompra::where('id', $id)->update(['estatus' => 5]);
+                SolicitudesCompra::where('id', $id)->update(['estatus' => EstatusSolicitud::CANCELADA]);
                 $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
                 OrdenCompra::where('cotizaciones_id', $cotizacion->id)->update(['estatus' => 0]);
             DB::commit();
@@ -322,7 +323,7 @@ class OrdenesComprasController extends Controller
                 //                ->notify(new SolicitudSurtido($datos));
 
                 // Actualizo el Actualizar el estatus de la solicitud de compra a 6 (En surtido)
-                SolicitudesCompra::where('id', $idSc)->update(['estatus' => 6]);
+                SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::EN_SURTIDO]);
 
                 // Actualizar el estatus de la orden de compra a 3 (En surtido)
                 OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
@@ -360,7 +361,7 @@ class OrdenesComprasController extends Controller
         try {
             DB::beginTransaction();
                 // Actualizar el estatus de la solicitud de compra a 4 (Autorizada)
-                SolicitudesCompra::where('id', $idSc)->update(['estatus' => 4]);
+                SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::AUTORIZADA]);
                 
                 // Actualizar el estatus de la orden de compra a 3 (Autorizada)
                 OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);

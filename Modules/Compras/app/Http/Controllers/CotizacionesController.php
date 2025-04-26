@@ -4,6 +4,7 @@ namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Enums\EstatusSolicitud;
 
 //Models
 use Modules\Compras\Models\Cotizaciones;
@@ -211,7 +212,7 @@ class CotizacionesController extends Controller
         $data = $request->all();
         $idSc = $data['0'];
         CotizacionesProveedores::where('id', $id)->update(['seleccionado' => 1]);
-        SolicitudesCompra::where('id', $idSc)->update(['estatus' => 3]);
+        SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::EN_ORDEN_COMPRA]);
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha actualizado correctamente',
