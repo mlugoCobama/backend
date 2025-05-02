@@ -34,18 +34,10 @@ class CatUnidadesMedidaController extends Controller
      */
     public function store(Request $request)
     {
-        // $valiadcion  = Validator::make($request->all(),[
-        //     'nombre' => 'required|string|max:45',
-        //     'abreviatura' => 'required|string|max:45'
-        // ]);
-
-        // if($valiadcion->fails()){
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Datos inválidos',
-        //         'errors' => $valiadcion->errors()
-        //     ]);
-        // }
+         $valiadcion  = Validator::make($request->all(),[
+             'nombre' => 'required|string|max:45',
+             'abreviatura' => 'required|string|max:45'
+         ]);
 
         $unidadMedida = CatUnidadesMedidas::create($request->all());
         return response()->json([

@@ -1,0 +1,182 @@
+{
+    "0": {
+        "id": "0",
+        "clave": "N/A",
+        "descripcion": " No aplica"
+    },
+    "1": {
+        "id": "1",
+        "clave": "24-VT",
+        "descripcion": " TELEFONO E INTERNET"
+    },
+    "2": {
+        "id": "2",
+        "clave": "A.F.",
+        "descripcion": "ACTIVO FIJO"
+    },
+    "3": {
+        "id": "3",
+        "clave": "ACREE",
+        "descripcion": "ACREEDORES DIVERSOS"
+    },
+    "4": {
+        "id": "4",
+        "clave": "ACTIV",
+        "descripcion": "ACTIVOS FIJOS"
+    },
+    "5": {
+        "id": "5",
+        "clave": "ADMIN",
+        "descripcion": "SERVICIO UNiDAD"
+    },
+    "6": {
+        "id": "6",
+        "clave": "COSTO",
+        "descripcion": "COSTO UNiDADES NUEVAS"
+    },
+    "7": {
+        "id": "7",
+        "clave": "CTOFI",
+        "descripcion": "COSTO FINANCIERO (INTERESES)"
+    },
+    "8": {
+        "id": "8",
+        "clave": "DEUDO",
+        "descripcion": "DEUDORES DIVERSOS"
+    },
+    "9": {
+        "id": "9",
+        "clave": "EQUIP",
+        "descripcion": "EQUIPAMIENTO"
+    },
+    "10": {
+        "id": "10",
+        "clave": "G.ADM",
+        "descripcion": "GASTOS DE ADMINISTRACION"
+    },
+    "11": {
+        "id": "10",
+        "clave": "G.FLO",
+        "descripcion": " GASTOS DE VENTA FLOTILLAS"
+    },
+    "12": {
+        "id": "12",
+        "clave": "G.REF",
+        "descripcion": "GASTOS DE REFACCIONES"
+    },
+    "13": {
+        "id": "13",
+        "clave": "G.SER",
+        "descripcion": "GASTOS DE SERVICIO"
+    },
+    "14": {
+        "id": "14",
+        "clave": "G.SIC",
+        "descripcion": "GASTOS DE VENTA SICREA"
+    },
+    "15": {
+        "id": "15",
+        "clave": "G.US",
+        "descripcion": "GASTOS DE VENTA SEMI-NUEVOS"
+    },
+    "16": {
+        "id": "16",
+        "clave": "G.VTA",
+        "descripcion": "GASTOS DE VENTA MENUDEO"
+    },
+    "17": {
+        "id": "17",
+        "clave": "GTHYP",
+        "descripcion": "GASTOS DE HOJALATERIA Y PINTURA"
+    },
+    "18": {
+        "id": "18",
+        "clave": "HYP",
+        "descripcion": "HOJALATERIA Y PINTURA"
+    },
+    "19": {
+        "id": "19",
+        "clave": "INREF",
+        "descripcion": "INTERNAS XVENTAS (CORTESIAS REFACCIONES)"
+    },
+    "20": {
+        "id": "20",
+        "clave": "INRES",
+        "descripcion": "PREPARACIONES (PREVIAS Y REPAR SERVICIO)"
+    },
+    "21": {
+        "id": "21",
+        "clave": "INSER",
+        "descripcion": "INTERNAS X VENTAS (CORTESIAS SERVICIO)"
+    },
+    "22": {
+        "id": "22",
+        "clave": "INT",
+        "descripcion": "INTERESES PRESTAMOS INTERCOMPAÑIAS"
+    },
+    "23": {
+        "id": "23",
+        "clave": "INTRU",
+        "descripcion": "PREPARACIONES (PREVIAS Y REP. SEMI-NUEV)"
+    },
+    "24": {
+        "id": "24",
+        "clave": "INURE",
+        "descripcion": "INURE PREPARACIONES (PREVIAS, REPAR. NUEVOS)"
+    },
+    "25": {
+        "id": "25",
+        "clave": "INUSA",
+        "descripcion": "INTERNAS X VENTAS (CORTESIAS SEMI-NVOS)"
+    },
+    "26": {
+        "id": "26",
+        "clave": "INUVO",
+        "descripcion": "INTERNAS X VENTAS (CORTESIAS NUEVOS)"
+    },
+    "27": {
+        "id": "27",
+        "clave": "OTRIN",
+        "descripcion": "OTROS INGRESOS"
+    },
+    "28": {
+        "id": "28",
+        "clave": "PROT",
+        "descripcion": "PROTECCION CIVIL"
+    },
+    "29": {
+        "id": "29",
+        "clave": "REF",
+        "descripcion": "SERVICIO UNiDAD"
+    },
+    "30": {
+        "id": "30",
+        "clave": "REFAC",
+        "descripcion": "REFACCIONES"
+    },
+    "31": {
+        "id": "31",
+        "clave": "SERV",
+        "descripcion": "SERVICIO UNiDAD"
+    },
+    "32": {
+        "id": "32",
+        "clave": "SERVI",
+        "descripcion": "SERVICIO"
+    },
+    "33": {
+        "id": "33",
+        "clave": "US",
+        "descripcion": "COSTO DE UNiDADES SEMI-NUEVAS"
+    },
+    "34": {
+        "id": "34",
+        "clave": "VTA",
+        "descripcion": "INTERNA VENTAS"
+    },
+    "35": {
+        "id": "35",
+        "clave": "VTAS",
+        "descripcion": "SERVICIO UNiDAD"
+    }
+}

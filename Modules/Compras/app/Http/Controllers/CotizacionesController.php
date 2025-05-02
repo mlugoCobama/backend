@@ -50,14 +50,11 @@ class CotizacionesController extends Controller
         if (!File::exists($path)) {
             abort(404);
         }
+
         $fileContent = File::get($path);
 
         $type = File::mimeType($path);
         return response($fileContent, 200)->header("Content-Type", $type);
-
-        // Convertir en base 64
-        // $binaryContent = base64_encode($fileContent);
-        // return response($binaryContent, 200)->header("Content-Type", 'application/octet-stream');
     }
 
     public function index()
@@ -168,6 +165,7 @@ class CotizacionesController extends Controller
         if ($cotizacion) {
             $proveedores = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
                 ->get(['id', 'proveedores_id', 'cotizaciones_id', 'ruta', 'seleccionado']);
+                
             $data = [];
             foreach ($proveedores as $proveedor) {
                 $proveedorId = $proveedor->id;

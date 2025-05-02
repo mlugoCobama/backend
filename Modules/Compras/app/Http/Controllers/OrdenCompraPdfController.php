@@ -62,6 +62,10 @@ class OrdenCompraPdfController extends Controller
         $dataFacturacion = $json[$data['destino'][0]->empresa];
         $dataEntrega = $jsonE[$data['ordenCompra']['entrega']];
 
+        $rawCentrosCosto = File::get(base_path('\Modules\Compras\resources\assets\json\centrosCostos\catCentrosCostos.json'));
+        $jsonCC = json_decode(json: $rawCentrosCosto, associative: true);
+        $dataCC = $jsonCC[$data['solicitudCompra']['c_c']];
+
         $pdf = new Fpdi();
         $pdf->AddPage();
          
@@ -112,10 +116,22 @@ class OrdenCompraPdfController extends Controller
         /*-----------------------------------------------------
          * Inicia datos de usuario destino
         -----------------------------------------------------*/
-        $pdf->SetXY(57, 43.4);
-        $pdf->Write(0, utf8_decode('' . $data['destino'][0]->firstname . ' ' . $data['destino'][0]->realname . ''));
-        $pdf->SetXY(57, 46);
-        $pdf->Write(0, utf8_decode($data['destino'][0]->puesto));
+         if($data['solicitudCompra']['c_c'] === 0){
+            // Datos para cualquier otra empresa
+             $pdf->SetXY(57, 43.4);
+             $pdf->Write(0, utf8_decode('' . $data['destino'][0]->firstname . ' ' . $data['destino'][0]->realname . ''));
+             $pdf->SetXY(57, 46);
+             $pdf->Write(0, utf8_decode($data['destino'][0]->puesto));
+         }else{
+            // Datos para empresas que son agencias
+            $pdf->SetXY(57, 43.4);
+            $pdf->Write(0, utf8_decode($dataCC['descripcion']));
+            $pdf->SetXY(57, 46);
+            $pdf->Write(0, '---------------------------------');
+         }
+        
+
+
         $pdf->SetXY(57, 48.6);
         $pdf->Write(0, strtoupper(utf8_decode($data['destino'][0]->empresa)));
         $pdf->SetXY(56.9, 50.3);

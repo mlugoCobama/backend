@@ -15,7 +15,7 @@ class SolicitudesCompra extends Model
      */
     protected $fillable = [
         'folio',
-        'users_id',
+        'c_c',
         'usuario_solicita',
         'usuario_destino',
         'motivo',

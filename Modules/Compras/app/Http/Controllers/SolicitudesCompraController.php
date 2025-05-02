@@ -34,6 +34,9 @@ use App\Jobs\EnviarCorreoSolicitudCotizacion;
 use App\Models\User;
 use Modules\Compras\Models\Proveedores;
 
+use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
+use Modules\Compras\Http\Requests\SendSolicitudCotizacionRequest;
+
 class SolicitudesCompraController extends Controller
 {
 
@@ -50,7 +53,6 @@ class SolicitudesCompraController extends Controller
             $numero = 1;
         }
         $nuevoFolio = 'SC-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
-        // return response()->json(['nuevoFolio' => $nuevoFolio]);
         return  $nuevoFolio;
     }
 
@@ -73,14 +75,15 @@ class SolicitudesCompraController extends Controller
      *********************************************************************/
     public function getSolicitud($id)
     {
-        $data = SolicitudesCompra::findOrFail($id);
+        $data = new SolicitudesComprasResource(SolicitudesCompra::findOrFail($id));
 
         return response()->json([
             'status' => 'success',
             'message' => 'Consulta generada correctamente',
-            'data' => new SolicitudesComprasResource($data)
+            'data' => $data
         ]);
     }
+
     /** ************************************************************
      * Recupera todos los registros de la base de datos
      * Con paginacion (30 registros por pagina)
@@ -112,44 +115,10 @@ class SolicitudesCompraController extends Controller
      * Genera un el registro de la solicitud de compra junto con sus detalles
      * Valida y coordina el funcionamiento de storeSolicitudCOmpra y storeDetallesSolicitud
      ***************************************************************************************/
-    public function store(Request $request)
-    {
-        $data = json_decode($request->input('data'), true);
-        $files =  $request->allFiles();
-
-          $validador = Validator::make($data, [
-              'usuario_solicita' => 'required|integer',
-              'usuario_destino' => 'required|integer',
-              'motivo' => 'required|string',
-              'users_id' => 'required||integer',
-              'detalles' => 'required|array|min:1',
-              'detalles.*.cantidad' => 'required|numeric|min:1',
-              'detalles.*.descripcion' => 'required|string',
-              'detalles.*.observaciones' => 'nullable|string',
-              'detalles.*.cat_unidades_medida_id' => 'required|integer',
-          ]);
-
-          //validación archivos
-          foreach ($files as $key => $file) {
-              if (strpos($key, 'img_referencia_') === 0) {
-                  $validador->after(function ($validador) use ($file, $key) {
-                      if (!$file->isValid() || !in_array($file->getClientOriginalExtension(), ['jpg', 'jpeg', 'png'])) {
-                          $validador->errors()->add($key, 'El archivo debe ser una imagen valida');
-                      }
-                      if ($file->getSize() > 50 * 1024 * 1024) {
-                          $validador->errors()->add($key, 'El archivo no puede superar los 50MB');
-                      }
-                  });
-              }
-          }
-
-          if ($validador->fails()) {
-              return response()->json([
-                  'status' => 'error',
-                  'message' => 'Datos no validos',
-                  'errors' => $validador->errors()
-              ]);
-          }
+    public function store(StoreSolicitudCompraRequest $request)
+    {  
+        $data =  $request->validated()['data'];
+        $files = $request->allFiles();
 
         try {
             DB::beginTransaction();
@@ -167,7 +136,6 @@ class SolicitudesCompraController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollback();
-
             return response()->json([
                 'status' => 'error',
                 'message' => 'Ocurrió un error al guardar la solicitud',
@@ -188,7 +156,7 @@ class SolicitudesCompraController extends Controller
         $dataSolicitud->usuario_destino = $data["usuario_destino"];
         $dataSolicitud->motivo = $data["motivo"];
         $dataSolicitud->fecha = $this->getFecha() ?? now();
-        $dataSolicitud->users_id = $data["users_id"];
+        $dataSolicitud->c_c = $data["c_c"];
         $dataSolicitud->save();
         return $dataSolicitud->id;
     }
@@ -278,25 +246,9 @@ class SolicitudesCompraController extends Controller
      * Envía la solicitud de cotización a los proveedores y almacena la 
      * relación en la BD
      ********************************************************************/
-    public function enviarSolicitudCotizacion(Request $request)
+    public function enviarSolicitudCotizacion(SendSolicitudCotizacionRequest $request)
     {
-        $data = $request->all();
-
-        $validacion = Validator::make($data, [
-            'consideraciones' => 'nullable|string',
-            'proveedor1' => 'required|integer',
-            'proveedor2' => 'required|integer',
-            'proveedor3' => 'required|integer',
-            'solicitudes_compra_id' => 'required|integer',
-        ]);
-
-        if ($validacion->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Datos no validos o incompletos',
-                'errors' => $validacion->errors()
-            ]);
-        }
+        $data = $request->validated();
 
         try {
             DB::beginTransaction();

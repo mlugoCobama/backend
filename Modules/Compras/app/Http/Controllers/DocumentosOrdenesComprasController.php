@@ -4,6 +4,7 @@ namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\Compras\Http\Requests\uploadDocsOCRequest;
 //Model
 use Modules\Compras\Models\DocumentosOrdenesCompra;
 
@@ -83,25 +84,8 @@ class DocumentosOrdenesComprasController extends Controller
     /** ****************************************************
      * Almacena los archivos de orden compra
      ******************************************************/
-    public function store(Request $request)
+    public function store(uploadDocsOCRequest $request)
     {
-        // $validacion = Validator::make($request->all(),[
-        //     'orden_compra_id' => 'required|exists:com_orden_compra,id',
-        //     // 'fecha' => 'required|date',
-        //     'factura_xml' => 'required|file|mimes:xml|max:2048',
-        //     'factura_pdf' => 'required|file|mimes:pdf|max:2048',
-        //     'comprobante_pago' => 'nullable|file|mimes:pdf|max:2048',
-
-        // ]);
-
-        // if($validacion->fails()){
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Error de validacion',
-        //         'errror' => $validacion->errors()
-        //     ]);
-        // }
-
         try {
             $data = $request;
             $hoy = date("jnY");
@@ -166,26 +150,8 @@ class DocumentosOrdenesComprasController extends Controller
      * Guarda los documentos de orden de compra
      * Facturas XML, Facturas PDF, Comprobantes de pago
      ****************************************************/
-    public function update(Request $request, $id)
+    public function update(uploadDocsOCRequest $request, $id)
     {
-
-        // $validacion = Validator::make($request->all(),[
-        //     // 'com_orden_compra_id' => 'required|exists:orden_compra,id',
-        //     // 'fecha' => 'required|date',
-        //     'factura_xml' => 'nullable|file|mimes:xml|max:2048',
-        //     'factura_pdf' => 'nullable|file|mimes:pdf|max:2048',
-        //     'comprobante_pago' => 'required|file|mimes:pdf|max:2048',
-
-        // ]);
-
-        // if($validacion->fails()){
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Error de validacion',
-        //         'errror' => $validacion->errors()
-        //     ]);
-        // }
-
         $registro = DocumentosOrdenesCompra::where('id', $id)->first();
         if(!$registro){
             return response()->json([
@@ -274,10 +240,10 @@ class DocumentosOrdenesComprasController extends Controller
     public function leerYProcesarXML($id)
     {
         // Catalogo de códigos SAT
-        $ruta = 'Modules/Compras/resources/assets/json';
-        $catMP = File::get(base_path($ruta . '/catalogoSAT/metodoPago.json'));
-        $catRF = File::get(base_path($ruta . '/catalogoSAT/regimenFiscal.json'));
-        $catUC = File::get(base_path($ruta . '/catalogoSAT/usoCFDI.json'));
+        $assetsJson = 'Modules/Compras/resources/assets/json';
+        $catMP = File::get(base_path($assetsJson . '/catalogoSAT/metodoPago.json'));
+        $catRF = File::get(base_path($assetsJson . '/catalogoSAT/regimenFiscal.json'));
+        $catUC = File::get(base_path($assetsJson . '/catalogoSAT/usoCFDI.json'));
 
         $jsonMP = json_decode(json: $catMP, associative: true);
         $jsonRF = json_decode(json: $catRF, associative: true);
@@ -345,14 +311,6 @@ class DocumentosOrdenesComprasController extends Controller
                     $factura['impuestos'][] =  $impuesto['TotalImpuestosTrasladados'];
                 }
             }
-
-            // if ($impuestos) {
-            //     $factura['impuestos'][] = [
-            //         'data' => 'data',
-            //         'totalImpuestosTrasladados' => (string) $impuestos['TotalImpuestosTrasladados'],
-            //         'totalImpuestosTrasladados' => (string) $impuestos,
-            //     ];
-            // }
                
             if ($index === 0) {
                 $emisor = $xml->xpath('//cfdi:Emisor')[0] ?? null;

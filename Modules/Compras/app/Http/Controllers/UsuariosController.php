@@ -7,6 +7,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Modules\Compras\Transformers\usersResource;
+use Illuminate\Support\Facades\File;
 
 class UsuariosController extends Controller
 {
@@ -17,13 +19,18 @@ class UsuariosController extends Controller
     {
         $data = DB::connection('intranet')->table('glpi_entities')->select('name','intercompania')->where('intercompania', '>', '0')->get();
 
+        $interAgencias = array_flip([7102, 7075, 7074, 7072, 7071, 7064, 7063, 7062, 7061, 7051, 712, 710, 706]);
+
+        foreach ($data as $item) {
+            $item->isAgencia = isset($interAgencias[$item->intercompania]);   
+        }
+
         return response()->json([
             'status' => 'success',
             'data' =>  $data,
             'message' => 'Datos recuperados correctamente'
         ]);
     }
-
 
     public function create()
     {
@@ -37,7 +44,7 @@ class UsuariosController extends Controller
     }
 
     /** ***********************************************************
-     * Recupera un usuario DEL INTRANET especifico por su id
+     * Recupera una colección de usuarios por su numero intercompania
      ************************************************************/
     public function show($id)
     {
@@ -46,6 +53,26 @@ class UsuariosController extends Controller
         return response()->json([
             'status' => 'success',
             'data' =>  $data,
+            'message' => 'Datos recuperados correctamente'
+        ]);
+    }
+
+    /** ***********************************************************
+     * Recupera un usuario DEL INTRANET especifico por su id
+     ************************************************************/
+
+    public function showById($id)
+    {
+        // $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $id . ')');
+        $content = File::get(base_path('\Modules\Compras\resources\assets\json\centrosCostos\catCentrosCostos.json'));
+        // $rawCentrosCosto = (__DIR__ . "/../../../resources/assets/json/caCentrosCostos.json");
+        $jsonCC = json_decode(json: $content, associative: true);
+        $dataCC = $jsonCC;
+
+        return response()->json([
+            'status' => 'success',
+            // 'data' => usersResource::collection($data),
+            'data' => $jsonCC[1]['descripcion'],
             'message' => 'Datos recuperados correctamente'
         ]);
     }

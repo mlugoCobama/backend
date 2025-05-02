@@ -16,6 +16,7 @@ class OrdenCompra extends Model
     protected $fillable = [
         'folio_oc',
         'fecha',
+        'entrega',
         'observaciones',
         'estatus',
         'cotizaciones_id'

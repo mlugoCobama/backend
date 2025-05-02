@@ -61,6 +61,7 @@ Route::prefix('compras')->group(function () {
     Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente']);
 
     Route::get('/getUserByEmail/{correo}', [UsuariosController::class, 'getDataUsuario']);
+    Route::get('/getUserById/{correo}', [UsuariosController::class, 'showById']);
 
 });
 

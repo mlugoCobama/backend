@@ -10,6 +10,7 @@ use Modules\Compras\Models\ExpedientesProveedores;
 use Modules\Compras\Models\Proveedores;
 //Transformers
 use Modules\Compras\Transformers\ProveedoresResource;
+use Modules\Compras\Http\Requests\ProveedoresRequest;
 //Utilities 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -56,41 +57,9 @@ class ProveedoresController extends Controller
      * Función que valida la información y coordina 
      * storeProveedor y storeExpedienteProveedor
      ***********************************************************************************/
-    public function store(Request $request)
+    public function store(ProveedoresRequest $request)
     {
-     $mensajes = [
-        'correo.unique' => 'El correo ya es usado por otro proveedor',
-        'telefono.unique' => 'El telefono ya es usado por otro proveedor'
-     ];
      
-     $validacion =  Validator::make($request->all(), [
-         'nombre' => 'required|string',
-         'contacto' => 'required|string',
-         'telefono' => 'required|string|unique:com_proveedores,telefono',
-         'localidad' => 'required|string',
-         'condiciones' => 'required|string',
-         'servicios' => 'required|string',
-         'correo' => 'required|email |unique:com_proveedores,correo',
-        'dias_credito' => 'nullable|integer',
-         'horario_atencion' => 'required|string',
-         'tiempo_entrega' => 'required|string',
-         //Validacion para archivos
-         'constancia_fiscal' => 'nullable|file|mimes:pdf',
-         'ine' => 'nullable|file|mimes:pdf',
-         'comprobante_domicilio' => 'nullable|file|mimes:pdf',
-         'estado_cuenta' => 'nullable|file|mimes:pdf',
-         'acta_constitutiva' => 'nullable|file|mimes:pdf',
-         'poder_notarial' => 'nullable|file|mimes:pdf',
-     ], $mensajes);
-
-     if ($validacion->fails()) {
-         return response()->json([
-             'status' => 'error',
-             'message' => 'Los datos ingresados no son validos o están incompletos',
-             'errors' => $validacion->errors()
-         ]);
-     }
-
         try {
             DB::beginTransaction();
 
@@ -172,6 +141,7 @@ class ProveedoresController extends Controller
         }
 
         $expedienteSolicitud->proveedores_id = $idProveedor;
+
         $expedienteSolicitud->save();
     }
 
@@ -195,38 +165,39 @@ class ProveedoresController extends Controller
      **************************************************************************************/
     public function update(Request $request, $id)
     {
-        $mensajes = [
-            'correo.unique' => 'El correo ya es usado por otro proveedor',
-            'telefono.unique' => 'El telefono ya es usado por otro proveedor'
-         ];
+        
+         $mensajes = [
+             'correo.unique' => 'El correo ya es usado por otro proveedor',
+             'telefono.unique' => 'El telefono ya es usado por otro proveedor'
+          ];
          
-         $validacion =  Validator::make($request->all(), [
-             'nombre' => 'required|string',
-             'contacto' => 'required|string',
-             'telefono' => 'required|string|unique:com_proveedores,telefono'.$id,
-             'localidad' => 'required|string',
-             'condiciones' => 'required|string',
-             'servicios' => 'required|string',
-             'correo' => 'required|email |unique:com_proveedores,correo'.$id,
-            'dias_credito' => 'nullable|integer',
-             'horario_atencion' => 'required|string',
-             'tiempo_entrega' => 'required|string',
-             //Validacion para archivos
-             'constancia_fiscal' => 'nullable|file|mimes:pdf',
-             'ine' => 'nullable|file|mimes:pdf',
-             'comprobante_domicilio' => 'nullable|file|mimes:pdf',
-             'estado_cuenta' => 'nullable|file|mimes:pdf',
-             'acta_constitutiva' => 'nullable|file|mimes:pdf',
-             'poder_notarial' => 'nullable|file|mimes:pdf',
-         ], $mensajes);
+          $validacion =  Validator::make($request->all(), [
+              'nombre' => 'required|string',
+              'contacto' => 'required|string',
+              'telefono' => 'required|string|unique:com_proveedores,telefono,'.$id,
+              'localidad' => 'required|string',
+              'condiciones' => 'required|string',
+              'servicios' => 'required|string',
+              'correo' => 'required|email |unique:com_proveedores,correo,'.$id,
+             'dias_credito' => 'nullable|integer',
+              'horario_atencion' => 'required|string',
+              'tiempo_entrega' => 'required|string',
+              //Validacion para archivos
+              'constancia_fiscal' => 'nullable|file|mimes:pdf',
+              'ine' => 'nullable|file|mimes:pdf',
+              'comprobante_domicilio' => 'nullable|file|mimes:pdf',
+              'estado_cuenta' => 'nullable|file|mimes:pdf',
+              'acta_constitutiva' => 'nullable|file|mimes:pdf',
+              'poder_notarial' => 'nullable|file|mimes:pdf',
+          ], $mensajes);
     
-         if ($validacion->fails()) {
-             return response()->json([
-                 'status' => 'error',
-                 'message' => 'Los datos ingresados no son validos o están incompletos',
-                 'errors' => $validacion->errors()
-             ]);
-         }
+          if ($validacion->fails()) {
+              return response()->json([
+                  'status' => 'error',
+                  'message' => 'Los datos ingresados no son validos o están incompletos',
+                  'errors' => $validacion->errors()
+              ]);
+          }
 
         try {
             DB::beginTransaction();
@@ -285,16 +256,16 @@ class ProveedoresController extends Controller
         $hoy = date("jnY"); //Recuperar la fecha del dia de hoy para diferenciar el registro nuevo
         $expediente = ExpedientesProveedores::where('proveedores_id', $idProveedor)->first();
 
-        $carpetaProveedor = 'expedientes/' . $idProveedor;
+        //Valido que el registro del expediente exista
+        if($expediente){
+            $carpetaProveedor = 'expedientes/' . $idProveedor;
 
         Storage::makeDirectory($carpetaProveedor);
             if ($data->hasFile('constancia_fiscal')) {
-
                 $archivoEliminar = $expediente->constancia_fiscal; //Recuperarla anterior ruta del archivo al a eliminar
                 if ($archivoEliminar) { // verificar si existe la ruta
                     Storage::delete($archivoEliminar); //Borrar el antiguo archivo
                 }
-
                 $constancia_fiscal = "constancia_fiscal" . $hoy . "." . $data->file('constancia_fiscal')->getClientOriginalExtension(); //Asignar un nombre al archivo
                 $expediente->constancia_fiscal = $data->file('constancia_fiscal')->storeAs($carpetaProveedor, $constancia_fiscal); //Actualiza la ruta y el archivo
             }
@@ -350,6 +321,11 @@ class ProveedoresController extends Controller
             }
 
         $expediente->save();
+        }else //Si no existe crea el registro
+        {
+            $this->storeExpedienteProveedor($data, $idProveedor);
+        }
+        
     }
 
     /** *******************************************************************************************

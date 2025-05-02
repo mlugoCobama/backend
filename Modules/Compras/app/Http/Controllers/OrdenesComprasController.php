@@ -1,6 +1,8 @@
 <?php
 
 namespace Modules\Compras\Http\Controllers;
+
+use App\Enums\EstatusOrdenCompra;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,8 +30,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Notification;
 //Mailables
 use App\Notifications\SolicitudSurtido;
-
-
+use Modules\Compras\Transformers\usersResource;
 
 class OrdenesComprasController extends Controller
 {
@@ -148,7 +149,8 @@ class OrdenesComprasController extends Controller
     {
         $solicitudCompra = SolicitudesCompra::where('id', $id)->first();
 
-        $user = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')');
+        $user = usersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')'));
+
         $userSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_solicita . ')');
 
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
@@ -173,19 +175,19 @@ class OrdenesComprasController extends Controller
         ];
 
         //Llamada a la funcion quue genera el formato
-        $pdf = new OrdenCompraPdfController();
-        $file = $pdf->OrdenCompraFormatoInterno($data);
+         $pdf = new OrdenCompraPdfController();
+         $file = $pdf->OrdenCompraFormatoInterno($data);
 
          //Devuelvo el pdf hacia el front
-        return response($file, 200)
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
+         return response($file, 200)
+             ->header('Content-Type', 'application/pdf')
+             ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
 
         // return response()->json(
         //     [
         //         'data' => $data
         //     ]
-        //     );
+        // );
     }
 
     public function edit($id)
@@ -204,7 +206,7 @@ class OrdenesComprasController extends Controller
         try {
             DB::beginTransaction();
                 //Actualiza el estatus de Orden compra a 5 (Pagado)
-                OrdenCompra::where('id', $id)->update(['estatus' => 5]);
+                OrdenCompra::where('id', $id)->update(['estatus' => EstatusOrdenCompra::PAGADA]);
 
                 //Actualiza el estatus de Solicitud Compra a 7 (Pagado)
                 SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::PAGADA]);
@@ -236,9 +238,13 @@ class OrdenesComprasController extends Controller
     {
         try {
             DB::beginTransaction();
+
                 SolicitudesCompra::where('id', $id)->update(['estatus' => EstatusSolicitud::CANCELADA]);
+
                 $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
-                OrdenCompra::where('cotizaciones_id', $cotizacion->id)->update(['estatus' => 0]);
+
+                OrdenCompra::where('cotizaciones_id', $cotizacion->id)->update(['estatus' => EstatusOrdenCompra::CANCELADA]);
+                
             DB::commit();
             return response()->json([
                 'status' => 'success',
@@ -322,11 +328,9 @@ class OrdenesComprasController extends Controller
                 //    Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
                 //                ->notify(new SolicitudSurtido($datos));
 
-                // Actualizo el Actualizar el estatus de la solicitud de compra a 6 (En surtido)
                 SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::EN_SURTIDO]);
 
-                // Actualizar el estatus de la orden de compra a 3 (En surtido)
-                OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
+                OrdenCompra::where('id', $idOc)->update(['estatus' => EstatusOrdenCompra::EN_SURTIDO]);
 
             DB::commit();
 
@@ -360,11 +364,10 @@ class OrdenesComprasController extends Controller
 
         try {
             DB::beginTransaction();
-                // Actualizar el estatus de la solicitud de compra a 4 (Autorizada)
+
                 SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::AUTORIZADA]);
                 
-                // Actualizar el estatus de la orden de compra a 3 (Autorizada)
-                OrdenCompra::where('id', $idOc)->update(['estatus' => 3]);
+                OrdenCompra::where('id', $idOc)->update(['estatus' => EstatusOrdenCompra::AUTORIZADA]);
 
             DB::commit();
 
