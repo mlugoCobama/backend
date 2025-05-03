@@ -18,6 +18,7 @@ class CotizacionesResource extends JsonResource
             'fecha'=>$this->fecha,
             'consideraciones'=>$this->consideraciones,
             'solicitudes_compra_id'=>$this->solicitudes_compra_id,
+            // 'SolicitudCompra'=> new SolicitudesComprasResource($this->SolicitudCompra)
         ];
     }
 }

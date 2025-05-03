@@ -14,6 +14,7 @@ class OrdenCompra extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'id',
         'folio_oc',
         'fecha',
         'entrega',

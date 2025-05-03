@@ -1,23 +1,20 @@
 <?php
 
 namespace Modules\Compras\Http\Controllers;
-
-
 use App\Http\Controllers\Controller;
 use App\Enums\EstatusSolicitud;
-// use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-// use Illuminate\Http\Response;
-// use League\CommonMark\Extension\Attributes\Node\Attributes;
+
 //Models
 use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Models\DetalleSolicitud;
-use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
 use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\DetallesCotizacion;
+use Modules\Compras\Models\Proveedores;
 
 //Transformers
+use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
 use Modules\Compras\Transformers\SolicitudesComprasResource;
 //Utilities
 use Illuminate\Support\Facades\Notification;
@@ -31,9 +28,8 @@ use App\Mail\SolicitudCotizacion;
 use App\Notifications\SolicitudCotizacionNotification;
 // Jobs
 use App\Jobs\EnviarCorreoSolicitudCotizacion;
-use App\Models\User;
-use Modules\Compras\Models\Proveedores;
 
+//Request validation
 use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
 use Modules\Compras\Http\Requests\SendSolicitudCotizacionRequest;
 
@@ -61,8 +57,8 @@ class SolicitudesCompraController extends Controller
      **************************************************************/
     public function index()
     {
-        $data =  SolicitudesComprasResource::collection((SolicitudesCompra::active()->orderBy('fecha', 'desc')->get()));
-
+          
+        $data = SolicitudesComprasResource::collection((SolicitudesCompra::active()->orderBy('fecha', 'desc')->get()));
         return response()->json([
             'status' => 'success',
             'message' => 'Consulta generada correctamente',
@@ -124,7 +120,6 @@ class SolicitudesCompraController extends Controller
             DB::beginTransaction();
 
                 $idSolicitud = $this->storeSolicitudCompra($data);
-
                 $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
 
             DB::commit();
@@ -286,7 +281,6 @@ class SolicitudesCompraController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Correos enviados correctamente',
-                // 'data' => []
                 'data' => $data
             ]);
         } catch (\Exception $e) {

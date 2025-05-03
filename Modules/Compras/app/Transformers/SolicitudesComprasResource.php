@@ -4,8 +4,9 @@ namespace Modules\Compras\Transformers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+
 
 class SolicitudesComprasResource extends JsonResource
 {
@@ -19,7 +20,7 @@ class SolicitudesComprasResource extends JsonResource
         $usuarioDestino =  $this->getNombreUsuario($this->usuario_destino);
         $usuarioSolicita =  $this->getNombreUsuario($this->usuario_solicita);
         $estadoInfo = $this->asignarEstado($this->estatus);
-        
+        $datosCC = $this->asignarDescripcionCC($this->c_c);
 
         return [
             'id' => $this->id,
@@ -27,6 +28,7 @@ class SolicitudesComprasResource extends JsonResource
             'motivo' => $this->motivo,
             'fecha' => $this->fecha,
             'c_c' => $this->c_c,
+            'centro_costo' => $datosCC['descripcion'],
             'usuario_destino' => $usuarioDestino['nombre_completo'],
             'empresa' => $usuarioDestino['empresa'],
             'usuario_solicita' => $usuarioSolicita['nombre_completo'],
@@ -70,4 +72,10 @@ class SolicitudesComprasResource extends JsonResource
         return $estados[$estatus] ?? ['estado' => 'DESCONOCIDO', 'claseEstado' => 'bg-secondary'];
     }
 
+    private function asignarDescripcionCC($cc){
+        $rawCentrosCosto = File::get(base_path('\Modules\Compras\resources\assets\json\centrosCostos\catCentrosCostos.json'));
+        $jsonCC = json_decode(json: $rawCentrosCosto, associative: true);
+        $dataCC = $jsonCC[$cc];
+        return $dataCC;
+    }
 }

@@ -42,7 +42,7 @@ class Cotizaciones extends Model
      * Una cotizacion pertenece a una solicitud de compra
      */
     public function SolicitudCompra(){
-        $this->belongsTo(SolicitudesCompra::class);
+       return $this->belongsTo(SolicitudesCompra::class,'solicitudes_compra_id', 'id' );
     }
 
 
@@ -73,6 +73,6 @@ class Cotizaciones extends Model
      */
 
      public function CotizacionesProveedor(){
-        $this->hasMany(CotizacionesProveedores::class);
+        return $this->hasMany(CotizacionesProveedores::class);
      }
 }

@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Notification;
 //Mailables
 use App\Notifications\SolicitudSurtido;
+use Modules\Compras\Transformers\CotizacionesProveedoresResource;
+use Modules\Compras\Transformers\OrdenCompraResource;
 use Modules\Compras\Transformers\usersResource;
 
 class OrdenesComprasController extends Controller
@@ -127,19 +129,12 @@ class OrdenesComprasController extends Controller
     public function show($id)
     {
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
-        $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->with('documentos')
-            ->first(['id', 'folio_oc', 'fecha', 'observaciones', 'estatus', 'cotizaciones_id', 'entrega']);
+        $ordenCompra = new OrdenCompraResource(OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first());
 
-            /**
-             * Json con los datos de entrga de las empresas
-             * @todo modificar los datos de cada empresa
-             */
-            $contentE = File::get(base_path('/dataEntregas.json'));
-            $jsonE = json_decode(json: $contentE, associative: true);
-            $dataEntrega = $jsonE[$ordenCompra->entrega];
-
-            $ordenCompra->entrega = $dataEntrega; 
-        return $ordenCompra;
+        return response()->json([
+            'data' => $ordenCompra
+        ]);        
+        
     }
 
     /** **************************************************************
@@ -157,7 +152,7 @@ class OrdenesComprasController extends Controller
 
         $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
 
-        $cotizacionProveedor = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id) ->where('seleccionado', 1)->first();
+        $cotizacionProveedor = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->Seleccionado()->first();
 
         $proveedor = Proveedores::where('id', $cotizacionProveedor->proveedores_id)->first();
 
@@ -182,12 +177,6 @@ class OrdenesComprasController extends Controller
          return response($file, 200)
              ->header('Content-Type', 'application/pdf')
              ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
-
-        // return response()->json(
-        //     [
-        //         'data' => $data
-        //     ]
-        // );
     }
 
     public function edit($id)
@@ -297,12 +286,10 @@ class OrdenesComprasController extends Controller
                     throw new \Exception('No se encontro la cotizacion asociada');
                 }
                 // Recupero los datos del proveedor seleccionado para mandarle el correo
-                $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
-                    ->where('seleccionado', 1)
-                    ->with(['datos_proveedor' => function ($query) {
+                 $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
+                     ->Seleccionado()->with(['datos_proveedor' => function ($query) {
                         $query->select('id', 'nombre', 'correo');
-                    }])
-                    ->first(['id', 'proveedores_id', 'seleccionado']);
+                    }])->first(['id', 'proveedores_id', 'seleccionado']);
 
                     if(!$proveedorSeleccionado){
                         throw new \Exception('No hay un proveedor seleccionado para esta cotizacion');
@@ -391,6 +378,7 @@ class OrdenesComprasController extends Controller
 
     /** ************************************************************************************
      * Lee el contenido de archivos xml en el servidor y le envía los datos al frontend
+     * Probablemente en desuso
      **************************************************************************************/
     public function leerXML($id)
     {

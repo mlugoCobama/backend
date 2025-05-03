@@ -4,6 +4,8 @@ namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+
 
 //Models
 use Modules\Compras\Models\CatUnidadesMedidas;
@@ -20,7 +22,12 @@ class CatUnidadesMedidaController extends Controller
      */
     public function index()
     {
-        return CatUnidadesMedidaResource::collection((CatUnidadesMedidas::active()->get()));
+        $data = Cache::remember(
+            'unidadesMedida', 600, function (){
+                return CatUnidadesMedidaResource::collection((CatUnidadesMedidas::active()->get()));
+            }
+        );
+        return $data;
     }
 
 
@@ -40,12 +47,12 @@ class CatUnidadesMedidaController extends Controller
          ]);
 
         $unidadMedida = CatUnidadesMedidas::create($request->all());
+        Cache::forget('unidadesMedida');
         return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha guardado correctamente',
                 'data' => new CatUnidadesMedidaResource($unidadMedida)
             ]);
-        
     }
 
     /**
@@ -93,7 +100,7 @@ class CatUnidadesMedidaController extends Controller
             'nombre' => $request->nombre,
             'abreviatura' => $request->abreviatura,
         ]);
-
+        Cache::forget('unidadesMedida');
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha actualizado correctamente',
@@ -119,7 +126,7 @@ class CatUnidadesMedidaController extends Controller
         $unidadMedida->update([
             'activo' => 0
         ]);
-
+        Cache::forget('unidadesMedida');
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha eliminado correctamente',

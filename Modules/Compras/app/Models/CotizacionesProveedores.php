@@ -47,8 +47,12 @@ class CotizacionesProveedores extends Model
         $this->hasMany(DetallesCotizacion::class);
     }
 
-    protected static function newFactory(): CotizacionesProveedoresFactory
+    protected static function newFactory()
     {
         //return CotizacionesProveedoresFactory::new();
+    }
+
+    public function scopeSeleccionado ($query) {
+        return $query->where('seleccionado', 1);
     }
 }

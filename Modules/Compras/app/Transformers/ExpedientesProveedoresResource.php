@@ -22,7 +22,6 @@ class ExpedientesProveedoresResource extends JsonResource
             'estado_cuenta'=> $this->estado_cuenta,
             'acta_constitutiva'=> $this->acta_constitutiva,
             'poder_notarial'=> $this->poder_notarial,
-            
             'proveedores_id'=> $this->proveedores_id,
         ];
 

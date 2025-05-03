@@ -235,7 +235,7 @@ class DocumentosOrdenesComprasController extends Controller
 
     /** 
      * Recupera los datos del xml y los procesa listos para mostrar en el backend
-     * @param id e de la orden de compra
+     * @param id  de la orden de compra
      */
     public function leerYProcesarXML($id)
     {

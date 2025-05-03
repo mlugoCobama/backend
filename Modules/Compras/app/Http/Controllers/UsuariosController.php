@@ -3,13 +3,10 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
+use Modules\Compras\Transformers\CatEmpresasResource;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Modules\Compras\Transformers\usersResource;
-use Illuminate\Support\Facades\File;
-
 class UsuariosController extends Controller
 {
     /** ******************************************************************
@@ -19,15 +16,9 @@ class UsuariosController extends Controller
     {
         $data = DB::connection('intranet')->table('glpi_entities')->select('name','intercompania')->where('intercompania', '>', '0')->get();
 
-        $interAgencias = array_flip([7102, 7075, 7074, 7072, 7071, 7064, 7063, 7062, 7061, 7051, 712, 710, 706]);
-
-        foreach ($data as $item) {
-            $item->isAgencia = isset($interAgencias[$item->intercompania]);   
-        }
-
         return response()->json([
             'status' => 'success',
-            'data' =>  $data,
+            'data' =>  CatEmpresasResource::collection($data),
             'message' => 'Datos recuperados correctamente'
         ]);
     }
@@ -63,16 +54,10 @@ class UsuariosController extends Controller
 
     public function showById($id)
     {
-        // $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $id . ')');
-        $content = File::get(base_path('\Modules\Compras\resources\assets\json\centrosCostos\catCentrosCostos.json'));
-        // $rawCentrosCosto = (__DIR__ . "/../../../resources/assets/json/caCentrosCostos.json");
-        $jsonCC = json_decode(json: $content, associative: true);
-        $dataCC = $jsonCC;
-
+        $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $id . ')');
         return response()->json([
             'status' => 'success',
-            // 'data' => usersResource::collection($data),
-            'data' => $jsonCC[1]['descripcion'],
+            'data' => usersResource::collection($data),
             'message' => 'Datos recuperados correctamente'
         ]);
     }
@@ -87,13 +72,13 @@ class UsuariosController extends Controller
         if(empty($data)){
              return response()->json([
                  'status' => 'error',
-                 'message' => 'El usuario no existe'
+                 'message' => 'No se pudo validar el usuario'
              ]);
          }
 
         return response()->json([
             'status' => 'success',
-            'data' =>  $data,
+            'data' =>  new usersResource($data),
             'message' => 'Datos recuperados correctamente'
         ]);
     }

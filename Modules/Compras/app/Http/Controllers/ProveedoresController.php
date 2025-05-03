@@ -33,11 +33,7 @@ class ProveedoresController extends Controller
     public function getProveedores()
     {
         $data = (Proveedores::active()
-            ->get([
-                'id',
-                'nombre',
-               
-            ]));
+            ->get(['id', 'nombre',]));
 
         return response()->json([
             'status' => 'success',
