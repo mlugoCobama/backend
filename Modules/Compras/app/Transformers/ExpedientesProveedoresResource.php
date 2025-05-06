@@ -15,14 +15,14 @@ class ExpedientesProveedoresResource extends JsonResource
         // return parent::toArray($request);
 
         return[
-            'id'=> $this->id,
-            'constancia_fiscal'=> $this->constancia_fiscal,
-            'ine'=> $this->ine,
-            'comprobante_domicilio'=> $this->comprobante_domicilio,
-            'estado_cuenta'=> $this->estado_cuenta,
-            'acta_constitutiva'=> $this->acta_constitutiva,
-            'poder_notarial'=> $this->poder_notarial,
-            'proveedores_id'=> $this->proveedores_id,
+            // 'id'=> $this->id,
+        'constancia_fiscal' => $this->constancia_fiscal,
+        'ine'  => $this->constancia_fiscal,
+        'comprobante_domicilio'  => $this->constancia_fiscal,
+        'estado_cuenta'  => $this->constancia_fiscal,
+        'acta_constitutiva'  => $this->constancia_fiscal,
+        'proveedores_id'  => $this->constancia_fiscal,
+        'poder_notarial' => $this->constancia_fiscal
         ];
 
     }

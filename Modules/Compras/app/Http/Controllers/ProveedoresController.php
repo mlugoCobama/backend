@@ -145,10 +145,36 @@ class ProveedoresController extends Controller
      * Función que recupera las rutas del expediente del proveedor
      ***********************************************************************************/
     public function show($id)
-    {
+    {   
+        $archivos = ['constancia_fiscal', 'ine', 'comprobante_domicilio', 'estado_cuenta', 'acta_constitutiva', 'poder_notarial'];
         $expediente = ExpedientesProveedores::where('proveedores_id', $id)->first();
-        return response()->json($expediente);
+
+        $archivosDisponibles = $this->validarExpediente($expediente, $archivos);
+
+        $habilitarDescarga =  false;
+        $tamanio = count($archivosDisponibles);
+        if($tamanio > 0){
+            $habilitarDescarga =  true;
+        }
+
+        return response()->json([
+                'data' => $expediente,
+                'descargable' => $habilitarDescarga,
+                'tamanio' => $tamanio
+            ]);
+        }
+
+    public function validarExpediente($rutas, $archivos)
+    {
+        $archivosDisponibles = [];
+        foreach ($archivos as $archivo) {
+            if (!empty($rutas[$archivo])) {
+                $archivosDisponibles[] = $archivo;
+            }
+        }
+        return $archivosDisponibles;
     }
+
 
     public function edit($id)
     {

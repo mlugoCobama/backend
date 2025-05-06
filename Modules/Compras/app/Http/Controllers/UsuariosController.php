@@ -67,7 +67,8 @@ class UsuariosController extends Controller
      ************************************************************/
     public function getDataUsuario($correo)
     {
-        $data = DB::connection('intranet')->table('glpi_users')->select('*')->where('name', $correo)->first();
+        $data = DB::connection('intranet')->select("call SOPORTEZM.SP_GetUsuarioEmail('$correo')");
+        // $data = DB::connection('intranet')->table('glpi_users')->select('*')->where('name', $correo)->first();
         
         if(empty($data)){
              return response()->json([
@@ -78,7 +79,7 @@ class UsuariosController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' =>  new usersResource($data),
+            'data' => usersResource::collection($data),
             'message' => 'Datos recuperados correctamente'
         ]);
     }
