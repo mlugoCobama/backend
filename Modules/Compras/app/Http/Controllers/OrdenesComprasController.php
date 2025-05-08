@@ -177,6 +177,7 @@ class OrdenesComprasController extends Controller
          return response($file, 200)
              ->header('Content-Type', 'application/pdf')
              ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
+        
     }
 
     public function edit($id)
@@ -312,8 +313,8 @@ class OrdenesComprasController extends Controller
                 /** ********************************************************************************
                 *! Habilitar para envío de correo a proveedor
                 * ********************************************************************************/ 
-                //    Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
-                //                ->notify(new SolicitudSurtido($datos));
+                    // Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
+                    //             ->notify(new SolicitudSurtido($datos));
 
                 SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::EN_SURTIDO]);
 

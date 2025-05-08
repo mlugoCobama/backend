@@ -56,17 +56,17 @@ class SolicitudesComprasResource extends JsonResource
     private function asignarEstado($estatus)
     {
         $estados = [
-            0 => ['estado' => 'CANCELADA', 'claseEstado' => 'bg-danger'],
             1 => ['estado' => 'ESP. AUT. PLANTA', 'claseEstado' => 'badge-soft-info'],
             2 => ['estado' => 'SOLICITADO', 'claseEstado' => 'bg-info'],
             3 => ['estado' => 'EN COTIZACIÓN', 'claseEstado' => 'badge-soft-warning'],
-            4 => ['estado' => 'ORDEN DE COMPRA', 'claseEstado' => 'bg-warning'],
-            5 => ['estado' => 'AUTORIZADA', 'claseEstado' => 'badge-soft-success'],
-            6 => ['estado' => 'EN SURTIDO', 'claseEstado' => 'badge-soft-secondary'],
-            7 => ['estado' => 'ENTREGADA', 'claseEstado' => 'badge-soft-dark'],
-            8 => ['estado' => 'PAGANDO', 'claseEstado' => 'bg-primary'],
-            9 => ['estado' => 'PAGADA', 'claseEstado' => 'bg-success'],
-            10 => ['estado' => 'RECHAZADA', 'claseEstado' => 'bg-danger'],
+            5 => ['estado' => 'ORDEN DE COMPRA', 'claseEstado' => 'bg-warning'],
+            4 => ['estado' => 'CANCELADA', 'claseEstado' => 'bg-danger'],
+            6 => ['estado' => 'AUTORIZADA', 'claseEstado' => 'badge-soft-success'],
+            7 => ['estado' => 'EN SURTIDO', 'claseEstado' => 'badge-soft-secondary'],
+            8 => ['estado' => 'ENTREGADA', 'claseEstado' => 'badge-soft-dark'],
+            9 => ['estado' => 'PAGANDO', 'claseEstado' => 'bg-primary'],
+            10 => ['estado' => 'PAGADA', 'claseEstado' => 'bg-success'],
+            11 => ['estado' => 'RECHAZADA', 'claseEstado' => 'bg-danger'],
         ];
 
         return $estados[$estatus] ?? ['estado' => 'DESCONOCIDO', 'claseEstado' => 'bg-secondary'];

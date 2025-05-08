@@ -4,17 +4,19 @@ namespace App\Enums;
 
 class EstatusSolicitud
 {
-    public const CANCELADA = 0;
     public const ESP_AUT_PLANTA = 1;
     public const SOLICITADO = 2;
     public const EN_COTIZACION = 3;
-    public const EN_ORDEN_COMPRA = 4;
-    public const AUTORIZADA = 5;
-    public const EN_SURTIDO = 6;
-    public const ENTREGADA = 7;
-    public const PAGANDO = 8;
-    public const PAGADA = 9;
-    public const RECHAZADA = 10;
+
+    public const CANCELADA = 4;
+    public const EN_ORDEN_COMPRA = 5;
+    
+    public const AUTORIZADA = 6;
+    public const EN_SURTIDO = 7;
+    public const ENTREGADA = 8;
+    public const PAGANDO = 9;
+    public const PAGADA = 10;
+    public const RECHAZADA = 11;
 
     public static function labels()
     {
