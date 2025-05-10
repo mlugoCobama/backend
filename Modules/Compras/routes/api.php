@@ -50,6 +50,8 @@ Route::prefix('compras')->group(function () {
     Route::post('/enviar-solicitud-surtido', [OrdenesComprasController::class, 'enviarSolicitudSurtido']);
     Route::post('/autorizar-orden-compra', [OrdenesComprasController::class, 'autorizarOrden']);
 
+    //Route::get('/autorizacion-solicitud-gerencia/{id}', [SolicitudesCompraController::class, 'autorizeFromEmail']);
+    Route::get('/autorizacion-solicitud-gerencia/{campo}/{necesarias}/{id}', [SolicitudesCompraController::class, 'autorizeFromEmail'])->name('confirm.accion')->middleware('signed');
     //*Ruta para generar pdf
     Route::get('/consulta-datos-pdf/{id}',[OrdenesComprasController::class, 'consultaDatosPDF']);
 

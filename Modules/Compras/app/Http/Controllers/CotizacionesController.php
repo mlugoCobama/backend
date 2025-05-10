@@ -16,7 +16,6 @@ use Modules\Compras\Models\DetallesCotizacion;
 //Utilities
 use Exception;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
 use Modules\Compras\Models\SolicitudesCompra;
@@ -73,34 +72,6 @@ class CotizacionesController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
-
-
-        // $validacion = Validator::make($data, [
-        //     'precios' => 'required|array|min:1',
-        //     'precios.*' => 'array|min:1',
-        //     'precios.*.*' => 'required|numeric|min:0.00',
-
-        //     'files' => 'required|array',
-        //     'files.*' => 'file|mimes:pdf|max:2048'
-        // ]);
-
-        // if ($validacion->fails()) {
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Datos no validos o incompletos',
-        //         'errors' => $validacion->errors()
-        //     ]);
-        // }
-
-        // $tamPrcios = count($data['precios']);
-        // $tamFiles = $request->hasFile('files') ? count($request->file('files')) : 0;
-        // if($tamPrcios !== $tamFiles){
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Faltan precios o archivos',
-        //         'errors' => []
-        //     ]);
-        // }
 
         try {
             DB::beginTransaction();

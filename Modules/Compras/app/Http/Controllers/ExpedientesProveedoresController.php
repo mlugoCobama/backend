@@ -5,7 +5,6 @@ namespace Modules\Compras\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 //Model
 use Modules\Compras\Models\ExpedientesProveedores;
@@ -15,7 +14,6 @@ use Modules\Compras\Models\ExpedientesProveedores;
 //Utilities 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
-use Modules\Compras\Transformers\ExpedientesProveedoresResource;
 use ZipArchive;
 
 

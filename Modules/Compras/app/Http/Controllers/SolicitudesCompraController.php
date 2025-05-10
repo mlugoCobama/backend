@@ -18,7 +18,6 @@ use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
 use Modules\Compras\Transformers\SolicitudesComprasResource;
 //Utilities
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use DateTime;
@@ -26,12 +25,15 @@ use DateTimeZone;
 // Mailiables
 use App\Mail\SolicitudCotizacion;
 use App\Notifications\SolicitudCotizacionNotification;
+use Modules\Compras\Notifications\AutorizacionEmail;
 // Jobs
 use App\Jobs\EnviarCorreoSolicitudCotizacion;
 
 //Request validation
 use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
 use Modules\Compras\Http\Requests\SendSolicitudCotizacionRequest;
+use Modules\Compras\Transformers\EmailAutorizarSolicitud;
+use Modules\Compras\Transformers\EmailAutorizarSolicitudResource;
 
 class SolicitudesCompraController extends Controller
 {
@@ -121,9 +123,12 @@ class SolicitudesCompraController extends Controller
 
                 $idSolicitud = $this->storeSolicitudCompra($data);
                 $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
-
+                // $idSolicitud = 19;
+                // $this->sendSolicitudAutorizacion($data);
+                $correos = $this->getGerente($data['empresa']);
+                $this->sendSolicitudAutorizacion($idSolicitud, $correos);
             DB::commit();
-
+            
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha guardado correctamente',
@@ -208,6 +213,34 @@ class SolicitudesCompraController extends Controller
              'message' => 'Se ha actualizado correctamente',
              'data' => ''
          ]);
+    }
+
+    public function autorizeFromEmail($campo, $necesarias ,$id)
+    {
+        $campoBD= "auto_$campo";
+        $solicitud = SolicitudesCompra::findOrFail($id);
+        if($necesarias === 1){
+            $solicitud->auto_admin = "1";
+            $solicitud->auto_gg = "1";
+            $solicitud->save();
+        }else{
+             $solicitud->$campoBD= "1";
+             $solicitud->save();     
+        }
+        $this->validarAutorizacion($id);
+        // SolicitudesCompra::where ('id', $id)->update(
+        //    [ "auto_admin" => "1", "auto_gg" => "1", "estatus" => EstatusSolicitud::SOLICITADO]
+        // );
+
+        return view('compras::confirmacion');
+    }
+
+    public function validarAutorizacion($id){
+        $solicitud = SolicitudesCompra::findOrFail($id);
+        if($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1){
+            $solicitud->estatus = "2";
+            $solicitud->save();
+        }
     }
 
     /** ************************************************************
@@ -378,5 +411,89 @@ class SolicitudesCompraController extends Controller
                 $detalleCotizacion->save();
             }
         }
+    }
+
+
+    public function sendSolicitudAutorizacion($id, $correos){
+       $data = (new EmailAutorizarSolicitudResource(SolicitudesCompra::findOrFail($id)))->resolve();
+       $data['autoNecesarias'] = $correos['autoNecesarias'];
+       foreach ($correos['data'] as $correo) {
+            $email = $correo['name'];
+            $data['campo'] = $correo['campo'];
+            Notification::route('mail', $email)
+               ->notify(new AutorizacionEmail($data));
+        }
+        
+    }
+
+    private function getGerente($intercompania){
+        // $interAgencias = array_flip([7064, 7063, 7062, 7061]);
+        // $isRenault = isset($interAgencias[$intercompania]);
+        // if ($isRenault) {
+        //     $intercompania = 7064;
+        // }
+        // $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetGereneciaEmpresas(' . $intercompania . ')');
+        // $subCadena = 'gerencia';
+        // $autoNecesarias  = count($data);
+        // if ($autoNecesarias > 0) {
+        //     foreach ($data as $dato) {
+        //         $isGerente = strpos($dato->name, $subCadena);
+        //         if ($isGerente !== false) {
+        //             $dato->isGerente = true;
+        //             $dato->campo = 'g_g';
+        //         } else {
+        //             $dato->isGerente = $isGerente;
+        //             $dato->campo = 'g_a';
+        //         }
+        //     }
+        //     return [
+        //         'data' =>  $data,
+        //         'autoNecesarias' => $autoNecesarias
+        //     ];
+        // }
+        
+        // if (count($data) > 0) {
+        //     return [
+        //         'correo' => $data[0]->name, 
+        //         'isRenault' => $isRenault
+        //     ];
+        // }
+
+        // return ['correo' => 'mlugo@cobama.com.mx'];
+
+        $data = [ 
+                ["id"=> 50,
+                "firstname"=> "Marco Antonio",
+                "realname"=> "Villanueva Gómez",
+                "name"=> "mlugo@cobama.com.mx",
+                "phone2"=> "25030",
+                "mobile"=> "5579002797",
+                "puesto"=> "Gerente General",
+                "Telefono"=> "01 (55) 5751-6060",
+                "area"=> "Gerencia",
+                "direccion"=> "Amp San Juan de Aragón, 07460 Ciudad de México, CDMX",
+                "intercompania"=> 250,
+                "empresa"=> "GAS FLAMAZUL",
+                "isGerente"=> true,
+                "campo"=> "gg"
+                ],
+                [
+                "id"=> 42,
+                "firstname"=> "Cecilia del Mar",
+                "realname"=> "Cruz Velázquez",
+                "name"=> "mlugo@cobama.com.mx",
+                "phone2"=> "25035",
+                "mobile"=> "5580052442",
+                "puesto"=> "Responsable Administrativo",
+                "Telefono"=> "01 (55) 5751-6060",
+                "area"=> "Administración",
+                "direccion"=> "Amp San Juan de Aragón, 07460 Ciudad de México, CDMX",
+                "intercompania"=> 250,
+                "empresa"=> "GAS FLAMAZUL",
+                "isGerente"=> false,
+                "campo"=> "admin"
+                ]
+            ];
+        return ["data" => $data , "autoNecesarias" => 2];
     }
 }

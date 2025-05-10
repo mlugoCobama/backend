@@ -50,7 +50,7 @@ class ProveedoresController extends Controller
     }
 
     /** ********************************************************************************
-     * Función que valida la información y coordina 
+     * Función que valida la información y coordina, 
      * storeProveedor y storeExpedienteProveedor
      ***********************************************************************************/
     public function store(ProveedoresRequest $request)

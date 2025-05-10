@@ -4,9 +4,7 @@ namespace Modules\Compras\Http\Controllers;
 
 use App\Enums\EstatusOrdenCompra;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use DateTime;
 use DateTimeZone;
 use App\Enums\EstatusSolicitud;
@@ -25,12 +23,10 @@ use Modules\Compras\Transformers\DetallesCotizacionResource;
 use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
 //Utilities
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Notification;
 //Mailables
 use App\Notifications\SolicitudSurtido;
-use Modules\Compras\Transformers\CotizacionesProveedoresResource;
 use Modules\Compras\Transformers\OrdenCompraResource;
 use Modules\Compras\Transformers\usersResource;
 

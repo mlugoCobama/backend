@@ -4,8 +4,6 @@ namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-
 
 //Models
 use Modules\Compras\Models\CatUnidadesMedidas;
@@ -77,19 +75,6 @@ class CatUnidadesMedidaController extends Controller
                 'data' => ''
             ]);
         }
-
-        // $validacion  = Validator::make($request->all(),[
-        //     'nombre' => 'required|string|max:45',
-        //     'abreviatura' => 'required|string|max:45'
-        // ]);
-
-        // if($validacion->fails()){
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Datos inválidos',
-        //         'errors' => $validacion->errors()
-        //     ]);
-        // }
         
         $unidadMedida->update([
             'nombre' => $request->nombre,

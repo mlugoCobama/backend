@@ -14,10 +14,11 @@ class StoreSolicitudCompraRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'data.empresa' => 'nullable',
             'data.usuario_solicita' => 'required|integer',
             'data.usuario_destino' => 'required|integer',
             'data.motivo' => 'required|string',
-            'data.c_c' => 'nullable||integer',
+            'data.c_c' => 'nullable|integer',
             'data.detalles' => 'required|array|min:1',
             'data.detalles.*.cantidad' => 'required|numeric|min:1',
             'data.detalles.*.descripcion' => 'required|string',

@@ -40,7 +40,7 @@ class UsuariosController extends Controller
     public function show($id)
     {
         $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetDataUsuarios(' . $id . ')');
-
+        
         return response()->json([
             'status' => 'success',
             'data' =>  $data,

@@ -3,7 +3,6 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Modules\Compras\Http\Requests\uploadDocsOCRequest;
 //Model
 use Modules\Compras\Models\DocumentosOrdenesCompra;
@@ -11,7 +10,6 @@ use Modules\Compras\Models\DocumentosOrdenesCompra;
 //Utilities 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 
 use ZipArchive;
 use DateTime;
