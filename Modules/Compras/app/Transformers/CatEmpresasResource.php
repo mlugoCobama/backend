@@ -21,7 +21,7 @@ class CatEmpresasResource extends JsonResource
     }
 
     /**
-     * Valida si a empresa pes una agencia por medio del "intercompania"
+     * Valida si a empresa es una agencia por medio del numero de "intercompania"
      */
     private function setIsAgencia($intercompania)
     {

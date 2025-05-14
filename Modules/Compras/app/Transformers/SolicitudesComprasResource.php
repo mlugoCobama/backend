@@ -41,6 +41,9 @@ class SolicitudesComprasResource extends JsonResource
         ];
     }
 
+    /**
+     *  Recupera los datos del usuario para asignarlos a la consulta
+     */
     private function getNombreUsuario($usuarioId)
     {
         $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')');
@@ -53,6 +56,9 @@ class SolicitudesComprasResource extends JsonResource
         return ['nombre_completo' => 'No asignado', 'empresa' => null];
     }
 
+    /**
+     * Asigna los datos del status como una etiqueta y una clase css
+     */
     private function asignarEstado($estatus)
     {
         $estados = [
@@ -72,6 +78,9 @@ class SolicitudesComprasResource extends JsonResource
         return $estados[$estatus] ?? ['estado' => 'DESCONOCIDO', 'claseEstado' => 'bg-secondary'];
     }
 
+    /**
+     * Asigna la descripción del centro de costo
+     */
     private function asignarDescripcionCC($cc){
         $rawCentrosCosto = File::get(base_path('\Modules\Compras\resources\assets\json\centrosCostos\catCentrosCostos.json'));
         $jsonCC = json_decode(json: $rawCentrosCosto, associative: true);

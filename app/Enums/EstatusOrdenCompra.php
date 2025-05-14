@@ -1,7 +1,11 @@
 <?php
 
+
 namespace App\Enums;
 
+/**
+ * Esta enumeración representa los estados de una los estatus de una orden de compra
+ */
 enum EstatusOrdenCompra
 {
     public const CANCELADA = 0;

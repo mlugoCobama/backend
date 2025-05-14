@@ -242,11 +242,13 @@ class DocumentosOrdenesComprasController extends Controller
         $catMP = File::get(base_path($assetsJson . '/catalogoSAT/metodoPago.json'));
         $catRF = File::get(base_path($assetsJson . '/catalogoSAT/regimenFiscal.json'));
         $catUC = File::get(base_path($assetsJson . '/catalogoSAT/usoCFDI.json'));
+        $catTC = File::get(base_path($assetsJson . '/catalogoSAT/tipoComprobante.json'));
+
 
         $jsonMP = json_decode(json: $catMP, associative: true);
         $jsonRF = json_decode(json: $catRF, associative: true);
         $jsonUCfdi = json_decode(json: $catUC, associative: true);
-
+        $jsonTC = json_decode(json: $catTC, associative: true);
         // $dataFacturacion = $json[$data['destino'][0]->empresa];
 
         $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get('ruta_xml_factura');
@@ -286,6 +288,8 @@ class DocumentosOrdenesComprasController extends Controller
                     'serie' => (string) $comprobante['Serie'],
                     'subTotal' => $subtotal,
                     // 'impuestos' =>  $impuestos['TotalImpuestosTrasladados'],
+                    'tComprobante' =>  (string) $comprobante['TipoDeComprobante'],
+                    'tComprobanteDesc' => $jsonTC[(string) $comprobante['TipoDeComprobante']]['descripcion'],
                     'moneda' => (string) $comprobante['Moneda'],
                     'total' => $total,
                 ];

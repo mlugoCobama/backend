@@ -35,6 +35,9 @@ class EmailAutorizarSolicitudResource extends JsonResource
         ];
     }
 
+    /**
+     * Recupera el nombre de usuario en base al id
+     */
     private function getNombreUsuario($usuarioId)
     {
         $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')');
@@ -48,6 +51,9 @@ class EmailAutorizarSolicitudResource extends JsonResource
         return ['nombre_completo' => 'No asignado', 'empresa' => null];
     }
 
+    /**
+     * Asigna una descripción del centro de costos
+     */
     private function asignarDescripcionCC($cc){
         $rawCentrosCosto = File::get(base_path('\Modules\Compras\resources\assets\json\centrosCostos\catCentrosCostos.json'));
         $jsonCC = json_decode(json: $rawCentrosCosto, associative: true);

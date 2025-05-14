@@ -28,6 +28,9 @@ class OrdenCompraResource extends JsonResource
         ];
     }
 
+    /**
+     * Asigna un lugar de entrega en base a un id asignado
+     */
     private function asignarLugarEntrega($intercompania){
         $contentE = File::get(base_path('/dataEntregas.json'));
         $jsonE = json_decode(json: $contentE, associative: true);

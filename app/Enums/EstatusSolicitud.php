@@ -2,6 +2,9 @@
 
 namespace App\Enums;
 
+/**
+ * Esta enumeración representa los estados de una los estatus de una orden de compra
+ */
 class EstatusSolicitud
 {
     public const ESP_AUT_PLANTA = 1;
@@ -18,6 +21,10 @@ class EstatusSolicitud
     public const PAGADA = 10;
     public const RECHAZADA = 11;
 
+
+    /**
+     * Etiqueta basada en cada estado de la solicitud de compra
+     */
     public static function labels()
     {
         return [
@@ -35,6 +42,9 @@ class EstatusSolicitud
         ];
     }
 
+    /**
+     * Etiqueta basada en cada clase bootstrap de la solicitud de compra
+     */
     public static function clases()
     {
         return [

@@ -28,6 +28,9 @@ class UsersResource extends JsonResource
         ];
     }
 
+    /**
+     * Valida si el usuario pertenece a una agencia en base al numero de intercompania
+     */
     private function setIsAgencia($intercompania)
     {
         $interAgencias = array_flip([7102, 7075, 7074, 7072, 7071, 7064, 7063, 7062, 7061, 7051, 712, 710, 706]);

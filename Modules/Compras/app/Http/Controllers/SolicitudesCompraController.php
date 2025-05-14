@@ -123,10 +123,9 @@ class SolicitudesCompraController extends Controller
 
                 $idSolicitud = $this->storeSolicitudCompra($data);
                 $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
-                // $idSolicitud = 19;
-                // $this->sendSolicitudAutorizacion($data);
-                $correos = $this->getGerente($data['empresa']);
-                $this->sendSolicitudAutorizacion($idSolicitud, $correos);
+                //TODO MODIFICAR ESTO PARA QUE SE ENVIÉ EL CORREO
+                //$correos = $this->getGerente($data['empresa']);
+                //$this->sendSolicitudAutorizacion($idSolicitud, $correos);
             DB::commit();
             
             return response()->json([
@@ -215,6 +214,11 @@ class SolicitudesCompraController extends Controller
          ]);
     }
 
+    /**
+     * Recupera las autorizaciones por medio del correo 
+     * Valida el numero de autorizaciones necesarias
+     * Modifica los campos necesarios en la base de datos 
+     */
     public function autorizeFromEmail($campo, $necesarias ,$id)
     {
         $campoBD= "auto_$campo";
@@ -235,10 +239,14 @@ class SolicitudesCompraController extends Controller
         return view('compras::confirmacion');
     }
 
+    /** 
+     * Verifica si ya esta autorizado por gerencias 
+     * y actualiza el estatus a siguiente
+     */
     public function validarAutorizacion($id){
         $solicitud = SolicitudesCompra::findOrFail($id);
         if($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1){
-            $solicitud->estatus = "2";
+            $solicitud->estatus = EstatusSolicitud::SOLICITADO;
             $solicitud->save();
         }
     }
@@ -400,6 +408,9 @@ class SolicitudesCompraController extends Controller
         }
     }
 
+    /**
+     * Genera los detalles de cotización y les asigna un cero por defecto
+     */
     public function storeDetallesCotizacion($data, $idsCotProv)
     {
         foreach ($data['detalles'] as $detalle) {
@@ -414,6 +425,10 @@ class SolicitudesCompraController extends Controller
     }
 
 
+    /**
+     * Envía el correo de solicitud de autorización
+     * agrega los parámetros para la url del botón 'Autorizo'
+     */
     public function sendSolicitudAutorizacion($id, $correos){
        $data = (new EmailAutorizarSolicitudResource(SolicitudesCompra::findOrFail($id)))->resolve();
        $data['autoNecesarias'] = $correos['autoNecesarias'];
@@ -426,7 +441,12 @@ class SolicitudesCompraController extends Controller
         
     }
 
+    /**
+     * Recupera los datos de los gerente de las empresas en base a 
+     * su numero de intercompania 
+     */
     private function getGerente($intercompania){
+        //TODO DESCOMENTAR ESTE CÓDIGO PARA RECUPERAR LOS CORREOS DE GERENTES Y ADMINS
         // $interAgencias = array_flip([7064, 7063, 7062, 7061]);
         // $isRenault = isset($interAgencias[$intercompania]);
         // if ($isRenault) {
@@ -440,10 +460,10 @@ class SolicitudesCompraController extends Controller
         //         $isGerente = strpos($dato->name, $subCadena);
         //         if ($isGerente !== false) {
         //             $dato->isGerente = true;
-        //             $dato->campo = 'g_g';
+        //             $dato->campo = 'gg';
         //         } else {
         //             $dato->isGerente = $isGerente;
-        //             $dato->campo = 'g_a';
+        //             $dato->campo = 'admin';
         //         }
         //     }
         //     return [
@@ -451,21 +471,12 @@ class SolicitudesCompraController extends Controller
         //         'autoNecesarias' => $autoNecesarias
         //     ];
         // }
-        
-        // if (count($data) > 0) {
-        //     return [
-        //         'correo' => $data[0]->name, 
-        //         'isRenault' => $isRenault
-        //     ];
-        // }
-
-        // return ['correo' => 'mlugo@cobama.com.mx'];
-
-        $data = [ 
+        // Array con datos que devolvería la consulta
+       $data = [ 
                 ["id"=> 50,
                 "firstname"=> "Marco Antonio",
                 "realname"=> "Villanueva Gómez",
-                "name"=> "mlugo@cobama.com.mx",
+                "name"=> "archundiagus@gmail.com",
                 "phone2"=> "25030",
                 "mobile"=> "5579002797",
                 "puesto"=> "Gerente General",
@@ -481,7 +492,7 @@ class SolicitudesCompraController extends Controller
                 "id"=> 42,
                 "firstname"=> "Cecilia del Mar",
                 "realname"=> "Cruz Velázquez",
-                "name"=> "mlugo@cobama.com.mx",
+                "name"=> "archundiagus@gmail.com",
                 "phone2"=> "25035",
                 "mobile"=> "5580052442",
                 "puesto"=> "Responsable Administrativo",
