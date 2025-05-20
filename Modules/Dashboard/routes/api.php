@@ -50,5 +50,6 @@ Route::get('antiguedad-inventarios-nissan/{mes}/{anio}', [AgenciasController::cl
 /**--------------------------------------
  * Rutas Agencias Renault
  -----------------------------------------*/
+Route::get('dashboard/agencia-renault/{sub_division}/{mes}/{anio}', [AgenciasRenaultController::class, 'index'])->name('agencia-renault-anual.index');
 Route::get('show-agencia-renault/{mes}/{anio}', [AgenciasRenaultController::class, 'getDataGridAgencia'])->name('agencia-renault.getDataGridAgencia');
 Route::put('dashboard/edit-agencia-renault', [AgenciasRenaultController::class, 'updateAgenciaRenault'])->name('agencia-renault.updateAgenciaRenault');

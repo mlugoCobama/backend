@@ -4,8 +4,12 @@ namespace Modules\Dashboard\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Modules\Dashboard\Transformers\DataAnualAgenciasResource;
+use App\Http\Resources\NissanMesResource;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+
+use DateTime;
 
 /**
  * Modelos
@@ -23,9 +27,131 @@ class AgenciasRenaultController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(string $sub_division, $mes, $anio)
     {
-        return view('dashboard::index');
+
+        $meses = array(
+            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril', 
+            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto', 
+            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
+        );
+        /**
+         * Cuando el mes es diciembre (12 + 1)
+         * Simulamos enero del año siguiente
+         */
+        if($mes > 12){
+            $anio= $anio + 1;
+            $mes = 1;
+        }
+        /**
+         * Numero máximo de peticiones 12
+         */
+        $maxIntentos = 12;
+        $intento = 0;
+
+        
+
+
+        //$mes = $this->monthYear->getMonth();
+                // $mes = '05';
+        //$mesAnt = $this->monthYear->getMonthPrev();
+                // $mesAnt = '04';
+        //$anio = $this->monthYear->getYear();
+                // $anio = '2024';
+        //$anioAnt = $this->monthYear->getYearPrev();
+        // $anioAnt = '2023';
+
+        // $sub_division = '3';
+
+        // $nissanMes =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anio . ')'));
+        // $nissanMesAnt =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mesAnt . ',' . $anio . ')'));
+        // $nissanAnioAnt =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anioAnt . ')'));
+        // $totalAnio = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anio . ',' . $sub_division . ')'));
+        // $totalAnioAnt = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anioAnt . ',' . $sub_division . ')'));
+        // $antInventarios = DB::connection('dashboard')->select('call Dashboard.SP_GetDataAntSemestralInventarios(' . $mes . ',' . $anio . ',' . $sub_division . ')');
+        
+
+        
+        do {
+
+            $fechaMes = new DateTime("$anio-$mes-01");
+            $fechaMes->modify('-1 month'); 
+            $mes = $fechaMes->format('m');
+            $anio = $fechaMes->format('Y');
+
+            $anioAnt = $anio - 1;
+
+
+            $fechaMesA = $fechaMes->modify('-1 month');
+            $mesA = $fechaMesA->format('m');
+            $anioA = $fechaMesA->format('Y');
+
+            $nissanMes =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesRenault(' . $mes . ',' . $anio . ')'));
+            $nissanMesAnt =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesRenault(' . $mesA . ',' . $anioA . ')'));
+            $nissanAnioAnt =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesRenault(' . $mes . ',' . $anioAnt . ')'));
+            $totalAnio = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anio . ',' . $sub_division . ')'));
+            $totalAnioAnt = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anioAnt . ',' . $sub_division . ')'));
+            $antInventarios = DB::connection('dashboard')->select('call Dashboard.SP_GetDataAntSemestralInventarios(' . $mes . ',' . $anio . ',' . $sub_division . ')');
+
+            $data = [
+                'mes' => $nissanMes,
+                'mesAnt' => $nissanMesAnt,
+                'anioAnt' => $nissanAnioAnt,
+                'totalAnio' => $totalAnio,
+                'totalAnioAnt' => $totalAnioAnt,
+                'antInventarios' => $antInventarios,
+            ];
+
+            if (count($nissanMes) > 1 && $intento == 1) {
+                $nombreMes = $meses[intval($mes)];
+                return response()->json([
+                    'success' => true,
+                    'message' => "Mostrando datos de $nombreMes $anio",
+                    'data' => $data
+                ]);
+            } 
+
+            if (count($nissanMes) > 1 && $intento > 1) {
+                $nombreMes = $meses[intval($mes)];
+                return response()->json([
+                    'success' => true,
+                    'message' => "No hay datos del mes actual, en su lugar se muestran los de $nombreMes $anio",
+                    'data' => $data,
+                ]);
+            }
+
+        } while (count($nissanMes) <= 1 && $intento < $maxIntentos);
+
+          if (count($nissanMes) > 0) {
+            $nombreMes = $meses[intval($mes)];
+              return response()->json([
+                  'success' => true,
+                  'message' => "Mostrando datos de $nombreMes $anio",
+                  'data' => $data
+              ]);
+
+          } else {
+             return response()->json([
+                 'success' => false,
+                 'message' => 'No se tiene información captura.',
+                 'data' => []
+             ]);
+         }
+    }
+
+    public function SemestreAntiguedadInventarios(string $mes, $anio)
+    {       
+            $fechaInicial = new DateTime("$anio-$mes-01");
+
+            $fechaMes = new DateTime("$anio-$mes-01");
+            $fechaMes->modify('-5 month'); 
+            $mes = $fechaMes->format('m');
+            $anio = $fechaMes->format('Y');
+
+            return response()->json([
+                'fechaInicial' => $fechaInicial,
+                'fechaFinal' => "$anio-$mes-01"
+            ]);
     }
 
     /**
