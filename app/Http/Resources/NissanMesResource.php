@@ -16,6 +16,7 @@ class NissanMesResource extends JsonResource
     {
         return [
             'planta' => $this->planta,
+            'entidad' => $this->estacion,
             'estacion' => $this->estacion,
             'fecha' => $this->fecha,
             'uno' => $this->uno,
