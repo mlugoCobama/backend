@@ -24,17 +24,16 @@ use App\Models\OrdenesUnidades;
 
 class AgenciasRenaultController extends Controller
 {
+    private array $meses = [
+         1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
+         5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
+         9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
+     ];
     /**
      * Display a listing of the resource.
      */
     public function index(string $sub_division, $mes, $anio)
     {
-
-        $meses = array(
-            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril', 
-            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto', 
-            9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
-        );
         /**
          * Cuando el mes es diciembre (12 + 1)
          * Simulamos enero del año siguiente
@@ -48,9 +47,6 @@ class AgenciasRenaultController extends Controller
          */
         $maxIntentos = 12;
         $intento = 0;
-
-        
-
 
         //$mes = $this->monthYear->getMonth();
                 // $mes = '05';
@@ -70,8 +66,6 @@ class AgenciasRenaultController extends Controller
         // $totalAnioAnt = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anioAnt . ',' . $sub_division . ')'));
         // $antInventarios = DB::connection('dashboard')->select('call Dashboard.SP_GetDataAntSemestralInventarios(' . $mes . ',' . $anio . ',' . $sub_division . ')');
         
-
-        
         do {
 
             $fechaMes = new DateTime("$anio-$mes-01");
@@ -86,24 +80,11 @@ class AgenciasRenaultController extends Controller
             $mesA = $fechaMesA->format('m');
             $anioA = $fechaMesA->format('Y');
 
-            $nissanMes =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesRenault(' . $mes . ',' . $anio . ')'));
-            $nissanMesAnt =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesRenault(' . $mesA . ',' . $anioA . ')'));
-            $nissanAnioAnt =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesRenault(' . $mes . ',' . $anioAnt . ')'));
-            $totalAnio = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anio . ',' . $sub_division . ')'));
-            $totalAnioAnt = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anioAnt . ',' . $sub_division . ')'));
-            $antInventarios = DB::connection('dashboard')->select('call Dashboard.SP_GetDataAntSemestralInventarios(' . $mes . ',' . $anio . ',' . $sub_division . ')');
+            $renaultMes =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesRenault(' . $mes . ',' . $anio . ')'));
 
-            $data = [
-                'mes' => $nissanMes,
-                'mesAnt' => $nissanMesAnt,
-                'anioAnt' => $nissanAnioAnt,
-                'totalAnio' => $totalAnio,
-                'totalAnioAnt' => $totalAnioAnt,
-                'antInventarios' => $antInventarios,
-            ];
-
-            if (count($nissanMes) > 1 && $intento == 1) {
-                $nombreMes = $meses[intval($mes)];
+            if (count($renaultMes) > 1 && $intento == 1) {
+                $data = $this->conjuntoDatos($sub_division, $mes, $mesA, $anio, $anioA , $anioAnt,  $renaultMes);
+                $nombreMes = $this->meses[intval($mes)];
                 return response()->json([
                     'success' => true,
                     'message' => "Mostrando datos de $nombreMes $anio",
@@ -111,8 +92,9 @@ class AgenciasRenaultController extends Controller
                 ]);
             } 
 
-            if (count($nissanMes) > 1 && $intento > 1) {
-                $nombreMes = $meses[intval($mes)];
+            if (count($renaultMes) > 1 && $intento > 1) {
+                $data = $this->conjuntoDatos($sub_division, $mes, $mesA, $anio, $anioA , $anioAnt,  $renaultMes);
+                $nombreMes = $this->meses[intval($mes)];
                 return response()->json([
                     'success' => true,
                     'message' => "No hay datos del mes actual, en su lugar se muestran los de $nombreMes $anio",
@@ -120,10 +102,11 @@ class AgenciasRenaultController extends Controller
                 ]);
             }
 
-        } while (count($nissanMes) <= 1 && $intento < $maxIntentos);
+        } while (count($renaultMes) <= 1 && $intento < $maxIntentos);
 
-          if (count($nissanMes) > 0) {
-            $nombreMes = $meses[intval($mes)];
+          if (count($renaultMes) > 0) {
+            $data = $this->conjuntoDatos($sub_division, $mes, $mesA, $anio, $anioA , $anioAnt,  $renaultMes);
+            $nombreMes = $this->meses[intval($mes)];
               return response()->json([
                   'success' => true,
                   'message' => "Mostrando datos de $nombreMes $anio",
@@ -154,32 +137,53 @@ class AgenciasRenaultController extends Controller
             ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    
+
+     private function conjuntoDatos($sub_division, $mes, $mesA, $anio, $anioA , $anioAnt,  $datames){
+        $renaultMes = $datames;
+        $renaultMesAnt = $this->getDataMesRenault($mesA, $anioA);
+        $renaultAnioAnt = $this->getDataMesRenault($mes, $anioAnt);
+        $totalAnio = $this->getDataAnualAgencias($anio, $sub_division);
+        $totalAnioAnt = $this->getDataAnualAgencias($anioAnt, $sub_division);
+        $antInventarios = $this->getDataAntInventarios($mesA, $anio, $sub_division);        
+
+            $data = [
+                'mes' => $renaultMes,
+                'mesAnt' => $renaultMesAnt,
+                'anioAnt' => $renaultAnioAnt,
+                'totalAnio' => $totalAnio,
+                'totalAnioAnt' => $totalAnioAnt,
+                'antInventarios' => $antInventarios,
+            ];
+
+        return $data;
+     }
+
+     private function getDataMesRenault(int $mes, int $anio)
+     {
+         return NissanMesResource::collection(DB::select("call Dashboard.SP_GetDataMesRenault($mes, $anio)"));
+     }
+
+     private function getDataAnualAgencias(int $anio, string $subDivision)
+     {
+         return DataAnualAgenciasResource::collection(
+             DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAgencias($anio, $subDivision)")
+         );
+     }
+
+     private function getDataAntInventarios(int $mes, int $anio, string $subDivision)
+     {
+         return DB::connection('dashboard')->select(
+             "call Dashboard.SP_GetDataAntSemestralInventarios($mes, $anio, $subDivision)"
+         );
+     }
+
     public function create()
     {
         return view('dashboard::create');
     }
-
-
-    /**
-     * Guarda los registros de la tabla captura Renault
-     * -------------------------------------------------------
-     * Tablas que afecta
-     * -------------------------------------------------------
-     * ordenes_unidades, ventas_post_venta, datos_generales
-     * costos_financieros_prestamos, complementos, utilidad_area
-     */
-    public function store(Request $request)
-    {
-        $dataMesAgencias = $request->input('dataMesAgencias'); // Recibe datos en crudo
-        $anio = $request->input('anio');
-        $mes = $request->input('mes');
-        $fecha = sprintf('%s-%02d-01', $anio, $mes);
-
-        // Relación tabla sección
-        $relTablas = [
+    
+    private $relTablas = [
             "UNIDADES VENDIDAS" => "ordenes_unidades",
             "ORDENES DE SERVICIO" => "ordenes_unidades",
             "VENTAS DE POST VENTA" => "ventas_post_venta",
@@ -190,8 +194,8 @@ class AgenciasRenaultController extends Controller
             "ACUMULADO PERSONAL CONSOLIDADO" => "datos_generales",
             "UTILIDAD POR AREA" => "utilidad_area",
         ];
-        // Relación campo->campo tabla
-        $relCampos = [
+
+    private $relCampos = [
             "Nuevos" => "nuevos",
             "UB Nuevos" => "utilidad_nuevos",
             "Flotillas" => "flotillas",
@@ -220,12 +224,25 @@ class AgenciasRenaultController extends Controller
             "Area Postventa" => "area_postventa",
         ];
 
-        $relAgencias = [
+    private $relAgencias = [
             "Azcapotzalco" => 26,
             "Ecatepec" => 27,
             "Vallejo" => 28,
             "Pachuca" => 29,
         ];
+    /**
+     * Guarda los registros de la tabla captura Renault
+     * ------------------------------------------------
+     * Tablas que afecta: 
+     * ordenes_unidades, ventas_post_venta, datos_generales
+     * costos_financieros_prestamos, complementos, utilidad_area
+     */
+    public function store(Request $request)
+    {
+        $dataMesAgencias = $request->input('dataMesAgencias'); // Recibe datos en crudo
+        $anio = $request->input('anio');
+        $mes = $request->input('mes');
+        $fecha = sprintf('%s-%02d-01', $anio, $mes);
 
         // Procesamiento del array a json
         $jsonData = [];
@@ -241,9 +258,9 @@ class AgenciasRenaultController extends Controller
                     $agencia = trim($request->input('headers')[$index + 1]);
 
                     if (strtolower($agencia) !== "total") {
-                        $dbAgencia = $relAgencias[$agencia] ?? $agencia;
-                        $dbSeccion = $relTablas[$seccion] ?? $seccion;
-                        $dbCampos = $relCampos[$concepto] ?? $concepto;
+                        $dbAgencia = $this->relAgencias[$agencia] ?? $agencia;
+                        $dbSeccion = $this->relTablas[$seccion] ?? $seccion;
+                        $dbCampos = $this->relCampos[$concepto] ?? $concepto;
                         $value = trim($cell['value'] ?? "");
 
                         if (!isset($jsonData[$dbAgencia])) {
@@ -313,60 +330,11 @@ class AgenciasRenaultController extends Controller
         /**-------------------------------------------------------------
          * Inicia proceso de formateo de datos
         ---------------------------------------------------------------- */
-        // Relación tabla sección
-        $relTablas = [
-            "UNIDADES VENDIDAS" => "ordenes_unidades",
-            "ORDENES DE SERVICIO" => "ordenes_unidades",
-            "VENTAS DE POST VENTA" => "ventas_post_venta",
-            "TOTAL DE GASTOS OPERATIVOS" => "datos_generales",
-            "COSTO FINANCIERO CONSOLIDADO" => "costos_financieros_prestamos",
-            "BONOS MARCA" => "complementos",
-            "UNO" => "datos_generales",
-            "ACUMULADO PERSONAL CONSOLIDADO" => "datos_generales",
-            "UTILIDAD POR AREA" => "utilidad_area",
-        ];
-        // Relación campo->campo tabla
-        $relCampos = [
-            "Nuevos" => "nuevos",
-            "UB Nuevos" => "utilidad_nuevos",
-            "Flotillas" => "flotillas",
-            "UB Flotillas" => "utilidad_flotillas",
-            "Seminuevos" => "seminuevos",
-            "UB Seminuevos" => "utilidad_seminuevos",
-            "Ordenes de servicios" => "servicio",
-            "UB O. servicios" => "utilidad_servicio",
-            "Ordenes de HyP" => "hyp",
-            "UB Ordenes de HyP" => "utilidad_hyp",
-            "Ventas Servicio" => "ventas_servicio",
-            "Total Ventas Refacciones" => "total_ventas_ref",
-            "Refacciones Servicio" => "refacciones_servicio",
-            "Refacciones HyP" => "refacciones_hyp",
-            "Refacciones Mostrador" => "refacciones_mostrador",
-            "Total de Gastos Operativos" => "gasto",
-            "CNuevos" => "nuevos",
-            "CFlotillas" => "utilidad_nuevos",
-            "Refacciones" => "refacciones",
-            "Bajio" => "bajio",
-            "Intercias" => "intercias",
-            "Bonos Marca" => "bonos",
-            "UNO" => "uno",
-            "Personal" => "personal",
-            "Area Comercial" => "area_comercial",
-            "Area Postventa" => "area_postventa",
-        ];
-        //Relacion agencia->id_agencia
-        $relAgencias = [
-            "Azcapotzalco" => 26,
-            "Ecatepec" => 27,
-            "Vallejo" => 28,
-            "Pachuca" => 29,
-        ];
+       // Procesamiento del array a json
+       $jsonData = [];
+       $seccion = "";
 
-        // Procesamiento del array a json
-        $jsonData = [];
-        $seccion = "";
-
-        foreach ($dataMesAgencias as $row) {
+       foreach ($dataMesAgencias as $row) {
             if (count($row) === 1) {
                 $seccion = trim($row[0]['value']);
             } elseif ($seccion) {
@@ -376,9 +344,9 @@ class AgenciasRenaultController extends Controller
                     $agencia = trim($request->input('headers')[$index + 1]);
 
                     if (strtolower($agencia) !== "total") {
-                        $dbAgencia = $relAgencias[$agencia] ?? $agencia;
-                        $dbSeccion = $relTablas[$seccion] ?? $seccion;
-                        $dbCampos = $relCampos[$concepto] ?? $concepto;
+                        $dbAgencia = $this->relAgencias[$agencia] ?? $agencia;
+                        $dbSeccion = $this->relTablas[$seccion] ?? $seccion;
+                        $dbCampos = $this->relCampos[$concepto] ?? $concepto;
                         $value = trim($cell['value'] ?? "");
 
                         if (!isset($jsonData[$dbAgencia])) {
@@ -393,6 +361,7 @@ class AgenciasRenaultController extends Controller
                 }
             }
         }
+        
         /**-------------------------------------------------------------
          * Finaliza el proceso de formateo de datos
          * Inicia proceso actualizar o insertar los datos en la base de datos
@@ -428,33 +397,18 @@ class AgenciasRenaultController extends Controller
         ]);
     }
 
-    /**
-     * Show the specified resource.
-     */
     public function show($id)
     {
         return view('dashboard::show');
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('dashboard::edit');
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         //
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         //
@@ -600,4 +554,57 @@ class AgenciasRenaultController extends Controller
             ]);
         }
     }
+
+    //Relación tabla sección
+    /**
+    * $relTablas = [
+    * "UNIDADES VENDIDAS" => "ordenes_unidades",
+    * "ORDENES DE SERVICIO" => "ordenes_unidades",
+    *  "VENTAS DE POST VENTA" => "ventas_post_venta",
+    *  "TOTAL DE GASTOS OPERATIVOS" => "datos_generales",
+    *  "COSTO FINANCIERO CONSOLIDADO" => "costos_financieros_prestamos",
+    *  "BONOS MARCA" => "complementos",
+    *  "UNO" => "datos_generales",
+    *  "ACUMULADO PERSONAL CONSOLIDADO" => "datos_generales",
+    *  "UTILIDAD POR AREA" => "utilidad_area",
+    *  ];
+    *  // Relación campo->campo tabla
+
+    * 
+    *  $relCampos = [
+    *  "Nuevos" => "nuevos",
+    *  "UB Nuevos" => "utilidad_nuevos",
+    *  "Flotillas" => "flotillas",
+    *   "UB Flotillas" => "utilidad_flotillas",
+    *   "Seminuevos" => "seminuevos",
+    *   "UB Seminuevos" => "utilidad_seminuevos",
+    *   "Ordenes de servicios" => "servicio",
+    *   "UB O. servicios" => "utilidad_servicio",
+    *   "Ordenes de HyP" => "hyp",
+    *   "UB Ordenes de HyP" => "utilidad_hyp",
+    *   "Ventas Servicio" => "ventas_servicio",
+    *   "Total Ventas Refacciones" => "total_ventas_ref",
+    *   "Refacciones Servicio" => "refacciones_servicio",
+    *   "Refacciones HyP" => "refacciones_hyp",
+    *   "Refacciones Mostrador" => "refacciones_mostrador",
+    *   "Total de Gastos Operativos" => "gasto",
+    *   "CNuevos" => "nuevos",
+    *   "CFlotillas" => "utilidad_nuevos",
+    *   "Refacciones" => "refacciones",
+    *   "Bajio" => "bajio",
+    *   "Intercias" => "intercias",
+    *   "Bonos Marca" => "bonos",
+    *   "UNO" => "uno",
+    *   "Personal" => "personal",
+    *   "Area Comercial" => "area_comercial",
+    *   "Area Postventa" => "area_postventa",
+    *   ];
+    *  //Relacion agencia->id_agencia
+    *   $relAgencias = [
+    *   "Azcapotzalco" => 26,
+    *    "Ecatepec" => 27,
+    *    "Vallejo" => 28,
+    *   "Pachuca" => 29,
+    *   ];
+    */
 }
