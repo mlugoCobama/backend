@@ -35,6 +35,8 @@ Route::get('energeticos-gasolinerias/{sub_division}/{mes}/{anio}', [EnergeticosG
 Route::get('energeticos/{sub_division}/{mes}/{anio}/{titular}', [EnergeticosController::class, 'index'])->name('subdivision.index');
 Route::get('energeticos/anual/{id}', [EnergeticosController::class, 'show'])->name('energeticos_anual.index');
 
+Route::get('energeticos/anual-estacion/{id}/{anio}', [EnergeticosController::class, 'getAnualEstacionEnergeticos'])->name('energeticos_anual.getAnualEstacionEnergeticos');
+Route::get('agencias/anual-agencias/{id}/{anio}', [AgenciasController::class, 'getAnualAgecia'])->name('agencias_anual.getAnualAgecia');
 /**--------------------------------------
  * Rutas Agencias Nissan
  -----------------------------------------*/

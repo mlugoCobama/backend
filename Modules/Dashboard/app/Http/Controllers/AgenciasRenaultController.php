@@ -14,7 +14,6 @@ use DateTime;
 /**
  * Modelos
  */
-
 use App\Models\VentasPostVenta;
 use App\Models\DatosGenerales;
 use App\Models\CostosFinancierosPrestamos;
@@ -32,132 +31,91 @@ class AgenciasRenaultController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(string $sub_division, $mes, $anio)
-    {
-        /**
-         * Cuando el mes es diciembre (12 + 1)
-         * Simulamos enero del año siguiente
-         */
-        if($mes > 12){
-            $anio= $anio + 1;
-            $mes = 1;
-        }
-        /**
-         * Numero máximo de peticiones 12
-         */
-        $maxIntentos = 12;
-        $intento = 0;
+    public function index(string $sub_division, $mes, $anio){
+         $mes = $mes - 1;
 
-        //$mes = $this->monthYear->getMonth();
-                // $mes = '05';
-        //$mesAnt = $this->monthYear->getMonthPrev();
-                // $mesAnt = '04';
-        //$anio = $this->monthYear->getYear();
-                // $anio = '2024';
-        //$anioAnt = $this->monthYear->getYearPrev();
-        // $anioAnt = '2023';
+        $periodoBuscado = "$anio-$mes-01";
+        $date = DateTime::createFromFormat('Y-m-d', $periodoBuscado);
+        $fanio = $date->format('Y');
+        $fmes = $date->format('m');
+        $newPeriodo = "$fanio-$fmes-01";
+        do{
+            $dataAnio = DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAgencias($anio, $sub_division)");
+            (array)$arrDatos = $dataAnio;
+            $arr_mesesDatos = array_map(function($registro) { return $registro->fecha; }, $arrDatos);
 
-        // $sub_division = '3';
+            $arr_mesesDatos1 = array_flip($arr_mesesDatos);
 
-        // $nissanMes =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anio . ')'));
-        // $nissanMesAnt =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mesAnt . ',' . $anio . ')'));
-        // $nissanAnioAnt =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anioAnt . ')'));
-        // $totalAnio = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anio . ',' . $sub_division . ')'));
-        // $totalAnioAnt = DataAnualAgenciasResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualAgencias(' . $anioAnt . ',' . $sub_division . ')'));
-        // $antInventarios = DB::connection('dashboard')->select('call Dashboard.SP_GetDataAntSemestralInventarios(' . $mes . ',' . $anio . ',' . $sub_division . ')');
-        
-        do {
-
-            $fechaMes = new DateTime("$anio-$mes-01");
-            $fechaMes->modify('-1 month'); 
-            $mes = $fechaMes->format('m');
-            $anio = $fechaMes->format('Y');
-
-            $anioAnt = $anio - 1;
-
-
-            $fechaMesA = $fechaMes->modify('-1 month');
-            $mesA = $fechaMesA->format('m');
-            $anioA = $fechaMesA->format('Y');
-
-            $renaultMes =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesRenault(' . $mes . ',' . $anio . ')'));
-
-            if (count($renaultMes) > 1 && $intento == 1) {
-                $data = $this->conjuntoDatos($sub_division, $mes, $mesA, $anio, $anioA , $anioAnt,  $renaultMes);
-                $nombreMes = $this->meses[intval($mes)];
-                return response()->json([
-                    'success' => true,
-                    'message' => "Mostrando datos de $nombreMes $anio",
-                    'data' => $data
-                ]);
-            } 
-
-            if (count($renaultMes) > 1 && $intento > 1) {
-                $data = $this->conjuntoDatos($sub_division, $mes, $mesA, $anio, $anioA , $anioAnt,  $renaultMes);
-                $nombreMes = $this->meses[intval($mes)];
-                return response()->json([
-                    'success' => true,
-                    'message' => "No hay datos del mes actual, en su lugar se muestran los de $nombreMes $anio",
-                    'data' => $data,
-                ]);
+            $periodoExiste = isset($arr_mesesDatos1[$newPeriodo]); 
+            
+            if($periodoExiste === false){
+                $anio = $anio - 1;
             }
 
-        } while (count($renaultMes) <= 1 && $intento < $maxIntentos);
+        }while( count($dataAnio) < 1 );
 
-          if (count($renaultMes) > 0) {
-            $data = $this->conjuntoDatos($sub_division, $mes, $mesA, $anio, $anioA , $anioAnt,  $renaultMes);
+        if($periodoExiste === false){
+
+            $fecha = end($arr_mesesDatos);
+
+            $data = $this->conjuntoDatos1($fecha, $sub_division,  $dataAnio);
+            $fechaRecuperada = DateTime::createFromFormat('Y-m-d', $fecha);
+            $mesRec = $fechaRecuperada->format('m');
+            $anioRec = $fechaRecuperada->format('Y');
+            $nombreMes = $this->meses[intval($mesRec)];
+
+            return response()->json(
+                
+                [
+                    'success' => true,
+                    'message' => "No hay datos de este periodo en su lugar se muestran los de $nombreMes $anioRec",
+                    'data' => $data
+                ]
+
+            );
+        }else{
+            $fecha = $periodoBuscado;
+            
+            $data = $this->conjuntoDatos1($fecha , $sub_division,  $dataAnio);
             $nombreMes = $this->meses[intval($mes)];
-              return response()->json([
-                  'success' => true,
-                  'message' => "Mostrando datos de $nombreMes $anio",
-                  'data' => $data
-              ]);
-
-          } else {
-             return response()->json([
-                 'success' => false,
-                 'message' => 'No se tiene información captura.',
-                 'data' => []
-             ]);
-         }
+            return response()->json(
+            [
+                'success' => true,
+                'message' => "Mostrando datos de $nombreMes $anio",
+                'data' => $data,
+            ]
+        );
+        }
     }
 
-    public function SemestreAntiguedadInventarios(string $mes, $anio)
-    {       
-            $fechaInicial = new DateTime("$anio-$mes-01");
+    private function conjuntoDatos1($fechaBusqueda, $sub_division,  $dataAnio){
 
-            $fechaMes = new DateTime("$anio-$mes-01");
-            $fechaMes->modify('-5 month'); 
-            $mes = $fechaMes->format('m');
-            $anio = $fechaMes->format('Y');
+        $fecha = DateTime::createFromFormat('Y-m-d', $fechaBusqueda);
+        $anio =  $fecha->format('Y');
+        $mes = $fecha->format('m');
+        $anioAnt = $anio - 1;
+        $fechaMesA = $fecha->modify('-1 month');
+        $mesA = $fechaMesA->format('m');
+        $anioA = $fechaMesA->format('Y');
 
-            return response()->json([
-                'fechaInicial' => $fechaInicial,
-                'fechaFinal' => "$anio-$mes-01"
-            ]);
-    }
-
-    
-
-     private function conjuntoDatos($sub_division, $mes, $mesA, $anio, $anioA , $anioAnt,  $datames){
-        $renaultMes = $datames;
-        $renaultMesAnt = $this->getDataMesRenault($mesA, $anioA);
-        $renaultAnioAnt = $this->getDataMesRenault($mes, $anioAnt);
-        $totalAnio = $this->getDataAnualAgencias($anio, $sub_division);
-        $totalAnioAnt = $this->getDataAnualAgencias($anioAnt, $sub_division);
-        $antInventarios = $this->getDataAntInventarios($mesA, $anio, $sub_division);        
-
-            $data = [
-                'mes' => $renaultMes,
-                'mesAnt' => $renaultMesAnt,
-                'anioAnt' => $renaultAnioAnt,
-                'totalAnio' => $totalAnio,
-                'totalAnioAnt' => $totalAnioAnt,
-                'antInventarios' => $antInventarios,
-            ];
-
+            $dataMes =  $this->getDataMesRenault($mes, $anio);  
+            $dataMesAnt =   $this->getDataMesRenault($mesA, $anioA);
+            $dataAnioAnt =  $this->getDataMesRenault($mes, $anioAnt);
+            $totalAnio =  DataAnualAgenciasResource::collection($dataAnio);
+            $totalAnioAnt = $this->getDataAnualAgencias($anioAnt, $sub_division);
+            $antInventarios = $this->getDataAntInventarios($mes, $anio, $sub_division);    
+                $data = [
+                    'mes' => $dataMes,
+                    'mesAnt' => $dataMesAnt,
+                    'anioAnt' => $dataAnioAnt,
+                    'totalAnio' => $totalAnio,
+                    'totalAnioAnt' => $totalAnioAnt,
+                    'antInventarios' => $antInventarios,
+                    ];
+                        
         return $data;
-     }
+
+    }
 
      private function getDataMesRenault(int $mes, int $anio)
      {
@@ -177,6 +135,8 @@ class AgenciasRenaultController extends Controller
              "call Dashboard.SP_GetDataAntSemestralInventarios($mes, $anio, $subDivision)"
          );
      }
+
+
 
     public function create()
     {

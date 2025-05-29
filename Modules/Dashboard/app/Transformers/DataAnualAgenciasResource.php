@@ -13,7 +13,8 @@ class DataAnualAgenciasResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'fecha' => $this->fecha,
+            
+            'fecha' => date_format( date_create( $this->fecha ), 'm-d-Y' ),
             'uno' => $this->uno,
             'gasto' => $this->gasto,
             'personal' => $this->personal,
@@ -52,6 +53,9 @@ class DataAnualAgenciasResource extends JsonResource
             'refacciones_hyp' => $this->refacciones_hyp,
             'refacciones_mostrador' => $this->refacciones_mostrador,
             'descuentos' => $this->descuentos,
+            'inventario_nuevos'=>$this->inventario_nuevos,
+            'inventario_seminuevos'=> $this->inventario_seminuevos,
+            'inventario_refacciones'=>$this->inventario_refacciones,
         ];
     }
 }

@@ -15,10 +15,11 @@ class NissanMesResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id,
             'planta' => $this->planta,
             'entidad' => $this->estacion,
             'estacion' => $this->estacion,
-            'fecha' => $this->fecha,
+            'fecha' => date_format( date_create( $this->fecha ), 'd-m-Y' ),
             'uno' => $this->uno,
             'gasto' => $this->gasto,
             'personal' => $this->personal,

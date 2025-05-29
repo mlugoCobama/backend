@@ -123,6 +123,27 @@ class EnergeticosController extends Controller
         return $data;
         
     }
+
+    public function getAnualEstacionEnergeticos($idEstacion, $anio){
+        
+        $anioAnt = $anio - 1;
+
+        $totalAnioEstacion = GaseraMesResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos($idEstacion ,$anio)"));
+        
+        $totalAnioAntEstacion = GaseraMesResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos($idEstacion ,$anioAnt)"));
+        
+        $data = [
+            'totalAnio' => $totalAnioEstacion,
+            'totalAnioAnt' => $totalAnioAntEstacion,
+            ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Datos anuales recuperados correctamente',
+            'data' => $data
+        ]);
+
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -137,22 +158,8 @@ class EnergeticosController extends Controller
      */
     public function store(Request $request)
     {
-        $datos = $request->all(); {
+        $datos = $request->all(); 
             $datos = $request->all();
-
-            $validatedData = $request->validate([
-                '*.sucursales_id' => 'required|integer|exists:sucursales,id',
-                '*.fecha' => 'required|date',
-                '*.Acumulado Personal' => 'nullable|numeric',
-                '*.Eficiencia' => 'nullable|numeric',
-                '*.UBO' => 'nullable|numeric',
-                '*.UB' => 'nullable|numeric',
-                '*.Venta Litros' => 'nullable|numeric',
-                '*.Ventas' => 'nullable|numeric',
-                '*.Gasto' => 'nullable|numeric',
-                '*.UNO' => 'nullable|numeric',
-                '*.isNew' => 'nullable|boolean',
-            ]);
 
             DB::connection('dashboard1')->beginTransaction();
             try {
@@ -164,14 +171,14 @@ class EnergeticosController extends Controller
                             insert([
                                 'sucursales_id' => $dato['sucursales_id'],
                                 'fecha' => $dato['fecha'],
-                                'personal' => $dato['Acumulado Personal'] ?? 0,
-                                'eficiencia' => $dato['Eficiencia'] ?? 0,
-                                'ubo' => $dato['UBO'] ?? 0,
-                                'utilidad_bruta' => $dato['UB'] ?? 0,
-                                'venta_litros' => $dato['Venta Litros'] ?? 0,
-                                'ventas' => $dato['Ventas'] ??  0,
-                                'gasto' => $dato['Gasto'] ?? 0,
-                                'uno' => $dato['UNO'] ?? 0,
+                                'personal' => str_replace(",", "", $dato['Acumulado Personal'])  ?? 0,
+                                'eficiencia' => str_replace(",", "", $dato['Eficiencia']) ?? 0,
+                                'ubo' => str_replace(",", "", $dato['UBO']) ?? 0,
+                                'utilidad_bruta' => str_replace(",", "", $dato['UB']) ?? 0,
+                                'venta_litros' => str_replace(",", "", $dato['Venta Litros']) ?? 0,
+                                'ventas' => str_replace(",", "", $dato['Ventas']) ??  0,
+                                'gasto' => str_replace(",", "", $dato['Gasto']) ?? 0,
+                                'uno' => str_replace(",", "", $dato['UNO']) ?? 0,
                             ]);
                         /**
                          * Si no contiene "isNew" actualiza el registro 
@@ -183,14 +190,14 @@ class EnergeticosController extends Controller
                             where('sucursales_id', $dato['sucursales_id'])->where('fecha', $dato['fecha'])->update([
                                 'sucursales_id' => $dato['sucursales_id'],
                                 'fecha' => $dato['fecha'],
-                                'personal' => $dato['Acumulado Personal'] ?? 0,
-                                'eficiencia' => $dato['Eficiencia'] ?? 0,
-                                'ubo' => $dato['UBO'] ?? 0,
-                                'utilidad_bruta' => $dato['UB'] ?? 0,
-                                'venta_litros' => $dato['Venta Litros'] ?? 0,
-                                'ventas' => $dato['Ventas'] ??  0,
-                                'gasto' => $dato['Gasto'] ?? 0,
-                                'uno' => $dato['UNO'] ?? 0,
+                                'personal' => str_replace(",", "", $dato['Acumulado Personal']) ?? 0,
+                                'eficiencia' => str_replace(",", "", $dato['Eficiencia']) ?? 0,
+                                'ubo' => str_replace(",", "", $dato['UBO']) ?? 0,
+                                'utilidad_bruta' => str_replace(",", "", $dato['UB']) ?? 0,
+                                'venta_litros' => str_replace(",", "", $dato['Venta Litros']) ?? 0,
+                                'ventas' => str_replace(",", "", $dato['Ventas']) ??  0,
+                                'gasto' => str_replace(",", "", $dato['Gasto']) ?? 0,
+                                'uno' => str_replace(",", "", $dato['UNO']) ?? 0,
 
                             ]);
                     }
@@ -210,54 +217,7 @@ class EnergeticosController extends Controller
                     'error' => $e->getMessage()
 
                 ]);
-            }
-        }
-        foreach ($datos as $dato) {
-            // Verifica si el dato es un nuevo registro
-            if (isset($dato['isNew']) && $dato['isNew']) {
-                DB::connection('dashboard1')->table('datos_generales')->
-                    // // DatosGenerales::create
-                    insert([
-                        'sucursales_id' => $dato['sucursales_id'],
-                        'fecha' => $dato['fecha'],
-                        'personal' => $dato['Acumulado Personal'] ?? 0,
-                        'eficiencia' => $dato['Eficiencia'] ?? 0,
-                        'ubo' => $dato['UBO'] ?? 0,
-                        'utilidad_bruta' => $dato['UB'] ?? 0,
-                        'venta_litros' => $dato['Venta Litros'] ?? 0,
-                        'ventas' => $dato['Ventas'] ??  0,
-                        'gasto' => $dato['Gasto'] ?? 0,
-                        'uno' => $dato['UNO'] ?? 0,
-                    ]);
-                /**
-                 * Si no contiene "isNew" actualiza el registro 
-                 * Usando como clave el id de sucursal y la fecha del periodo
-                 */
-            } else {
-                DB::connection('dashboard1')->table('datos_generales')->
-                    // DatosGenerales::
-                    where('sucursales_id', $dato['sucursales_id'])->where('fecha', $dato['fecha'])->update([
-                        'sucursales_id' => $dato['sucursales_id'],
-                        'fecha' => $dato['fecha'],
-                        'personal' => $dato['Acumulado Personal'] ?? 0,
-                        'eficiencia' => $dato['Eficiencia'] ?? 0,
-                        'ubo' => $dato['UBO'] ?? 0,
-                        'utilidad_bruta' => $dato['UB'] ?? 0,
-                        'venta_litros' => $dato['Venta Litros'] ?? 0,
-                        'ventas' => $dato['Ventas'] ??  0,
-                        'gasto' => $dato['Gasto'] ?? 0,
-                        'uno' => $dato['UNO'] ?? 0,
-
-                    ]);
-            }
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Datos guardados correctamente',
-            'data' => []
-
-        ]);
+            }       
     }
 
     /**

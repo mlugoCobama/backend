@@ -13,7 +13,7 @@ class DataAnualResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'fecha' => $this->fecha,
+            'fecha' => date_format( date_create( $this->fecha ), 'm-d-Y' ),
             'uno' => $this->uno,
             'gasto' => $this->gasto,
             'ventas' => $this->ventas,
