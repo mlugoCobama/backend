@@ -62,6 +62,12 @@ class DataAnualAgenciasResource extends JsonResource
             'inventario_nuevos'=>$this->inventario_nuevos,
             'inventario_seminuevos'=> $this->inventario_seminuevos,
             'inventario_refacciones'=>$this->inventario_refacciones,
+            'personal_ventas'=> $this->personal_ventas,
+            'personal_usados'=> $this->personal_usados,
+            'personal_refacciones'=> $this->personal_refacciones,
+            'personal_servicios' =>  $this->personal_servicios,
+            'personal_admin' => $this->personal_admin,
+            'personal_apvs' => $this->personal_apvs 
         ];
     }
 }

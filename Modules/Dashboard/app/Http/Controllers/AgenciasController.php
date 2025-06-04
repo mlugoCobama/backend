@@ -20,6 +20,7 @@ use App\Models\Complementos;
 use App\Models\UtilidadArea;
 use App\Models\OrdenesUnidades;
 use DateTime;
+use Modules\Dashboard\Transformers\DataMesUtilidadAreaPvResource;
 
 class AgenciasController extends Controller
 {
@@ -627,6 +628,34 @@ class AgenciasController extends Controller
             'message' => 'Datos anuales recuperados correctamente',
             'data' => $data
         ]);
+    }
+
+    public function  getMesPVs($mes, $anio, $subDivision){
+        $fechaBusqueda = "$anio-$mes-01";
+        $fecha = DateTime::createFromFormat('Y-m-d', $fechaBusqueda);
+        $anio =  $fecha->format('Y');
+        $mes = $fecha->format('m');
+        $anioAnt = $anio - 1;
+        $fechaMesA = $fecha->modify('-1 month');
+        $mesA = $fechaMesA->format('m');
+        $anioA = $fechaMesA->format('Y');
+
+         $dataMes = (DB::connection('dashboard')->select("call Dashboard.SP_GetDataMesUtilidadAreaPV($mes, $anio, $subDivision)"));
+         $mesAnt =  (DB::connection('dashboard')->select("call Dashboard.SP_GetDataMesUtilidadAreaPV($mesA, $anioA, $subDivision)"));
+         $mesAnioAnt = (DB::connection('dashboard')->select("call Dashboard.SP_GetDataMesUtilidadAreaPV($mes, $anioAnt, $subDivision)"));
+        
+        $data = [
+            'mes' => DataMesUtilidadAreaPvResource::collection($dataMes),
+            'mesAnt' => DataMesUtilidadAreaPvResource::collection($mesAnt),
+            'anioAnt' => DataMesUtilidadAreaPvResource::collection($mesAnioAnt)
+            ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Datos anuales recuperados correctamente',
+            'data' => $data
+        ]);
+
 
     }
 }

@@ -48,7 +48,7 @@ Route::put('dashboard/edit-agencia-nissan', [AgenciasController::class, 'updateA
 
 //Ruta de prueba
 Route::get('antiguedad-inventarios-nissan/{mes}/{anio}', [AgenciasController::class, 'SemestreAntiguedadInventarios'])->name('agencia-nissan.SemestreAntiguedadInventarios');
-
+Route::get('dashboard/utilidad-area-pvs/{mes}/{anio}/{subDivision}', [AgenciasController::class, 'getMesPVs'])->name('agencia-nissan.mesUtilidadArea');
 /**--------------------------------------
  * Rutas Agencias Renault
  -----------------------------------------*/
