@@ -97,12 +97,14 @@ class EnergeticosGasolinerasController extends Controller
         $dataAnioAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(' . $mes . ',' . $anioAnt . ')'));
         $totalAnio = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anio . ',' . $sub_division . ')'));
         $totalAnioAnt = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anioAnt . ',' . $sub_division . ')'));
+        $totalAnioAnt2 = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . ($anioAnt - 1) . ',' . $sub_division . ')'));
             $data = [
                 'mes' => $dataMes,
                 'mesAnt' => $dataMesAnt,
                 'anioAnt' => $dataAnioAnt,
                 'totalAnio' => $totalAnio,
                 'totalAnioAnt' => $totalAnioAnt,
+                'totalAnioAnt2' => $totalAnioAnt2,
             ];
                 
         return $data;
@@ -185,10 +187,12 @@ class EnergeticosGasolinerasController extends Controller
             $dataAnioAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(' . $mes . ',' . $anioAnt . ')'));
             $totalAnio =  DataAnualResource::collection($dataAnio);
             $totalAnioAnt = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anioAnt . ',' . $sub_division . ')'));
+            $totalAnioAnt2 = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . ($anioAnt - 1 ) . ',' . $sub_division . ')'));
                 $data = [
                     'mes' => $dataMes,
                     'mesAnt' => $dataMesAnt,
                     'anioAnt' => $dataAnioAnt,
+                    'anioAnt2' => $totalAnioAnt2,
                     'totalAnio' => $totalAnio,
                     'totalAnioAnt' => $totalAnioAnt,
                     ];

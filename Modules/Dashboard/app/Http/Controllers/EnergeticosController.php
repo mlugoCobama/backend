@@ -14,6 +14,7 @@ use Modules\Dashboard\Transformers\DataAnualResource;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\GetMonthYearController;
 use DateTime;
+use Modules\Dashboard\Transformers\DataAnualEnergeticoResource;
 
 class EnergeticosController extends Controller
 {
@@ -111,13 +112,14 @@ class EnergeticosController extends Controller
         $dataAnioAnt =  GaseraMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGaseras(' . $mes . ',' . $anioAnt . ',' . '\'' . $titular . '\'' . ')'));
         $totalAnio = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anio . ',' . $sub_division . ')'));
         $totalAnioAnt = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anioAnt . ',' . $sub_division . ')'));
-
+        $totalAnioAnt2 = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . ($anioAnt-1) . ',' . $sub_division . ')'));
             $data = [
                 'mes' => $dataMes,
                 'mesAnt' => $dataMesAnt,
                 'anioAnt' => $dataAnioAnt,
                 'totalAnio' => $totalAnio,
                 'totalAnioAnt' => $totalAnioAnt,
+                'totalAnioAnt2' =>  $totalAnioAnt2
             ];
 
         return $data;
@@ -128,13 +130,18 @@ class EnergeticosController extends Controller
         
         $anioAnt = $anio - 1;
 
-        $totalAnioEstacion = GaseraMesResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos($idEstacion ,$anio)"));
+        $totalAnioEstacion = DataAnualEnergeticoResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos($idEstacion ,$anio)"));
         
-        $totalAnioAntEstacion = GaseraMesResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos($idEstacion ,$anioAnt)"));
+        $totalAnioAntEstacion = DataAnualEnergeticoResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos($idEstacion ,$anioAnt)"));
+
+        $anioAnt2 = $anio - 2;
+
+        $totalAnioAntEstacion2 = DataAnualEnergeticoResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos($idEstacion ,$anioAnt2)"));
         
         $data = [
             'totalAnio' => $totalAnioEstacion,
             'totalAnioAnt' => $totalAnioAntEstacion,
+            'totalAnioAnt2' => $totalAnioAntEstacion2,
             ];
 
         return response()->json([

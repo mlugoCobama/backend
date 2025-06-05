@@ -110,6 +110,7 @@ class AgenciasRenaultController extends Controller
                     'anioAnt' => $dataAnioAnt,
                     'totalAnio' => $totalAnio,
                     'totalAnioAnt' => $totalAnioAnt,
+                    'totalAnioAnt2' => [],
                     'antInventarios' => $antInventarios,
                     ];
                         
