@@ -55,7 +55,7 @@ class EmailAutorizarSolicitudResource extends JsonResource
      * Asigna una descripción del centro de costos
      */
     private function asignarDescripcionCC($cc){
-        $rawCentrosCosto = File::get(base_path('\Modules\Compras\resources\assets\json\centrosCostos\catCentrosCostos.json'));
+        $rawCentrosCosto = File::get(base_path('Modules/Compras/resources/assets/json/centrosCostos/catCentrosCostos.json'));
         $jsonCC = json_decode(json: $rawCentrosCosto, associative: true);
         $dataCC = $jsonCC[$cc];
         return $dataCC;

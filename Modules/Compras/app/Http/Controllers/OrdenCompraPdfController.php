@@ -60,7 +60,7 @@ class OrdenCompraPdfController extends Controller
         $dataFacturacion = $json[$data['destino'][0]->empresa];
         $dataEntrega = $jsonE[$data['ordenCompra']['entrega']];
 
-        $rawCentrosCosto = File::get(base_path('\Modules\Compras\resources\assets\json\centrosCostos\catCentrosCostos.json'));
+        $rawCentrosCosto = File::get(base_path('Modules/Compras/resources/assets/json/centrosCostos/catCentrosCostos.json'));
         $jsonCC = json_decode(json: $rawCentrosCosto, associative: true);
         $dataCC = $jsonCC[$data['solicitudCompra']['c_c']];
 
