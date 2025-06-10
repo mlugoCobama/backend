@@ -51,10 +51,10 @@ class OrdenCompraPdfController extends Controller
     public function OrdenCompraFormatoInterno($data)
     {
         //JSON de donde se obtienen los datos de facturacion
-        $content = File::get(base_path('/dataFacturacion.json'));
+        $content = File::get(base_path('dataFacturacion.json'));
         $json = json_decode(json: $content, associative: true);
 
-        $contentE = File::get(base_path('/dataEntregas.json'));
+        $contentE = File::get(base_path('dataEntregas.json'));
         $jsonE = json_decode(json: $contentE, associative: true);
 
         $dataFacturacion = $json[$data['destino'][0]->empresa];

@@ -31,7 +31,7 @@ class PdfOrdenCompraResource extends JsonResource
             
     }
     private function asignarLugarEntrega($intercompania){
-        $contentE = File::get(base_path('/dataEntregas.json'));
+        $contentE = File::get(base_path('dataEntregas.json'));
         $jsonE = json_decode(json: $contentE, associative: true);
         $dataEntrega = $jsonE[$intercompania];
         return $dataEntrega;    
