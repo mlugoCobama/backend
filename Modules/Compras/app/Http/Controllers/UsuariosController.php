@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Modules\Compras\Transformers\CatEmpresasResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Modules\Compras\Transformers\usersResource;
+use Modules\Compras\Transformers\UsersResource;
 class UsuariosController extends Controller
 {
     /** ******************************************************************
@@ -57,7 +57,7 @@ class UsuariosController extends Controller
         $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $id . ')');
         return response()->json([
             'status' => 'success',
-            'data' => usersResource::collection($data),
+            'data' => UsersResource::collection($data),
             'message' => 'Datos recuperados correctamente'
         ]);
     }
@@ -79,7 +79,7 @@ class UsuariosController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => usersResource::collection($data),
+            'data' => UsersResource::collection($data),
             'message' => 'Datos recuperados correctamente'
         ]);
     }

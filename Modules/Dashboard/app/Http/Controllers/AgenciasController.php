@@ -105,6 +105,10 @@ class AgenciasController extends Controller
         }
     }
 
+    /**
+     * Recupera el resto de los datos una vez que se ha validado 
+     * que existen datos para periodo seleccionado
+     */
     private function conjuntoDatos1($fechaBusqueda, $sub_division,  $dataAnio){
 
         $fecha = DateTime::createFromFormat('Y-m-d', $fechaBusqueda);
