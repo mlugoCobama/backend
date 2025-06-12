@@ -10,7 +10,6 @@ use Modules\Compras\Models\CatUnidadesMedidas;
 //Transformers
 use Modules\Compras\Transformers\CatUnidadesMedidaResource;
 // Utilities
-use Illuminate\Support\Facades\Validator;
 class CatUnidadesMedidaController extends Controller
 
 {
@@ -25,21 +24,11 @@ class CatUnidadesMedidaController extends Controller
     }
 
 
-    public function create()
-    {
-        return view('compras::create');
-    }
-
     /**
      * Guarda un nuevo registro
      */
     public function store(Request $request)
     {
-         $valiadcion  = Validator::make($request->all(),[
-             'nombre' => 'required|string|max:45',
-             'abreviatura' => 'required|string|max:45'
-         ]);
-
         $unidadMedida = CatUnidadesMedidas::create($request->all());
         return response()->json([
                 'status' => 'success',
@@ -56,10 +45,6 @@ class CatUnidadesMedidaController extends Controller
         return CatUnidadesMedidas::where('id', $id)->get();
     }
 
-    public function edit($id)
-    {
-        return view('compras::edit');
-    }
 
     /**
      * Actualiza un registro especifico

@@ -1,6 +1,7 @@
 <?php
 
 namespace Modules\Compras\Http\Controllers;
+
 use App\Http\Controllers\Controller;
 use App\Enums\EstatusSolicitud;
 use Illuminate\Http\Request;
@@ -20,8 +21,7 @@ use Modules\Compras\Transformers\SolicitudesComprasResource;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use DateTime;
-use DateTimeZone;
+
 // Mailiables
 use App\Mail\SolicitudCotizacion;
 use App\Notifications\SolicitudCotizacionNotification;
@@ -39,8 +39,8 @@ class SolicitudesCompraController extends Controller
 {
 
     /** *********************************************************** 
-    * Genera un nuevo folio consecutivo en base al ultimo folio
-    *************************************************************/
+     * Genera un nuevo folio consecutivo en base al ultimo folio
+     *************************************************************/
     public function generarFolioSc()
     {
         $ultimaOrden = SolicitudesCompra::orderBy('id', 'desc')->first('folio');
@@ -59,7 +59,7 @@ class SolicitudesCompraController extends Controller
      **************************************************************/
     public function index()
     {
-          
+
         $data = SolicitudesComprasResource::collection((SolicitudesCompra::active()->orderBy('fecha', 'desc')->get()));
         return response()->json([
             'status' => 'success',
@@ -104,30 +104,26 @@ class SolicitudesCompraController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        return view('compras::create');
-    }
 
     /** *************************************************************************************
      * Genera un el registro de la solicitud de compra junto con sus detalles
      * Valida y coordina el funcionamiento de storeSolicitudCOmpra y storeDetallesSolicitud
      ***************************************************************************************/
     public function store(StoreSolicitudCompraRequest $request)
-    {  
+    {
         $data =  $request->validated()['data'];
         $files = $request->allFiles();
 
         try {
             DB::beginTransaction();
 
-                $idSolicitud = $this->storeSolicitudCompra($data);
-                $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
-                //TODO MODIFICAR ESTO PARA QUE SE ENVIÉ EL CORREO
-                //$correos = $this->getGerente($data['empresa']);
-                //$this->sendSolicitudAutorizacion($idSolicitud, $correos);
+            $idSolicitud = $this->storeSolicitudCompra($data);
+            $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
+            //TODO MODIFICAR ESTO PARA QUE SE ENVIÉ EL CORREO
+            //$correos = $this->getGerente($data['empresa']);
+            //$this->sendSolicitudAutorizacion($idSolicitud, $correos);
             DB::commit();
-            
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha guardado correctamente',
@@ -144,9 +140,9 @@ class SolicitudesCompraController extends Controller
     }
 
     /** ********************************************************************
-    *Primero genero una solicitud de compra
-    *Después almaceno los detalles de la solicitud
-    **********************************************************************/
+     *Primero genero una solicitud de compra
+     *Después almaceno los detalles de la solicitud
+     **********************************************************************/
     private function storeSolicitudCompra($data)
     {
         $dataSolicitud = new SolicitudesCompra();
@@ -154,7 +150,7 @@ class SolicitudesCompraController extends Controller
         $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
         $dataSolicitud->usuario_destino = $data["usuario_destino"];
         $dataSolicitud->motivo = $data["motivo"];
-        $dataSolicitud->fecha = $this->getFecha() ?? now();
+        $dataSolicitud->fecha = date('Y-m-d H:i:s') ?? now();
         $dataSolicitud->c_c = $data["c_c"];
         $dataSolicitud->save();
         return $dataSolicitud->id;
@@ -192,10 +188,6 @@ class SolicitudesCompraController extends Controller
         return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->get()));
     }
 
-    public function edit($id)
-    {
-        return view('compras::edit');
-    }
 
     /**
      * Actualiza los estatus de la solicitud de compra
@@ -203,15 +195,15 @@ class SolicitudesCompraController extends Controller
      */
     public function update(Request $request, $id)
     {
-        SolicitudesCompra::where ('id', $id)->update(
-           [ "$request->campo" => $request->value]
+        SolicitudesCompra::where('id', $id)->update(
+            ["$request->campo" => $request->value]
         );
 
         return response()->json([
-             'status' => 'success',
-             'message' => 'Se ha actualizado correctamente',
-             'data' => ''
-         ]);
+            'status' => 'success',
+            'message' => 'Se ha actualizado correctamente',
+            'data' => ''
+        ]);
     }
 
     /**
@@ -219,17 +211,17 @@ class SolicitudesCompraController extends Controller
      * Valida el numero de autorizaciones necesarias
      * Modifica los campos necesarios en la base de datos 
      */
-    public function autorizeFromEmail($campo, $necesarias ,$id)
+    public function autorizeFromEmail($campo, $necesarias, $id)
     {
-        $campoBD= "auto_$campo";
+        $campoBD = "auto_$campo";
         $solicitud = SolicitudesCompra::findOrFail($id);
-        if($necesarias === 1){
+        if ($necesarias === 1) {
             $solicitud->auto_admin = "1";
             $solicitud->auto_gg = "1";
             $solicitud->save();
-        }else{
-             $solicitud->$campoBD= "1";
-             $solicitud->save();     
+        } else {
+            $solicitud->$campoBD = "1";
+            $solicitud->save();
         }
         $this->validarAutorizacion($id);
         // SolicitudesCompra::where ('id', $id)->update(
@@ -243,9 +235,10 @@ class SolicitudesCompraController extends Controller
      * Verifica si ya esta autorizado por gerencias 
      * y actualiza el estatus a siguiente
      */
-    public function validarAutorizacion($id){
+    public function validarAutorizacion($id)
+    {
         $solicitud = SolicitudesCompra::findOrFail($id);
-        if($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1){
+        if ($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1) {
             $solicitud->estatus = EstatusSolicitud::SOLICITADO;
             $solicitud->save();
         }
@@ -288,34 +281,34 @@ class SolicitudesCompraController extends Controller
 
         try {
             DB::beginTransaction();
-                // Almacenar la cotización
-                $idCotizacion = $this->storeCotizacion($data);
+            // Almacenar la cotización
+            $idCotizacion = $this->storeCotizacion($data);
 
-                    //Adecuación nuevo front
-                    $idsProv = [$data['proveedor1'], $data['proveedor2'], $data['proveedor3']];
-                    $data['proveedores'] = [];
-                    foreach ($idsProv as $id) {
-                        $proveedor = Proveedores::where("id", $id)->first();
-                        $data['proveedores'][] =  $proveedor;
-                    }
+            //Adecuación nuevo front
+            $idsProv = [$data['proveedor1'], $data['proveedor2'], $data['proveedor3']];
+            $data['proveedores'] = [];
+            foreach ($idsProv as $id) {
+                $proveedor = Proveedores::where("id", $id)->first();
+                $data['proveedores'][] =  $proveedor;
+            }
 
-                    $data['detalles'] =  DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])->get();
+            $data['detalles'] =  DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])->get();
 
-                // Almacenar la relación entre cotización y proveedores
-                $this->storeCotizacionProveedores($data['proveedores'], $idCotizacion);
-                
-                //Queue para despachar el correo
-                //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
+            // Almacenar la relación entre cotización y proveedores
+            $this->storeCotizacionProveedores($data['proveedores'], $idCotizacion);
 
-                /** *****************************************************************************************
-                 * !Habiltar para que se envíen los correos 
-                 * 
-                 *******************************************************************************************/ 
-                // $this->enviaCorreoProveedores($data['proveedores'], $data);
-                $idSolicitudC = $data['solicitudes_compra_id'];
+            //Queue para despachar el correo
+            //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
 
-                // Actualiza el estatus de la Solicitud a COTIZACION
-                SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => EstatusSolicitud::EN_COTIZACION]);
+            /** *****************************************************************************************
+             * !Habiltar para que se envíen los correos 
+             * 
+             *******************************************************************************************/
+            // $this->enviaCorreoProveedores($data['proveedores'], $data);
+            $idSolicitudC = $data['solicitudes_compra_id'];
+
+            // Actualiza el estatus de la Solicitud a COTIZACION
+            SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => EstatusSolicitud::EN_COTIZACION]);
 
             DB::commit();
 
@@ -354,23 +347,13 @@ class SolicitudesCompraController extends Controller
     }
 
     /** ***********************************************************************
-     * Función que genera la fecha actual tiempo de Mexico
-     ************************************************************************/
-    public function getFecha()
-    {
-        $fecha = new DateTime('now', new DateTimeZone('America/Mexico_City'));
-        $fecha = $fecha->format('Y-m-d H:i:s');
-        return $fecha;
-    }
-
-     /** ***********************************************************************
      * Almacena la cotización y devuelve el id del registro creado
      ************************************************************************/
     public function storeCotizacion($data)
     {
         $dataCotizacion = new Cotizaciones();
         $dataCotizacion->folio = $this->generarFolioCo();
-        $dataCotizacion->fecha = $this->getFecha() ?? now();
+        $dataCotizacion->fecha = date('Y-m-d H:i:s') ?? now();
         $dataCotizacion->consideraciones = $data["consideraciones"];
         $dataCotizacion->solicitudes_compra_id = $data["solicitudes_compra_id"];
 
@@ -429,82 +412,47 @@ class SolicitudesCompraController extends Controller
      * Envía el correo de solicitud de autorización
      * agrega los parámetros para la url del botón 'Autorizo'
      */
-    public function sendSolicitudAutorizacion($id, $correos){
-       $data = (new EmailAutorizarSolicitudResource(SolicitudesCompra::findOrFail($id)))->resolve();
-       $data['autoNecesarias'] = $correos['autoNecesarias'];
-       foreach ($correos['data'] as $correo) {
+    public function sendSolicitudAutorizacion($id, $correos)
+    {
+        $data = (new EmailAutorizarSolicitudResource(SolicitudesCompra::findOrFail($id)))->resolve();
+        $data['autoNecesarias'] = $correos['autoNecesarias'];
+        foreach ($correos['data'] as $correo) {
             $email = $correo['name'];
             $data['campo'] = $correo['campo'];
             Notification::route('mail', $email)
-               ->notify(new AutorizacionEmail($data));
+                ->notify(new AutorizacionEmail($data));
         }
-        
     }
 
     /**
      * Recupera los datos de los gerente de las empresas en base a 
      * su numero de intercompania 
      */
-    private function getGerente($intercompania){
-        //TODO DESCOMENTAR ESTE CÓDIGO PARA RECUPERAR LOS CORREOS DE GERENTES Y ADMINS
-        // $interAgencias = array_flip([7064, 7063, 7062, 7061]);
-        // $isRenault = isset($interAgencias[$intercompania]);
-        // if ($isRenault) {
-        //     $intercompania = 7064;
-        // }
-        // $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetGereneciaEmpresas(' . $intercompania . ')');
-        // $subCadena = 'gerencia';
-        // $autoNecesarias  = count($data);
-        // if ($autoNecesarias > 0) {
-        //     foreach ($data as $dato) {
-        //         $isGerente = strpos($dato->name, $subCadena);
-        //         if ($isGerente !== false) {
-        //             $dato->isGerente = true;
-        //             $dato->campo = 'gg';
-        //         } else {
-        //             $dato->isGerente = $isGerente;
-        //             $dato->campo = 'admin';
-        //         }
-        //     }
-        //     return [
-        //         'data' =>  $data,
-        //         'autoNecesarias' => $autoNecesarias
-        //     ];
-        // }
-        // Array con datos que devolvería la consulta
-       $data = [ 
-                ["id"=> 50,
-                "firstname"=> "Marco Antonio",
-                "realname"=> "Villanueva Gómez",
-                "name"=> "archundiagus@gmail.com",
-                "phone2"=> "25030",
-                "mobile"=> "5579002797",
-                "puesto"=> "Gerente General",
-                "Telefono"=> "01 (55) 5751-6060",
-                "area"=> "Gerencia",
-                "direccion"=> "Amp San Juan de Aragón, 07460 Ciudad de México, CDMX",
-                "intercompania"=> 250,
-                "empresa"=> "GAS FLAMAZUL",
-                "isGerente"=> true,
-                "campo"=> "gg"
-                ],
-                [
-                "id"=> 42,
-                "firstname"=> "Cecilia del Mar",
-                "realname"=> "Cruz Velázquez",
-                "name"=> "archundiagus@gmail.com",
-                "phone2"=> "25035",
-                "mobile"=> "5580052442",
-                "puesto"=> "Responsable Administrativo",
-                "Telefono"=> "01 (55) 5751-6060",
-                "area"=> "Administración",
-                "direccion"=> "Amp San Juan de Aragón, 07460 Ciudad de México, CDMX",
-                "intercompania"=> 250,
-                "empresa"=> "GAS FLAMAZUL",
-                "isGerente"=> false,
-                "campo"=> "admin"
-                ]
+    private function getGerente($intercompania)
+    {
+        $interAgencias = array_flip([7064, 7063, 7062, 7061]);
+        $isRenault = isset($interAgencias[$intercompania]);
+        if ($isRenault) {
+            $intercompania = 7064;
+        }
+        $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetGereneciaEmpresas(' . $intercompania . ')');
+        $subCadena = 'gerencia';
+        $autoNecesarias  = count($data);
+        if ($autoNecesarias > 0) {
+            foreach ($data as $dato) {
+                $isGerente = strpos($dato->name, $subCadena);
+                if ($isGerente !== false) {
+                    $dato->isGerente = true;
+                    $dato->campo = 'gg';
+                } else {
+                    $dato->isGerente = $isGerente;
+                    $dato->campo = 'admin';
+                }
+            }
+            return [
+                'data' =>  $data,
+                'autoNecesarias' => $autoNecesarias
             ];
-        return ["data" => $data , "autoNecesarias" => 2];
+        }
     }
 }

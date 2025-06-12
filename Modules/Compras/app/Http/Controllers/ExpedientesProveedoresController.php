@@ -99,14 +99,6 @@ class ExpedientesProveedoresController extends Controller
         return $zipPath;
     }
 
-    public function index()
-    {
-        return view('compras::index');
-    }
-    public function create()
-    {
-        return view('compras::create');
-    }
     public function store(Request $request): RedirectResponse
     {
         //
@@ -115,10 +107,7 @@ class ExpedientesProveedoresController extends Controller
     {
         //
     }
-    public function edit($id)
-    {
-        return view('compras::edit');
-    }
+    
     public function update(Request $request, $id): RedirectResponse
     {
         //

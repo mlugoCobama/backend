@@ -3,48 +3,12 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+
 use setasign\Fpdi\Fpdi;
 use Illuminate\Support\Facades\File;
 
 class OrdenCompraPdfController extends Controller
 {
-
-    public function index()
-    {
-        return view('compras::index');
-    }
-
-    public function create()
-    {
-        return view('compras::create');
-    }
-
-    public function store(Request $request)
-    {
-        //
-    }
-
-    public function show($id)
-    {
-        return view('compras::show');
-    }
-
-    public function edit($id)
-    {
-        return view('compras::edit');
-    }
-
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    public function destroy($id)
-    {
-        //
-    }
-
     /** *********************************************************************
     * Código que genera el formato de orden de compra
     ***********************************************************************/

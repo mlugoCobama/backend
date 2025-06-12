@@ -5,11 +5,13 @@ namespace Modules\Dashboard\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
-use App\Http\Resources\NissanMesResource;
-
 use App\Http\Controllers\GetMonthYearController;
 use App\Http\Controllers\Controller;
+
+use App\Http\Resources\NissanMesResource;
 use Modules\Dashboard\Transformers\DataAnualAgenciasResource;
+use Modules\Dashboard\Transformers\DataMesUtilidadAreaPvResource;
+
 /**
  * Modelos
  */
@@ -20,7 +22,6 @@ use App\Models\Complementos;
 use App\Models\UtilidadArea;
 use App\Models\OrdenesUnidades;
 use DateTime;
-use Modules\Dashboard\Transformers\DataMesUtilidadAreaPvResource;
 
 class AgenciasController extends Controller
 {
@@ -32,76 +33,135 @@ class AgenciasController extends Controller
     }
 
     private array $meses = [
-         1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
-         5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
-         9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
-     ];
+        1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril', 5 => 'mayo', 6 => 'junio',
+        7 => 'julio', 8 => 'agosto', 9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre',
+        12 => 'diciembre'
+    ];
+
+    /**
+     * Relación entre las tablas y secciones
+     */
+    private $relTablas = [
+        "UNIDADES VENDIDAS" => "ordenes_unidades",
+        "ORDENES DE SERVICIO" => "ordenes_unidades",
+        "VENTAS DE POST VENTA" => "ventas_post_venta",
+        "TOTAL DE GASTOS OPERATIVOS" => "datos_generales",
+        "COSTO FINANCIERO CONSOLIDADO" => "costos_financieros_prestamos",
+        "BONOS MARCA" => "complementos",
+        "UNO" => "datos_generales",
+        "ACUMULADO PERSONAL CONSOLIDADO" => "datos_generales",
+        "UTILIDAD POR AREA" => "utilidad_area",
+    ];
+
+    /**
+     * Relación entre los campos del front y los de la bd
+     */
+    private $relCampos = [
+        "Nuevos" => "nuevos",
+        "UB Nuevos" => "utilidad_nuevos",
+        "Flotillas" => "flotillas",
+        "UB Flotillas" => "utilidad_flotillas",
+        "Seminuevos" => "seminuevos",
+        "UB Seminuevos" => "utilidad_seminuevos",
+        "Ordenes de servicios" => "servicio",
+        "UB O. servicios" => "utilidad_servicio",
+        "Ordenes de HyP" => "hyp",
+        "UB Ordenes de HyP" => "utilidad_hyp",
+        "Ventas Servicio" => "ventas_servicio",
+        "Total Ventas Refacciones" => "total_ventas_ref",
+        "Refacciones Servicio" => "refacciones_servicio",
+        "Refacciones HyP" => "refacciones_hyp",
+        "Refacciones Mostrador" => "refacciones_mostrador",
+        "Total de Gastos Operativos" => "gasto",
+        "CNuevos" => "nuevos",
+        "CFlotillas" => "utilidad_nuevos",
+        "Refacciones" => "refacciones",
+        "Bajio" => "bajio",
+        "Intercias" => "intercias",
+        "Bonos Marca" => "bonos",
+        "UNO" => "uno",
+        "Personal" => "personal",
+        "Area Comercial" => "area_comercial",
+        "Area Postventa" => "area_postventa",
+    ];
+
+    /**
+     * relación entre las agencias y sus ids
+     */
+    private $relAgencias = [
+        "Campestre" => 22,
+        "Automotriz" => 23,
+        "Insurgentes" => 24,
+        "Universidad" => 25,
+    ];
+
     /**
      * Recupera los datos para el dashboard
      * recupera mes, mes anterior, mes anio anterior, acumulado del año actual y acumulado del año anterior y antigüedad de inventarios
      */
-    public function index(string $sub_division, $mes, $anio){
+    public function index(string $sub_division, $mes, $anio)
+    {
 
         // $periodoBuscado = new DateTime("$anio-$mes-01");
-        
+
         /**
          * Cuando el mes es diciembre (12 + 1)
          * Simulamos enero del año siguiente
          */
-         $mes = $mes - 1;
+        $mes = $mes - 1;
 
         $periodoBuscado = "$anio-$mes-01";
         $date = DateTime::createFromFormat('Y-m-d', $periodoBuscado);
         $fanio = $date->format('Y');
         $fmes = $date->format('m');
         $newPeriodo = "$fanio-$fmes-01";
-        do{
+        do {
             $dataAnio = DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAgencias($anio, $sub_division)");
             (array)$arrDatos = $dataAnio;
-            $arr_mesesDatos = array_map(function($registro) { return $registro->fecha; }, $arrDatos);
+            $arr_mesesDatos = array_map(function ($registro) {
+                return $registro->fecha;
+            }, $arrDatos);
 
             $arr_mesesDatos1 = array_flip($arr_mesesDatos);
 
-            $periodoExiste = isset($arr_mesesDatos1[$newPeriodo]); 
-            
-            if($periodoExiste === false){
+            $periodoExiste = isset($arr_mesesDatos1[$newPeriodo]);
+
+            if ($periodoExiste === false) {
                 $anio = $anio - 1;
             }
+        } while (count($dataAnio) < 1);
 
-        }while( count($dataAnio) < 1 );
-
-        if($periodoExiste === false){
+        if ($periodoExiste === false) {
 
             $fecha = end($arr_mesesDatos);
 
-            $data = $this->conjuntoDatos1($fecha, $sub_division,  $dataAnio);
-            
+            $data = $this->conjuntoDatos($fecha, $sub_division,  $dataAnio);
+
             $fechaRecuperada = DateTime::createFromFormat('Y-m-d', $fecha);
             $mesRec = $fechaRecuperada->format('m');
             $anioRec = $fechaRecuperada->format('Y');
             $nombreMes = $this->meses[intval($mesRec)];
-            
+
             return response()->json(
-                
                 [
                     'success' => true,
                     'message' => "No hay datos de este periodo en su lugar se muestran los de $nombreMes $anioRec",
                     'data' => $data
                 ]
-
             );
-        }else{
+
+        } else {
             $fecha = $periodoBuscado;
-            
-            $data = $this->conjuntoDatos1($fecha , $sub_division,  $dataAnio);
+            $data = $this->conjuntoDatos($fecha, $sub_division,  $dataAnio);
             $nombreMes = $this->meses[intval($mes)];
+
             return response()->json(
-            [
-                'success' => true,
-                'message' => "Mostrando datos de $nombreMes $anio",
-                'data' => $data,
-            ]
-        );
+                [
+                    'success' => true,
+                    'message' => "Mostrando datos de $nombreMes $anio",
+                    'data' => $data,
+                ]
+            );
         }
     }
 
@@ -109,8 +169,8 @@ class AgenciasController extends Controller
      * Recupera el resto de los datos una vez que se ha validado 
      * que existen datos para periodo seleccionado
      */
-    private function conjuntoDatos1($fechaBusqueda, $sub_division,  $dataAnio){
-
+    private function conjuntoDatos($fechaBusqueda, $sub_division,  $dataAnio)
+    {
         $fecha = DateTime::createFromFormat('Y-m-d', $fechaBusqueda);
         $anio =  $fecha->format('Y');
         $mes = $fecha->format('m');
@@ -119,45 +179,40 @@ class AgenciasController extends Controller
         $mesA = $fechaMesA->format('m');
         $anioA = $fechaMesA->format('Y');
 
-            $dataMes = $this->getDataMesNissan($mes, $anio);  
-            $dataMesAnt =  $this->getDataMesNissan($mesA, $anioA);
-            $dataAnioAnt = $this->getDataMesNissan($mes, $anioAnt);
-            $totalAnio =  DataAnualAgenciasResource::collection($dataAnio);
-            $totalAnioAnt = $this->getDataAnualAgencias($anioAnt, $sub_division);
-            $antInventarios = $this->getDataAntInventarios($mes, $anio, $sub_division);    
-                $data = [
-                    'mes' => $dataMes,
-                    'mesAnt' => $dataMesAnt,
-                    'anioAnt' => $dataAnioAnt,
-                    'totalAnio' => $totalAnio,
-                    'totalAnioAnt' => $totalAnioAnt,
-                    'totalAnioAnt2' => [],
-                    'antInventarios' => $antInventarios,
-                    ];
-                        
-        return $data;
+        $dataMes = $this->getDataMesNissan($mes, $anio);
+        $dataMesAnt =  $this->getDataMesNissan($mesA, $anioA);
+        $dataAnioAnt = $this->getDataMesNissan($mes, $anioAnt);
+        $totalAnio =  DataAnualAgenciasResource::collection($dataAnio);
+        $totalAnioAnt = $this->getDataAnualAgencias($anioAnt, $sub_division);
+        $antInventarios = $this->getDataAntInventarios($mes, $anio, $sub_division);
+        $data = [
+            'mes' => $dataMes,
+            'mesAnt' => $dataMesAnt,
+            'anioAnt' => $dataAnioAnt,
+            'totalAnio' => $totalAnio,
+            'totalAnioAnt' => $totalAnioAnt,
+            'totalAnioAnt2' => [],
+            'antInventarios' => $antInventarios,
+        ];
 
+        return $data;
     }
 
-     private function getDataMesNissan(int $mes, int $anio)
-     {
-         return NissanMesResource::collection(DB::select("call Dashboard.SP_GetDataMesNissan($mes, $anio)"));
-     }
+    private function getDataMesNissan(int $mes, int $anio)
+    {
+        return NissanMesResource::collection(DB::select("call Dashboard.SP_GetDataMesNissan($mes, $anio)"));
+    }
 
-     private function getDataAnualAgencias(int $anio, string $subDivision)
-     {
-         return DataAnualAgenciasResource::collection(
-             DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAgencias($anio, $subDivision)")
-         );
-     }
+    private function getDataAnualAgencias(int $anio, string $subDivision)
+    {
+        return DataAnualAgenciasResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAgencias($anio, $subDivision)"));
+    }
 
-     private function getDataAntInventarios(int $mes, int $anio, string $subDivision)
-     {
-         return DB::connection('dashboard')->select(
-             "call Dashboard.SP_GetDataAntSemestralInventarios($mes, $anio, $subDivision)"
-         );
-     }
-     
+    private function getDataAntInventarios(int $mes, int $anio, string $subDivision)
+    {
+        return DB::connection('dashboard')->select("call Dashboard.SP_GetDataAntSemestralInventarios($mes, $anio, $subDivision)");
+    }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -180,86 +235,8 @@ class AgenciasController extends Controller
         $mes = $request->input('mes');
         $fecha = sprintf('%s-%02d-01', $anio, $mes);
 
-        // Relación tablas sección
-        $relTablas = [
-            "UNIDADES VENDIDAS" => "ordenes_unidades",
-            "ORDENES DE SERVICIO" => "ordenes_unidades",
-            "VENTAS DE POST VENTA" => "ventas_post_venta",
-            "TOTAL DE GASTOS OPERATIVOS" => "datos_generales",
-            "COSTO FINANCIERO CONSOLIDADO" => "costos_financieros_prestamos",
-            "BONOS MARCA" => "complementos",
-            "UNO" => "datos_generales",
-            "ACUMULADO PERSONAL CONSOLIDADO" => "datos_generales",
-            "UTILIDAD POR AREA" => "utilidad_area",
-        ];
-
-        $relCampos = [
-            "Nuevos" => "nuevos",
-            "UB Nuevos" => "utilidad_nuevos",
-            "Flotillas" => "flotillas",
-            "UB Flotillas" => "utilidad_flotillas",
-            "Seminuevos" => "seminuevos",
-            "UB Seminuevos" => "utilidad_seminuevos",
-            "Ordenes de servicios" => "servicio",
-            "UB O. servicios" => "utilidad_servicio",
-            "Ordenes de HyP" => "hyp",
-            "UB Ordenes de HyP" => "utilidad_hyp",
-            "Ventas Servicio" => "ventas_servicio",
-            "Total Ventas Refacciones" => "total_ventas_ref",
-            "Refacciones Servicio" => "refacciones_servicio",
-            "Refacciones HyP" => "refacciones_hyp",
-            "Refacciones Mostrador" => "refacciones_mostrador",
-            "Total de Gastos Operativos" => "gasto",
-            "CNuevos" => "nuevos",
-            "CFlotillas" => "utilidad_nuevos",
-            "Refacciones" => "refacciones",
-            "Bajio" => "bajio",
-            "Intercias" => "intercias",
-            "Bonos Marca" => "bonos",
-            "UNO" => "uno",
-            "Personal" => "personal",
-            "Area Comercial" => "area_comercial",
-            "Area Postventa" => "area_postventa",
-        ];
-
-        $relAgencias = [
-            "Campestre" => 22,
-            "Automotriz" => 23,
-            "Insurgentes" => 24,
-            "Universidad" => 25,
-        ];
-
         // Procesamiento del array a json
-        $jsonData = [];
-        $seccion = "";
-
-        foreach ($dataMesAgencias as $row) {
-            if (count($row) === 1) {
-                $seccion = trim($row[0]['value']);
-            } elseif ($seccion) {
-                $concepto = trim($row[0]['value']);
-
-                foreach (array_slice($row, 1) as $index => $cell) {
-                    $agencia = trim($request->input('headers')[$index + 1]);
-
-                    if (strtolower($agencia) !== "total") {
-                        $dbAgencia = $relAgencias[$agencia] ?? $agencia;
-                        $dbSeccion = $relTablas[$seccion] ?? $seccion;
-                        $dbCampos = $relCampos[$concepto] ?? $concepto;
-                        $value = str_replace(',', '', trim($cell['value'] ?? ""));
-
-                        if (!isset($jsonData[$dbAgencia])) {
-                            $jsonData[$dbAgencia] = [];
-                        }
-                        if (!isset($jsonData[$dbAgencia][$dbSeccion])) {
-                            $jsonData[$dbAgencia][$dbSeccion] = ["fecha" => $fecha];
-                        }
-
-                        $jsonData[$dbAgencia][$dbSeccion][$dbCampos] = $value;
-                    }
-                }
-            }
-        }
+        $jsonData = $this->procesarArraytoJson($dataMesAgencias, $request, $fecha);
 
         // Insertar los datos en la base de datos
         foreach ($jsonData as $agenciaId => $secciones) {
@@ -311,89 +288,8 @@ class AgenciasController extends Controller
             ]);
         }
 
-        /**-------------------------------------------------------------
-         * Inicia proceso de formateo de datos
-        ---------------------------------------------------------------- */
-        // Relacion seccion->tabla
-        $relTablas = [
-            "UNIDADES VENDIDAS" => "ordenes_unidades",
-            "ORDENES DE SERVICIO" => "ordenes_unidades",
-            "VENTAS DE POST VENTA" => "ventas_post_venta",
-            "TOTAL DE GASTOS OPERATIVOS" => "datos_generales",
-            "COSTO FINANCIERO CONSOLIDADO" => "costos_financieros_prestamos",
-            "BONOS MARCA" => "complementos",
-            "UNO" => "datos_generales",
-            "ACUMULADO PERSONAL CONSOLIDADO" => "datos_generales",
-            "UTILIDAD POR AREA" => "utilidad_area",
-        ];
-         //Relacion campo->campo_tabla
-        $relCampos = [
-            "Nuevos" => "nuevos",
-            "UB Nuevos" => "utilidad_nuevos",
-            "Flotillas" => "flotillas",
-            "UB Flotillas" => "utilidad_flotillas",
-            "Seminuevos" => "seminuevos",
-            "UB Seminuevos" => "utilidad_seminuevos",
-            "Ordenes de servicios" => "servicio",
-            "UB O. servicios" => "utilidad_servicio",
-            "Ordenes de HyP" => "hyp",
-            "UB Ordenes de HyP" => "utilidad_hyp",
-            "Ventas Servicio" => "ventas_servicio",
-            "Total Ventas Refacciones" => "total_ventas_ref",
-            "Refacciones Servicio" => "refacciones_servicio",
-            "Refacciones HyP" => "refacciones_hyp",
-            "Refacciones Mostrador" => "refacciones_mostrador",
-            "Total de Gastos Operativos" => "gasto",
-            "CNuevos" => "nuevos",
-            "CFlotillas" => "utilidad_nuevos",
-            "Refacciones" => "refacciones",
-            "Bajio" => "bajio",
-            "Intercias" => "intercias",
-            "Bonos Marca" => "bonos",
-            "UNO" => "uno",
-            "Personal" => "personal",
-            "Area Comercial" => "area_comercial",
-            "Area Postventa" => "area_postventa",
-        ];
-        //Relacion agencia->id_agencia
-        $relAgencias = [
-            "Campestre" => 22,
-            "Automotriz" => 23,
-            "Insurgentes" => 24,
-            "Universidad" => 25,
-        ];
+        $jsonData = $this->procesarArraytoJson($dataMesAgencias, $request, $fecha);
 
-        // Procesamiento del array a json
-        $jsonData = [];
-        $seccion = "";
-
-        foreach ($dataMesAgencias as $row) {
-            if (count($row) === 1) {
-                $seccion = trim($row[0]['value']);
-            } elseif ($seccion) {
-                $concepto = trim($row[0]['value']);
-
-                foreach (array_slice($row, 1) as $index => $cell) {
-                    $agencia = trim($request->input('headers')[$index + 1]);
-
-                    if (strtolower($agencia) !== "total") {
-                        $dbAgencia = $relAgencias[$agencia] ?? $agencia;
-                        $dbSeccion = $relTablas[$seccion] ?? $seccion;
-                        $dbCampos = $relCampos[$concepto] ?? $concepto;
-                        $value = str_replace(',', '', trim($cell['value'] ?? ""));
-
-                        if (!isset($jsonData[$dbAgencia])) {
-                            $jsonData[$dbAgencia] = [];
-                        }
-                        if (!isset($jsonData[$dbAgencia][$dbSeccion])) {
-                            $jsonData[$dbAgencia][$dbSeccion] = ["fecha" => $fecha];
-                        }
-
-                        $jsonData[$dbAgencia][$dbSeccion][$dbCampos] = $value;
-                    }
-                }
-            }
-        }
         /**-------------------------------------------------------------
          * Finaliza el proceso de formateo de datos
          * Inicia proceso actualizar o insertar los datos en la base de datos
@@ -430,32 +326,49 @@ class AgenciasController extends Controller
     }
 
     /**
-     * Show the specified resource.
+     * Convierte el array del request a json 
      */
-    public function show($id)
+    public function procesarArraytoJson($dataMesAgencias, $request, $fecha)
     {
-        return view('dashboard::show');
+        $jsonData = [];
+        $seccion = "";
+
+        foreach ($dataMesAgencias as $row) {
+            if (count($row) === 1) {
+                $seccion = trim($row[0]['value']);
+            } elseif ($seccion) {
+                $concepto = trim($row[0]['value']);
+
+                foreach (array_slice($row, 1) as $index => $cell) {
+                    $agencia = trim($request->input('headers')[$index + 1]);
+
+                    if (strtolower($agencia) !== "total") {
+                        $dbAgencia = $this->relAgencias[$agencia] ?? $agencia;
+                        $dbSeccion = $this->relTablas[$seccion] ?? $seccion;
+                        $dbCampos = $this->relCampos[$concepto] ?? $concepto;
+                        $value = str_replace(',', '', trim($cell['value'] ?? ""));
+
+                        if (!isset($jsonData[$dbAgencia])) {
+                            $jsonData[$dbAgencia] = [];
+                        }
+                        if (!isset($jsonData[$dbAgencia][$dbSeccion])) {
+                            $jsonData[$dbAgencia][$dbSeccion] = ["fecha" => $fecha];
+                        }
+
+                        $jsonData[$dbAgencia][$dbSeccion][$dbCampos] = $value;
+                    }
+                }
+            }
+        }
+
+        return $jsonData;
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('dashboard::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id)
     {
         //
@@ -465,7 +378,6 @@ class AgenciasController extends Controller
     {
         $data =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anio . ')'));
 
-
         return response()->json([
             'success' => true,
             'message' => '',
@@ -473,6 +385,83 @@ class AgenciasController extends Controller
         ]);
     }
 
+    private $estructura = [
+        "UNIDADES VENDIDAS" => [
+            ['value' => "nuevos", 'colspan' => 1],
+            ['value' => "utilidad_nuevos", 'colspan' => 1],
+            ['value' => "flotillas", 'colspan' => 1],
+            ['value' => "utilidad_flotillas", 'colspan' => 1],
+            ['value' => "seminuevos", 'colspan' => 1],
+            ['value' => "utilidad_seminuevos", 'colspan' => 1]
+        ],
+        "ORDENES DE SERVICIO" => [
+            ['value' => "servicio", 'colspan' => 1],
+            ['value' => "utilidad_servicio", 'colspan' => 1],
+            ['value' => "hyp", 'colspan' => 1],
+            ['value' => "utilidad_hyp", 'colspan' => 1]
+        ],
+        "VENTAS DE POST VENTA" => [
+            ['value' => "ventas_servicio", 'colspan' => 1],
+            ['value' => "total_ventas_ref", 'colspan' => 1],
+            ['value' => "refacciones_servicio", 'colspan' => 1],
+            ['value' => "refacciones_hyp", 'colspan' => 1],
+            ['value' => "refacciones_mostrador", 'colspan' => 1],
+        ],
+        "TOTAL DE GASTOS OPERATIVOS" => [
+            ['value' => "gasto", 'colspan' => 1],
+        ],
+        "COSTO FINANCIERO CONSOLIDADO" => [
+            ['value' => "cnuevos", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "cflotillas", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "refacciones", 'colspan' => 1],
+            ['value' => "bajio", 'colspan' => 1],
+            ['value' => "intercias", 'colspan' => 1],
+        ],
+        "BONOS MARCAS" => [
+            ['value' => "bonos", 'colspan' => 1],
+        ],
+        "UNO" => [
+            ['value' => "uno", 'colspan' => 1],
+        ],
+        "ACUMULADO PERSONAL CONSOLIDADO" => [
+            ['value' => "personal", 'colspan' => 1],
+        ],
+        "UTILIDAD POR AREA" => [
+            ['value' => "area_comercial", 'colspan' => 1],
+            ['value' => "area_postventa", 'colspan' => 1],
+        ],
+
+    ];
+            //Relación campos devueltos por la bd y 
+            //nombres visuales de los campos
+    private $mapaCampos = [
+        "nuevos" => "Nuevos",
+        "cnuevos" => "Nuevos",
+        "utilidad_nuevos" => "UB Nuevos",
+        "flotillas" => "Flotillas",
+        "cflotillas" => "Flotillas",
+        "utilidad_flotillas" => "UB Flotillas",
+        "seminuevos" => "Seminuevos",
+        "utilidad_seminuevos" => "UB Seminuevos",
+        "servicio" => "Ordenes de servicios",
+        "utilidad_servicio" => "UB O. servicios",
+        "hyp" => "Ordenes de HyP",
+        "utilidad_hyp" => "UB Ordenes de HyP",
+        "ventas_servicio" => "Ventas Servicio",
+        "total_ventas_ref" => "Total Ventas Refacciones",
+        "refacciones_servicio" => "Refacciones Servicio",
+        "refacciones_hyp" => "Refacciones HyP",
+        "refacciones_mostrador" => "Refacciones Mostrador",
+        "gasto" => "Gasto",
+        "refacciones" => "Refacciones",
+        "bajio" => "Bajio",
+        "intercias" => "Intercias",
+        "bonos" => "BONOS MARCA",
+        "uno" => "UNO",
+        "personal" => "Personal",
+        "area_comercial" => "Area Comercial",
+        "area_postventa" => "Area Postventa",
+    ];
     /**
      * Recupera los datos del Store Procedure
      * Formatea los datos a json
@@ -496,83 +485,7 @@ class AgenciasController extends Controller
          */
         if (count($datos) > 1) {
             //Estructura para devolver el array
-            $estructura = [
-                "UNIDADES VENDIDAS" => [
-                    ['value' => "nuevos", 'colspan' => 1],
-                    ['value' => "utilidad_nuevos", 'colspan' => 1],
-                    ['value' => "flotillas", 'colspan' => 1],
-                    ['value' => "utilidad_flotillas", 'colspan' => 1],
-                    ['value' => "seminuevos", 'colspan' => 1],
-                    ['value' => "utilidad_seminuevos", 'colspan' => 1]
-                ],
-                "ORDENES DE SERVICIO" => [
-                    ['value' => "servicio", 'colspan' => 1],
-                    ['value' => "utilidad_servicio", 'colspan' => 1],
-                    ['value' => "hyp", 'colspan' => 1],
-                    ['value' => "utilidad_hyp", 'colspan' => 1]
-                ],
-                "VENTAS DE POST VENTA" => [
-                    ['value' => "ventas_servicio", 'colspan' => 1],
-                    ['value' => "total_ventas_ref", 'colspan' => 1],
-                    ['value' => "refacciones_servicio", 'colspan' => 1],
-                    ['value' => "refacciones_hyp", 'colspan' => 1],
-                    ['value' => "refacciones_mostrador", 'colspan' => 1],
-                ],
-                "TOTAL DE GASTOS OPERATIVOS" => [
-                    ['value' => "gasto", 'colspan' => 1],
-                ],
-                "COSTO FINANCIERO CONSOLIDADO" => [
-                    ['value' => "cnuevos", 'colspan' => 1],//Cambiar el valor que regresa de la bd
-                    ['value' => "cflotillas", 'colspan' => 1],//Cambiar el valor que regresa de la bd
-                    ['value' => "refacciones", 'colspan' => 1],
-                    ['value' => "bajio", 'colspan' => 1],
-                    ['value' => "intercias", 'colspan' => 1],
-                ],
-                "BONOS MARCAS" => [
-                    ['value' => "bonos", 'colspan' => 1],
-                ],
-                "UNO" => [
-                    ['value' => "uno", 'colspan' => 1],
-                ],
-                "ACUMULADO PERSONAL CONSOLIDADO" => [
-                    ['value' => "personal", 'colspan' => 1],
-                ],
-                "UTILIDAD POR AREA" => [
-                    ['value' => "area_comercial", 'colspan' => 1],
-                    ['value' => "area_postventa", 'colspan' => 1],
-                ],
-
-            ];
-            //Relación campos devueltos por la bd y 
-            //nombres visuales de los campos
-            $mapaCampos = [
-                "nuevos" => "Nuevos",
-                "cnuevos" => "Nuevos",
-                "utilidad_nuevos" => "UB Nuevos",
-                "flotillas" => "Flotillas",
-                "cflotillas" => "Flotillas",
-                "utilidad_flotillas" => "UB Flotillas",
-                "seminuevos" => "Seminuevos",
-                "utilidad_seminuevos" => "UB Seminuevos",
-                "servicio" => "Ordenes de servicios",
-                "utilidad_servicio" => "UB O. servicios",
-                "hyp" => "Ordenes de HyP",
-                "utilidad_hyp" => "UB Ordenes de HyP",
-                "ventas_servicio" => "Ventas Servicio",
-                "total_ventas_ref" => "Total Ventas Refacciones",
-                "refacciones_servicio" => "Refacciones Servicio",
-                "refacciones_hyp" => "Refacciones HyP",
-                "refacciones_mostrador" => "Refacciones Mostrador",
-                "gasto" => "Gasto",
-                "refacciones" => "Refacciones",
-                "bajio" => "Bajio",
-                "intercias" => "Intercias",
-                "bonos" => "BONOS MARCA",
-                "uno" => "UNO",
-                "personal" => "Personal",
-                "area_comercial" => "Area Comercial",
-                "area_postventa" => "Area Postventa",
-            ];
+            
 
             $encabezados = [];
             foreach ($datos as $estacion) {
@@ -580,11 +493,11 @@ class AgenciasController extends Controller
             }
 
             $resultado = [];
-            $calcSpan = count($encabezados)+1;
-            foreach ($estructura as $seccion => $filas) {
+            $calcSpan = count($encabezados) + 1;
+            foreach ($this->estructura as $seccion => $filas) {
                 $resultado[] = [['value' => $seccion, 'colspan' => $calcSpan]];
                 foreach ($filas as $fila) {
-                    $nombreCampo = $mapaCampos[$fila['value']] ?? $fila['value'];
+                    $nombreCampo = $this->mapaCampos[$fila['value']] ?? $fila['value'];
                     // $row = [$fila];
                     $row = [['value' => $nombreCampo, 'colspan' => 1]];
                     foreach ($datos as $dato) {
@@ -595,8 +508,6 @@ class AgenciasController extends Controller
                     $resultado[] = $row;
                 }
             }
-
-            
 
             return response()->json([
                 'success' => true,
@@ -615,18 +526,17 @@ class AgenciasController extends Controller
         }
     }
 
-    public function getAnualAgecia($id, $anio){
-        
+    public function getAnualAgecia($id, $anio)
+    {
         $anioAnt = $anio - 1;
 
         $totalAnio = NissanMesResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAutos($anio, $id)"));
-        
         $totalAnioAnt =  NissanMesResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAutos($anioAnt, $id)"));
-        
+
         $data = [
             'totalAnio' => $totalAnio,
             'totalAnioAnt' => $totalAnioAnt,
-            ];
+        ];
 
         return response()->json([
             'success' => true,
@@ -635,7 +545,8 @@ class AgenciasController extends Controller
         ]);
     }
 
-    public function  getMesPVs($mes, $anio, $subDivision){
+    public function  getMesPVs($mes, $anio, $subDivision)
+    {
         $fechaBusqueda = "$anio-$mes-01";
         $fecha = DateTime::createFromFormat('Y-m-d', $fechaBusqueda);
         $anio =  $fecha->format('Y');
@@ -645,22 +556,20 @@ class AgenciasController extends Controller
         $mesA = $fechaMesA->format('m');
         $anioA = $fechaMesA->format('Y');
 
-         $dataMes = (DB::connection('dashboard')->select("call Dashboard.SP_GetDataMesUtilidadAreaPV($mes, $anio, $subDivision)"));
-         $mesAnt =  (DB::connection('dashboard')->select("call Dashboard.SP_GetDataMesUtilidadAreaPV($mesA, $anioA, $subDivision)"));
-         $mesAnioAnt = (DB::connection('dashboard')->select("call Dashboard.SP_GetDataMesUtilidadAreaPV($mes, $anioAnt, $subDivision)"));
-        
+        $dataMes = (DB::connection('dashboard')->select("call Dashboard.SP_GetDataMesUtilidadAreaPV($mes, $anio, $subDivision)"));
+        $mesAnt =  (DB::connection('dashboard')->select("call Dashboard.SP_GetDataMesUtilidadAreaPV($mesA, $anioA, $subDivision)"));
+        $mesAnioAnt = (DB::connection('dashboard')->select("call Dashboard.SP_GetDataMesUtilidadAreaPV($mes, $anioAnt, $subDivision)"));
+
         $data = [
             'mes' => DataMesUtilidadAreaPvResource::collection($dataMes),
             'mesAnt' => DataMesUtilidadAreaPvResource::collection($mesAnt),
             'anioAnt' => DataMesUtilidadAreaPvResource::collection($mesAnioAnt)
-            ];
+        ];
 
         return response()->json([
             'success' => true,
             'message' => 'Datos anuales recuperados correctamente',
             'data' => $data
         ]);
-
-
     }
 }

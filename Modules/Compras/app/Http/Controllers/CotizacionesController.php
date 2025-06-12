@@ -20,8 +20,6 @@ use Illuminate\Support\Facades\DB;
 
 use Modules\Compras\Models\SolicitudesCompra;
 
-use function Laravel\Prompts\error;
-
 class CotizacionesController extends Controller
 {
     /** ****************************************
@@ -56,14 +54,6 @@ class CotizacionesController extends Controller
         return response($fileContent, 200)->header("Content-Type", $type);
     }
 
-    public function index()
-    {
-        return view('compras::index');
-    }
-    public function create()
-    {
-        return view('compras::create');
-    }
 
     /** ***************************************************
      * Guarda los importes unitarios de la cotización.
@@ -167,10 +157,6 @@ class CotizacionesController extends Controller
         }
     }
 
-    public function edit($id)
-    {
-        return view('compras::edit');
-    }
 
     /**
      * Actualiza el estatus de la cotización seleccionada

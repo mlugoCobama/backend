@@ -43,25 +43,19 @@ class ProveedoresController extends Controller
     }
 
 
-
-    public function create()
-    {
-        return view('compras::create');
-    }
-
     /** ********************************************************************************
      * Función que valida la información y coordina, 
      * storeProveedor y storeExpedienteProveedor
      ***********************************************************************************/
     public function store(ProveedoresRequest $request)
     {
-     
+
         try {
             DB::beginTransaction();
 
-                $idProveedor =  $this->storeProveedor($request);
+            $idProveedor =  $this->storeProveedor($request);
 
-                $this->storeExpedienteProveedor($request, $idProveedor);
+            $this->storeExpedienteProveedor($request, $idProveedor);
 
             DB::commit();
 
@@ -110,30 +104,13 @@ class ProveedoresController extends Controller
         $carpetaProveedor = 'expedientes/' . $idProveedor;
         Storage::makeDirectory($carpetaProveedor);
 
-        if ($data->hasFile('constancia_fiscal')) {
-            $constancia_fiscal = "constancia_fiscal" . "." . $data->file('constancia_fiscal')->getClientOriginalExtension();
-            $expedienteSolicitud->constancia_fiscal = $data->file('constancia_fiscal')->storeAs($carpetaProveedor, $constancia_fiscal);
-        }
-        if ($data->hasFile('ine')) {
-            $nombreArchivo = "ine" . "." . $data->file('ine')->getClientOriginalExtension();
-            $expedienteSolicitud->ine = $data->file('ine')->storeAs($carpetaProveedor, $nombreArchivo);
-        }
-        if ($data->hasFile('comprobante_domicilio')) {
-            $nombreArchivo = "comprobante_domicilio" . "." . $data->file('comprobante_domicilio')->getClientOriginalExtension();
-            $expedienteSolicitud->comprobante_domicilio = $data->file('comprobante_domicilio')->storeAs($carpetaProveedor, $nombreArchivo);
-        }
-        if ($data->hasFile('estado_cuenta')) {
-            $nombreArchivo = "estado_cuenta" . "." . $data->file('estado_cuenta')->getClientOriginalExtension();
-            $expedienteSolicitud->estado_cuenta = $data->file('estado_cuenta')->storeAs($carpetaProveedor, $nombreArchivo);
-        }
-        if ($data->hasFile('acta_constitutiva')) {
-            $nombreArchivo = "acta_constitutiva" . "." . $data->file('acta_constitutiva')->getClientOriginalExtension();
-            $expedienteSolicitud->acta_constitutiva = $data->file('acta_constitutiva')->storeAs($carpetaProveedor, $nombreArchivo);
-        }
+        $documentos = ['constancia_fiscal', 'ine', 'comprobante_domicilio', 'estado_cuenta', 'acta_constitutiva', 'poder_notarial'];
 
-        if ($data->hasFile('poder_notarial')) {
-            $nombreArchivo = "poder_notarial" . "." . $data->file('poder_notarial')->getClientOriginalExtension();
-            $expedienteSolicitud->poder_notarial = $data->file('poder_notarial')->storeAs($carpetaProveedor, $nombreArchivo);
+        for ($i = 0; $i < count($documentos); $i++) {
+            if ($data->hasFile($documentos[$i])) {
+                $constancia_fiscal = $documentos[$i] . "." . $data->file($documentos[$i])->getClientOriginalExtension();
+                $expedienteSolicitud->{$documentos[$i]} = $data->file($documentos[$i])->storeAs($carpetaProveedor, $constancia_fiscal);
+            }
         }
 
         $expedienteSolicitud->proveedores_id = $idProveedor;
@@ -145,7 +122,7 @@ class ProveedoresController extends Controller
      * Función que recupera las rutas del expediente del proveedor
      ***********************************************************************************/
     public function show($id)
-    {   
+    {
         $archivos = ['constancia_fiscal', 'ine', 'comprobante_domicilio', 'estado_cuenta', 'acta_constitutiva', 'poder_notarial'];
         $expediente = ExpedientesProveedores::where('proveedores_id', $id)->first();
 
@@ -153,16 +130,16 @@ class ProveedoresController extends Controller
 
         $habilitarDescarga =  false;
         $tamanio = count($archivosDisponibles);
-        if($tamanio > 0){
+        if ($tamanio > 0) {
             $habilitarDescarga =  true;
         }
 
         return response()->json([
-                'data' => $expediente,
-                'descargable' => $habilitarDescarga,
-                'tamanio' => $tamanio
-            ]);
-        }
+            'data' => $expediente,
+            'descargable' => $habilitarDescarga,
+            'tamanio' => $tamanio
+        ]);
+    }
 
     public function validarExpediente($rutas, $archivos)
     {
@@ -176,56 +153,51 @@ class ProveedoresController extends Controller
     }
 
 
-    public function edit($id)
-    {
-        return view('compras::edit');
-    }
-
     /** **********************************************************************************
      * Fucnion que recibe datos y coordina el funcionamiento de
      * updateProveedor y updateExpedietProveedor
      **************************************************************************************/
     public function update(Request $request, $id)
     {
-        
-         $mensajes = [
-             'correo.unique' => 'El correo ya es usado por otro proveedor',
-             'telefono.unique' => 'El telefono ya es usado por otro proveedor'
-          ];
-         
-          $validacion =  Validator::make($request->all(), [
-              'nombre' => 'required|string',
-              'contacto' => 'required|string',
-              'telefono' => 'required|string|unique:com_proveedores,telefono,'.$id,
-              'localidad' => 'required|string',
-              'condiciones' => 'required|string',
-              'servicios' => 'required|string',
-              'correo' => 'required|email |unique:com_proveedores,correo,'.$id,
-             'dias_credito' => 'nullable|integer',
-              'horario_atencion' => 'required|string',
-              'tiempo_entrega' => 'required|string',
-              //Validacion para archivos
-              'constancia_fiscal' => 'nullable|file|mimes:pdf',
-              'ine' => 'nullable|file|mimes:pdf',
-              'comprobante_domicilio' => 'nullable|file|mimes:pdf',
-              'estado_cuenta' => 'nullable|file|mimes:pdf',
-              'acta_constitutiva' => 'nullable|file|mimes:pdf',
-              'poder_notarial' => 'nullable|file|mimes:pdf',
-          ], $mensajes);
-    
-          if ($validacion->fails()) {
-              return response()->json([
-                  'status' => 'error',
-                  'message' => 'Los datos ingresados no son validos o están incompletos',
-                  'errors' => $validacion->errors()
-              ]);
-          }
+
+        $mensajes = [
+            'correo.unique' => 'El correo ya es usado por otro proveedor',
+            'telefono.unique' => 'El telefono ya es usado por otro proveedor'
+        ];
+
+        $validacion =  Validator::make($request->all(), [
+            'nombre' => 'required|string',
+            'contacto' => 'required|string',
+            'telefono' => 'required|string|unique:com_proveedores,telefono,' . $id,
+            'localidad' => 'required|string',
+            'condiciones' => 'required|string',
+            'servicios' => 'required|string',
+            'correo' => 'required|email |unique:com_proveedores,correo,' . $id,
+            'dias_credito' => 'nullable|integer',
+            'horario_atencion' => 'required|string',
+            'tiempo_entrega' => 'required|string',
+            //Validacion para archivos
+            'constancia_fiscal' => 'nullable|file|mimes:pdf',
+            'ine' => 'nullable|file|mimes:pdf',
+            'comprobante_domicilio' => 'nullable|file|mimes:pdf',
+            'estado_cuenta' => 'nullable|file|mimes:pdf',
+            'acta_constitutiva' => 'nullable|file|mimes:pdf',
+            'poder_notarial' => 'nullable|file|mimes:pdf',
+        ], $mensajes);
+
+        if ($validacion->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Los datos ingresados no son validos o están incompletos',
+                'errors' => $validacion->errors()
+            ]);
+        }
 
         try {
             DB::beginTransaction();
 
-                $this->updateProveedor($request, $id);
-                $this->updateExpedienteProveedor($request, $id);
+            $this->updateProveedor($request, $id);
+            $this->updateExpedienteProveedor($request, $id);
 
             DB::commit();
 
@@ -271,83 +243,36 @@ class ProveedoresController extends Controller
         ]);
     }
     /** ***********************************************************************
-    *FUNCIÓN QUE ACTUALIZA LOS ARCHIVOS DEL EXPEDIENTE DEL PROVEEDOR
-    **************************************************************************/
+     *FUNCIÓN QUE ACTUALIZA LOS ARCHIVOS DEL EXPEDIENTE DEL PROVEEDOR
+     **************************************************************************/
     private function updateExpedienteProveedor($data, $idProveedor)
     {
         $hoy = date("jnY"); //Recuperar la fecha del dia de hoy para diferenciar el registro nuevo
         $expediente = ExpedientesProveedores::where('proveedores_id', $idProveedor)->first();
 
         //Valido que el registro del expediente exista
-        if($expediente){
+        if ($expediente) {
             $carpetaProveedor = 'expedientes/' . $idProveedor;
 
-        Storage::makeDirectory($carpetaProveedor);
-            if ($data->hasFile('constancia_fiscal')) {
-                $archivoEliminar = $expediente->constancia_fiscal; //Recuperarla anterior ruta del archivo al a eliminar
-                if ($archivoEliminar) { // verificar si existe la ruta
-                    Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+            $documentos = ['constancia_fiscal', 'ine', 'comprobante_domicilio', 'estado_cuenta', 'acta_constitutiva', 'poder_notarial'];
+
+            Storage::makeDirectory($carpetaProveedor);
+            for ($i = 0; $i < count($documentos); $i++) {
+                if ($data->hasFile($documentos[$i])) {
+                    $archivoEliminar = $expediente->{$documentos[$i]}; //Recuperarla anterior ruta del archivo al a eliminar
+                    if ($archivoEliminar) { // verificar si existe la ruta
+                        Storage::delete($archivoEliminar); //Borrar el antiguo archivo
+                    }
+                    $constancia_fiscal = $documentos[$i] . $hoy . "." . $data->file($documentos[$i])->getClientOriginalExtension(); //Asignar un nombre al archivo
+                    $expediente->{$documentos[$i]} = $data->file($documentos[$i])->storeAs($carpetaProveedor, $constancia_fiscal); //Actualiza la ruta y el archivo
                 }
-                $constancia_fiscal = "constancia_fiscal" . $hoy . "." . $data->file('constancia_fiscal')->getClientOriginalExtension(); //Asignar un nombre al archivo
-                $expediente->constancia_fiscal = $data->file('constancia_fiscal')->storeAs($carpetaProveedor, $constancia_fiscal); //Actualiza la ruta y el archivo
-            }
-            if ($data->hasFile('ine')) {
-
-                $archivoEliminar = $expediente->ine;
-                if ($archivoEliminar) { // verificar si existe la ruta
-                    Storage::delete($archivoEliminar); //Borrar el antiguo archivo
-                }
-
-                $nombreArchivo = "ine" . $hoy . "." . $data->file('ine')->getClientOriginalExtension();
-                $expediente->ine = $data->file('ine')->storeAs($carpetaProveedor, $nombreArchivo);
-            }
-            if ($data->hasFile('comprobante_domicilio')) {
-
-                $archivoEliminar = $expediente->comprobante_domicilio;
-                if ($archivoEliminar) { // verificar si existe la ruta
-                    Storage::delete($archivoEliminar); //Borrar el antiguo archivo
-                }
-
-                $nombreArchivo = "comprobante_domicilio" . $hoy . "." . $data->file('comprobante_domicilio')->getClientOriginalExtension();
-                $expediente->comprobante_domicilio = $data->file('comprobante_domicilio')->storeAs($carpetaProveedor, $nombreArchivo);
-            }
-            if ($data->hasFile('estado_cuenta')) {
-
-                $archivoEliminar = $expediente->estado_cuenta;
-                if ($archivoEliminar) { // verificar si existe la ruta
-                    Storage::delete($archivoEliminar); //Borrar el antiguo archivo
-                }
-
-                $nombreArchivo = "estado_cuenta" . $hoy . "." . $data->file('estado_cuenta')->getClientOriginalExtension();
-                $expediente->estado_cuenta = $data->file('estado_cuenta')->storeAs($carpetaProveedor, $nombreArchivo);
-            }
-            if ($data->hasFile('acta_constitutiva')) {
-
-                $archivoEliminar = $expediente->acta_constitutiva;
-                if ($archivoEliminar) { // verificar si existe la ruta
-                    Storage::delete($archivoEliminar); //Borrar el antiguo archivo
-                }
-
-                $nombreArchivo = "acta_constitutiva" . $hoy . "." . $data->file('acta_constitutiva')->getClientOriginalExtension();
-                $expediente->acta_constitutiva = $data->file('acta_constitutiva')->storeAs($carpetaProveedor, $nombreArchivo);
-            }
-            if ($data->hasFile('poder_notarial')) {
-
-                $archivoEliminar = $expediente->poder_notarial;
-                if ($archivoEliminar) { // verificar si existe la ruta
-                    Storage::delete($archivoEliminar); //Borrar el antiguo archivo
-                }
-
-                $nombreArchivo = "poder_notarial" . $hoy . "." . $data->file('poder_notarial')->getClientOriginalExtension();
-                $expediente->poder_notarial = $data->file('poder_notarial')->storeAs($carpetaProveedor, $nombreArchivo);
             }
 
-        $expediente->save();
-        }else //Si no existe crea el registro
+            $expediente->save();
+        } else //Si no existe crea el registro
         {
             $this->storeExpedienteProveedor($data, $idProveedor);
         }
-        
     }
 
     /** *******************************************************************************************

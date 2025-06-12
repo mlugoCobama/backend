@@ -5,8 +5,6 @@ namespace Modules\Compras\Http\Controllers;
 use App\Enums\EstatusOrdenCompra;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use DateTime;
-use DateTimeZone;
 use App\Enums\EstatusSolicitud;
 
 //Models
@@ -23,12 +21,12 @@ use Modules\Compras\Transformers\DetallesCotizacionResource;
 use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
 //Utilities
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+
 use Illuminate\Support\Facades\Notification;
 //Mailables
 use App\Notifications\SolicitudSurtido;
 use Modules\Compras\Transformers\OrdenCompraResource;
-use Modules\Compras\Transformers\usersResource;
+use Modules\Compras\Transformers\UsersResource;
 
 class OrdenesComprasController extends Controller
 {
@@ -45,18 +43,10 @@ class OrdenesComprasController extends Controller
                 $numero = 1;
             }
         $nuevoFolio = 'OC-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
-        // return response()->json(['nuevoFolio' => $nuevoFolio]);
+
         return $nuevoFolio;
     }
 
-    public function index()
-    {
-        return view('compras::index');
-    }
-    public function create()
-    {
-        return view('compras::create');
-    }
 
     /** **********************************************************
      * Genera la orden de compra en la BD
@@ -64,30 +54,13 @@ class OrdenesComprasController extends Controller
     public function store(Request $request)
     {
 
-        // $validacion = Validator::make($request->all(),[
-        //     // 'folio_oc' => 'required|string|max:50',
-        //     // 'fecha' => 'required|date',
-        //     'observaciones' => 'nullable|string|max:150',
-        //     'cotizaciones_id' => 'required',
-        //     'id_cotizacion_prov' => 'required',
-        //     'id_solicitud_compra' => 'required',
-        // ]);
-
-        // if($validacion->fails()){
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Datos incompletos o no validos',
-        //         'errors' => $validacion->errors()
-        //     ]);
-        // }
-
         try{
             DB::beginTransaction();
 
                 // Genera el registro de orden de compra
                 OrdenCompra::create([
                     'folio_oc' => $this->generarFolio(),
-                    'fecha' => $this->getFecha() ?? now(),
+                    'fecha' => date('Y-m-d H:i:s') ?? now(),
                     'observaciones' => $request->input('observaciones'),
                     'cotizaciones_id' => $request->input('cotizaciones_id'),
                     'entrega' => $request->input('entrega'),
@@ -140,7 +113,7 @@ class OrdenesComprasController extends Controller
     {
         $solicitudCompra = SolicitudesCompra::where('id', $id)->first();
 
-        $user = usersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')'));
+        $user = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')'));
 
         $userSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_solicita . ')');
 
@@ -256,21 +229,6 @@ class OrdenesComprasController extends Controller
     {
         $data = $request->all();
         
-        // Recupero los datos (id solicitud de compra, id de orden de compra)
-        // $validacion =  Validator::make($data,[
-        //     'idOrdenCompra' => 'required|exists:com_orden_compra,id',
-        //     'idSolicituCompra' => 'required|exists:com_solicitudes_compra,id'
-
-        // ]);
-
-        // if($validacion->fails()){
-        //     return response()->json([
-        //         "status" => "error",
-        //         "message" => "Datos no validos o incorrectos",
-        //         "errors" => $validacion->errors()
-        //     ]);
-        // }
-
         $idOc = $data['idOrdenCompra'];
         $idSc = $data['idSolicituCompra'];
 
@@ -402,12 +360,4 @@ class OrdenesComprasController extends Controller
 
     }
 
-    /** ************************************************************************************
-     * Recupera la fecha en un formato que la bd acepte
-     **************************************************************************************/
-    public function getFecha(){
-        $fecha = new DateTime('now', new DateTimeZone('America/Mexico_City'));
-        $fecha = $fecha->format('Y-m-d H:i:s');
-        return $fecha;
-    }
 }

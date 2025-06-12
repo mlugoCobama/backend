@@ -12,9 +12,6 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 use ZipArchive;
-use DateTime;
-use DateTimeZone;
-
 
 
 class DocumentosOrdenesComprasController extends Controller
@@ -68,16 +65,6 @@ class DocumentosOrdenesComprasController extends Controller
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
-    public function index()
-    {
-        return view('compras::index');
-    }
-
-
-    public function create()
-    {
-        return view('compras::create');
-    }
 
     /** ****************************************************
      * Almacena los archivos de orden compra
@@ -89,28 +76,25 @@ class DocumentosOrdenesComprasController extends Controller
             $hoy = date("jnY");
             $time = time();
             $docsOrdenCompra = new DocumentosOrdenesCompra();
-    
+
             $carpetaOrdenCompra = 'docsOrdenCompra/' . $data['orden_compra_id'];
             Storage::makeDirectory($carpetaOrdenCompra);
-    
-            if ($data->hasFile('factura_xml')) {
-                $nombreArchivo = "factura_xml" . $hoy .$time ."." . $data->file('factura_xml')->getClientOriginalExtension(); 
-                $docsOrdenCompra->ruta_xml_factura = $data->file('factura_xml')->storeAs($carpetaOrdenCompra, $nombreArchivo); 
+
+            $documentos = ['factura_xml', 'factura_pdf', 'comprobante_pago'];
+            $keys = ['ruta_xml_factura', 'ruta_pdf_factura', 'comprobante_pago'];
+
+            for ($i = 0; $i < count($documentos); $i++) {
+                if ($data->hasFile($documentos[$i])) {
+                    $nombreArchivo = $documentos[$i] . $hoy . $time . "." . $data->file($documentos[$i])->getClientOriginalExtension();
+                    $docsOrdenCompra->{$keys[$i]} = $data->file($documentos[$i])->storeAs($carpetaOrdenCompra, $nombreArchivo);
+                }
             }
-            if ($data->hasFile('factura_pdf')) {
-                $nombreArchivo = "factura_pdf" . $hoy . $time . "." . $data->file('factura_pdf')->getClientOriginalExtension();
-                $docsOrdenCompra->ruta_pdf_factura = $data->file('factura_pdf')->storeAs($carpetaOrdenCompra, $nombreArchivo);
-            }
-            if ($data->hasFile('comprobante_pago')) {
-    
-                $nombreArchivo = "comprobante_pago" . $hoy . $time . "." . $data->file('comprobante_pago')->getClientOriginalExtension();
-                $docsOrdenCompra->comprobante_pago = $data->file('comprobante_pago')->storeAs($carpetaOrdenCompra, $nombreArchivo);
-            }
+
             $docsOrdenCompra->orden_compra_id = $data["orden_compra_id"];
-            $docsOrdenCompra->fecha = $this->getFecha();
-    
+            $docsOrdenCompra->fecha = date('Y-m-d H:i:s');
+
             $docsOrdenCompra->save();
-    
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha guardado correctamente',
@@ -139,10 +123,6 @@ class DocumentosOrdenesComprasController extends Controller
         return $registro;
     }
 
-    public function edit($id)
-    {
-        return view('compras::edit');
-    }
 
     /** **************************************************
      * Guarda los documentos de orden de compra
@@ -151,7 +131,7 @@ class DocumentosOrdenesComprasController extends Controller
     public function update(uploadDocsOCRequest $request, $id)
     {
         $registro = DocumentosOrdenesCompra::where('id', $id)->first();
-        if(!$registro){
+        if (!$registro) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error de validación',
@@ -161,46 +141,29 @@ class DocumentosOrdenesComprasController extends Controller
         try {
             $data = $request;
             $hoy = date("jnY"); //Recuperar la fecha del dia de hoy para diferenciar el registro nuevo
-            $time = time();//Marca temporal del momento en el que se subió
-            
-    
+            $time = time(); //Marca temporal del momento en el que se subió
+
+
             $carpetaOrdenCompra = 'docsOrdenCompra/' . $data['orden_compra_id'];
             Storage::makeDirectory($carpetaOrdenCompra);
-    
-            if ($data->hasFile('factura_xml')) {
-    
-                $archivoEliminar = $registro->ruta_xml_factura; //Recupera el anterior ruta del archivo al a eliminar
-                if ($archivoEliminar) {
-                    Storage::delete($archivoEliminar);
+
+            $documentos = ['factura_xml', 'factura_pdf', 'comprobante_pago'];
+            $keys = ['ruta_xml_factura', 'ruta_pdf_factura', 'comprobante_pago'];
+
+            for ($i = 0; $i < count($documentos); $i++) {
+                if ($data->hasFile($documentos[$i])) {
+
+                    $archivoEliminar = $registro->{$keys[$i]}; //Recupera el anterior ruta del archivo al a eliminar
+                    if ($archivoEliminar) {
+                        Storage::delete($archivoEliminar);
+                    }
+                    $nombreArchivo = $documentos[$i] . $hoy . $time . "." . $data->file($documentos[$i])->getClientOriginalExtension(); //Asigna un nuevo nombre al archivo
+                    $registro->{$keys[$i]} = $data->file($documentos[$i])->storeAs($carpetaOrdenCompra, $nombreArchivo); //Actualiza la ruta y el archivo
                 }
-                $nombreArchivo = "factura_xml" . $hoy . $time . "." . $data->file('factura_xml')->getClientOriginalExtension(); //Asigna un nuevo nombre al archivo
-                $registro->ruta_xml_factura = $data->file('factura_xml')->storeAs($carpetaOrdenCompra, $nombreArchivo); //Actualiza la ruta y el archivo
             }
-            if ($data->hasFile('factura_pdf')) {
-    
-                $archivoEliminar = $registro->ruta_pdf_factura;
-    
-                if ($archivoEliminar) {
-                    Storage::delete($archivoEliminar);
-                }
-    
-                $nombreArchivo = "factura_pdf" . $hoy . $time . "." . $data->file('factura_pdf')->getClientOriginalExtension();
-                $registro->ruta_pdf_factura = $data->file('factura_pdf')->storeAs($carpetaOrdenCompra, $nombreArchivo);
-            }
-            if ($data->hasFile('comprobante_pago')) {
-    
-                $archivoEliminar = $registro->comprobante_pago;
-    
-                if ($archivoEliminar) {
-                    Storage::delete($archivoEliminar);
-                }
-    
-                $nombreArchivo = "comprobante_pago" . $hoy . $time . "." .  $data->file('comprobante_pago')->getClientOriginalExtension();
-                $registro->comprobante_pago = $data->file('comprobante_pago')->storeAs($carpetaOrdenCompra, $nombreArchivo);
-            }
-    
+
             $registro->save();
-    
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha actualizado correctamente',
@@ -213,24 +176,13 @@ class DocumentosOrdenesComprasController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
-
     }
 
     public function destroy($id)
     {
         //
     }
-
-    /** *************************************
-     * Recupera la fecha actual
-     ****************************************/
-    public function getFecha()
-    {
-        $fecha = new DateTime('now', new DateTimeZone('America/Mexico_City'));
-        $fecha = $fecha->format('Y-m-d H:i:s');
-        return $fecha;
-    }
-
+    
     /** 
      * Recupera los datos del xml y los procesa listos para mostrar en el backend
      * @param id  de la orden de compra
@@ -276,7 +228,7 @@ class DocumentosOrdenesComprasController extends Controller
 
             $xml->registerXPathNamespace('cfdi', $ns);
 
-            
+
             $comprobante = $xml->xpath('//cfdi:Comprobante')[0] ?? null;
 
             if ($comprobante) {
@@ -307,13 +259,13 @@ class DocumentosOrdenesComprasController extends Controller
 
             $impuestos = $xml->xpath('//cfdi:Impuestos') ?? null;
             // $factura['impuestos'][] = [$impuestos];
-            
+
             foreach ($impuestos as $impuesto) {
                 if (isset($impuesto['TotalImpuestosTrasladados'])) {
                     $factura['impuestos'][] =  $impuesto['TotalImpuestosTrasladados'];
                 }
             }
-               
+
             if ($index === 0) {
                 $emisor = $xml->xpath('//cfdi:Emisor')[0] ?? null;
                 if ($emisor) {
@@ -340,5 +292,4 @@ class DocumentosOrdenesComprasController extends Controller
 
         return response()->json(['factura' => $factura], 200);
     }
-
 }
