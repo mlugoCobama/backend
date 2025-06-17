@@ -91,6 +91,10 @@ class EnergeticosGasolinerasController extends Controller
         ]);
     }
 
+    /**
+     *  Recupera un conjunto de datos basados en una fecha
+     * después de validar el periodo existente
+     */
     private function conjuntoDatos($mes, $anio, $mesA, $anioA, $anioAnt, $sub_division,  $dataMes){
 
         $dataMesAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(' . $mesA . ',' . $anioA . ')'));

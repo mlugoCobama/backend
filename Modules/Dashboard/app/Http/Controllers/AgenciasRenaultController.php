@@ -92,8 +92,11 @@ class AgenciasRenaultController extends Controller
             (array)$arrDatos = $dataAnio;
 
             $arr_mesesDatos = array_map(function($registro) { return $registro->fecha; }, $arrDatos);
+
             $arr_mesesDatos1 = array_flip($arr_mesesDatos);
             $periodoExiste = isset($arr_mesesDatos1[$newPeriodo]); 
+
+            // $periodoExiste = in_array($newPeriodo, $arr_mesesDatos);
             
             if($periodoExiste === false){
                 $anio = $anio - 1;
@@ -146,6 +149,7 @@ class AgenciasRenaultController extends Controller
             $dataMes =  $this->getDataMesRenault($mes, $anio);  
             $dataMesAnt =   $this->getDataMesRenault($mesA, $anioA);
             $dataAnioAnt =  $this->getDataMesRenault($mes, $anioAnt);
+            $dataAnioAnt2 =  $this->getDataMesRenault($mes, ($anioAnt - 1));
             $totalAnio =  DataAnualAgenciasResource::collection($dataAnio);
             $totalAnioAnt = $this->getDataAnualAgencias($anioAnt, $sub_division);
             $antInventarios = $this->getDataAntInventarios($mes, $anio, $sub_division);    
@@ -155,7 +159,7 @@ class AgenciasRenaultController extends Controller
                     'anioAnt' => $dataAnioAnt,
                     'totalAnio' => $totalAnio,
                     'totalAnioAnt' => $totalAnioAnt,
-                    'totalAnioAnt2' => [],
+                    'totalAnioAnt2' => $dataAnioAnt2,
                     'antInventarios' => $antInventarios,
                     ];
                         

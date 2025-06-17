@@ -15,13 +15,13 @@ class OrdenCompraPdfController extends Controller
     public function OrdenCompraFormatoInterno($data)
     {
         //JSON de donde se obtienen los datos de facturacion
-        $content = File::get(base_path('dataFacturacion.json'));
+        $content = File::get(base_path('dataEntregas.json'));
         $json = json_decode(json: $content, associative: true);
 
         $contentE = File::get(base_path('dataEntregas.json'));
         $jsonE = json_decode(json: $contentE, associative: true);
 
-        $dataFacturacion = $json[$data['destino'][0]->empresa];
+        $dataFacturacion = $json[$data['destino'][0]->intercompania];
         $dataEntrega = $jsonE[$data['ordenCompra']['entrega']];
 
         $rawCentrosCosto = File::get(base_path('Modules/Compras/resources/assets/json/centrosCostos/catCentrosCostos.json'));
@@ -163,9 +163,9 @@ class OrdenCompraPdfController extends Controller
         $pdf->SetXY(130.5, 94.5);
         $pdf->Write(0, $dataEntrega['C.P.']);
         $pdf->SetXY(130.5, 97.1);
-        $pdf->Write(0, $dataEntrega['CONTACTO PAGOS']);
+        $pdf->Write(0, $dataEntrega['CONTACTO ENTREGA']);
         $pdf->SetXY(130.5, 99.7);
-        $pdf->Write(0, $dataEntrega['TELS.']);
+        $pdf->Write(0, $dataEntrega['TELS. ENTREGA']);
 
         /*-----------------------------------------------------
          * Fila de la tabla  de detalles                                    

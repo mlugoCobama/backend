@@ -185,13 +185,15 @@ class AgenciasController extends Controller
         $totalAnio =  DataAnualAgenciasResource::collection($dataAnio);
         $totalAnioAnt = $this->getDataAnualAgencias($anioAnt, $sub_division);
         $antInventarios = $this->getDataAntInventarios($mes, $anio, $sub_division);
+        $totalAnioAnt2 = $this->getDataAnualAgencias(($anioAnt - 1), $sub_division);
+
         $data = [
             'mes' => $dataMes,
             'mesAnt' => $dataMesAnt,
             'anioAnt' => $dataAnioAnt,
             'totalAnio' => $totalAnio,
             'totalAnioAnt' => $totalAnioAnt,
-            'totalAnioAnt2' => [],
+            'totalAnioAnt2' => $totalAnioAnt2,
             'antInventarios' => $antInventarios,
         ];
 
