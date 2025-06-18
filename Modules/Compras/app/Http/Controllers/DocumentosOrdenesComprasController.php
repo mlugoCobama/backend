@@ -3,7 +3,7 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Modules\Compras\Http\Requests\uploadDocsOCRequest;
+use Modules\Compras\Http\Requests\UploadDocsOCRequest;
 //Model
 use Modules\Compras\Models\DocumentosOrdenesCompra;
 
@@ -69,7 +69,7 @@ class DocumentosOrdenesComprasController extends Controller
     /** ****************************************************
      * Almacena los archivos de orden compra
      ******************************************************/
-    public function store(uploadDocsOCRequest $request)
+    public function store(UploadDocsOCRequest $request)
     {
         try {
             $data = $request;
@@ -128,7 +128,7 @@ class DocumentosOrdenesComprasController extends Controller
      * Guarda los documentos de orden de compra
      * Facturas XML, Facturas PDF, Comprobantes de pago
      ****************************************************/
-    public function update(uploadDocsOCRequest $request, $id)
+    public function update(UploadDocsOCRequest $request, $id)
     {
         $registro = DocumentosOrdenesCompra::where('id', $id)->first();
         if (!$registro) {

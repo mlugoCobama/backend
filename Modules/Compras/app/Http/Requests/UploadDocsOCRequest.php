@@ -4,7 +4,7 @@ namespace Modules\Compras\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class uploadDocsOCRequest extends FormRequest
+class UploadDocsOCRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
