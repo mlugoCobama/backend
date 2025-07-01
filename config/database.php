@@ -83,6 +83,24 @@ return [
             ]) : [],
         ],
 
+        'nissan_universidad' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DATABASE_URL'),
+            'host' => env('UNIVERSIDAD_DB_HOST', '192.168.112.240'),
+            'port' => env('UNIVERSIDAD_DB_PORT', '1433'),
+            'database' => env('UNIVERSIDAD_DB_DATABASE', 'SISTEMAS'),
+            'username' => env('UNIVERSIDAD_DB_USERNAME', 'SA'),
+            'password' => env('UNIVERSIDAD_DB_PASSWORD', 'C0b4m42024.'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            //ENTORNO DE DESARROLLO
+            'encrypt' => 'false',  // Desactivar SSL
+            'trust_server_certificate' => 'true',  // Confiar en el certificado
+            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
+            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
+        ],
+
         'intranet' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),

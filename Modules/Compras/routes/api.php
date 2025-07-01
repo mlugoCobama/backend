@@ -9,6 +9,7 @@ use Modules\Compras\Http\Controllers\ExpedientesProveedoresController;
 use Modules\Compras\Http\Controllers\CotizacionesController;
 use Modules\Compras\Http\Controllers\OrdenesComprasController;
 use Modules\Compras\Http\Controllers\DocumentosOrdenesComprasController;
+use Modules\Compras\Http\Controllers\CatUnidadesController;
 use Modules\Compras\Models\Cotizaciones;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Modules\Compras\Http\Controllers\UsuariosController;
@@ -27,6 +28,7 @@ use Modules\Compras\Models\SolicitudesCompra;
 
 // Route::middleware(['auth:sanctum'])->group(function () {
 Route::prefix('compras')->group(function () {
+    Route::resource('CatalogoUnidades', CatUnidadesController::class);
     Route::resource('CatalogoUnidadesMedida', CatUnidadesMedidaController::class);
     Route::resource('Proveedores', ProveedoresController::class);
     Route::resource('SolicitudesCompras', SolicitudesCompraController::class);
@@ -64,5 +66,7 @@ Route::prefix('compras')->group(function () {
     Route::get('/getUserByEmail/{correo}', [UsuariosController::class, 'getDataUsuario'])->name('Usuarios.getDataUsuario');
     Route::get('/getUserById/{correo}', [UsuariosController::class, 'showById'])->name('Usuarios.showById');
 
+    //*Rutas para el catalogo de vehiculos
+    Route::post('/importar-autotanques', [CatUnidadesController::class, 'importarCSV']);
 });
 
