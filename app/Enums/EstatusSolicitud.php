@@ -8,6 +8,7 @@ namespace App\Enums;
 class EstatusSolicitud
 {
     public const ESP_AUT_PLANTA = 1;
+    public const REVISION_MACRO = 2;
     public const SOLICITADO = 2;
     public const EN_COTIZACION = 3;
 
@@ -29,6 +30,7 @@ class EstatusSolicitud
     {
         return [
             self::CANCELADA => 'CANCELADA',
+            self::REVISION_MACRO => 'REVISION MACRO',
             self::ESP_AUT_PLANTA => 'ESP. AUT. PLANTA',
             self::SOLICITADO => 'SOLICITADO',
             self::EN_COTIZACION => 'EN COTIZACIÓN',
@@ -50,6 +52,7 @@ class EstatusSolicitud
         return [
             self::CANCELADA => 'bg-danger',
             self::ESP_AUT_PLANTA => 'badge-soft-info',
+            self::REVISION_MACRO => 'badge-soft-warning',
             self::SOLICITADO => 'bg-info',
             self::EN_COTIZACION => 'badge-soft-warning',
             self::EN_ORDEN_COMPRA => 'bg-warning',

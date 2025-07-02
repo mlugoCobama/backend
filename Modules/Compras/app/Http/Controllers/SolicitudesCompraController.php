@@ -43,7 +43,7 @@ class SolicitudesCompraController extends Controller
      *************************************************************/
     public function generarFolioSc()
     {
-        $ultimaOrden = SolicitudesCompra::orderBy('id', 'desc')->first('folio');
+        $ultimaOrden = SolicitudesCompra::compras()->orderBy('id', 'desc')->first('folio');
         if ($ultimaOrden) {
             $ultimoFolio = $ultimaOrden->folio;
             $numero = intval(substr($ultimoFolio, 3)) + 1;
@@ -59,8 +59,7 @@ class SolicitudesCompraController extends Controller
      **************************************************************/
     public function index()
     {
-
-        $data = SolicitudesComprasResource::collection((SolicitudesCompra::active()->orderBy('fecha', 'desc')->get()));
+        $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->orderBy('fecha', 'desc')->get()));
         return response()->json([
             'status' => 'success',
             'message' => 'Consulta generada correctamente',
@@ -185,7 +184,7 @@ class SolicitudesCompraController extends Controller
      *********************************************************************/
     public function show($id)
     {
-        return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->get()));
+        return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->confirmadas()->get()));
     }
 
 

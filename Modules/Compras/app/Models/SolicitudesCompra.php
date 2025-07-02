@@ -34,6 +34,19 @@ class SolicitudesCompra extends Model
     public function scopeActive ($query) {
         return $query->where('activo', 1);
     }
+
+    public function scopeCompras($query) {
+        return $query->where('tipo', 1);
+    }
+
+    public function scopeMacrotaller($query) {
+        return $query->where('tipo', 2);
+    }
+
+    public function scopeAutorizadas($query) {
+        return $query->where('estatus', '>', 1);
+    }
+
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

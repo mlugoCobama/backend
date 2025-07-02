@@ -77,6 +77,16 @@ class CatUnidadesController extends Controller
         //
     }
 
+    public function getAutotanques($intercompania) {
+        $data = DB::select("call SistemaTickets.SP_GetAutotanquesSucursal($intercompania)");
+
+        return response()->json([
+            "status" => "Success",
+            "data" => $data,
+            "message" => "Datos recuperados correctamente"
+        ]);
+    }
+
     /**
      * Importa datos de los vehículos y tanques desde un csv
      */
@@ -116,7 +126,9 @@ class CatUnidadesController extends Controller
 
     fclose($handle);
 
-    return response()->json(['mensaje' => 'Importación exitosa']);
+    return response()->json([
+        'mensaje' => 'Importación exitosa'
+    ]);
 }
 
 

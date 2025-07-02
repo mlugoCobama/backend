@@ -17,7 +17,8 @@ class DetalleSolicitud extends Model
         'cantidad',
         'descripcion',
         'observaciones',
-        'img_referencia'
+        'img_referencia',
+        'confirmado'
     ];
     /**
      * Nombre de la tabla
@@ -47,6 +48,13 @@ class DetalleSolicitud extends Model
      */
     public function SolicitudCompra(){
         return $this->belongsTo(SolicitudesCompra::class, 'id');
+    }
+
+    /**
+     * Scopes
+     */
+    public function scopeConfirmadas($query) {
+        return $query->where('confirmado', 1);
     }
 
 }

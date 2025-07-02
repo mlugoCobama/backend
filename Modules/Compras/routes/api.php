@@ -10,6 +10,7 @@ use Modules\Compras\Http\Controllers\CotizacionesController;
 use Modules\Compras\Http\Controllers\OrdenesComprasController;
 use Modules\Compras\Http\Controllers\DocumentosOrdenesComprasController;
 use Modules\Compras\Http\Controllers\CatUnidadesController;
+use Modules\Compras\Http\Controllers\SolicitudesMacroController;
 use Modules\Compras\Models\Cotizaciones;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Modules\Compras\Http\Controllers\UsuariosController;
@@ -37,6 +38,7 @@ Route::prefix('compras')->group(function () {
     Route::resource('OrdenesCompras', OrdenesComprasController::class);
     Route::resource('DocumentosOrdenesCompras', DocumentosOrdenesComprasController::class);
     Route::resource('Usuarios', UsuariosController::class);
+    Route::resource('SolicitudesMacro', SolicitudesMacroController::class);
     
     Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores'])->name('Proveedores.getProveedores');
     Route::get('/SolicitudCompra/{id}',[SolicitudesCompraController::class, 'getSolicitud'])->name('SolicitudesCompras.getSolicitud');
@@ -68,5 +70,6 @@ Route::prefix('compras')->group(function () {
 
     //*Rutas para el catalogo de vehiculos
     Route::post('/importar-autotanques', [CatUnidadesController::class, 'importarCSV']);
+    Route::get('/recuperar-autotanques/{intercompania}', [CatUnidadesController::class, 'getAutotanques']);
 });
 
