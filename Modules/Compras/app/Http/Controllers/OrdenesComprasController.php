@@ -19,12 +19,14 @@ use Modules\Compras\Models\Cotizaciones;
 //Transformers
 use Modules\Compras\Transformers\DetallesCotizacionResource;
 use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
+use Modules\Compras\Transformers\SolicitudesMacroResource;
 //Utilities
 use Illuminate\Support\Facades\DB;
 
 use Illuminate\Support\Facades\Notification;
 //Mailables
 use App\Notifications\SolicitudSurtido;
+use Modules\Compras\Transformers\AutotanqueResource;
 use Modules\Compras\Transformers\OrdenCompraResource;
 use Modules\Compras\Transformers\UsersResource;
 
@@ -112,8 +114,11 @@ class OrdenesComprasController extends Controller
     public function consultaDatosPDF($id)
     {
         $solicitudCompra = SolicitudesCompra::where('id', $id)->first();
-
-        $user = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')'));
+        if($solicitudCompra->tipo == 2){
+            $user = UsersResource::collection(DB::connection('dashboard')->select("call SP_GetDataAutotanque($solicitudCompra->usuario_destino)"));
+        }else{
+            $user = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')'));
+        }
 
         $userSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_solicita . ')');
 
@@ -139,14 +144,14 @@ class OrdenesComprasController extends Controller
         ];
 
         //Llamada a la funcion quue genera el formato
-         $pdf = new OrdenCompraPdfController();
-         $file = $pdf->OrdenCompraFormatoInterno($data);
+        $pdf = new OrdenCompraPdfController();
+        $file = $pdf->OrdenCompraFormatoInterno($data);
 
-         //Devuelvo el pdf hacia el front
+        //Devuelvo el pdf hacia el front
          return response($file, 200)
              ->header('Content-Type', 'application/pdf')
-             ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
-        
+           ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
+
     }
 
     public function edit($id)

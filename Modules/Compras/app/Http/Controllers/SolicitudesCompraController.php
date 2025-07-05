@@ -184,7 +184,7 @@ class SolicitudesCompraController extends Controller
      *********************************************************************/
     public function show($id)
     {
-        return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->confirmadas()->get()));
+        return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->get()));
     }
 
 
@@ -291,7 +291,7 @@ class SolicitudesCompraController extends Controller
                 $data['proveedores'][] =  $proveedor;
             }
 
-            $data['detalles'] =  DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])->get();
+            $data['detalles'] =  DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])->confirmadas()->get();
 
             // Almacenar la relación entre cotización y proveedores
             $this->storeCotizacionProveedores($data['proveedores'], $idCotizacion);

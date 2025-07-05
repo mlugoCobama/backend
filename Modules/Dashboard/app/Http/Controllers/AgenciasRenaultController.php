@@ -29,6 +29,9 @@ class AgenciasRenaultController extends Controller
          9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
      ];
 
+    /**
+     * Relación entre las tablas y secciones
+     */
     private $relTablas = [
         "UNIDADES VENDIDAS" => "ordenes_unidades",
         "ORDENES DE SERVICIO" => "ordenes_unidades",
@@ -36,41 +39,73 @@ class AgenciasRenaultController extends Controller
         "TOTAL DE GASTOS OPERATIVOS" => "datos_generales",
         "COSTO FINANCIERO CONSOLIDADO" => "costos_financieros_prestamos",
         "BONOS MARCA" => "complementos",
+        "OBJETIVOS" => "complementos",
         "UNO" => "datos_generales",
         "ACUMULADO PERSONAL CONSOLIDADO" => "datos_generales",
+        "PERSONAL POR AREA" => "personal",
         "UTILIDAD POR AREA" => "utilidad_area",
-        ];
+        "CONCEPTOS AREA COMERCIAL" => "utilidad_area",
+        "CONCEPTOS AREA POSTVENTA" => "utilidad_area",
+        "INVENTARIOS" => "inventarios",
+        "ANTIGÜEDAD INVENTARIOS NUEVOS" => "inventarios",
+        "ANTIGÜEDAD INVENTARIOS SEMI" => "inventarios",
 
+    ];
+
+    /**
+     * Relación entre los campos del front y los de la bd
+     */
     private $relCampos = [
-            "Nuevos" => "nuevos",
-            "UB Nuevos" => "utilidad_nuevos",
-            "Flotillas" => "flotillas",
-            "UB Flotillas" => "utilidad_flotillas",
-            "Seminuevos" => "seminuevos",
-            "UB Seminuevos" => "utilidad_seminuevos",
-            "Ordenes de servicios" => "servicio",
-            "UB O. servicios" => "utilidad_servicio",
-            "Ordenes de HyP" => "hyp",
-            "UB Ordenes de HyP" => "utilidad_hyp",
-            "Ventas Servicio" => "ventas_servicio",
-            "Total Ventas Refacciones" => "total_ventas_ref",
-            "Refacciones Servicio" => "refacciones_servicio",
-            "Refacciones HyP" => "refacciones_hyp",
-            "Refacciones Mostrador" => "refacciones_mostrador",
-            "Total de Gastos Operativos" => "gasto",
-            "CNuevos" => "nuevos",
-            "CFlotillas" => "utilidad_nuevos",
-            "Refacciones" => "refacciones",
-            "Bajio" => "bajio",
-            "Intercias" => "intercias",
-            "Bonos Marca" => "bonos",
-            "UNO" => "uno",
-            "Personal" => "personal",
-            "Area Comercial" => "area_comercial",
-            "Area Postventa" => "area_postventa",
-        ];
+        "Nuevos" => "nuevos",
+        "UB Nuevos" => "utilidad_nuevos",
+        "Flotillas" => "flotillas",
+        "UB Flotillas" => "utilidad_flotillas",
+        "Seminuevos" => "seminuevos",
+        "UB Seminuevos" => "utilidad_seminuevos",
+        "Ordenes de servicios" => "servicio",
+        "UB O. servicios" => "utilidad_servicio",
+        "Ordenes de HyP" => "hyp",
+        "UB Ordenes de HyP" => "utilidad_hyp",
+        "Ventas Servicio" => "ventas_servicio",
+        "Total Ventas Refacciones" => "total_ventas_ref",
+        "Refacciones Servicio" => "refacciones_servicio",
+        "Refacciones HyP" => "refacciones_hyp",
+        "Refacciones Mostrador" => "refacciones_mostrador",
+        "Total de Gastos Operativos" => "gasto",
+        "CNuevos" => "nuevos",
+        "CFlotillas" => "utilidad_nuevos",
+        "Refacciones" => "refacciones",
+        "Bajio" => "bajio",
+        "Intercias" => "intercias",
+        "Bonos Marca" => "bonos",
+        "UNO" => "uno",
+        "Personal" => "personal",
+        "Area Comercial" => "area_comercial",
+        "Area Postventa" => "area_postventa",
+        "Plan Piso" => "plan_piso",
+        "Plan Piso Intereses" => "plan_piso_interes",
+        "Nrf" => "nrf",
+        "Nrf Intereses" => "nrf_interes",
+        "Objetivo" => "objetivo",
+        "Cumplimiento" => "cumplimiento",
+        "Porcentaje" => "porcentaje",
+        "Servicio" => "servicios",
+        "Apvs" => "apvs",
+        "Hyp" => "hyp",
+        "Hyp" => "hyp",
+        "Inv Nuevo 101" => "inv_nuevo_101",
+        "Inv Nuevo 201" => "inv_nuevo_201",
+        "Inv Nuevo 301" => "inv_nuevo_301",
+        "Inv Nuevo 401" => "inv_nuevo_401",
+        "Inv Semi 101" => "inv_semi_101",
+        "Inv Semi 201" => "inv_semi_201",
+        "Inv Semi 301" => "inv_semi_301",
+        "Inv Semi 401" => "inv_semi_401",
+    ];
 
-    private $relAgencias = [
+    
+    
+        private $relAgencias = [
             "Azcapotzalco" => 26,
             "Ecatepec" => 27,
             "Vallejo" => 28,
@@ -341,49 +376,96 @@ class AgenciasRenaultController extends Controller
             ['value' => "utilidad_flotillas", 'colspan' => 1],
             ['value' => "seminuevos", 'colspan' => 1],
             ['value' => "utilidad_seminuevos", 'colspan' => 1]
-            ],
+        ],
         "ORDENES DE SERVICIO" => [
             ['value' => "servicio", 'colspan' => 1],
             ['value' => "utilidad_servicio", 'colspan' => 1],
             ['value' => "hyp", 'colspan' => 1],
             ['value' => "utilidad_hyp", 'colspan' => 1]
-            ],
+        ],
         "VENTAS DE POST VENTA" => [
             ['value' => "ventas_servicio", 'colspan' => 1],
             ['value' => "total_ventas_ref", 'colspan' => 1],
             ['value' => "refacciones_servicio", 'colspan' => 1],
             ['value' => "refacciones_hyp", 'colspan' => 1],
             ['value' => "refacciones_mostrador", 'colspan' => 1],
-            ],
+        ],
         "TOTAL DE GASTOS OPERATIVOS" => [
             ['value' => "gasto", 'colspan' => 1],
-            ],
+        ],
         "COSTO FINANCIERO CONSOLIDADO" => [
-            ['value' => "cnuevos", 'colspan' => 1],
-            ['value' => "cflotillas", 'colspan' => 1],
+            ['value' => "cnuevos", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "cflotillas", 'colspan' => 1], //Cambiar el valor que regresa de la bd
             ['value' => "refacciones", 'colspan' => 1],
             ['value' => "bajio", 'colspan' => 1],
             ['value' => "intercias", 'colspan' => 1],
-            ],
+        ],
+        "PRESTAMOS" => [
+            ['value' => "plan_piso", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "plan_piso_intereses", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "nrf", 'colspan' => 1],
+            ['value' => "nrf_intereses", 'colspan' => 1],
+        ],
         "BONOS MARCAS" => [
-            ['value' => "bonos", 'colspan' => 1],
-            ],
+            ['value' => "bono_marca", 'colspan' => 1],
+        ],
+        "OBJETIVOS" => [
+            ['value' => "objetivos", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "cumplimiento", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "porcentaje", 'colspan' => 1],
+        ],
         "UNO" => [
             ['value' => "uno", 'colspan' => 1],
-            ],
+        ],
         "ACUMULADO PERSONAL CONSOLIDADO" => [
             ['value' => "personal", 'colspan' => 1],
-            ],
+        ],
+        "PERSONAL POR AREA" => [
+            ['value' => "personal_ventas", 'colspan' => 1],
+            ['value' => "personal_usados", 'colspan' => 1],
+            ['value' => "personal_refacciones", 'colspan' => 1],
+            ['value' => "personal_admin", 'colspan' => 1],
+            ['value' => "personal_apvs", 'colspan' => 1],
+
+        ],
         "UTILIDAD POR AREA" => [
             ['value' => "area_comercial", 'colspan' => 1],
             ['value' => "area_postventa", 'colspan' => 1],
-            ],
+        ],
+        "CONCEPTOS AREA COMERCIAL" => [
+            ['value' => "area_nuevos", 'colspan' => 1],
+            ['value' => "area_seminuevos", 'colspan' => 1],
+            ['value' => "area_flotillas", 'colspan' => 1],
+        ],
+        "CONCEPTOS AREA POSTVENTA" => [
+            ['value' => "area_servicio", 'colspan' => 1],
+            ['value' => "area_refacciones", 'colspan' => 1],
+            ['value' => "area_hyp", 'colspan' => 1],
+        ],
+
+        "INVENTARIOS" => [
+            ['value' => "inventario_nuevos", 'colspan' => 1],
+            ['value' => "inventarios_seminuevos", 'colspan' => 1],
+            ['value' => "inventarios_refacciones", 'colspan' => 1],
+        ],
+
+        "ANTIGÜEDAD INVENTARIOS NUEVOS" => [
+            ['value' => "inv_nuevo_101", 'colspan' => 1],
+            ['value' => "inv_nuevo_201", 'colspan' => 1],
+            ['value' => "inv_nuevo_301", 'colspan' => 1],
+            ['value' => "inv_nuevo_401", 'colspan' => 1],
+        ],
+
+        "ANTIGÜEDAD INVENTARIOS SEMI" => [
+            ['value' => "inv_semi_101", 'colspan' => 1],
+            ['value' => "inv_semi_201", 'colspan' => 1],
+            ['value' => "inv_semi_301", 'colspan' => 1],
+            ['value' => "inv_semi_401", 'colspan' => 1],
+        ],
+
     ];
-            /**
-            *  Relación campos devueltos por la bd y 
-            *  nombres visuales de los campos,
-            *  campoBD->TextoMostrado
-            */
+            //Relación campos devueltos por la bd y 
+            //nombres visuales de los campos
     private $mapaCampos = [
         "nuevos" => "Nuevos",
         "cnuevos" => "Nuevos",
@@ -406,11 +488,42 @@ class AgenciasRenaultController extends Controller
         "refacciones" => "Refacciones",
         "bajio" => "Bajio",
         "intercias" => "Intercias",
-        "bonos" => "Bonos Marca",
+        "bono_marca" => "Bonos Marca",
         "uno" => "UNO",
         "personal" => "Personal",
         "area_comercial" => "Area Comercial",
         "area_postventa" => "Area Postventa",
+        "plan_piso" => "Plan Piso",
+        "plan_piso_intereses" => "Plan Piso Intereses",
+        "nrf" => "Nrf",
+        "nrf_intereses" => "Nrf Intereses",
+        "objetivos" => "Objetivo",
+        "cumplimiento" => "Cumplimiento",
+        "porcentaje" => "Porcentaje",
+        "personal_ventas" => "Ventas",
+        "personal_usados" => "Usados",
+        "personal_refacciones" => "Refacciones",
+        "personal_servicios" => "Servicios",
+        "personal_admin" => "Admin",
+        "personal_apvs" => "Apvs",
+        "area_nuevos" => "Nuevos",
+        "area_seminuevos" => "Seminuevos",
+        "area_flotillas" => "Flotillas",
+        "area_servicio" => "Servicio",
+        "area_refacciones" => "Refacciones",
+        "area_refacciones" => "Refacciones",
+        "area_hyp" => "Hyp",
+        "inventario_nuevos" => "Nuevos",
+        "inventarios_seminuevos" => "Seminuevos",
+        "inventarios_refacciones" => "Refacciones",
+        "inv_nuevo_101" => "Inv Nuevo 101",
+        "inv_nuevo_201" => "Inv Nuevo 201",
+        "inv_nuevo_301" => "Inv Nuevo 301",
+        "inv_nuevo_401" => "Inv Semi 401",
+        "inv_semi_101" => "Inv Semi 101",
+        "inv_semi_201" => "Inv Semi 201",
+        "inv_semi_301" => "Inv Semi 301",
+        "inv_semi_401" => "Inv Semi 401",
     ];
 
     /**

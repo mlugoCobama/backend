@@ -15,7 +15,7 @@ class DetallesCotizacionResource extends JsonResource
         return[
             'id'=>$this->id,
             'importe_unitario'=>$this->importe_unitario,
-            'detalle_solicitud'=>new DetalleSolicitudCompraResource($this->detalle_solicitud),
+            'detalle_solicitud'=>new DetalleSolicitudCompraResource($this->detalle_solicitud->confirmadas()),
             'cotizaciones_proveedores_proveedores_id'=>$this->cotizaciones_proveedores_proveedores_id,
         ];
     }

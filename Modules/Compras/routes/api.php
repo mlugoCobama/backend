@@ -15,6 +15,7 @@ use Modules\Compras\Models\Cotizaciones;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Modules\Compras\Http\Controllers\UsuariosController;
 use Modules\Compras\Models\SolicitudesCompra;
+use Modules\Compras\Http\Controllers\DetalleSolicitudController;
 
 /*
  *--------------------------------------------------------------------------
@@ -39,6 +40,7 @@ Route::prefix('compras')->group(function () {
     Route::resource('DocumentosOrdenesCompras', DocumentosOrdenesComprasController::class);
     Route::resource('Usuarios', UsuariosController::class);
     Route::resource('SolicitudesMacro', SolicitudesMacroController::class);
+    Route::resource('DetallesSolicitud', DetalleSolicitudController::class);
     
     Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores'])->name('Proveedores.getProveedores');
     Route::get('/SolicitudCompra/{id}',[SolicitudesCompraController::class, 'getSolicitud'])->name('SolicitudesCompras.getSolicitud');

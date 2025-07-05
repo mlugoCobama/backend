@@ -5,6 +5,7 @@ namespace Modules\Compras\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Modules\Compras\Models\DetalleSolicitud;
 
 class DetalleSolicitudController extends Controller
 {
@@ -51,9 +52,32 @@ class DetalleSolicitudController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id): RedirectResponse
+    public function update(Request $request, $id)
     {
-        //
+        $data = $request->all();
+
+        /**
+         * TODO: MDIFICARLO PARA QUE ACEPTE NUEVOS DETALLES
+         * PREPARARLO PARA QUE MANEJE EL LOG DE EVENTOS
+         */
+        foreach ($data as $item) {
+            DetalleSolicitud::
+            where('id', $item['id'])->update([
+                'cantidad' => $item['cantidad'],
+                'descripcion' =>  $item['descripcion'],
+                'observaciones' =>  $item['observaciones'],
+                'cat_unidades_medida_id' =>  $item['unidadMedida']['id'],
+                'solicitudes_compra_id' =>  $item['solicitudes_compra_id'],
+                'img_referencia' =>  $item['img_referencia'],
+                'confirmado' =>  $item['confirmado'],
+            ]);
+        }
+
+        return response()->json([
+            "status" => 'success',
+            "message" => 'Actualizado correctamente',
+            "data" => []
+        ]);
     }
 
     /**

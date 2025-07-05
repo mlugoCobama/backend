@@ -20,7 +20,7 @@ class SolicitudesMacroResource extends JsonResource
         $estadoInfo = $this->asignarEstado($this->estatus);
         // $datosUnidad = $this->getUnidad($this->usuario_destino);
         $datosCC = $this->asignarDescripcionCC($this->c_c);
-
+        $claseEmpresa = $this->asignarBadges($this->id_suc);
         return [
             'id' => $this->id_solicitud,
             'folio' => $this->folio,
@@ -28,12 +28,13 @@ class SolicitudesMacroResource extends JsonResource
             'fecha' => $this->fecha,
             'c_c' => $this->c_c,
             'centro_costo' => $datosCC['descripcion'],
-            'usuario_destino' => "ECO: $this->id $this->marca_vehiculo $this->modelo ($this->placas)",
+            'usuario_destino' => "ECO: $this->id MOD: $this->marca_vehiculo $this->modelo PLACAS: $this->placas",
             'empresa' => $this->empresa,
             'usuario_solicita' =>  $usuarioSolicita['nombre_completo'],
             'estatus' => $this->estatus,
             'estado' => $estadoInfo['estado'],
             'claseEstado' => $estadoInfo['claseEstado'],
+            'claseEmpresa' => $claseEmpresa['clase'],
             'auto_admin' => $this->auto_admin,
             'auto_gg' => $this->auto_gg
             //'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
@@ -82,6 +83,31 @@ class SolicitudesMacroResource extends JsonResource
         return $estados[$estatus] ?? ['estado' => 'DESCONOCIDO', 'claseEstado' => 'bg-secondary'];
     }
 
+    private function asignarBadges($entidad)
+    {
+        $estados = [
+            1 =>  ['clase' => 'badge bg-primary' ],
+            2 =>  ['clase' => 'badge bg-secondary' ],
+            3 =>  ['clase' => 'badge bg-success' ],
+            5 =>  ['clase' => 'badge bg-danger' ],
+            4 =>  ['clase' => 'badge bg-warning text-dark' ],
+            6 =>  ['clase' => 'badge bg-info text-dark' ],
+            7 =>  ['clase' => 'badge bg-light text-dark' ],
+            8 =>  ['clase' => 'badge bg-dark' ],
+            9 =>  ['clase' => 'badge rounded-pill bg-success' ],
+            10 => ['clase' => 'badge rounded-pill bg-primary' ],
+            11 => ['clase' => 'badge rounded-pill bg-warning text-dark' ],
+            12 => ['clase' => 'badge text-bg-primary border border-light' ],
+            13 => ['clase' => 'badge text-bg-success border border-dark' ],
+            14 => ['clase' => 'badge text-bg-info border border-primary' ],
+            15 => ['clase' => 'badge bg-transparent text-primary border border-primary' ],
+            16 => ['clase' => 'badge bg-transparent text-success border border-success' ],
+            17 => ['clase' => 'badge bg-transparent text-danger border border-danger' ],
+            18 => ['clase' => 'badge badge rounded-pill bg-dark text-warning' ],
+        ];
+
+        return $estados[$entidad] ?? ['clase' => 'bg-secondary'];
+    }
     /**
      * Asigna la descripción del centro de costo
      */

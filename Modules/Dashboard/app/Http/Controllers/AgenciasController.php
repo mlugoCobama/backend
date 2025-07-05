@@ -19,8 +19,10 @@ use App\Models\VentasPostVenta;
 use App\Models\DatosGenerales;
 use App\Models\CostosFinancierosPrestamos;
 use App\Models\Complementos;
+use App\Models\Inventarios;
 use App\Models\UtilidadArea;
 use App\Models\OrdenesUnidades;
+use App\Models\Personal;
 use DateTime;
 
 class AgenciasController extends Controller
@@ -48,9 +50,17 @@ class AgenciasController extends Controller
         "TOTAL DE GASTOS OPERATIVOS" => "datos_generales",
         "COSTO FINANCIERO CONSOLIDADO" => "costos_financieros_prestamos",
         "BONOS MARCA" => "complementos",
+        "OBJETIVOS" => "complementos",
         "UNO" => "datos_generales",
         "ACUMULADO PERSONAL CONSOLIDADO" => "datos_generales",
+        "PERSONAL POR AREA" => "personal",
         "UTILIDAD POR AREA" => "utilidad_area",
+        "CONCEPTOS AREA COMERCIAL" => "utilidad_area",
+        "CONCEPTOS AREA POSTVENTA" => "utilidad_area",
+        "INVENTARIOS" => "inventarios",
+        "ANTIGÜEDAD INVENTARIOS NUEVOS" => "inventarios",
+        "ANTIGÜEDAD INVENTARIOS SEMI" => "inventarios",
+
     ];
 
     /**
@@ -83,6 +93,25 @@ class AgenciasController extends Controller
         "Personal" => "personal",
         "Area Comercial" => "area_comercial",
         "Area Postventa" => "area_postventa",
+        "Plan Piso" => "plan_piso",
+        "Plan Piso Intereses" => "plan_piso_interes",
+        "Nrf" => "nrf",
+        "Nrf Intereses" => "nrf_interes",
+        "Objetivo" => "objetivo",
+        "Cumplimiento" => "cumplimiento",
+        "Porcentaje" => "porcentaje",
+        "Servicio" => "servicios",
+        "Apvs" => "apvs",
+        "Hyp" => "hyp",
+        "Hyp" => "hyp",
+        "Inv Nuevo 101" => "inv_nuevo_101",
+        "Inv Nuevo 201" => "inv_nuevo_201",
+        "Inv Nuevo 301" => "inv_nuevo_301",
+        "Inv Nuevo 401" => "inv_nuevo_401",
+        "Inv Semi 101" => "inv_semi_101",
+        "Inv Semi 201" => "inv_semi_201",
+        "Inv Semi 301" => "inv_semi_301",
+        "Inv Semi 401" => "inv_semi_401",
     ];
 
     /**
@@ -93,6 +122,11 @@ class AgenciasController extends Controller
         "Automotriz" => 23,
         "Insurgentes" => 24,
         "Universidad" => 25,
+        "PV Mitika" => 30,
+        "PV Plutarco" => 31,
+        "PV Mixcoac" => 32,
+        "PV Revolucion" => 33,
+        "PV Patriotismo" => 34,
     ];
 
     /**
@@ -261,6 +295,10 @@ class AgenciasController extends Controller
                         break;
                     case 'utilidad_area':
                         UtilidadArea::create(array_merge(['sucursales_id' => $agenciaId], $valores));
+                    case 'personal':
+                        Personal::create(array_merge(['sucursales_id' => $agenciaId], $valores));
+                    case 'inventarios':
+                        Inventarios::create(array_merge(['sucursales_id' => $agenciaId], $valores));
                         break;
                 }
             }
@@ -305,6 +343,8 @@ class AgenciasController extends Controller
                     'costos_financieros_prestamos' => CostosFinancierosPrestamos::class,
                     'complementos' => Complementos::class,
                     'utilidad_area' => UtilidadArea::class,
+                    'personal' => Personal::class,
+                    'inventarios' => Inventarios::class,
                     default => null
                 };
 
@@ -419,8 +459,19 @@ class AgenciasController extends Controller
             ['value' => "bajio", 'colspan' => 1],
             ['value' => "intercias", 'colspan' => 1],
         ],
+        "PRESTAMOS" => [
+            ['value' => "plan_piso", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "plan_piso_intereses", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "nrf", 'colspan' => 1],
+            ['value' => "nrf_intereses", 'colspan' => 1],
+        ],
         "BONOS MARCAS" => [
-            ['value' => "bonos", 'colspan' => 1],
+            ['value' => "bono_marca", 'colspan' => 1],
+        ],
+        "OBJETIVOS" => [
+            ['value' => "objetivos", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "cumplimiento", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "porcentaje", 'colspan' => 1],
         ],
         "UNO" => [
             ['value' => "uno", 'colspan' => 1],
@@ -428,9 +479,47 @@ class AgenciasController extends Controller
         "ACUMULADO PERSONAL CONSOLIDADO" => [
             ['value' => "personal", 'colspan' => 1],
         ],
+        "PERSONAL POR AREA" => [
+            ['value' => "personal_ventas", 'colspan' => 1],
+            ['value' => "personal_usados", 'colspan' => 1],
+            ['value' => "personal_refacciones", 'colspan' => 1],
+            ['value' => "personal_admin", 'colspan' => 1],
+            ['value' => "personal_apvs", 'colspan' => 1],
+
+        ],
         "UTILIDAD POR AREA" => [
             ['value' => "area_comercial", 'colspan' => 1],
             ['value' => "area_postventa", 'colspan' => 1],
+        ],
+        "CONCEPTOS AREA COMERCIAL" => [
+            ['value' => "area_nuevos", 'colspan' => 1],
+            ['value' => "area_seminuevos", 'colspan' => 1],
+            ['value' => "area_flotillas", 'colspan' => 1],
+        ],
+        "CONCEPTOS AREA POSTVENTA" => [
+            ['value' => "area_servicio", 'colspan' => 1],
+            ['value' => "area_refacciones", 'colspan' => 1],
+            ['value' => "area_hyp", 'colspan' => 1],
+        ],
+
+        "INVENTARIOS" => [
+            ['value' => "inventario_nuevos", 'colspan' => 1],
+            ['value' => "inventarios_seminuevos", 'colspan' => 1],
+            ['value' => "inventarios_refacciones", 'colspan' => 1],
+        ],
+
+        "ANTIGÜEDAD INVENTARIOS NUEVOS" => [
+            ['value' => "inv_nuevo_101", 'colspan' => 1],
+            ['value' => "inv_nuevo_201", 'colspan' => 1],
+            ['value' => "inv_nuevo_301", 'colspan' => 1],
+            ['value' => "inv_nuevo_401", 'colspan' => 1],
+        ],
+
+        "ANTIGÜEDAD INVENTARIOS SEMI" => [
+            ['value' => "inv_semi_101", 'colspan' => 1],
+            ['value' => "inv_semi_201", 'colspan' => 1],
+            ['value' => "inv_semi_301", 'colspan' => 1],
+            ['value' => "inv_semi_401", 'colspan' => 1],
         ],
 
     ];
@@ -458,11 +547,42 @@ class AgenciasController extends Controller
         "refacciones" => "Refacciones",
         "bajio" => "Bajio",
         "intercias" => "Intercias",
-        "bonos" => "BONOS MARCA",
+        "bono_marca" => "Bonos Marca",
         "uno" => "UNO",
         "personal" => "Personal",
         "area_comercial" => "Area Comercial",
         "area_postventa" => "Area Postventa",
+        "plan_piso" => "Plan Piso",
+        "plan_piso_intereses" => "Plan Piso Intereses",
+        "nrf" => "Nrf",
+        "nrf_intereses" => "Nrf Intereses",
+        "objetivos" => "Objetivo",
+        "cumplimiento" => "Cumplimiento",
+        "porcentaje" => "Porcentaje",
+        "personal_ventas" => "Ventas",
+        "personal_usados" => "Usados",
+        "personal_refacciones" => "Refacciones",
+        "personal_servicios" => "Servicios",
+        "personal_admin" => "Admin",
+        "personal_apvs" => "Apvs",
+        "area_nuevos" => "Nuevos",
+        "area_seminuevos" => "Seminuevos",
+        "area_flotillas" => "Flotillas",
+        "area_servicio" => "Servicio",
+        "area_refacciones" => "Refacciones",
+        "area_refacciones" => "Refacciones",
+        "area_hyp" => "Hyp",
+        "inventario_nuevos" => "Nuevos",
+        "inventarios_seminuevos" => "Seminuevos",
+        "inventarios_refacciones" => "Refacciones",
+        "inv_nuevo_101" => "Inv Nuevo 101",
+        "inv_nuevo_201" => "Inv Nuevo 201",
+        "inv_nuevo_301" => "Inv Nuevo 301",
+        "inv_nuevo_401" => "Inv Semi 401",
+        "inv_semi_101" => "Inv Semi 101",
+        "inv_semi_201" => "Inv Semi 201",
+        "inv_semi_301" => "Inv Semi 301",
+        "inv_semi_401" => "Inv Semi 401",
     ];
     /**
      * Recupera los datos del Store Procedure

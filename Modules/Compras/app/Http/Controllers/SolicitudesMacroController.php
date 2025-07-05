@@ -13,7 +13,8 @@ use Modules\Compras\Transformers\SolicitudesMacroResource;
 use Modules\Compras\Models\DetalleSolicitud;
 use Modules\Compras\Models\OrdenTrabajo;
 use App\Enums\EstatusSolicitud;
-
+use Modules\Compras\Transformers\AutotanqueResource;
+use Modules\Compras\Transformers\UsersResource;
 
 class SolicitudesMacroController extends Controller
 {
@@ -82,7 +83,31 @@ class SolicitudesMacroController extends Controller
      */
     public function show($id)
     {
-        return view('compras::show');
+        // $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudMacro($id)"));
+        $solicitudCompra = SolicitudesCompra::findOrFail($id);
+        if($solicitudCompra->tipo == 2){
+            $user = UsersResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetDataAutotanque('.$solicitudCompra->usuario_destino.')'));
+        }else{
+            $user = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')'));
+        }
+
+        $data =  [
+            'ordenCompra' => [],
+            'cotizacion' => [],
+            'cotizacionProveedor' => [],
+            'proveedor' => [],
+            'detallesCotizacion' => [],
+            'solicitudCompra' => $solicitudCompra,
+            'destino' => $user,
+            'solicita' => []
+        ];
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Consulta generada correctamente',
+            'data' => $data,
+            'dataDestino' => $data['destino'][0]->intercompania,
+        ]);
     }
 
     /**
@@ -109,12 +134,13 @@ class SolicitudesMacroController extends Controller
         //
     }
 
-
     /**
-     * Genera un folio para cada solicitud de macrotaller
-     * @param string $codigoEntidad: numero intercompania || abreviatura
-     * @return string $nuevoFolio: folio de tipo MC-IDE-0000X
-     */
+   * Genera un folio para cada solicitud de macrotaller
+   * 
+   * @param string $codigoEntidad 
+   *                    intercompania (000) || abreviatura (ABC)
+   * @return string $nuevoFolio: folio de tipo MC-IDE-0000X
+   */
     public function generarFolioMc($codigoEntidad)
     {
     // Ejemplo: $codigoEntidad = 'GGA'
@@ -137,10 +163,13 @@ class SolicitudesMacroController extends Controller
         return $nuevoFolio;
     }
 
-        /** ********************************************************************
-     *Primero genero una solicitud de compra
-     *Después almaceno los detalles de la solicitud
-     **********************************************************************/
+  /**
+   * Almacena los datos de solicitud de compra
+   * @param array  $data Datos del request debe contener:
+   * 'empresa (num_intercompania)', 'usuario_solicita (id_usuario)',  
+   * 'usuario_destino (id_autotanque)', 'motivo'.
+   * @return int : id de la solicitud guardada
+   */
     private function storeSolicitudCompra($data)
     {
         $dataSolicitud = new SolicitudesCompra();
@@ -155,6 +184,13 @@ class SolicitudesMacroController extends Controller
         return $dataSolicitud->id;
     }
 
+    /**
+   * Almacena la orden de trabajo  en la base de datos
+   * 
+   * @param array $data debe contener 
+   *                     "orden_trabajo":string, "usuario_destino":int
+   * @param int $idSolicitud de la solicitud de compra
+   */
     private function storeOrdenTrabajo($idSolicitud, $data){
         $dataOrdenTrabajo = new OrdenTrabajo();
         $dataOrdenTrabajo->orden_trabajo = $data["orden_trabajo"];
@@ -163,9 +199,18 @@ class SolicitudesMacroController extends Controller
         $dataOrdenTrabajo->save();
     }
 
-    /** ***************************************************************************
-     * Amacena los detalles de la solicitud
-     *****************************************************************************/
+
+    /**
+     * Almacena los detalles de una solicitud de compra en la base de datos.
+     *
+     * Itera sobre el array de detalles y crea instancias de DetalleSolicitud.
+     * Si hay una imagen válida asociada al detalle, se guarda en el almacenamiento público.
+     *
+     * @param array $detalles Array de detalles, cada uno debe contener:
+     *                         'cantidad', 'descripcion', 'observaciones', 'cat_unidades_medida_id'.
+     * @param int $idSolicitud ID de la solicitud de compra a la que se asociarán los detalles.
+     * @param array $files Array de archivos subidos, con claves como 'img_referencia_0', 'img_referencia_1', etc.
+     */
     private function storeDetalleSolicitudCompra($detalles, $idSolicitud, $files)
     {
         foreach ($detalles as $index => $detalle) {

@@ -17,8 +17,8 @@ class SolicitudesComprasResource extends JsonResource
 
 
     {
-        $usuarioDestino =  $this->getNombreUsuario($this->usuario_destino);
-        $usuarioSolicita =  $this->getNombreUsuario($this->usuario_solicita);
+        $usuarioDestino =  $this->getNombreUsuario( $this->tipo ,$this->usuario_destino);
+        $usuarioSolicita =  $this->getNombreUsuario( 1 ,$this->usuario_solicita);
         $estadoInfo = $this->asignarEstado($this->estatus);
         $datosCC = $this->asignarDescripcionCC($this->c_c);
 
@@ -44,9 +44,15 @@ class SolicitudesComprasResource extends JsonResource
     /**
      *  Recupera los datos del usuario para asignarlos a la consulta
      */
-    private function getNombreUsuario($usuarioId)
+    private function getNombreUsuario($tipoSolicitud ,$usuarioId)
     {
-        $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')');
+        if($tipoSolicitud == 2){
+            $usuario = UsersResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetDataAutotanque('. $usuarioId.')'));
+        }else{
+            $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' .  $usuarioId . ')'));
+        }
+        // $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')');
+
         if (count($usuario) > 0) {
             return [
                 'nombre_completo' => trim($usuario[0]->firstname . ' ' . $usuario[0]->realname),
