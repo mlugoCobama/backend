@@ -38,6 +38,107 @@ use Modules\Compras\Transformers\EmailAutorizarSolicitudResource;
 class SolicitudesCompraController extends Controller
 {
 
+    /** ************************************************************
+     * Recupera todos los registros de la base de datos
+     **************************************************************/
+    public function index()
+    {
+        $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->orderBy('fecha', 'desc')->get()));
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Consulta generada correctamente',
+            'data' => $data
+        ]);
+    }
+
+    /** *************************************************************************************
+     * Genera un el registro de la solicitud de compra junto con sus detalles
+     * Valida y coordina el funcionamiento de storeSolicitudCOmpra y storeDetallesSolicitud
+     ***************************************************************************************/
+    public function store(StoreSolicitudCompraRequest $request)
+    {
+        $data =  $request->validated()['data'];
+        $files = $request->allFiles();
+
+        try {
+            DB::beginTransaction();
+
+            $idSolicitud = $this->storeSolicitudCompra($data);
+            $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
+            //TODO MODIFICAR ESTO PARA QUE SE ENVIÉ EL CORREO
+            //$correos = $this->getGerente($data['empresa']);
+            //$this->sendSolicitudAutorizacion($idSolicitud, $correos);
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha guardado correctamente',
+                'data' => []
+            ]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error al guardar la solicitud',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    
+    /** *******************************************************************
+     * Recupera los detalles de la solicitud
+     *********************************************************************/
+    public function show($id)
+    {
+        return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->get()));
+    }
+
+
+    /**
+     * Actualiza los estatus de la solicitud de compra
+     * auto_gg, auto_admin y estatus
+     */
+    public function update(Request $request, $id)
+    {
+        SolicitudesCompra::where('id', $id)->update(
+            ["$request->campo" => $request->value]
+        );
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Se ha actualizado correctamente',
+            'data' => ''
+        ]);
+    }
+
+    /** ************************************************************
+     * Actualiza el estatus a cancelado
+     **************************************************************/
+    public function destroy($id)
+    {
+
+        $solicitudCompra = SolicitudesCompra::where('id', $id);
+
+        if (!$solicitudCompra) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El registro que intentas actualizar no existe',
+                'data' => []
+            ]);
+        }
+
+        $solicitudCompra->update([
+            'estatus' => EstatusSolicitud::CANCELADA
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Se ha eliminado correctamente',
+            'data' => []
+        ]);
+    }
+
     /** *********************************************************** 
      * Genera un nuevo folio consecutivo en base al ultimo folio
      *************************************************************/
@@ -53,20 +154,6 @@ class SolicitudesCompraController extends Controller
         $nuevoFolio = 'SC-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
         return  $nuevoFolio;
     }
-
-    /** ************************************************************
-     * Recupera todos los registros de la base de datos
-     **************************************************************/
-    public function index()
-    {
-        $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->orderBy('fecha', 'desc')->get()));
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Consulta generada correctamente',
-            'data' => $data
-        ]);
-    }
-
     /** *******************************************************************
      * Recupera las solicitud de compra por id
      *********************************************************************/
@@ -101,41 +188,6 @@ class SolicitudesCompraController extends Controller
                 'total' => $solicitudes->total(),
             ]
         ]);
-    }
-
-
-    /** *************************************************************************************
-     * Genera un el registro de la solicitud de compra junto con sus detalles
-     * Valida y coordina el funcionamiento de storeSolicitudCOmpra y storeDetallesSolicitud
-     ***************************************************************************************/
-    public function store(StoreSolicitudCompraRequest $request)
-    {
-        $data =  $request->validated()['data'];
-        $files = $request->allFiles();
-
-        try {
-            DB::beginTransaction();
-
-            $idSolicitud = $this->storeSolicitudCompra($data);
-            $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
-            //TODO MODIFICAR ESTO PARA QUE SE ENVIÉ EL CORREO
-            //$correos = $this->getGerente($data['empresa']);
-            //$this->sendSolicitudAutorizacion($idSolicitud, $correos);
-            DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Se ha guardado correctamente',
-                'data' => []
-            ]);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Ocurrió un error al guardar la solicitud',
-                'error' => $e->getMessage()
-            ]);
-        }
     }
 
     /** ********************************************************************
@@ -179,96 +231,6 @@ class SolicitudesCompraController extends Controller
         }
     }
 
-    /** *******************************************************************
-     * Recupera los detalles de la solicitud
-     *********************************************************************/
-    public function show($id)
-    {
-        return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->get()));
-    }
-
-
-    /**
-     * Actualiza los estatus de la solicitud de compra
-     * auto_gg, auto_admin y estatus
-     */
-    public function update(Request $request, $id)
-    {
-        SolicitudesCompra::where('id', $id)->update(
-            ["$request->campo" => $request->value]
-        );
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha actualizado correctamente',
-            'data' => ''
-        ]);
-    }
-
-    /**
-     * Recupera las autorizaciones por medio del correo 
-     * Valida el numero de autorizaciones necesarias
-     * Modifica los campos necesarios en la base de datos 
-     */
-    public function autorizeFromEmail($campo, $necesarias, $id)
-    {
-        $campoBD = "auto_$campo";
-        $solicitud = SolicitudesCompra::findOrFail($id);
-        if ($necesarias === 1) {
-            $solicitud->auto_admin = "1";
-            $solicitud->auto_gg = "1";
-            $solicitud->save();
-        } else {
-            $solicitud->$campoBD = "1";
-            $solicitud->save();
-        }
-        $this->validarAutorizacion($id);
-        // SolicitudesCompra::where ('id', $id)->update(
-        //    [ "auto_admin" => "1", "auto_gg" => "1", "estatus" => EstatusSolicitud::SOLICITADO]
-        // );
-
-        return view('compras::confirmacion');
-    }
-
-    /** 
-     * Verifica si ya esta autorizado por gerencias 
-     * y actualiza el estatus a siguiente
-     */
-    public function validarAutorizacion($id)
-    {
-        $solicitud = SolicitudesCompra::findOrFail($id);
-        if ($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1) {
-            $solicitud->estatus = EstatusSolicitud::SOLICITADO;
-            $solicitud->save();
-        }
-    }
-
-    /** ************************************************************
-     * Actualiza el estatus a cancelado
-     **************************************************************/
-    public function destroy($id)
-    {
-
-        $solicitudCompra = SolicitudesCompra::where('id', $id);
-
-        if (!$solicitudCompra) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'El registro que intentas actualizar no existe',
-                'data' => []
-            ]);
-        }
-
-        $solicitudCompra->update([
-            'estatus' => EstatusSolicitud::CANCELADA
-        ]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha eliminado correctamente',
-            'data' => []
-        ]);
-    }
 
     /** ******************************************************************
      * Envía la solicitud de cotización a los proveedores y almacena la 
@@ -345,6 +307,43 @@ class SolicitudesCompraController extends Controller
         return $nuevoFolio;
     }
 
+    /**
+     * Recupera las autorizaciones por medio del correo 
+     * Valida el numero de autorizaciones necesarias
+     * Modifica los campos necesarios en la base de datos 
+     */
+    public function autorizeFromEmail($campo, $necesarias, $id)
+    {
+        $campoBD = "auto_$campo";
+        $solicitud = SolicitudesCompra::findOrFail($id);
+        if ($necesarias === 1) {
+            $solicitud->auto_admin = "1";
+            $solicitud->auto_gg = "1";
+            $solicitud->save();
+        } else {
+            $solicitud->$campoBD = "1";
+            $solicitud->save();
+        }
+        $this->validarAutorizacion($id);
+        // SolicitudesCompra::where ('id', $id)->update(
+        //    [ "auto_admin" => "1", "auto_gg" => "1", "estatus" => EstatusSolicitud::SOLICITADO]
+        // );
+
+        return view('compras::confirmacion');
+    }
+
+    /** 
+     * Verifica si ya esta autorizado por gerencias 
+     * y actualiza el estatus a siguiente
+     */
+    public function validarAutorizacion($id)
+    {
+        $solicitud = SolicitudesCompra::findOrFail($id);
+        if ($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1) {
+            $solicitud->estatus = EstatusSolicitud::SOLICITADO;
+            $solicitud->save();
+        }
+    }
     /** ***********************************************************************
      * Almacena la cotización y devuelve el id del registro creado
      ************************************************************************/

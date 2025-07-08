@@ -203,9 +203,6 @@ class SolicitudesMacroController extends Controller
     /**
      * Almacena los detalles de una solicitud de compra en la base de datos.
      *
-     * Itera sobre el array de detalles y crea instancias de DetalleSolicitud.
-     * Si hay una imagen válida asociada al detalle, se guarda en el almacenamiento público.
-     *
      * @param array $detalles Array de detalles, cada uno debe contener:
      *                         'cantidad', 'descripcion', 'observaciones', 'cat_unidades_medida_id'.
      * @param int $idSolicitud ID de la solicitud de compra a la que se asociarán los detalles.

@@ -27,22 +27,6 @@ class ProveedoresController extends Controller
         return ProveedoresResource::collection((Proveedores::active()->get()));
     }
 
-    /** **************************************************************************
-     * Recupera unicamente tres datos para llenar los select
-     *****************************************************************************/
-    public function getProveedores()
-    {
-        $data = (Proveedores::active()
-            ->get(['id', 'nombre',]));
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha realizado correctamente',
-            'data' => $data
-        ]);
-    }
-
-
     /** ********************************************************************************
      * Función que valida la información y coordina, 
      * storeProveedor y storeExpedienteProveedor
@@ -75,48 +59,6 @@ class ProveedoresController extends Controller
         }
     }
 
-    /** ********************************************************************************
-     * Función que almacena los datos del proveedor en a base de datos 
-     **********************************************************************************/
-    private function storeProveedor($data)
-    {
-        $dataProveedor = new Proveedores();
-        $dataProveedor->nombre = $data["nombre"];
-        $dataProveedor->contacto = $data["contacto"];
-        $dataProveedor->telefono = $data["telefono"];
-        $dataProveedor->localidad = $data["localidad"];
-        $dataProveedor->condiciones = $data["condiciones"];
-        $dataProveedor->servicios = $data["servicios"];
-        $dataProveedor->correo = $data["correo"];
-        $dataProveedor->dias_credito = $data["dias_credito"];
-        $dataProveedor->horario_atencion = $data["horario_atencion"];
-        $dataProveedor->tiempo_entrega = $data["tiempo_entrega"];
-        $dataProveedor->save();
-        return $dataProveedor->id;
-    }
-
-    /** ********************************************************************************
-     * Función que almacena los archivos en el servidor y las rutas en la base de datos
-     **********************************************************************************/
-    private function storeExpedienteProveedor($data, $idProveedor)
-    {
-        $expedienteSolicitud = new ExpedientesProveedores();
-        $carpetaProveedor = 'expedientes/' . $idProveedor;
-        Storage::makeDirectory($carpetaProveedor);
-
-        $documentos = ['constancia_fiscal', 'ine', 'comprobante_domicilio', 'estado_cuenta', 'acta_constitutiva', 'poder_notarial'];
-
-        for ($i = 0; $i < count($documentos); $i++) {
-            if ($data->hasFile($documentos[$i])) {
-                $constancia_fiscal = $documentos[$i] . "." . $data->file($documentos[$i])->getClientOriginalExtension();
-                $expedienteSolicitud->{$documentos[$i]} = $data->file($documentos[$i])->storeAs($carpetaProveedor, $constancia_fiscal);
-            }
-        }
-
-        $expedienteSolicitud->proveedores_id = $idProveedor;
-
-        $expedienteSolicitud->save();
-    }
 
     /** *********************************************************************************
      * Función que recupera las rutas del expediente del proveedor
@@ -140,18 +82,6 @@ class ProveedoresController extends Controller
             'tamanio' => $tamanio
         ]);
     }
-
-    public function validarExpediente($rutas, $archivos)
-    {
-        $archivosDisponibles = [];
-        foreach ($archivos as $archivo) {
-            if (!empty($rutas[$archivo])) {
-                $archivosDisponibles[] = $archivo;
-            }
-        }
-        return $archivosDisponibles;
-    }
-
 
     /** **********************************************************************************
      * Fucnion que recibe datos y coordina el funcionamiento de
@@ -217,6 +147,101 @@ class ProveedoresController extends Controller
         }
     }
 
+    /** *******************************************************************************************
+     * Actualiza el estatus del proveedor a inactivo
+     *********************************************************************************************/
+    public function destroy($id)
+    {
+        $proveedor = Proveedores::where('id', $id);
+
+        if (!$proveedor) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El registro que intentas eliminar no existe',
+                'data' => []
+            ]);
+        }
+
+        $proveedor->update([
+            'activo' => 0
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Se ha eliminado correctamente',
+            'data' => []
+        ]);
+    }
+    
+    public function validarExpediente($rutas, $archivos)
+    {
+        $archivosDisponibles = [];
+        foreach ($archivos as $archivo) {
+            if (!empty($rutas[$archivo])) {
+                $archivosDisponibles[] = $archivo;
+            }
+        }
+        return $archivosDisponibles;
+    }
+    
+    /** **************************************************************************
+     * Recupera unicamente tres datos para llenar los select
+     *****************************************************************************/
+    public function getProveedores()
+    {
+        $data = (Proveedores::active()
+            ->get(['id', 'nombre',]));
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Se ha realizado correctamente',
+            'data' => $data
+        ]);
+    }
+
+    /** ********************************************************************************
+     * Función que almacena los datos del proveedor en a base de datos 
+     **********************************************************************************/
+    private function storeProveedor($data)
+    {
+        $dataProveedor = new Proveedores();
+        $dataProveedor->nombre = $data["nombre"];
+        $dataProveedor->contacto = $data["contacto"];
+        $dataProveedor->telefono = $data["telefono"];
+        $dataProveedor->localidad = $data["localidad"];
+        $dataProveedor->condiciones = $data["condiciones"];
+        $dataProveedor->servicios = $data["servicios"];
+        $dataProveedor->correo = $data["correo"];
+        $dataProveedor->dias_credito = $data["dias_credito"];
+        $dataProveedor->horario_atencion = $data["horario_atencion"];
+        $dataProveedor->tiempo_entrega = $data["tiempo_entrega"];
+        $dataProveedor->save();
+        return $dataProveedor->id;
+    }
+
+    /** ********************************************************************************
+     * Función que almacena los archivos en el servidor y las rutas en la base de datos
+     **********************************************************************************/
+    private function storeExpedienteProveedor($data, $idProveedor)
+    {
+        $expedienteSolicitud = new ExpedientesProveedores();
+        $carpetaProveedor = 'expedientes/' . $idProveedor;
+        Storage::makeDirectory($carpetaProveedor);
+
+        $documentos = ['constancia_fiscal', 'ine', 'comprobante_domicilio', 'estado_cuenta', 'acta_constitutiva', 'poder_notarial'];
+
+        for ($i = 0; $i < count($documentos); $i++) {
+            if ($data->hasFile($documentos[$i])) {
+                $constancia_fiscal = $documentos[$i] . "." . $data->file($documentos[$i])->getClientOriginalExtension();
+                $expedienteSolicitud->{$documentos[$i]} = $data->file($documentos[$i])->storeAs($carpetaProveedor, $constancia_fiscal);
+            }
+        }
+
+        $expedienteSolicitud->proveedores_id = $idProveedor;
+
+        $expedienteSolicitud->save();
+    }
+
     /** *********************************************************************
      * Función para actualizar UNICAMENTE los datos del proveedor
      *************************************************************************/
@@ -273,31 +298,5 @@ class ProveedoresController extends Controller
         {
             $this->storeExpedienteProveedor($data, $idProveedor);
         }
-    }
-
-    /** *******************************************************************************************
-     * Actualiza el estatus del proveedor a inactivo
-     *********************************************************************************************/
-    public function destroy($id)
-    {
-        $proveedor = Proveedores::where('id', $id);
-
-        if (!$proveedor) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'El registro que intentas eliminar no existe',
-                'data' => []
-            ]);
-        }
-
-        $proveedor->update([
-            'activo' => 0
-        ]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Se ha eliminado correctamente',
-            'data' => []
-        ]);
     }
 }

@@ -61,7 +61,8 @@ class DetalleSolicitudController extends Controller
          * PREPARARLO PARA QUE MANEJE EL LOG DE EVENTOS
          */
         foreach ($data as $item) {
-            DetalleSolicitud::
+            if(isset($item['id'])){
+                DetalleSolicitud::
             where('id', $item['id'])->update([
                 'cantidad' => $item['cantidad'],
                 'descripcion' =>  $item['descripcion'],
@@ -70,7 +71,11 @@ class DetalleSolicitudController extends Controller
                 'solicitudes_compra_id' =>  $item['solicitudes_compra_id'],
                 'img_referencia' =>  $item['img_referencia'],
                 'confirmado' =>  $item['confirmado'],
-            ]);
+                ]);
+            }else{
+                $this->storeDetalleSolicitudCompra($item, $id);
+            }
+            
         }
 
         return response()->json([
@@ -78,6 +83,17 @@ class DetalleSolicitudController extends Controller
             "message" => 'Actualizado correctamente',
             "data" => []
         ]);
+    }
+
+    private function storeDetalleSolicitudCompra($detalle, $idSolicitud, )
+    {
+            $detalleSolicitud = new DetalleSolicitud();
+            $detalleSolicitud->cantidad = $detalle["cantidad"];
+            $detalleSolicitud->descripcion = $detalle["descripcion"];
+            $detalleSolicitud->observaciones = $detalle["observaciones"];
+            $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
+            $detalleSolicitud->solicitudes_compra_id = $idSolicitud;
+            $detalleSolicitud->save();
     }
 
     /**

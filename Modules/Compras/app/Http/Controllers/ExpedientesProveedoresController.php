@@ -20,9 +20,32 @@ use ZipArchive;
 class ExpedientesProveedoresController extends Controller
 {
 
-    /** ******************************************************************
-     * Función que recupera archivos 
-     ********************************************************************/
+    public function store(Request $request): RedirectResponse
+    {
+        //
+    }
+    public function show($id)
+    {
+        //
+    }
+    
+    public function update(Request $request, $id): RedirectResponse
+    {
+        //
+    }
+    public function destroy($id)
+    {
+        //
+    }
+
+    
+    /**
+    * Recupera un archivo específico de un expediente dado su ID y nombre de archivo.
+    *
+    * @param int $id ID del expediente.
+    * @param string $file Nombre del archivo a recuperar.
+    * @return \Illuminate\Http\Response El archivo con su tipo MIME, o error 404 si no existe.
+    */
     public function getFile($id, $file)
     {
         $path = storage_path("app/expedientes/$id/$file");
@@ -34,9 +57,12 @@ class ExpedientesProveedoresController extends Controller
         return response($fileContent, 200)->header("Content-Type", $type);
     }
 
-    /** ********************************************************************
-     * Genera un Zip con el expediente del proveedor para ser descargado optimizacion
-     *********************************************************************/
+    /**
+    * Genera un archivo ZIP con el expediente del proveedor, incluyendo los archivos disponibles.
+    *
+    * @param int $id ID del proveedor.
+    * @return \Illuminate\Http\Response Descarga del archivo ZIP o mensaje de error si no hay archivos.
+    */
     public function downloadExpediente($id)
     {
         $archivos = ['constancia_fiscal', 'ine', 'comprobante_domicilio', 'estado_cuenta', 'acta_constitutiva', 'poder_notarial'];
@@ -66,6 +92,13 @@ class ExpedientesProveedoresController extends Controller
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
+    /**
+    * Valida qué archivos del expediente existen y están disponibles.
+    *
+    * @param object $rutas Objeto con rutas de los archivos.
+    * @param array $archivos Lista de nombres de archivos a verificar.
+    * @return array Lista de nombres de archivos disponibles.
+    */
     public function validarExpediente($rutas, $archivos)
     {
         $archivosDisponibles = [];
@@ -77,6 +110,14 @@ class ExpedientesProveedoresController extends Controller
         return $archivosDisponibles;
     }
 
+    /**
+    * Genera un archivo ZIP con los archivos disponibles del expediente.
+    *
+    * @param array $archivosDisponibles Lista de nombres de archivos disponibles.
+    * @param object $rutas Objeto con rutas de los archivos.
+    * @param int $id ID del proveedor.
+    * @return string Ruta del archivo ZIP generado.
+    */
     public function generarZip($archivosDisponibles, $rutas, $id)
     {
         $zip = new ZipArchive();
@@ -97,23 +138,5 @@ class ExpedientesProveedoresController extends Controller
             ], 500);
         }
         return $zipPath;
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        //
-    }
-    public function show($id)
-    {
-        //
-    }
-    
-    public function update(Request $request, $id): RedirectResponse
-    {
-        //
-    }
-    public function destroy($id)
-    {
-        //
     }
 }

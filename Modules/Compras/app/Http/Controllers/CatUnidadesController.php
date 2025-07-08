@@ -77,6 +77,11 @@ class CatUnidadesController extends Controller
         //
     }
 
+    /**
+     * Recupera un catalogo de datos de autotanques filtrados por num intercompania
+     * 
+     * @param int $intercompania : num intercompania de la empresa
+     */
     public function getAutotanques($intercompania) {
         $data = DB::select("call SistemaTickets.SP_GetAutotanquesSucursal($intercompania)");
 

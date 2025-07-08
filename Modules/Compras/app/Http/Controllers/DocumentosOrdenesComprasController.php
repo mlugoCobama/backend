@@ -16,55 +16,6 @@ use ZipArchive;
 
 class DocumentosOrdenesComprasController extends Controller
 {
-    /** ****************************************************
-     * Recupera documentos de ordenes de compra
-     ******************************************************/
-    public function getFile($id, $file)
-    {
-        $path = storage_path("app/docsOrdenCompra/$id/$file");
-        if (!File::exists($path)) {
-            abort(404);
-        }
-        $fileContent = File::get($path);
-        $type = File::mimeType($path);
-        return response($fileContent, 200)->header("Content-Type", $type);
-    }
-
-
-    /** *****************************************************************
-     * Genera un ZIP con la factura en XML y PDF para ser descargado
-     * RECORRE LAS RUTAS Y GUARDAR UNO POR UNO EN EL ZIP
-     *******************************************************************/
-    public function downloadFacturas($id)
-    {
-        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['ruta_xml_factura', 'ruta_pdf_factura']);
-        $zip = new ZipArchive();
-        $zipFileName = 'facturas_' . $id . '.zip';
-        $zipPath = storage_path('app/' . $zipFileName);
-
-        if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
-
-            foreach ($rutas as $ruta) {
-                $archivoPDF = $ruta['ruta_pdf_factura'];
-                $archivoXML = $ruta['ruta_xml_factura'];
-                if (Storage::exists($archivoPDF)) {
-                    $zip->addFile(Storage::path($archivoPDF), basename($archivoPDF));
-                }
-                if (Storage::exists($archivoXML)) {
-                    $zip->addFile(Storage::path($archivoXML), basename($archivoXML));
-                }
-            }
-            $zip->close();
-        } else {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'No se pudo generar el archivo ZIP'
-            ], 500);
-        }
-
-        return response()->download($zipPath)->deleteFileAfterSend(true);
-    }
-
 
     /** ****************************************************
      * Almacena los archivos de orden compra
@@ -183,8 +134,64 @@ class DocumentosOrdenesComprasController extends Controller
         //
     }
     
+    /**
+    * Recupera un archivo relacionado con una orden de compra desde el servidor.
+    *
+    * @param int $id ID de la orden de compra.
+    * @param string $file Nombre del archivo que se desea recuperar.
+    * @return \Illuminate\Http\Response Archivo solicitado como respuesta HTTP con cabecera Content-Type.
+    */
+    public function getFile($id, $file)
+    {
+        $path = storage_path("app/docsOrdenCompra/$id/$file");
+        if (!File::exists($path)) {
+            abort(404);
+        }
+        $fileContent = File::get($path);
+        $type = File::mimeType($path);
+        return response($fileContent, 200)->header("Content-Type", $type);
+    }
+
+
+    /**
+    * Genera un archivo ZIP que contiene las facturas en formato PDF y XML de una orden de compra específica.
+    *
+    * @param int $id ID de la orden de compra.
+    * @return \Symfony\Component\HttpFoundation\BinaryFileResponse Archivo ZIP generado, listo para descargar.
+    */
+    public function downloadFacturas($id)
+    {
+        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['ruta_xml_factura', 'ruta_pdf_factura']);
+        $zip = new ZipArchive();
+        $zipFileName = 'facturas_' . $id . '.zip';
+        $zipPath = storage_path('app/' . $zipFileName);
+
+        if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
+
+            foreach ($rutas as $ruta) {
+                $archivoPDF = $ruta['ruta_pdf_factura'];
+                $archivoXML = $ruta['ruta_xml_factura'];
+                if (Storage::exists($archivoPDF)) {
+                    $zip->addFile(Storage::path($archivoPDF), basename($archivoPDF));
+                }
+                if (Storage::exists($archivoXML)) {
+                    $zip->addFile(Storage::path($archivoXML), basename($archivoXML));
+                }
+            }
+            $zip->close();
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No se pudo generar el archivo ZIP'
+            ], 500);
+        }
+
+        return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
+
     /** 
      * Recupera los datos del xml y los procesa listos para mostrar en el backend
+     * 
      * @param id  de la orden de compra
      */
     public function leerYProcesarXML($id)

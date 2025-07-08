@@ -22,38 +22,6 @@ use Modules\Compras\Models\SolicitudesCompra;
 
 class CotizacionesController extends Controller
 {
-    /** ****************************************
-     * Función que genera folios consecutivos
-     ******************************************/
-    public function generarFolioCo()
-    {
-        $ultimaCotizacion = Cotizaciones::orderBy('id', 'desc')->first('folio');
-        if ($ultimaCotizacion) {
-            $ultimoFolio = $ultimaCotizacion->folio;
-            $numero = intval(substr($ultimoFolio, 3)) + 1;
-        } else {
-            $numero = 1;
-        }
-        $nuevoFolio = 'CO-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
-        return response()->json(['nuevoFolio' => $nuevoFolio]);
-    }
-
-    /** **********************************************
-     * Función para recuperar archivos del servidor  
-     ***********************************************/
-    public function getFile($id, $file)
-    {
-        $path = storage_path("app/cotizaciones/$id/$file");
-        if (!File::exists($path)) {
-            abort(404);
-        }
-
-        $fileContent = File::get($path);
-
-        $type = File::mimeType($path);
-        return response($fileContent, 200)->header("Content-Type", $type);
-    }
-
 
     /** ***************************************************
      * Guarda los importes unitarios de la cotización.
@@ -179,5 +147,43 @@ class CotizacionesController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    /**
+    * Genera un nuevo folio consecutivo para cotizaciones.
+    *
+    * @return \Illuminate\Http\JsonResponse Devuelve el nuevo folio en formato JSON con la clave 'nuevoFolio'.
+    */
+    public function generarFolioCo()
+    {
+        $ultimaCotizacion = Cotizaciones::orderBy('id', 'desc')->first('folio');
+        if ($ultimaCotizacion) {
+            $ultimoFolio = $ultimaCotizacion->folio;
+            $numero = intval(substr($ultimoFolio, 3)) + 1;
+        } else {
+            $numero = 1;
+        }
+        $nuevoFolio = 'CO-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
+        return response()->json(['nuevoFolio' => $nuevoFolio]);
+    }
+
+    /**
+    * Recupera un archivo almacenado en el servidor relacionado con una cotización específica.
+    *
+    * @param int $id El ID de la cotización asociada.
+    * @param string $file El nombre del archivo que se desea recuperar.
+    * @return \Illuminate\Http\Response El archivo como respuesta HTTP, incluyendo el tipo de contenido.
+    */
+    public function getFile($id, $file)
+    {
+        $path = storage_path("app/cotizaciones/$id/$file");
+        if (!File::exists($path)) {
+            abort(404);
+        }
+
+        $fileContent = File::get($path);
+
+        $type = File::mimeType($path);
+        return response($fileContent, 200)->header("Content-Type", $type);
     }
 }

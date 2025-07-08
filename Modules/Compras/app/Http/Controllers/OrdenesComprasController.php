@@ -32,24 +32,6 @@ use Modules\Compras\Transformers\UsersResource;
 
 class OrdenesComprasController extends Controller
 {
-    /** ************************************************************
-     * Genera un nuevo folio consecutivo en base al ultimo folio
-     **************************************************************/
-    public function generarFolio()
-    {
-        $ultimaOrden = OrdenCompra::orderBy('id', 'desc')->first();
-            if ($ultimaOrden) {
-                $ultimoFolio = $ultimaOrden->folio_oc;
-                $numero = intval(substr($ultimoFolio, 3)) + 1;
-            } else {
-                $numero = 1;
-            }
-        $nuevoFolio = 'OC-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
-
-        return $nuevoFolio;
-    }
-
-
     /** **********************************************************
      * Genera la orden de compra en la BD
      ************************************************************/
@@ -106,52 +88,6 @@ class OrdenesComprasController extends Controller
             'data' => $ordenCompra
         ]);        
         
-    }
-
-    /** **************************************************************
-     * Consulta para generar el formato interno de orden de compra
-     ****************************************************************/
-    public function consultaDatosPDF($id)
-    {
-        $solicitudCompra = SolicitudesCompra::where('id', $id)->first();
-        if($solicitudCompra->tipo == 2){
-            $user = UsersResource::collection(DB::connection('dashboard')->select("call SP_GetDataAutotanque($solicitudCompra->usuario_destino)"));
-        }else{
-            $user = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')'));
-        }
-
-        $userSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_solicita . ')');
-
-        $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
-
-        $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
-
-        $cotizacionProveedor = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->Seleccionado()->first();
-
-        $proveedor = Proveedores::where('id', $cotizacionProveedor->proveedores_id)->first();
-
-        $detalleCotizacion = DetallesCotizacionResource::collection((DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $cotizacionProveedor->id)->get()));
-        
-        $data =  [
-            'ordenCompra' => $ordenCompra,
-            'cotizacion' => $cotizacion,
-            'cotizacionProveedor' => $cotizacionProveedor,
-            'proveedor' => $proveedor,
-            'detallesCotizacion' => $detalleCotizacion,
-            'solicitudCompra' => $solicitudCompra,
-            'destino' => $user,
-            'solicita' => $userSolicita
-        ];
-
-        //Llamada a la funcion quue genera el formato
-        $pdf = new OrdenCompraPdfController();
-        $file = $pdf->OrdenCompraFormatoInterno($data);
-
-        //Devuelvo el pdf hacia el front
-         return response($file, 200)
-             ->header('Content-Type', 'application/pdf')
-           ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
-
     }
 
     public function edit($id)
@@ -365,4 +301,66 @@ class OrdenesComprasController extends Controller
 
     }
 
+    /** ************************************************************
+     * Genera un nuevo folio consecutivo en base al ultimo folio
+     **************************************************************/
+    public function generarFolio()
+    {
+        $ultimaOrden = OrdenCompra::orderBy('id', 'desc')->first();
+            if ($ultimaOrden) {
+                $ultimoFolio = $ultimaOrden->folio_oc;
+                $numero = intval(substr($ultimoFolio, 3)) + 1;
+            } else {
+                $numero = 1;
+            }
+        $nuevoFolio = 'OC-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
+
+        return $nuevoFolio;
+    }
+
+    /** **************************************************************
+     * Consulta para generar el formato interno de orden de compra
+     ****************************************************************/
+    public function consultaDatosPDF($id)
+    {
+        $solicitudCompra = SolicitudesCompra::where('id', $id)->first();
+        if($solicitudCompra->tipo == 2){
+            $user = UsersResource::collection(DB::connection('dashboard')->select("call SP_GetDataAutotanque($solicitudCompra->usuario_destino)"));
+        }else{
+            $user = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')'));
+        }
+
+        $userSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_solicita . ')');
+
+        $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
+
+        $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
+
+        $cotizacionProveedor = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->Seleccionado()->first();
+
+        $proveedor = Proveedores::where('id', $cotizacionProveedor->proveedores_id)->first();
+
+        $detalleCotizacion = DetallesCotizacionResource::collection((DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $cotizacionProveedor->id)->get()));
+        
+        $data =  [
+            'ordenCompra' => $ordenCompra,
+            'cotizacion' => $cotizacion,
+            'cotizacionProveedor' => $cotizacionProveedor,
+            'proveedor' => $proveedor,
+            'detallesCotizacion' => $detalleCotizacion,
+            'solicitudCompra' => $solicitudCompra,
+            'destino' => $user,
+            'solicita' => $userSolicita
+        ];
+
+        //Llamada a la funcion quue genera el formato
+        $pdf = new OrdenCompraPdfController();
+        $file = $pdf->OrdenCompraFormatoInterno($data);
+
+        //Devuelvo el pdf hacia el front
+         return response($file, 200)
+             ->header('Content-Type', 'application/pdf')
+           ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
+
+    }
 }

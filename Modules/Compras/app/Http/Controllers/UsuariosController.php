@@ -34,6 +34,21 @@ class UsuariosController extends Controller
         //
     }
 
+    public function edit($id)
+    {
+        return view('compras::edit');
+    }
+
+    public function update(Request $request, $id)
+    {
+        //
+    }
+
+    public function destroy($id)
+    {
+        //
+    }
+
     /** ***********************************************************
      * Recupera una colección de usuarios por su numero intercompania
      ************************************************************/
@@ -51,7 +66,6 @@ class UsuariosController extends Controller
     /** ***********************************************************
      * Recupera un usuario DEL INTRANET especifico por su id
      ************************************************************/
-
     public function showById($id)
     {
         $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $id . ')');
@@ -82,20 +96,5 @@ class UsuariosController extends Controller
             'data' => UsersResource::collection($data),
             'message' => 'Datos recuperados correctamente'
         ]);
-    }
-
-    public function edit($id)
-    {
-        return view('compras::edit');
-    }
-
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    public function destroy($id)
-    {
-        //
     }
 }
