@@ -36,7 +36,9 @@ class SolicitudesMacroResource extends JsonResource
             'claseEstado' => $estadoInfo['claseEstado'],
             'claseEmpresa' => $claseEmpresa['clase'],
             'auto_admin' => $this->auto_admin,
-            'auto_gg' => $this->auto_gg
+            'auto_gg' => $this->auto_gg,
+            'tipo' => $this->tipo,
+            // 'ordenTrabajo' => new OrdenTrabajoResource($this->OrdenTrabajo)
             //'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
         ];
     }

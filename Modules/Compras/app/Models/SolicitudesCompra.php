@@ -22,6 +22,7 @@ class SolicitudesCompra extends Model
         'fecha',
         'estatus',
         'activo',
+        'empresa'
     ];
 
     /**
@@ -61,6 +62,10 @@ class SolicitudesCompra extends Model
 
     public function Cotizaciones(){
         return $this->hasMany(Cotizaciones::class);
+    }
+
+    public function OrdenTrabajo(){
+        return $this->hasMany(OrdenCompra::class, 'com_solicitudes_compra_id');
     }
 
     //TODO RELACIONARLO CON LA BASE DE USUARIOS Y EMPRESAS

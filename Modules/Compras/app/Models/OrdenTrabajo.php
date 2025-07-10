@@ -29,4 +29,8 @@ class OrdenTrabajo extends Model
     {
         //return OrdenTrabajoFactory::new();
     }
+
+    public function SolicitudCompra(){
+        return $this->hasOne(SolicitudesCompra::class);
+    }
 }

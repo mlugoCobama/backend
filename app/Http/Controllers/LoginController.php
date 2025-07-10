@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Modules\Compras\Transformers\AuthResource;
 
 class LoginController extends Controller
 {
@@ -18,9 +19,9 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $fields['email'])
-                    ->where('activo', '1')
-                    ->first();
+        $user = new AuthResource(User::where('name', $fields['email'])
+                    // ->where('activo', '1')
+                    ->first());
 
         if (!$user || !( md5($fields['password']) === $user->password)) {
             if (!$user || !( sha1($fields['password']) === $user->password)) {

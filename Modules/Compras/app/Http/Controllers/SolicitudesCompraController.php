@@ -41,9 +41,14 @@ class SolicitudesCompraController extends Controller
     /** ************************************************************
      * Recupera todos los registros de la base de datos
      **************************************************************/
-    public function index()
+    public function index(int $intercompania)
     {
-        $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->orderBy('fecha', 'desc')->get()));
+        if($intercompania === 333){
+            $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->autorizadas()->orderBy('fecha', 'desc')->get()));
+        }else{
+            $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->where('empresa', $intercompania)->active()->orderBy('fecha', 'desc')->get()));
+        }
+        
         return response()->json([
             'status' => 'success',
             'message' => 'Consulta generada correctamente',
@@ -199,6 +204,7 @@ class SolicitudesCompraController extends Controller
         $dataSolicitud = new SolicitudesCompra();
         $dataSolicitud->folio = $this->generarFolioSc();
         $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
+        $dataSolicitud->empresa = $data["empresa"];
         $dataSolicitud->usuario_destino = $data["usuario_destino"];
         $dataSolicitud->motivo = $data["motivo"];
         $dataSolicitud->fecha = date('Y-m-d H:i:s') ?? now();

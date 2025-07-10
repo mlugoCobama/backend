@@ -199,55 +199,6 @@ class AgenciasController extends Controller
         }
     }
 
-    /**
-     * Recupera el resto de los datos una vez que se ha validado 
-     * que existen datos para periodo seleccionado
-     */
-    private function conjuntoDatos($fechaBusqueda, $sub_division,  $dataAnio)
-    {
-        $fecha = DateTime::createFromFormat('Y-m-d', $fechaBusqueda);
-        $anio =  $fecha->format('Y');
-        $mes = $fecha->format('m');
-        $anioAnt = $anio - 1;
-        $fechaMesA = $fecha->modify('-1 month');
-        $mesA = $fechaMesA->format('m');
-        $anioA = $fechaMesA->format('Y');
-
-        $dataMes = $this->getDataMesNissan($mes, $anio);
-        $dataMesAnt =  $this->getDataMesNissan($mesA, $anioA);
-        $dataAnioAnt = $this->getDataMesNissan($mes, $anioAnt);
-        $totalAnio =  DataAnualAgenciasResource::collection($dataAnio);
-        $totalAnioAnt = $this->getDataAnualAgencias($anioAnt, $sub_division);
-        $antInventarios = $this->getDataAntInventarios($mes, $anio, $sub_division);
-        $totalAnioAnt2 = $this->getDataAnualAgencias(($anioAnt - 1), $sub_division);
-
-        $data = [
-            'mes' => $dataMes,
-            'mesAnt' => $dataMesAnt,
-            'anioAnt' => $dataAnioAnt,
-            'totalAnio' => $totalAnio,
-            'totalAnioAnt' => $totalAnioAnt,
-            'totalAnioAnt2' => $totalAnioAnt2,
-            'antInventarios' => $antInventarios,
-        ];
-
-        return $data;
-    }
-
-    private function getDataMesNissan(int $mes, int $anio)
-    {
-        return NissanMesResource::collection(DB::select("call Dashboard.SP_GetDataMesNissan($mes, $anio)"));
-    }
-
-    private function getDataAnualAgencias(int $anio, string $subDivision)
-    {
-        return DataAnualAgenciasResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAgencias($anio, $subDivision)"));
-    }
-
-    private function getDataAntInventarios(int $mes, int $anio, string $subDivision)
-    {
-        return DB::connection('dashboard')->select("call Dashboard.SP_GetDataAntSemestralInventarios($mes, $anio, $subDivision)");
-    }
 
     /**
      * Show the form for creating a new resource.
@@ -311,6 +262,107 @@ class AgenciasController extends Controller
         ]);
     }
 
+    public function update(Request $request, $id)
+    {
+        //
+    }
+
+    public function destroy($id)
+    {
+        //
+    }
+
+    /**
+     * Recupera el resto de los datos una vez que se ha validado que existen datos para periodo seleccionado
+     *  
+     * @param string $fechaBusqueda fecha del periodo a buscar
+     * @param int $sub_division subdivision de agencias
+     * @param object $dataAnio datos recuperados de la consulta de datos anuales
+     * @return array $data resultado de las consultas
+     */
+    private function conjuntoDatos($fechaBusqueda, $sub_division,  $dataAnio)
+    {
+        $fecha = DateTime::createFromFormat('Y-m-d', $fechaBusqueda);
+        $anio =  $fecha->format('Y');
+        $mes = $fecha->format('m');
+        $anioAnt = $anio - 1;
+        $fechaMesA = $fecha->modify('-1 month');
+        $mesA = $fechaMesA->format('m');
+        $anioA = $fechaMesA->format('Y');
+
+        $dataMes = $this->getDataMesNissan($mes, $anio);
+        $dataMesAnt =  $this->getDataMesNissan($mesA, $anioA);
+        $dataAnioAnt = $this->getDataMesNissan($mes, $anioAnt);
+        $totalAnio =  DataAnualAgenciasResource::collection($dataAnio);
+        $totalAnioAnt = $this->getDataAnualAgencias($anioAnt, $sub_division);
+        $antInventarios = $this->getDataAntInventarios($mes, $anio, $sub_division);
+        $totalAnioAnt2 = $this->getDataAnualAgencias(($anioAnt - 1), $sub_division);
+
+        $data = [
+            'mes' => $dataMes,
+            'mesAnt' => $dataMesAnt,
+            'anioAnt' => $dataAnioAnt,
+            'totalAnio' => $totalAnio,
+            'totalAnioAnt' => $totalAnioAnt,
+            'totalAnioAnt2' => $totalAnioAnt2,
+            'antInventarios' => $antInventarios,
+        ];
+
+        return $data;
+    }
+
+    /**
+     * Recupera los datos del mes de Nissan
+     * @param int $mes  Mes a buscar
+     * @param int $anio  Anio a buscar 
+     * @return object resultado de la consulta
+     */
+    private function getDataMesNissan(int $mes, int $anio)
+    {
+        return NissanMesResource::collection(DB::select("call Dashboard.SP_GetDataMesNissan($mes, $anio)"));
+    }
+
+    /**
+     * Recupera los datos de año buscado de Nissan
+     * @param int $subDivision subdivision a la que pertenecen la agencias
+     * @param int $anio  Anio a buscar 
+     * @return object resultado de la consulta
+     */
+    private function getDataAnualAgencias(int $anio, string $subDivision)
+    {
+        return DataAnualAgenciasResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAgencias($anio, $subDivision)"));
+    }
+
+    /**
+     * Recupera la antiguedad de inventarioa a 6 meses de la agencia
+     *  
+     * @param int $mes  Mes a buscar
+     * @param int $anio  Anio a buscar 
+     * @param int $subDivision subdivision a la que pertenecen la agencias
+     * @return object resultado de la consulta 
+     */
+    private function getDataAntInventarios(int $mes, int $anio, string $subDivision)
+    {
+        return DB::connection('dashboard')->select("call Dashboard.SP_GetDataAntSemestralInventarios($mes, $anio, $subDivision)");
+    }
+
+    /**
+     * Recupera los datos del mes de Nissan
+     * @param int $mes  Mes a buscar
+     * @param int $anio  Anio a buscar 
+     * @return object resultado de la consulta
+     */
+    public function showAgenciasNissan($mes, $anio)
+    {
+        $data =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anio . ')'));
+
+        return response()->json([
+            'success' => true,
+            'message' => '',
+            'data' => $data
+        ]);
+    }
+
     /**
      * Actualiza los datos si existen y los crea si no existen
      */
@@ -368,8 +420,14 @@ class AgenciasController extends Controller
     }
 
     /**
-     * Convierte el array del request a json 
-     */
+    * Procesa un array de datos de agencias y lo convierte a formato JSON estructurado
+    *  
+    * @param array $dataMesAgencias Array bidimensional con los datos a procesar.
+    * @param object $request Objeto request que contiene los headers con nombres de agencias
+    * @param string $fecha Fecha a asignar a cada sección procesada
+    * @return array Array JSON estructurado con el formato necesario
+    *
+    */
     public function procesarArraytoJson($dataMesAgencias, $request, $fecha)
     {
         $jsonData = [];
@@ -406,27 +464,6 @@ class AgenciasController extends Controller
         return $jsonData;
     }
 
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    public function destroy($id)
-    {
-        //
-    }
-
-    public function showAgenciasNissan($mes, $anio)
-    {
-        $data =  NissanMesResource::collection(DB::select('call Dashboard.SP_GetDataMesNissan(' . $mes . ',' . $anio . ')'));
-
-        return response()->json([
-            'success' => true,
-            'message' => '',
-            'data' => $data
-        ]);
-    }
-
     private $estructura = [
         "UNIDADES VENDIDAS" => [
             ['value' => "nuevos", 'colspan' => 1],
@@ -453,15 +490,15 @@ class AgenciasController extends Controller
             ['value' => "gasto", 'colspan' => 1],
         ],
         "COSTO FINANCIERO CONSOLIDADO" => [
-            ['value' => "cnuevos", 'colspan' => 1], //Cambiar el valor que regresa de la bd
-            ['value' => "cflotillas", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "cnuevos", 'colspan' => 1],
+            ['value' => "cflotillas", 'colspan' => 1],
             ['value' => "refacciones", 'colspan' => 1],
             ['value' => "bajio", 'colspan' => 1],
             ['value' => "intercias", 'colspan' => 1],
         ],
         "PRESTAMOS" => [
-            ['value' => "plan_piso", 'colspan' => 1], //Cambiar el valor que regresa de la bd
-            ['value' => "plan_piso_intereses", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "plan_piso", 'colspan' => 1],
+            ['value' => "plan_piso_intereses", 'colspan' => 1],
             ['value' => "nrf", 'colspan' => 1],
             ['value' => "nrf_intereses", 'colspan' => 1],
         ],
@@ -469,8 +506,8 @@ class AgenciasController extends Controller
             ['value' => "bono_marca", 'colspan' => 1],
         ],
         "OBJETIVOS" => [
-            ['value' => "objetivos", 'colspan' => 1], //Cambiar el valor que regresa de la bd
-            ['value' => "cumplimiento", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "objetivos", 'colspan' => 1],
+            ['value' => "cumplimiento", 'colspan' => 1],
             ['value' => "porcentaje", 'colspan' => 1],
         ],
         "UNO" => [
@@ -648,6 +685,12 @@ class AgenciasController extends Controller
         }
     }
 
+    /**
+     * Recupera la data anual deuna agencia en particular 
+     * 
+     * @param int $id Id de la agencia
+     * @param int $anio Anio que se busca
+     */
     public function getAnualAgecia($id, $anio)
     {
         $anioAnt = $anio - 1;
@@ -667,6 +710,14 @@ class AgenciasController extends Controller
         ]);
     }
 
+    /**
+     * Recupera la data mensual de los putnos de venta
+     * 
+     * @param int $mes mes de busqueda
+     * @param int $anio anio de busqueda
+     * @param int $subDivision subdiviosn de empresas a la que pertenecen los PV's
+     * 
+     */
     public function  getMesPVs($mes, $anio, $subDivision)
     {
         $fechaBusqueda = "$anio-$mes-01";

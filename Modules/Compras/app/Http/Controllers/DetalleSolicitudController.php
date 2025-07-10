@@ -36,10 +36,7 @@ class DetalleSolicitudController extends Controller
     /**
      * Show the specified resource.
      */
-    public function show($id)
-    {
-        
-    }
+    public function show($id) {}
 
     /**
      * Show the form for editing the specified resource.
@@ -61,21 +58,11 @@ class DetalleSolicitudController extends Controller
          * PREPARARLO PARA QUE MANEJE EL LOG DE EVENTOS
          */
         foreach ($data as $item) {
-            if(isset($item['id'])){
-                DetalleSolicitud::
-            where('id', $item['id'])->update([
-                'cantidad' => $item['cantidad'],
-                'descripcion' =>  $item['descripcion'],
-                'observaciones' =>  $item['observaciones'],
-                'cat_unidades_medida_id' =>  $item['unidadMedida']['id'],
-                'solicitudes_compra_id' =>  $item['solicitudes_compra_id'],
-                'img_referencia' =>  $item['img_referencia'],
-                'confirmado' =>  $item['confirmado'],
-                ]);
-            }else{
+            if (isset($item['id'])) {
+                $this->updateDetalleSolicitudCompra($item);
+            } else {
                 $this->storeDetalleSolicitudCompra($item, $id);
             }
-            
         }
 
         return response()->json([
@@ -85,17 +72,6 @@ class DetalleSolicitudController extends Controller
         ]);
     }
 
-    private function storeDetalleSolicitudCompra($detalle, $idSolicitud, )
-    {
-            $detalleSolicitud = new DetalleSolicitud();
-            $detalleSolicitud->cantidad = $detalle["cantidad"];
-            $detalleSolicitud->descripcion = $detalle["descripcion"];
-            $detalleSolicitud->observaciones = $detalle["observaciones"];
-            $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
-            $detalleSolicitud->solicitudes_compra_id = $idSolicitud;
-            $detalleSolicitud->save();
-    }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -103,4 +79,29 @@ class DetalleSolicitudController extends Controller
     {
         //
     }
+    
+    private function storeDetalleSolicitudCompra($detalle, $idSolicitud,)
+    {
+        $detalleSolicitud = new DetalleSolicitud();
+        $detalleSolicitud->cantidad = $detalle["cantidad"];
+        $detalleSolicitud->descripcion = $detalle["descripcion"];
+        $detalleSolicitud->observaciones = $detalle["observaciones"];
+        $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
+        $detalleSolicitud->solicitudes_compra_id = $idSolicitud;
+        $detalleSolicitud->save();
+    }
+
+    private function updateDetalleSolicitudCompra($item)
+    {
+        DetalleSolicitud::where('id', $item['id'])->update([
+            'cantidad' => $item['cantidad'],
+            'descripcion' =>  $item['descripcion'],
+            'observaciones' =>  $item['observaciones'],
+            'cat_unidades_medida_id' =>  $item['unidadMedida']['id'],
+            'solicitudes_compra_id' =>  $item['solicitudes_compra_id'],
+            'img_referencia' =>  $item['img_referencia'],
+            'confirmado' =>  $item['confirmado'],
+        ]);
+    }
+
 }

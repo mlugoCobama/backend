@@ -24,7 +24,15 @@ class SolicitudesMacroController extends Controller
      */
     public function index()
     {
-        $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacro()"));
+        $intercompania = 333;
+
+        if( $intercompania === 333){
+            $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacro()"));
+        }else
+        {
+            $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacro()"));
+        }
+        
         // $data = SolicitudesMacroResource::collection((SolicitudesCompra::macrotaller()->active()->orderBy('fecha', 'desc')->get()));
         return response()->json([
             'status' => 'success',

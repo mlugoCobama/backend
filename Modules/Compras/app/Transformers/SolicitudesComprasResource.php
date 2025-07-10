@@ -36,7 +36,8 @@ class SolicitudesComprasResource extends JsonResource
             'estado' => $estadoInfo['estado'],
             'claseEstado' => $estadoInfo['claseEstado'],
             'auto_admin' => $this->auto_admin,
-            'auto_gg' => $this->auto_gg
+            'auto_gg' => $this->auto_gg,
+            'tipo' => $this->tipo
             //'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
         ];
     }

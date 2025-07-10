@@ -23,6 +23,9 @@ class User extends Authenticatable
         'password',
     ];
 
+    protected $connection = 'intranet';
+    protected $table = 'glpi_users';
+
     /**
      * The attributes that should be hidden for serialization.
      *

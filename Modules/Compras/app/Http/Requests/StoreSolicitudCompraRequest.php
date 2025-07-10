@@ -18,6 +18,7 @@ class StoreSolicitudCompraRequest extends FormRequest
             'data.usuario_solicita' => 'required|integer',
             'data.usuario_destino' => 'required|integer',
             'data.motivo' => 'required|string',
+            'data.empresa' => 'required|integer',
             'data.c_c' => 'nullable|integer',
             'data.detalles' => 'required|array|min:1',
             'data.detalles.*.cantidad' => 'required|numeric|min:1',

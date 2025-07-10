@@ -74,22 +74,7 @@ class ComisionesController extends Controller
             // 'data' => $registros
         ]);
     }
-    // ", ['2025-06-01','2025-06-10']);
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function getPorcentajes(){
-    //     $data = Cache::remember('porcentajes_all', now()->addMinutes(10), function () {
-    //     return Porcentaje::all();
-    // });
-        $data = Porcentaje::all();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => '',
-            'data' => $data
-        ]);
-    }
     public function create()
     {
         return view('nissan::create');
@@ -170,5 +155,21 @@ class ComisionesController extends Controller
     }
 
 
+        // ", ['2025-06-01','2025-06-10']);
+    /**
+     * Recupera los porcentajes desde la base de datos
+     */
+    public function getPorcentajes(){
+    //     $data = Cache::remember('porcentajes_all', now()->addMinutes(10), function () {
+    //     return Porcentaje::all();
+    // });
+        $data = Porcentaje::all();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => '',
+            'data' => $data
+        ]);
+    }
     
 }

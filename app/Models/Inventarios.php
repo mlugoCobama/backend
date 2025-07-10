@@ -11,7 +11,7 @@ class Inventarios extends Model
     /**
      * Campos que pueden ser alterados
      */
-    protected $filleable = [
+    protected $fillable = [
         'nuevos',
         'refacciones',
         'seminuevos',
