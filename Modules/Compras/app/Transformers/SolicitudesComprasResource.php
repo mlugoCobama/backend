@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-
+use Modules\Compras\Models\OrdenTrabajo;
 
 class SolicitudesComprasResource extends JsonResource
 {
@@ -21,6 +21,7 @@ class SolicitudesComprasResource extends JsonResource
         $usuarioSolicita =  $this->getNombreUsuario( 1 ,$this->usuario_solicita);
         $estadoInfo = $this->asignarEstado($this->estatus);
         $datosCC = $this->asignarDescripcionCC($this->c_c);
+        $ordenTrabajo = $this->getOrdenTrabajo($this->id);
 
         return [
             'id' => $this->id,
@@ -37,8 +38,8 @@ class SolicitudesComprasResource extends JsonResource
             'claseEstado' => $estadoInfo['claseEstado'],
             'auto_admin' => $this->auto_admin,
             'auto_gg' => $this->auto_gg,
-            'tipo' => $this->tipo
-            //'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
+            'tipo' => $this->tipo,
+            'orden_trabajo' => $ordenTrabajo
         ];
     }
 
@@ -93,5 +94,10 @@ class SolicitudesComprasResource extends JsonResource
         $jsonCC = json_decode(json: $rawCentrosCosto, associative: true);
         $dataCC = $jsonCC[$cc];
         return $dataCC;
+    }
+
+    private function getOrdenTrabajo($idSolictud){
+        $ordenTrabajo = OrdenTrabajo::where('com_solicitudes_compra_id', $idSolictud)->first();
+        return $ordenTrabajo->orden_trabajo ?? null;
     }
 }

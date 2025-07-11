@@ -22,15 +22,13 @@ class SolicitudesMacroController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(int $intercompania)
     {
-        $intercompania = 333;
-
         if( $intercompania === 333){
             $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacro()"));
         }else
         {
-            $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacro()"));
+            $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacroGasera($intercompania)"));
         }
         
         // $data = SolicitudesMacroResource::collection((SolicitudesCompra::macrotaller()->active()->orderBy('fecha', 'desc')->get()));
@@ -185,6 +183,7 @@ class SolicitudesMacroController extends Controller
         $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
         $dataSolicitud->usuario_destino = $data["usuario_destino"];
         $dataSolicitud->motivo = $data["motivo"];
+        $dataSolicitud->empresa = $data["empresa"];
         $dataSolicitud->fecha = date('Y-m-d H:i:s') ?? now();
         $dataSolicitud->c_c = $data["c_c"];
         $dataSolicitud->tipo = 2;

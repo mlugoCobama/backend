@@ -64,9 +64,11 @@ class SolicitudesCompra extends Model
         return $this->hasMany(Cotizaciones::class);
     }
 
-    public function OrdenTrabajo(){
-        return $this->hasMany(OrdenCompra::class, 'com_solicitudes_compra_id');
+    public function OrdenTrabajo()
+    {
+    return $this->hasOne(OrdenTrabajo::class, 'com_solicitudes_compra_id', 'id');
     }
+
 
     //TODO RELACIONARLO CON LA BASE DE USUARIOS Y EMPRESAS
     /**

@@ -43,6 +43,7 @@ Route::prefix('compras')->group(function () {
     Route::resource('DetallesSolicitud', DetalleSolicitudController::class);
     
     Route::get('/Solicitudes/{intercompania}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
+    Route::get('/Solicitudes/Macro/{intercompania}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
     Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores'])->name('Proveedores.getProveedores');
     Route::get('/SolicitudCompra/{id}',[SolicitudesCompraController::class, 'getSolicitud'])->name('SolicitudesCompras.getSolicitud');
 

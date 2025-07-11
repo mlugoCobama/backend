@@ -7,6 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Modules\Compras\Models\DatosVehiculo;
+use Modules\Compras\Models\OrdenTrabajo;
 
 class SolicitudesMacroResource extends JsonResource
 {
@@ -38,8 +39,9 @@ class SolicitudesMacroResource extends JsonResource
             'auto_admin' => $this->auto_admin,
             'auto_gg' => $this->auto_gg,
             'tipo' => $this->tipo,
-            // 'ordenTrabajo' => new OrdenTrabajoResource($this->OrdenTrabajo)
-            //'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
+            'id_orden_trabajo' => $this->id_orden_trabajo,
+            'orden_trabajo' => $this->orden_trabajo,
+            // 'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
         ];
     }
 
@@ -119,4 +121,5 @@ class SolicitudesMacroResource extends JsonResource
         $dataCC = $jsonCC[$cc];
         return $dataCC;
     }
+
 }

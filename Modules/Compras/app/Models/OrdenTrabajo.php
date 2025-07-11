@@ -13,7 +13,7 @@ class OrdenTrabajo extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'orden_servicio',
+        'orden_trabajo',
         'com_datos_vehiculo_id',
         'com_solicitudes_compra_id',
     ];
@@ -31,6 +31,6 @@ class OrdenTrabajo extends Model
     }
 
     public function SolicitudCompra(){
-        return $this->hasOne(SolicitudesCompra::class);
+        return $this->belongsTo(SolicitudesCompra::class, 'com_solicitudes_compra_id', 'id');
     }
 }

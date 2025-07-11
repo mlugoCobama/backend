@@ -16,7 +16,7 @@ class OrdenTrabajoResource extends JsonResource
         return [
             "orden_trabajo" => $this->orden_trabajo,
             "datos_vehiculo" => $this->com_datos_vehiculo_id,
-            "solicitu_compra" => $this->com_solicitudes_compra_id,
+            "solicitud_compra" => $this->com_solicitudes_compra_id,
         ];
         
     }
