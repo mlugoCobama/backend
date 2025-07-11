@@ -86,7 +86,7 @@ class DetalleSolicitudController extends Controller
         $detalleSolicitud->cantidad = $detalle["cantidad"];
         $detalleSolicitud->descripcion = $detalle["descripcion"];
         $detalleSolicitud->observaciones = $detalle["observaciones"];
-        $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
+        $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"] ?? $detalle['unidadMedida'];
         $detalleSolicitud->solicitudes_compra_id = $idSolicitud;
         $detalleSolicitud->save();
     }
@@ -97,9 +97,10 @@ class DetalleSolicitudController extends Controller
             'cantidad' => $item['cantidad'],
             'descripcion' =>  $item['descripcion'],
             'observaciones' =>  $item['observaciones'],
-            'cat_unidades_medida_id' =>  $item['unidadMedida']['id'],
+            // 'cat_unidades_medida_id' =>  $item['unidadMedida']['id'],
+            'cat_unidades_medida_id' =>  $item['unidadMedida'],
             'solicitudes_compra_id' =>  $item['solicitudes_compra_id'],
-            'img_referencia' =>  $item['img_referencia'],
+            // 'img_referencia' =>  $item['img_referencia'],
             'confirmado' =>  $item['confirmado'],
         ]);
     }
