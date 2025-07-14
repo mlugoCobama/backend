@@ -110,10 +110,20 @@ class SolicitudesCompraController extends Controller
             ["$request->campo" => $request->value]
         );
 
+        $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
+
+        if(!empty($cotizacion)){
+            $solicitud = SolicitudesCompra::findOrFail($id);
+            if ($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1) {
+            $solicitud->estatus = EstatusSolicitud::EN_COTIZACION;
+            $solicitud->save();
+            }
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha actualizado correctamente',
-            'data' => ''
+            'data' => $cotizacion
         ]);
     }
 
@@ -331,9 +341,6 @@ class SolicitudesCompraController extends Controller
             $solicitud->save();
         }
         $this->validarAutorizacion($id);
-        // SolicitudesCompra::where ('id', $id)->update(
-        //    [ "auto_admin" => "1", "auto_gg" => "1", "estatus" => EstatusSolicitud::SOLICITADO]
-        // );
 
         return view('compras::confirmacion');
     }

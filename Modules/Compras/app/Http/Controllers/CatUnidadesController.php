@@ -117,7 +117,7 @@ class CatUnidadesController extends Controller
             'placas' => $row[4] ?? 'NA', 
             'id_sucursal' =>  10 ?? 'NA',
         ]);
-
+            
         DatosTanque::create([
             'marca' => $row[5] ?? 'NA', 
             'anio_fabricacion' => $row[6] ?? 'NA',
