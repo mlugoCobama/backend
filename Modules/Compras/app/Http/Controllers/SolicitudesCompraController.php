@@ -44,7 +44,7 @@ class SolicitudesCompraController extends Controller
     public function index(int $intercompania)
     {
         if($intercompania === 333){
-            $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->autorizadas()->orderBy('fecha', 'desc')->get()));
+            $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->autorizadas()->orderBy('updated_at', 'desc')->get()));
         }else{
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->where('empresa', $intercompania)->active()->orderBy('fecha', 'desc')->get()));
         }
@@ -110,20 +110,12 @@ class SolicitudesCompraController extends Controller
             ["$request->campo" => $request->value]
         );
 
-        $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
-
-        if(!empty($cotizacion)){
-            $solicitud = SolicitudesCompra::findOrFail($id);
-            if ($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1) {
-            $solicitud->estatus = EstatusSolicitud::EN_COTIZACION;
-            $solicitud->save();
-            }
-        }
-
+        $this->validarCotizacion($id);
+        
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha actualizado correctamente',
-            'data' => $cotizacion
+            'data' => []
         ]);
     }
 
@@ -355,6 +347,27 @@ class SolicitudesCompraController extends Controller
         if ($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1) {
             $solicitud->estatus = EstatusSolicitud::SOLICITADO;
             $solicitud->save();
+        }
+    }
+
+    public function validarCotizacion($id)
+    {
+        $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
+
+        if(!empty($cotizacion)){
+            $cotizacionesDisponibles = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->get();
+            $solicitud = SolicitudesCompra::findOrFail($id);
+            if ($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1 ) {
+            $solicitud->estatus = EstatusSolicitud::EN_COTIZACION;
+            $solicitud->save();
+            }
+
+            if(!empty($cotizacionesDisponibles)){
+                foreach ($cotizacionesDisponibles as $cotizacion) {
+                    CotizacionesProveedores::where('id', $cotizacion->id)->where('ruta','!=','null')->update(['autorizado' => 1]);
+                }
+            }
+
         }
     }
     /** ***********************************************************************

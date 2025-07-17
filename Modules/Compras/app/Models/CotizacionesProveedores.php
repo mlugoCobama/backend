@@ -17,6 +17,8 @@ class CotizacionesProveedores extends Model
         'proveedores_id',
         'cotizaciones_id',
         'ruta',
+        'seleccionado',
+        'autorizado',
     ];
     /**
      * Nombre de la tabla

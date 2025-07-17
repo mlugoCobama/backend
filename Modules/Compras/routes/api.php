@@ -61,6 +61,8 @@ Route::prefix('compras')->group(function () {
     Route::get('/autorizacion-solicitud-gerencia/{campo}/{necesarias}/{id}', [SolicitudesCompraController::class, 'autorizeFromEmail'])->name('confirm.accion')->middleware('signed');
     //*Ruta para generar pdf
     Route::get('/consulta-datos-pdf/{id}',[OrdenesComprasController::class, 'consultaDatosPDF'])->name('OrdenesCompras.consultaDatosPDF');
+    Route::put('/autorizar-cotizacion/{id}',[CotizacionesController::class, 'autorizarCotizacion'])->name('Cotizaciones.autorizarCotizacion');
+    Route::get('/solicitar-autorizacion/{id}',[CotizacionesController::class, 'limpiarAutorizaciones'])->name('Cotizaciones.solicitaAutorizacion');
 
     //*Ruta para leer el XML
     Route::get('/leer-xml/{id}',[OrdenesComprasController::class, 'leerXML'])->name('OrdenesCompras.leerXML');
