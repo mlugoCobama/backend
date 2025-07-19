@@ -3,6 +3,7 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sucursales;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -40,17 +41,54 @@ class CatUnidadesController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        //
+        $data = $request->all();
+
+        try {
+            $datosVehiculo = $data['datosVehiculo'];
+            $datosTanque = $data['datosTanque'];
+            $numIntercompania = $data['intercompania'];
+
+            DB::beginTransaction();
+
+            $vehiculo = $this->storeVehiculo($datosVehiculo, $numIntercompania);
+
+            if($datosVehiculo['tipo_vehiculo'] == "reparto"){
+                $this->storeTanque($vehiculo, $datosTanque, $numIntercompania);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                "status" => "success",
+                "message" => "Datos guardados correctamente",
+                "data" => $data
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al guardar los datos',
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
      * Show the specified resource.
+     * 
+     * @param $id int numero intercompania de la empresa
      */
     public function show($id)
     {
-        return view('compras::show');
+        $data = VehiculosTanquesResources::collection(DB::select("call SistemaTickets.SP_GetDataAutotanques($id)"));
+        return response()->json([
+            "status" => "Success",
+            "data" => $data,
+            "message" => "Datos recuperados correctamente"
+        ]);
     }
 
     /**
@@ -64,9 +102,39 @@ class CatUnidadesController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id): RedirectResponse
+    public function update(Request $request, $id)
     {
-        //
+        $data = $request->all();
+
+        try {
+            $datosVehiculo = $data['datosVehiculo'];
+            $datosTanque = $data['datosTanque'];
+            $numIntercompania = $id;
+
+            DB::beginTransaction();
+
+            $this->updateVehiculo($datosVehiculo, $datosVehiculo['id']);
+
+            if($datosVehiculo['tipo_vehiculo'] == "reparto"){
+                $this->updateTanque($datosTanque, $datosTanque['id']);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                "status" => "success",
+                "message" => "Datos guardados correctamente",
+                "data" => $data
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al guardar los datos',
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
@@ -74,7 +142,31 @@ class CatUnidadesController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $vehiculo = DatosVehiculo::where('id', $id)->with('datos_tanque')->first();
+        
+        if(!$vehiculo){
+             return response()->json([
+                'status' => 'error',
+                 'message' => 'El registro que intentas eliminar no existe',
+                'data' => ''
+            ]);
+        }
+
+        $vehiculo->update([
+            'activo' => 0
+        ]);
+
+        if (!empty($vehiculo->datos_tanque)) {
+            $vehiculo->datos_tanque->update([
+                'activo' => 0
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Se ha eliminado correctamente',
+            'data' => $vehiculo
+        ]);
     }
 
     /**
@@ -97,44 +189,133 @@ class CatUnidadesController extends Controller
      */
     public function importarCSV(Request $request)
     {
-    $request->validate([
-        'archivo_csv' => 'required|file|mimes:csv,txt',
-    ]);
-
-    $file = $request->file('archivo_csv');
-    $path = $file->getRealPath();
-    $handle = fopen($path, 'r');
-
-    $header = fgetcsv($handle);
-
-    while (($row = fgetcsv($handle, 1000, ',')) !== false) {
-
-        $auto = DatosVehiculo::create([
-            'marca' => $row[0] ?? 'NA',
-            'submarca' =>  $row[1] ?? 'NA',
-            'modelo' => $row[2] ?? 'NA',
-            'no_serie' =>  $row[3] ?? 'NA',
-            'placas' => $row[4] ?? 'NA', 
-            'id_sucursal' =>  10 ?? 'NA',
+        $request->validate([
+            'archivo_csv' => 'required|file|mimes:csv,txt',
         ]);
-            
-        DatosTanque::create([
-            'marca' => $row[5] ?? 'NA', 
-            'anio_fabricacion' => $row[6] ?? 'NA',
-            'capacidad' => $row[7] ?? 'NA',
-            'serie' => $row[8] ?? 'NA',
-            'tipo_medidor' => $row[9] ?? 'NA',
-            'id_sucursal' => 10,
-            'com_datos_vehiculo_id' => $auto->id,
+
+        $file = $request->file('archivo_csv');
+        $path = $file->getRealPath();
+        $handle = fopen($path, 'r');
+
+        $header = fgetcsv($handle);
+
+        while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+
+            $auto = DatosVehiculo::create([
+                'marca' => $row[0] ?? 'NA',
+                'submarca' =>  $row[1] ?? 'NA',
+                'modelo' => $row[2] ?? 'NA',
+                'no_serie' =>  $row[3] ?? 'NA',
+                'placas' => $row[4] ?? 'NA', 
+                'id_sucursal' =>  10 ?? 'NA',
+            ]);
+                
+            DatosTanque::create([
+                'marca' => $row[5] ?? 'NA', 
+                'anio_fabricacion' => $row[6] ?? 'NA',
+                'capacidad' => $row[7] ?? 'NA',
+                'serie' => $row[8] ?? 'NA',
+                'tipo_medidor' => $row[9] ?? 'NA',
+                'id_sucursal' => 10,
+                'com_datos_vehiculo_id' => $auto->id,
+            ]);
+        }
+
+        fclose($handle);
+
+        return response()->json([
+            'mensaje' => 'Importación exitosa'
         ]);
     }
 
-    fclose($handle);
+    /**
+     * Almacena los datos del vehículo y retorna el id
+     * 
+     * @param array $data 
+     * @param array $intercompania
+     * @return number $dataVehiculo->id
+     */
+    public function storeVehiculo($data, $intercompania){
 
-    return response()->json([
-        'mensaje' => 'Importación exitosa'
-    ]);
-}
+        $datosVehiculos =  $data;
+
+        $dataVehiculo = new DatosVehiculo();
+
+        $dataVehiculo->marca = $datosVehiculos['marca'];
+        $dataVehiculo->id_sucursal = $this->getIdSucursal($intercompania);
+        $dataVehiculo->submarca = $datosVehiculos['submarca'];
+        $dataVehiculo->modelo = $datosVehiculos['modelo'];
+        $dataVehiculo->no_serie = $datosVehiculos['no_serie'];
+        $dataVehiculo->placas = $datosVehiculos['placas'];
+        $dataVehiculo->tipo = $datosVehiculos['tipo_vehiculo'];
+        $dataVehiculo->save();
+
+        return $dataVehiculo->id;
+
+    }
+
+    /**
+     * Almacena los datos del tanque
+     * 
+     * @param array $id
+     * @param array $data 
+     * @param array $intercompania
+     */
+    public function storeTanque( $id, $data, $intercompania){
+
+        $datosTanque =  $data;
+
+        $dataTanque = new DatosTanque();
+
+        $dataTanque->com_datos_vehiculo_id = $id;
+        $dataTanque->marca = $datosTanque['marca_tanque'];
+        $dataTanque->id_sucursal = $this->getIdSucursal($intercompania);
+        $dataTanque->anio_fabricacion = $datosTanque['anio_fabricacion'];
+        $dataTanque->capacidad = $datosTanque['capacidad'];
+        $dataTanque->serie = $datosTanque['serie'];
+        $dataTanque->tipo_medidor = $datosTanque['tipo_medidor'];
+
+        $dataTanque->save();
+    }
+
+    public function updateVehiculo($data, $id){
+        $vehiculo = DatosVehiculo::find($id);
+        if (!$vehiculo) {
+            throw new \Exception("Proveedor no encontrado");
+        }
+
+        $vehiculo->update([
+        'marca' => $data['marca'],
+        'submarca' => $data['submarca'],
+        'modelo' => $data['modelo'],
+        'no_serie' => $data['no_serie'],
+        'placas' => $data['placas'],
+        'tipo' => $data['tipo_vehiculo'],
+        ]);
+
+    }
+
+    public function updateTanque($data, $id){
+        $tanque = DatosTanque::find($id);
+        if (!$tanque) {
+            throw new \Exception("Proveedor no encontrado");
+        }
+
+        $tanque->update([
+
+        'marca' => $data['marca_tanque'],
+        'anio_fabricacion' => $data['anio_fabricacion'],
+        'capacidad' => $data['capacidad'],
+        'serie' => $data['serie'],
+        'tipo_medidor' => $data['tipo_medidor']
+
+        ]);
+    }
+
+    public function getIdSucursal($intercompania){
+        $sucursal = Sucursales::where('num_intercompania', $intercompania)->first();
+        return $sucursal->id;
+    }
 
 
 }
