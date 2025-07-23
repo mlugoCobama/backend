@@ -20,7 +20,8 @@ class DatosTanque extends Model
         'serie',
         'tipo_medidor',
         'id_sucursal',
-        'com_datos_vehiculo_id'
+        'com_datos_vehiculo_id',
+        'activo'
     ];
      /**
      * Nombre de la tabla

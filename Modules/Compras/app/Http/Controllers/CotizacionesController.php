@@ -93,13 +93,13 @@ class CotizacionesController extends Controller
         // Recupera los detalles de las cotizaciones-proveedores asociadas a la cotización
         if ($cotizacion) {
             $proveedores = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
-                ->get(['id', 'proveedores_id', 'cotizaciones_id', 'ruta', 'seleccionado']);
+                ->get(['id', 'proveedores_id', 'cotizaciones_id', 'ruta', 'seleccionado', 'autorizado']);
                 
             $data = [];
             foreach ($proveedores as $proveedor) {
                 $proveedorId = $proveedor->id;
 
-                $detalles = DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $proveedorId)
+                $detalles = DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $proveedorId)->with('detalle_solicitud')
                     ->get(['id', 'importe_unitario', 'detalle_solicitud_id', 'cotizaciones_proveedores_proveedores_id']);
 
                 $nombreProveedor = Proveedores::where('id', $proveedor->proveedores_id)->get(['id', 'nombre', 'correo']);
@@ -185,5 +185,28 @@ class CotizacionesController extends Controller
 
         $type = File::mimeType($path);
         return response($fileContent, 200)->header("Content-Type", $type);
+    }
+
+
+    public function autorizarCotizacion($idCotizacion){
+        CotizacionesProveedores::where('id', $idCotizacion)->update(['autorizado' => 1]);
+        return response()->json([
+            'status' => 'Success',
+            'message' => 'Actualizado con exito',
+            'data' => []
+        ]);
+    }
+
+    public function limpiarAutorizaciones($id){
+        SolicitudesCompra::where('id', $id)->update([
+            'auto_admin' => 0,
+            'auto_gg' => 0,
+        ]);
+        
+        return response()->json([
+            'status' => 'Success',
+            'message' => 'Actualizado con exito',
+            'data' => []
+        ]);
     }
 }

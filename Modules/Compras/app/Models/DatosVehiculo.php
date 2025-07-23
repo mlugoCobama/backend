@@ -19,7 +19,10 @@ class DatosVehiculo extends Model
         'modelo',
         'no_serie',
         'placas',
+        'tipo',
         'id_sucursal',
+        'id',
+        'activo'
     ];
      /**
      * Nombre de la tabla

@@ -12,11 +12,15 @@ class Sucursales extends Model
      * Campos que pueden ser alterados
      */
     protected $filleable = [
-        'nombre', 'estatus'
+        'id',
+        'nombre',
+        'estatus',
+        'num_intercompania'
     ];
     /**
      * Nombre de la tabla
      */
+    protected $connection = 'dashboard1';
     protected $table = 'sucursales';
     /**
      * Función para obtener los datos activos

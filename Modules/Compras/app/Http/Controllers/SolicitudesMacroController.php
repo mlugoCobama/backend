@@ -13,6 +13,9 @@ use Modules\Compras\Transformers\SolicitudesMacroResource;
 use Modules\Compras\Models\DetalleSolicitud;
 use Modules\Compras\Models\OrdenTrabajo;
 use App\Enums\EstatusSolicitud;
+use Modules\Compras\Models\Cotizaciones;
+use Modules\Compras\Models\CotizacionesProveedores;
+use Modules\Compras\Models\Proveedores;
 use Modules\Compras\Transformers\AutotanqueResource;
 use Modules\Compras\Transformers\UsersResource;
 
@@ -62,7 +65,15 @@ class SolicitudesMacroController extends Controller
 
             $idSolicitud = $this->storeSolicitudCompra($data);
             $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
+            
             $this->storeOrdenTrabajo($idSolicitud, $data);
+
+            if(isset($files["file_cotizacion"]) && !empty($files["file_cotizacion"])){
+                $cotizacion = $this->storeCotizacion($idSolicitud);
+                $cotProv = $this->storeCotizacionProveedor($cotizacion);
+                $this->storeFile($cotProv, $files["file_cotizacion"]);
+            }
+
             //TODO MODIFICAR ESTO PARA QUE SE ENVIÉ EL CORREO
             //$correos = $this->getGerente($data['empresa']);
             //$this->sendSolicitudAutorizacion($idSolicitud, $correos);
@@ -205,6 +216,48 @@ class SolicitudesMacroController extends Controller
         $dataOrdenTrabajo->com_solicitudes_compra_id = $idSolicitud;
         $dataOrdenTrabajo->save();
     }
+
+    /**
+     * Almacena la cotización adjuntada en la solicitud
+     */
+    public function storeCotizacion($idSolicitud){
+        $cotizacion = new SolicitudesCompraController;
+        $folio = $cotizacion->generarFolioCo();
+        $dataCotizacion = new Cotizaciones();
+        $dataCotizacion->folio = $folio;
+        $dataCotizacion->fecha = date('Y-m-d H:i:s') ?? now();
+        $dataCotizacion->consideraciones = "Cotizacion precargada a por la planta";
+        $dataCotizacion->solicitudes_compra_id = $idSolicitud;
+        $dataCotizacion->save();
+        return $dataCotizacion->id;
+    }
+
+    public function storeCotizacionProveedor($idCotizacion){
+        $proveedor = Proveedores::where('nombre', 'Proveedor Planta Gasera')->first();
+        
+         $datacotProv = new CotizacionesProveedores();
+         $datacotProv->proveedores_id = $proveedor['id'];
+         $datacotProv->cotizaciones_id = $idCotizacion;
+         
+         $datacotProv->save();
+
+         return $datacotProv->id;
+    }
+
+    public function storeFile($cotizacionProveedorId, $file){
+        $cotizacionProveedor = CotizacionesProveedores::find($cotizacionProveedorId);
+
+        if ($cotizacionProveedor) {
+            $folderPath = 'cotizaciones/' . $cotizacionProveedor->cotizaciones_id;
+            $fileName = $cotizacionProveedor->proveedores_id . '.' . $file->getClientOriginalExtension();
+
+            $path = $file->storeAs($folderPath, $fileName);
+
+            $cotizacionProveedor->update(['ruta' => $path]);
+        }
+    }
+
+
 
 
     /**

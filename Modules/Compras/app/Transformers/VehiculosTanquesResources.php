@@ -21,11 +21,13 @@ class VehiculosTanquesResources extends JsonResource
             "modelo" => $this->modelo,
             "no_serie" => $this->no_serie,
             "placas" => $this->placas,
+            "id_tanque" => $this->id_tanque,
             "marca_tanque" => $this->marca_tanque,
             "anio_fabricacion" => $this->anio_fabricacion,
             "capacidad" => $this->capacidad,
             "serie" => $this->serie,
             "tipo_medidor" => $this->tipo_medidor,
+            "tipo_vehiculo" => $this->tipo,
             "id_sucursal" => $this->id_sucursal,
             "sucursal" => $this->sucursal,
             "entidad" => $this->entidad, 
@@ -57,6 +59,6 @@ class VehiculosTanquesResources extends JsonResource
             18 => ['clase' => 'badge badge rounded-pill bg-dark text-warning' ],
         ];
 
-        return $estados[$entidad] ?? ['clase' => 'bg-secondary'];
+        return $estados[$entidad] ?? ['clase' => 'badge badge rounded-pill bg-secondary'];
     }
 }
