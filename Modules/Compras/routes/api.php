@@ -77,5 +77,6 @@ Route::prefix('compras')->group(function () {
     //*Rutas para el catalogo de vehiculos
     Route::post('/importar-autotanques', [CatUnidadesController::class, 'importarCSV']);
     Route::get('/recuperar-autotanques/{intercompania}', [CatUnidadesController::class, 'getAutotanques']);
+    Route::get('/recuperar-gastos-vehiculo/{id}', [CatUnidadesController::class, 'getGastoUnidad']);
 });
 

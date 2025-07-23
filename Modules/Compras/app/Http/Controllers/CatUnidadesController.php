@@ -318,4 +318,14 @@ class CatUnidadesController extends Controller
     }
 
 
+    public function getGastoUnidad($idVehiculo){
+
+        $data = DB::select("call SistemaTickets.SP_GetGastosUnidad($idVehiculo)");
+
+        return response()->json([
+            "status" => "Success",
+            "data" => $data,
+            "message" => "Datos recuperados correctamente"
+        ]);
+    }
 }
