@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Ucoip\Http\Controllers\CatHardwareController;
 use Modules\Ucoip\Http\Controllers\HardwareController;
+use Modules\Ucoip\Http\Controllers\ModulosController;
+use Modules\Ucoip\Http\Controllers\PermisosController;
 use Modules\Ucoip\Http\Controllers\UcoipController;
 
 /*
@@ -20,4 +22,6 @@ Route::middleware([])->prefix('ucoip')->group(function () {
     Route::apiResource('ucoip', UcoipController::class)->names('ucoip');
     Route::apiResource('hardware', HardwareController::class)->names('hardware');
     Route::apiResource('cat-hardware', CatHardwareController::class)->names('cat-hardware');
+    Route::apiResource('modulos', ModulosController::class)->names('modulos');
+    Route::apiResource('permisos', PermisosController::class)->names('permisos');
 });

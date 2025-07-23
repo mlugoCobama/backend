@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Modules\Compras\Transformers\AuthResource;
+use Illuminate\Support\Facades\DB;
 
 class LoginController extends Controller
 {
@@ -36,11 +37,13 @@ class LoginController extends Controller
 
         $token = $user->createToken($fields['email'])->plainTextToken;
 
+        $permisos = $this->getPermisos($user->id);
+
         return response()->json([
             'success' => true,
             'token' => $token,
-            'Type' => 'Bearer',
-            'role' => $user // include user role in response
+            'role' => $user, // include user role in response
+            'permisos' => $permisos
         ]);
     }
 
@@ -49,6 +52,18 @@ class LoginController extends Controller
            'success' => false,
            'message' => 'Iniciar sesion nuevante',
         ]);
+    }
+
+    private function getPermisos($id) {
+
+        $permisos = DB::table('permissions as p')
+            ->join('model_has_permissions as mp', 'p.id', '=', 'mp.permission_id')
+            ->select('p.name', 'p.guard_name')
+            ->where('model_id', '=', $id)
+            ->get();
+
+        return $permisos;
+
     }
 
 }
