@@ -256,9 +256,12 @@ class SolicitudesCompraController extends Controller
             //Adecuación nuevo front
             $idsProv = [$data['proveedor1'], $data['proveedor2'], $data['proveedor3']];
             $data['proveedores'] = [];
+            
             foreach ($idsProv as $id) {
-                $proveedor = Proveedores::where("id", $id)->first();
-                $data['proveedores'][] =  $proveedor;
+                if(!empty($id)){
+                    $proveedor = Proveedores::where("id", $id)->first();
+                    $data['proveedores'][] =  $proveedor;
+                }
             }
 
             $data['detalles'] =  DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])->confirmadas()->get();

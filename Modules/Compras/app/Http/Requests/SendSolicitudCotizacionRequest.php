@@ -14,8 +14,8 @@ class SendSolicitudCotizacionRequest extends FormRequest
         return [
             'consideraciones' => 'nullable|string',
             'proveedor1' => 'required|integer',
-            'proveedor2' => 'required|integer',
-            'proveedor3' => 'required|integer',
+            'proveedor2' => 'nullable|integer',
+            'proveedor3' => 'nullable|integer',
             'solicitudes_compra_id' => 'required|integer',
         ];
     }
