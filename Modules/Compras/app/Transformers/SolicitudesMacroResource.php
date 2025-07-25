@@ -110,7 +110,7 @@ class SolicitudesMacroResource extends JsonResource
             18 => ['clase' => 'badge badge rounded-pill bg-dark text-warning' ],
         ];
 
-        return $estados[$entidad] ?? ['clase' => 'bg-secondary'];
+        return $estados[$entidad] ?? ['clase' => 'badge badge rounded-pill bg-secondary'];
     }
     /**
      * Asigna la descripción del centro de costo
