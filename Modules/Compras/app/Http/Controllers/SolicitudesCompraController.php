@@ -72,7 +72,7 @@ class SolicitudesCompraController extends Controller
             $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
             //TODO MODIFICAR ESTO PARA QUE SE ENVIÉ EL CORREO
             //$correos = $this->getGerente($data['empresa']);
-            //$this->sendSolicitudAutorizacion($idSolicitud, $correos);
+            //?$this->sendSolicitudAutorizacion($idSolicitud, $correos);
             DB::commit();
 
             return response()->json([
@@ -347,7 +347,13 @@ class SolicitudesCompraController extends Controller
     public function validarAutorizacion($id)
     {
         $solicitud = SolicitudesCompra::findOrFail($id);
-        if ($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1) {
+        if ($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1 && $solicitud->tipo === 1) {
+            $solicitud->estatus = EstatusSolicitud::SOLICITADO;
+            $solicitud->save();
+        }
+
+        if ($solicitud->auto_admin === 1 && $solicitud->auto_gg 
+            && $solicitud->auto_macro === 1 && $solicitud->tipo === 2) {
             $solicitud->estatus = EstatusSolicitud::SOLICITADO;
             $solicitud->save();
         }

@@ -11,6 +11,7 @@ use Modules\Compras\Http\Controllers\OrdenesComprasController;
 use Modules\Compras\Http\Controllers\DocumentosOrdenesComprasController;
 use Modules\Compras\Http\Controllers\CatUnidadesController;
 use Modules\Compras\Http\Controllers\SolicitudesMacroController;
+use Modules\Compras\Http\Controllers\CatSistemasAutoController;
 use Modules\Compras\Models\Cotizaciones;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Modules\Compras\Http\Controllers\UsuariosController;
@@ -41,6 +42,7 @@ Route::prefix('compras')->group(function () {
     Route::resource('Usuarios', UsuariosController::class);
     Route::resource('SolicitudesMacro', SolicitudesMacroController::class);
     Route::resource('DetallesSolicitud', DetalleSolicitudController::class);
+    Route::resource('CatalogoSistemasAuto', CatSistemasAutoController::class);
     
     Route::get('/Solicitudes/{intercompania}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
     Route::get('/Solicitudes/Macro/{intercompania}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
@@ -70,6 +72,7 @@ Route::prefix('compras')->group(function () {
     //*Rutas descarga zip
     Route::get('/descargar-facturas/{id}',[DocumentosOrdenesComprasController::class, 'downloadFacturas'])->name('DocumentosOrdenesCompras.downloadFacturas');
     Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente'])->name('ExpedientesProveedores.downloadExpediente');
+    Route::get('/download-xml/{folder}/{id}/{file}', [DocumentosOrdenesComprasController::class, 'downloadXML'])->name('DocumentosOrdenesCompras.downloadXML');
 
     Route::get('/getUserByEmail/{correo}', [UsuariosController::class, 'getDataUsuario'])->name('Usuarios.getDataUsuario');
     Route::get('/getUserById/{correo}', [UsuariosController::class, 'showById'])->name('Usuarios.showById');
@@ -78,5 +81,8 @@ Route::prefix('compras')->group(function () {
     Route::post('/importar-autotanques', [CatUnidadesController::class, 'importarCSV']);
     Route::get('/recuperar-autotanques/{intercompania}', [CatUnidadesController::class, 'getAutotanques']);
     Route::get('/recuperar-gastos-vehiculo/{id}', [CatUnidadesController::class, 'getGastoUnidad']);
+
+    // Ruta test
+    Route::post('/save-files-factura', [DocumentosOrdenesComprasController::class, 'subirDocumento'])->name('DocumentosOrdenesCompras.saveFilesFactura');
 });
 

@@ -209,7 +209,7 @@ class OrdenesComprasController extends Controller
                 *! Habilitar para envío de correo a proveedor
                 * ********************************************************************************/ 
                 Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
-                          ->notify(new SolicitudSurtido($datos));
+                            ->notify(new SolicitudSurtido($datos));
 
                 SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::EN_SURTIDO]);
 

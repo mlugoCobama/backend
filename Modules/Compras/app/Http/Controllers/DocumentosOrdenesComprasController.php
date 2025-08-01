@@ -4,13 +4,14 @@ namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Modules\Compras\Http\Requests\UploadDocsOCRequest;
+use Illuminate\Http\Request;
 //Model
 use Modules\Compras\Models\DocumentosOrdenesCompra;
 
 //Utilities 
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
-
+use Modules\Compras\Models\DocumentosFactura;
 use ZipArchive;
 
 
@@ -31,10 +32,11 @@ class DocumentosOrdenesComprasController extends Controller
             $carpetaOrdenCompra = 'docsOrdenCompra/' . $data['orden_compra_id'];
             Storage::makeDirectory($carpetaOrdenCompra);
 
-            $documentos = ['factura_xml', 'factura_pdf', 'comprobante_pago'];
-            $keys = ['ruta_xml_factura', 'ruta_pdf_factura', 'comprobante_pago'];
+            $documentos = ['factura_xml', 'factura_pdf', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
+            $keys = ['ruta_xml_factura', 'ruta_pdf_factura', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
 
             for ($i = 0; $i < count($documentos); $i++) {
+
                 if ($data->hasFile($documentos[$i])) {
                     $nombreArchivo = $documentos[$i] . $hoy . $time . "." . $data->file($documentos[$i])->getClientOriginalExtension();
                     $docsOrdenCompra->{$keys[$i]} = $data->file($documentos[$i])->storeAs($carpetaOrdenCompra, $nombreArchivo);
@@ -98,8 +100,8 @@ class DocumentosOrdenesComprasController extends Controller
             $carpetaOrdenCompra = 'docsOrdenCompra/' . $data['orden_compra_id'];
             Storage::makeDirectory($carpetaOrdenCompra);
 
-            $documentos = ['factura_xml', 'factura_pdf', 'comprobante_pago'];
-            $keys = ['ruta_xml_factura', 'ruta_pdf_factura', 'comprobante_pago'];
+            $documentos = ['factura_xml', 'factura_pdf', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
+            $keys = ['ruta_xml_factura', 'ruta_pdf_factura', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
 
             for ($i = 0; $i < count($documentos); $i++) {
                 if ($data->hasFile($documentos[$i])) {
@@ -133,14 +135,14 @@ class DocumentosOrdenesComprasController extends Controller
     {
         //
     }
-    
+
     /**
-    * Recupera un archivo relacionado con una orden de compra desde el servidor.
-    *
-    * @param int $id ID de la orden de compra.
-    * @param string $file Nombre del archivo que se desea recuperar.
-    * @return \Illuminate\Http\Response Archivo solicitado como respuesta HTTP con cabecera Content-Type.
-    */
+     * Recupera un archivo relacionado con una orden de compra desde el servidor.
+     *
+     * @param int $id ID de la orden de compra.
+     * @param string $file Nombre del archivo que se desea recuperar.
+     * @return \Illuminate\Http\Response Archivo solicitado como respuesta HTTP con cabecera Content-Type.
+     */
     public function getFile($id, $file)
     {
         $path = storage_path("app/docsOrdenCompra/$id/$file");
@@ -154,28 +156,34 @@ class DocumentosOrdenesComprasController extends Controller
 
 
     /**
-    * Genera un archivo ZIP que contiene las facturas en formato PDF y XML de una orden de compra específica.
-    *
-    * @param int $id ID de la orden de compra.
-    * @return \Symfony\Component\HttpFoundation\BinaryFileResponse Archivo ZIP generado, listo para descargar.
-    */
+     * Genera un archivo ZIP que contiene las facturas en formato PDF y XML de una orden de compra específica.
+     *
+     * @param int $id ID de la orden de compra.
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse Archivo ZIP generado, listo para descargar.
+     */
     public function downloadFacturas($id)
     {
-        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['ruta_xml_factura', 'ruta_pdf_factura']);
+        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)
+            ->get(['ruta_xml_factura', 'ruta_pdf_factura', 'complemento_pago_xml', 'complemento_pago_pdf', 'comprobante_pago']);
+
         $zip = new ZipArchive();
         $zipFileName = 'facturas_' . $id . '.zip';
         $zipPath = storage_path('app/' . $zipFileName);
 
         if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
-
             foreach ($rutas as $ruta) {
-                $archivoPDF = $ruta['ruta_pdf_factura'];
-                $archivoXML = $ruta['ruta_xml_factura'];
-                if (Storage::exists($archivoPDF)) {
-                    $zip->addFile(Storage::path($archivoPDF), basename($archivoPDF));
-                }
-                if (Storage::exists($archivoXML)) {
-                    $zip->addFile(Storage::path($archivoXML), basename($archivoXML));
+                $archivos = [
+                    $ruta['ruta_pdf_factura'],
+                    $ruta['ruta_xml_factura'],
+                    $ruta['complemento_pago_pdf'],
+                    $ruta['complemento_pago_xml'],
+                    $ruta['comprobante_pago'],
+                ];
+
+                foreach ($archivos as $archivo) {
+                    if (!is_null($archivo) && Storage::exists($archivo)) {
+                        $zip->addFile(Storage::path($archivo), basename($archivo));
+                    }
                 }
             }
             $zip->close();
@@ -210,7 +218,7 @@ class DocumentosOrdenesComprasController extends Controller
         $jsonTC = json_decode(json: $catTC, associative: true);
         // $dataFacturacion = $json[$data['destino'][0]->empresa];
 
-        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get('ruta_xml_factura');
+        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['id', 'ruta_xml_factura']);
 
         $factura = [
             'comprobantes' => [],
@@ -239,9 +247,11 @@ class DocumentosOrdenesComprasController extends Controller
             $comprobante = $xml->xpath('//cfdi:Comprobante')[0] ?? null;
 
             if ($comprobante) {
+
                 $subtotal = (float) $comprobante['SubTotal'];
                 $total = (float) $comprobante['Total'];
                 $factura['comprobantes'][] = [
+                    'idRuta' => $ruta['id'],
                     'fecha' => (string) $comprobante['Fecha'],
                     'folio' => (string) $comprobante['Folio'],
                     'serie' => (string) $comprobante['Serie'],
@@ -298,5 +308,57 @@ class DocumentosOrdenesComprasController extends Controller
         }
 
         return response()->json(['factura' => $factura], 200);
+    }
+
+
+    public function downloadXML($folder, $id, $file)
+    {
+        $filePath = storage_path("app/$folder/$id/$file");
+
+        $fileName = "$file";
+        if (!File::exists($filePath)) {
+            return response()->json([
+                'error' => 'Archivo no encontrado',
+            ], 404);
+        }
+
+        $type = File::mimeType($filePath);
+        return response()->streamDownload(function () use ($filePath) {
+            echo File::get($filePath);
+        }, $fileName, [
+            'Content-Type' => $type,
+        ]);
+    }
+
+    
+    public function subirDocumento(Request $request)
+    {
+        $data = $request;
+        $hoy = date("jnY"); //Recuperar la fecha del dia de hoy para diferenciar el registro nuevo
+        $time = time(); //Marca temporal del momento en el que se subió
+
+        $carpetaOrdenCompra = 'docsOrdenCompra/' . $data['orden_compra_id'];
+        Storage::makeDirectory($carpetaOrdenCompra);
+
+        $docsFactura = new DocumentosFactura();
+        $docsFactura->tipo_documento = $data['tipo_documento'];
+
+        if ($data->hasFile('archivo_xml')) {
+            $nombreArchivo = $data['tipo_documento'] . $hoy . $time . "." . $data->file('archivo_xml')->getClientOriginalExtension();
+            $docsFactura->archivo_xml = $data->file('archivo_xml')->storeAs($carpetaOrdenCompra, $nombreArchivo);
+        }
+        if ($data->hasFile('archivo')) {
+            $nombreArchivo = $data['tipo_documento'] . $hoy . $time . "." . $data->file('archivo')->getClientOriginalExtension();
+            $docsFactura->archivo = $data->file('archivo')->storeAs($carpetaOrdenCompra, $nombreArchivo);
+        }
+        $docsFactura->com_documentos_ordenes_compra_id = $data['idFactura'];
+        $docsFactura->fecha = date('Y-m-d H:i:s') ?? now();
+        $docsFactura->save();
+
+        return response()->json([
+            'status' => 'succes',
+            'message' => 'Documento guardado correctamente',
+            'data' => []
+        ]);
     }
 }

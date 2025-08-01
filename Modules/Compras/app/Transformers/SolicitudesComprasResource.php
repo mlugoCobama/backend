@@ -38,6 +38,7 @@ class SolicitudesComprasResource extends JsonResource
             'claseEstado' => $estadoInfo['claseEstado'],
             'auto_admin' => $this->auto_admin,
             'auto_gg' => $this->auto_gg,
+            'auto_macro' => $this->auto_macro,
             'tipo' => $this->tipo,
             'orden_trabajo' => $ordenTrabajo
         ];

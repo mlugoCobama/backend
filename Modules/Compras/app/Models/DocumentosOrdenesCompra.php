@@ -17,6 +17,8 @@ class DocumentosOrdenesCompra extends Model
         'fecha',
         'ruta_xml_factura',
         'ruta_pdf_factura',
+        'complemento_pago_xml',
+        'complemento_pago_pdf',
         'comprobante_pago',
         'orden_compra_id',
     ];
@@ -30,10 +32,16 @@ class DocumentosOrdenesCompra extends Model
      |--------------------------------------------------------------------------
      */
     /**
-     * Una documento de compra tiene un oreden de compra
+     * Un documento de compra tiene un orden de compra
      */
     public function OrdenesCompra() {
         $this->belongsTo(OrdenCompra::class);
+    }
+    /**
+     * Un documento (factura) tiene varios documentos
+     */
+    public function DocumentosFactura(){
+        $this->belongsTo(DocumentosFactura::class);
     }
     
 }

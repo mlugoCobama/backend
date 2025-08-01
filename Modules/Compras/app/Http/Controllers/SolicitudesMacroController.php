@@ -138,9 +138,20 @@ class SolicitudesMacroController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id): RedirectResponse
+    public function update(Request $request, $id)
     {
-        //
+        $data = $request->all();
+
+         $solicitudCompra = SolicitudesCompra::findOrFail($id);
+            $solicitudCompra->com_cat_sistemas_auto_id = $data['sistema'];
+            $solicitudCompra->tipo_mantenimiento = $data['tipoMantenimiento'];;
+            $solicitudCompra->save();
+
+         return response()->json([
+            'status' => 'success',
+            'message' => 'Datos actualizados exitosamente',
+            'data' => []
+         ]);
     }
 
     /**

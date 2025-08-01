@@ -15,7 +15,9 @@ class UploadDocsOCRequest extends FormRequest
           'orden_compra_id' => 'nullable|exists:com_orden_compra,id',
           'factura_xml' => 'nullable|file|mimes:xml|max:2048',
           'factura_pdf' => 'nullable|file|mimes:pdf|max:2048',
-          'comprobante_pago' => 'nullable|file|mimes:pdf|max:2048',
+          'complemento_pago_xml' => 'nullable|file|mimes:xml|max:2048',
+          'complemento_pago_pdf' => 'nullable|file|mimes:pdf|max:2048',
+          'comprobante_pago' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ];
     }
 
@@ -26,8 +28,12 @@ class UploadDocsOCRequest extends FormRequest
             'factura_xml.max' => "El archivo Es muy grande (Máximo 20 MB)",
             'factura_pdf.mimes' => "El archivo debe de ser un pdf",
             'factura_pdf.max' => "El archivo Es muy grande (Máximo 20 MB)",
-            'comprobante_pago.mimes' => "El archivo debe de ser un XML",
+            'comprobante_pago.mimes' => "El archivo debe de ser un pdf, jpg o png",
             'comprobante_pago.max' => "El archivo Es muy grande (Máximo 20 MB)",
+            'complemento_pago_xml.mimes' => "El archivo debe de ser un XML",
+            'complemento_pago_xml.max' => "El archivo Es muy grande (Máximo 20 MB)",
+            'complemento_pago_pdf.mimes' => "El archivo debe de ser un XML",
+            'complemento_pago_pdf.max' => "El archivo Es muy grande (Máximo 20 MB)",
         ];
         
     }
