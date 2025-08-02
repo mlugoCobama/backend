@@ -45,7 +45,7 @@ Route::prefix('compras')->group(function () {
     Route::resource('CatalogoSistemasAuto', CatSistemasAutoController::class);
     
     Route::get('/Solicitudes/{intercompania}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
-    Route::get('/Solicitudes/Macro/{intercompania}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
+    Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
     Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores'])->name('Proveedores.getProveedores');
     Route::get('/SolicitudCompra/{id}',[SolicitudesCompraController::class, 'getSolicitud'])->name('SolicitudesCompras.getSolicitud');
 
@@ -69,6 +69,7 @@ Route::prefix('compras')->group(function () {
     //*Ruta para leer el XML
     Route::get('/leer-xml/{id}',[OrdenesComprasController::class, 'leerXML'])->name('OrdenesCompras.leerXML');
     Route::get('/get-data-xml/{id}', [DocumentosOrdenesComprasController::class, 'leerYProcesarXML'])->name('OrdenesCompras.leerYProcesarXML');
+    
     //*Rutas descarga zip
     Route::get('/descargar-facturas/{id}',[DocumentosOrdenesComprasController::class, 'downloadFacturas'])->name('DocumentosOrdenesCompras.downloadFacturas');
     Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente'])->name('ExpedientesProveedores.downloadExpediente');

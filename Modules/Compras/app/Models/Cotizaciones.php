@@ -39,7 +39,7 @@ class Cotizaciones extends Model
     // }
 
     /**
-     * Una cotizacion pertenece a una solicitud de compra
+     * Una cotización pertenece a una solicitud de compra
      */
     public function SolicitudCompra(){
        return $this->belongsTo(SolicitudesCompra::class,'solicitudes_compra_id', 'id' );
@@ -47,29 +47,21 @@ class Cotizaciones extends Model
 
 
     /**
-     * Una cotizacion pertenece a un detalle de solicitud
-     */
-    // public function DetalleSolicitud(){
-    //     $this->belongsTo(DetalleSolicitud::class);
-    // }
-
-
-    /**
-     * Una cotizacion pertenece a una orden de compra
+     * Una cotización pertenece a una orden de compra
      */
     public function orden_compra(){
         return $this->belongsTo(OrdenCompra::class, 'cotizaciones_id', 'id');
     }
 
     /**
-     * Una cotizacion pertenece a un proveedor
+     * Una cotización pertenece a un proveedor
      */
     // public function Proveedor(){
     //     $this->belongsTo(proveedores::class);
     // }
 
     /**
-     * Una cotizacion tiene varias cotizaciones_proveedor
+     * Una cotización tiene varias cotizaciones_proveedor
      */
 
      public function CotizacionesProveedor(){

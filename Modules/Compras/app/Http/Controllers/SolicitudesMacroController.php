@@ -25,17 +25,30 @@ class SolicitudesMacroController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(int $intercompania)
+    public function index(int $intercompania, ?int $id = null)
     {
+        $usuariosMacro = array_flip([170, 167, 371,381]);
+        $isMacro = isset($usuariosMacro[$id]); 
+
         if( $intercompania === 333){
             $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacro()"));
-        }else
+            $tipo = 'compras';
+        }
+
+        if($isMacro){
+            $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacroTaller()"));
+            $tipo = 'macro';
+        }
+
+        if($intercompania !== 333 && !$isMacro)
         {
             $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacroGasera($intercompania)"));
+            $tipo = 'gasera';
         }
         
         // $data = SolicitudesMacroResource::collection((SolicitudesCompra::macrotaller()->active()->orderBy('fecha', 'desc')->get()));
         return response()->json([
+            'tipo' => $tipo,
             'status' => 'success',
             'message' => 'Consulta generada correctamente',
             'data' => $data
