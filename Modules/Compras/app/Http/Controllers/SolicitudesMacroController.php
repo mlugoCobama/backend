@@ -157,7 +157,7 @@ class SolicitudesMacroController extends Controller
 
          $solicitudCompra = SolicitudesCompra::findOrFail($id);
             $solicitudCompra->com_cat_sistemas_auto_id = $data['sistema'];
-            $solicitudCompra->tipo_mantenimiento = $data['tipoMantenimiento'];;
+            $solicitudCompra->com_cat_tipos_mantenimiento_id = $data['tipoMantenimiento'];;
             $solicitudCompra->save();
 
          return response()->json([

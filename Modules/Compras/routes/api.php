@@ -17,6 +17,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Modules\Compras\Http\Controllers\UsuariosController;
 use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Http\Controllers\DetalleSolicitudController;
+use Modules\Compras\Http\Controllers\CatTiposMantenimientoController;
 
 /*
  *--------------------------------------------------------------------------
@@ -43,6 +44,7 @@ Route::prefix('compras')->group(function () {
     Route::resource('SolicitudesMacro', SolicitudesMacroController::class);
     Route::resource('DetallesSolicitud', DetalleSolicitudController::class);
     Route::resource('CatalogoSistemasAuto', CatSistemasAutoController::class);
+    Route::resource('CatalogoTiposMantenimiento', CatTiposMantenimientoController::class);
     
     Route::get('/Solicitudes/{intercompania}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
     Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
