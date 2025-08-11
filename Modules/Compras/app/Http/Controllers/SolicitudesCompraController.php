@@ -41,11 +41,16 @@ class SolicitudesCompraController extends Controller
     /** ************************************************************
      * Recupera todos los registros de la base de datos
      **************************************************************/
-    public function index(int $intercompania)
+    public function index(int $intercompania, ?int $id = null)
     {
-        if($intercompania === 333){
+        $usuariosCompra = array_flip([413, 2039, 2364]);
+        $isCompras = isset($usuariosCompra[$id]);
+
+        if($intercompania === 333 && $isCompras){
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->autorizadas()->orderBy('updated_at', 'desc')->get()));
-        }else{
+        }
+
+        else{
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->where('empresa', $intercompania)->active()->orderBy('fecha', 'desc')->get()));
         }
         
@@ -276,7 +281,8 @@ class SolicitudesCompraController extends Controller
              * !Habiltar para que se envíen los correos 
              * 
              *******************************************************************************************/
-            $this->enviaCorreoProveedores($data['proveedores'], $data);
+            // $this->enviaCorreoProveedores($data['proveedores'], $data);
+            
             $idSolicitudC = $data['solicitudes_compra_id'];
 
             // Actualiza el estatus de la Solicitud a COTIZACION

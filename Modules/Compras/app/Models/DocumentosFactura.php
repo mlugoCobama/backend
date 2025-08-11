@@ -15,8 +15,8 @@ class DocumentosFactura extends Model
      */
     protected $fillable = [
         'tipo_documento',
-        'archivo_xml',
-        'archivo',
+        'xml',
+        'representacion_impresa',
         'fecha',
         'com_documentos_ordenes_compra_id'
     ];
@@ -30,6 +30,6 @@ class DocumentosFactura extends Model
      * Un documento de compra tiene un orden de compra
      */
     public function DocumentoOrdenCompra() {
-        $this->belongsTo(DocumentosOrdenesCompra::class);
+       return $this->belongsTo(DocumentosOrdenesCompra::class);
     }
 }

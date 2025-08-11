@@ -40,8 +40,8 @@ class DocumentosOrdenesCompra extends Model
     /**
      * Un documento (factura) tiene varios documentos
      */
-    public function DocumentosFactura(){
-        $this->belongsTo(DocumentosFactura::class);
+    public function documentosFactura(){
+        return $this->hasMany(DocumentosFactura::class, "com_documentos_ordenes_compra_id", "id");
     }
     
 }

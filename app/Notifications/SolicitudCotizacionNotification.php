@@ -31,36 +31,7 @@ class SolicitudCotizacionNotification extends Notification
     }
 
     /** * Get the mail representation of the notification. {* * @param mixed $notifiable * @return \Illuminate\Notifications\Messages\MailMessage */
-    //  public function toMail($notifiable)
-    //  {
-    //      { $table = '<table border="1" style="width:100%; border-collapse:collapse;">'; 
-    //        $table .= '<tr><th>Cantidad</th><th>Unidad de Medida</th><th>Descripción</th><th>Observaciones</th><th>Imagen de Referencia</th></tr>';
-    //         foreach ($this->data['detalles'] as $detalle) 
-    //         { 
-    //          $table .= '<tr>';
-    //           $table .= '<td>' . $detalle['cantidad'] . '</td>'; 
-    //           $table .= '<td>' . $detalle['unidadMedida']['nombre'] . '</td>';
-    //           $table .= '<td>' . $detalle['descripcion'] . '</td>'; 
-    //           $table .= '<td>' . $detalle['observaciones'] . '</td>'; 
-    //           $table .= '<td><a href="' . $detalle['img_referencia'] . '">Ver Imagen</a></td>'; 
-    //           $table .= '</tr>'; 
-    //          } 
-    //          $table .= '</table>'; 
 
-    //          return (new MailMessage) 
-    //          ->subject('Solicitud de Cotización')
-    //          ->line(new \Illuminate\Support\HtmlString('<h1>Solicitud de cotización</h1>'))
-    //          ->line('El area de compras COBAMA solicita una cotización de lo siguiente:') 
-    //          ->line('Detalles:') 
-    //          ->line(new \Illuminate\Support\HtmlString($table))
-    //          ->line('Consideraciones:', $this->data['consideraciones'])
-    //          ->line('Saludos cordiales');
-    //      }
-
-    //     //   return (new MailMessage)
-    //     //       ->subject('Solicitud de Cotización')
-    //     //       ->view('emails.solicitud_cotizacion', ['data' => $this->data]);
-    //  }
     public function toMail($notifiable)
 {
     $table = '<table border="1" style="width:100%; border-collapse:collapse;">'; 

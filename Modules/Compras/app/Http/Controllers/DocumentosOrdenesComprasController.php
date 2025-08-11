@@ -3,12 +3,13 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Complementos;
 use Modules\Compras\Http\Requests\UploadDocsOCRequest;
 use Illuminate\Http\Request;
 //Model
 use Modules\Compras\Models\DocumentosOrdenesCompra;
 
-//Utilities 
+//Utilities
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Modules\Compras\Models\DocumentosFactura;
@@ -67,13 +68,22 @@ class DocumentosOrdenesComprasController extends Controller
     }
 
     /** *****************************************************
-     * Recupera los documentos de orden de compra 
+     * Recupera los documentos de orden de compra
      * en base al id de orden de compra
      *******************************************************/
     public function show($id)
     {
-        $registro = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get();
-        return $registro;
+        // $registro = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get();
+
+        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['id', 'fecha', 'ruta_xml_factura as xml', 'ruta_pdf_factura as representacion_impresa']);
+
+        $rutaIds = $rutas->pluck('id')->toArray();
+
+        $docsFactura = DocumentosFactura::whereIn('com_documentos_ordenes_compra_id', $rutaIds)->get(['id', 'fecha', 'tipo_documento', 'xml', 'representacion_impresa']);
+
+        $registros = $rutas->concat($docsFactura);
+
+        return $registros;
     }
 
 
@@ -136,6 +146,35 @@ class DocumentosOrdenesComprasController extends Controller
         //
     }
 
+    public function leerYProcesarXML($id)
+    {
+        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['id', 'fecha', 'ruta_xml_factura as xml', 'ruta_pdf_factura as representacion_impresa']);
+
+        $rutaIds = $rutas->pluck('id')->toArray();
+
+        $docsFactura = DocumentosFactura::whereIn('com_documentos_ordenes_compra_id', $rutaIds)->get(['id', 'fecha', 'tipo_documento', 'xml', 'representacion_impresa']);
+
+        $factura = $this->leerComprobante($rutas, 'xml');
+
+        // $uuidOriginal = $factura['comprobantes'][0]['UUID'];
+        $uuidOriginal = $factura['UUIDs'];
+
+        $docsFacturaProcesados = $this->leerComprobante($docsFactura, 'xml', $uuidOriginal);
+
+        // Fusionar comprobantes
+        $comprobantesFactura = $factura['comprobantes'];
+        $comprobantesDocs = $docsFacturaProcesados['comprobantes'] ?? [];
+
+        $uuidFactura = $factura['UUIDs'];
+        $uuidsDocs = $docsFacturaProcesados['UUIDs'] ?? [];
+
+        $factura['comprobantes'] = array_merge($comprobantesFactura, $comprobantesDocs);
+        $factura['UUIDs'] = array_merge($uuidFactura, $uuidsDocs);
+        return response()->json([
+            'factura' => $factura,
+        ], 200);
+    }
+
     /**
      * Recupera un archivo relacionado con una orden de compra desde el servidor.
      *
@@ -163,21 +202,26 @@ class DocumentosOrdenesComprasController extends Controller
      */
     public function downloadFacturas($id)
     {
-        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)
-            ->get(['ruta_xml_factura', 'ruta_pdf_factura', 'complemento_pago_xml', 'complemento_pago_pdf', 'comprobante_pago']);
+
+        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['id', 'fecha', 'ruta_xml_factura as xml', 'ruta_pdf_factura as representacion_impresa']);
+        $rutaIds = $rutas->pluck('id')->toArray();
+        $docsFactura = DocumentosFactura::whereIn('com_documentos_ordenes_compra_id', $rutaIds)->get(['id', 'fecha', 'tipo_documento', 'xml', 'representacion_impresa']);
+        
+        $docs = $rutas->concat($docsFactura);
+
 
         $zip = new ZipArchive();
         $zipFileName = 'facturas_' . $id . '.zip';
         $zipPath = storage_path('app/' . $zipFileName);
 
         if ($zip->open($zipPath, ZipArchive::CREATE) === TRUE) {
-            foreach ($rutas as $ruta) {
+            foreach ($docs as $ruta) {
                 $archivos = [
-                    $ruta['ruta_pdf_factura'],
-                    $ruta['ruta_xml_factura'],
-                    $ruta['complemento_pago_pdf'],
-                    $ruta['complemento_pago_xml'],
-                    $ruta['comprobante_pago'],
+                    $ruta['xml'],
+                    // $ruta['ruta_xml_factura'],
+                    $ruta['representacion_impresa'],
+                    // $ruta['complemento_pago_xml'],
+                    // $ruta['comprobante_pago'],
                 ];
 
                 foreach ($archivos as $archivo) {
@@ -197,120 +241,218 @@ class DocumentosOrdenesComprasController extends Controller
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 
-    /** 
-     * Recupera los datos del xml y los procesa listos para mostrar en el backend
-     * 
-     * @param id  de la orden de compra
+
+    /**
+     * Recupera los datos del XML y los procesa listos para mostrar en el backend.
+     *
+     * @param array $rutas Datos que se obtienen de la consulta.
+     * @param string $key Campo del cual se obtiene la ruta.
+     * @param array $id UUIDs de las facturas cargadas.
+     *
+     * @return array Datos procesados listos para mostrar.
      */
-    public function leerYProcesarXML($id)
+    public function leerComprobante($rutas, $key, $id = null)
     {
-        // Catalogo de códigos SAT
+        // Carga de catálogos SAT
         $assetsJson = 'Modules/Compras/resources/assets/json';
-        $catMP = File::get(base_path($assetsJson . '/catalogoSAT/metodoPago.json'));
-        $catRF = File::get(base_path($assetsJson . '/catalogoSAT/regimenFiscal.json'));
-        $catUC = File::get(base_path($assetsJson . '/catalogoSAT/usoCFDI.json'));
-        $catTC = File::get(base_path($assetsJson . '/catalogoSAT/tipoComprobante.json'));
+        $catMP = File::get(base_path("$assetsJson/catalogoSAT/metodoPago.json"));
+        $catRF = File::get(base_path("$assetsJson/catalogoSAT/regimenFiscal.json"));
+        $catUC = File::get(base_path("$assetsJson/catalogoSAT/usoCFDI.json"));
+        $catTC = File::get(base_path("$assetsJson/catalogoSAT/tipoComprobante.json"));
 
+        $jsonMP = json_decode($catMP, true);
+        $jsonRF = json_decode($catRF, true);
+        $jsonUCfdi = json_decode($catUC, true);
+        $jsonTC = json_decode($catTC, true);
 
-        $jsonMP = json_decode(json: $catMP, associative: true);
-        $jsonRF = json_decode(json: $catRF, associative: true);
-        $jsonUCfdi = json_decode(json: $catUC, associative: true);
-        $jsonTC = json_decode(json: $catTC, associative: true);
-        // $dataFacturacion = $json[$data['destino'][0]->empresa];
-
-        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['id', 'ruta_xml_factura']);
-
+        // Inicializar estructura de respuesta
         $factura = [
-            'comprobantes' => [],
-            'impuestos' => [],
-            'emisor' => [],
-            'receptor' => [],
-            'metodoPago' => [],
-            'sumaSubTotal' => 0,
-            'sumaTotal' => 0,
+            'comprobantes'    => [],
+            // 'complementos'    => [],
+            'impuestos'       => [],
+            'emisor'          => [],
+            'receptor'        => [],
+            'metodoPago'      => [],
+            'sumaSubTotal'    => 0,
+            'sumaTotal'       => 0,
+            'UUIDs'           => [],
         ];
 
-        $ns = 'http://www.sat.gob.mx/cfd/4';
+        $nsCfdi = 'http://www.sat.gob.mx/cfd/4';
+        $nsTfd  = 'http://www.sat.gob.mx/TimbreFiscalDigital';
+        $nsPago = 'http://www.sat.gob.mx/Pagos20';
+
 
         foreach ($rutas as $index => $ruta) {
-            $rutaXML = storage_path('app/' . $ruta['ruta_xml_factura']);
-            if (!file_exists($rutaXML)) {
-                return response()->json(['message' => 'Archivo no encontrado: ' . $ruta['ruta_xml_factura']], 404);
-            }
+            // Valida que la tenga un archivo xml que pueda leer
+            if ($ruta[$key] != null) {
+                $rutaXML = storage_path('app/' . $ruta[$key]);
+                if (!file_exists($rutaXML)) {
+                    return response()->json([
+                        'message' => 'Archivo no encontrado: ' . $ruta[$key]
+                    ], 404);
+                }
 
-            $contenidoXML = file_get_contents($rutaXML);
-            $xml = new \SimpleXMLElement($contenidoXML);
+                $contenidoXML = file_get_contents($rutaXML);
+                $xml = new \SimpleXMLElement($contenidoXML);
 
-            $xml->registerXPathNamespace('cfdi', $ns);
+                //  Registrar namespaces antes de cualquier xpath()
+                $xml->registerXPathNamespace('cfdi', $nsCfdi);
+                $xml->registerXPathNamespace('tfd', $nsTfd);
+                $xml->registerXPathNamespace('pago20', $nsPago);
+
+                // Timbre fiscal
+                $timbres = $xml->xpath('//cfdi:Complemento/tfd:TimbreFiscalDigital');
+                $uuid = null;
+
+                if (!empty($timbres)) {
+                    $uuid = (string) $timbres[0]['UUID'];
+                    $factura['UUIDs'][] = (string) $timbres[0]['UUID'];
+                }
+
+                // Datos comprobante principal
+                $comprobante = $xml->xpath('//cfdi:Comprobante')[0] ?? null;
+                if ($comprobante) {
+                    $fecha    = (string) $comprobante['Fecha'];
+                    $folio = (string) $comprobante['Folio'];
+                    $subtotal = (float) $comprobante['SubTotal'];
+                    $total    = (float) $comprobante['Total'];
+                    $tipoComprobante = (string) $comprobante['TipoDeComprobante'];
+                    $formaPago = (string) $comprobante['FormaPago'];
+                    $serie = (string) $comprobante['Serie'];
 
 
-            $comprobante = $xml->xpath('//cfdi:Comprobante')[0] ?? null;
-
-            if ($comprobante) {
-
-                $subtotal = (float) $comprobante['SubTotal'];
-                $total = (float) $comprobante['Total'];
-                $factura['comprobantes'][] = [
-                    'idRuta' => $ruta['id'],
-                    'fecha' => (string) $comprobante['Fecha'],
-                    'folio' => (string) $comprobante['Folio'],
-                    'serie' => (string) $comprobante['Serie'],
-                    'subTotal' => $subtotal,
-                    // 'impuestos' =>  $impuestos['TotalImpuestosTrasladados'],
-                    'tComprobante' =>  (string) $comprobante['TipoDeComprobante'],
-                    'tComprobanteDesc' => $jsonTC[(string) $comprobante['TipoDeComprobante']]['descripcion'],
-                    'moneda' => (string) $comprobante['Moneda'],
-                    'total' => $total,
-                ];
-
-                $factura['sumaSubTotal'] += $subtotal;
-                $factura['sumaTotal'] += $total;
-
-                if ($index === 0) {
-                    $factura['metodoPago'] = [
-                        'metodoPago' => (string) $comprobante['MetodoPago'],
-                        'metodoPagoDesc' => $jsonMP[(string) $comprobante['MetodoPago']]['descripcion'],
+                    $factura['comprobantes'][] = [
+                        'idRuta'           => $ruta['id'] ?? null,
+                        'fecha'            => $fecha,
+                        'folio'            => $folio,
+                        'serie'            => $serie,
+                        'formaPago'        => $formaPago,
+                        'subTotal'         => $tipoComprobante === 'E' ? $subtotal * -1 : $subtotal,
+                        'tComprobante'     => (string) $comprobante['TipoDeComprobante'],
+                        'tComprobanteDesc' => strtoupper($jsonTC[(string) $comprobante['TipoDeComprobante']]['descripcion']) ?? null,
+                        'moneda'           => (string) $comprobante['Moneda'],
+                        'total'            => $tipoComprobante === 'E' ? $total * -1 : $total,
+                        'UUID'             => (string) $uuid ??  null,
+                        'xml'                   => $ruta['xml'] ?? null,
+                        'representacion_impresa' => $ruta['representacion_impresa'] ?? null,
                     ];
+
+                    // $factura['sumaSubTotal'] += (float) $subtotal;
+                    // $factura['sumaTotal']    += (float) $total;
+
+                    $factura['sumaSubTotal'] += $tipoComprobante === 'E' ? $subtotal * -1 : $subtotal;
+                    $factura['sumaTotal']    += $tipoComprobante === 'E' ? $total * -1 : $total;
+
+                    if($index === 0){
+                        $factura['metodoPago'] = [
+                        'metodoPago'     => (string) $comprobante['MetodoPago'] ?? null,
+                        'metodoPagoDesc' => $jsonMP[(string) $comprobante['MetodoPago']]['descripcion'] ?? null,
+                        ];
+                    }
+                    
+                    
                 }
-            }
 
-            $impuestos = $xml->xpath('//cfdi:Impuestos') ?? null;
-            // $factura['impuestos'][] = [$impuestos];
+                // Datos de complementos de pagos
+                $complementos = $xml->xpath('//cfdi:Complemento/pago20:Pagos/pago20:Pago');
+                if (!empty($complementos)) {
+                    foreach ($complementos as $complemento) {
+                        // Registrar en el contexto de este nodo antes de xpath si se requiere
+                        $complemento->registerXPathNamespace('pago20', $nsPago);
 
-            foreach ($impuestos as $impuesto) {
-                if (isset($impuesto['TotalImpuestosTrasladados'])) {
-                    $factura['impuestos'][] =  $impuesto['TotalImpuestosTrasladados'];
+                        $fechaPago   = (string) $complemento['FechaPago'];
+                        $monedaPago  = (string) $complemento['MonedaP'];
+                        $formaPagoP  = (string) $complemento['FormaDePagoP'];
+
+                        foreach ($complemento->xpath('pago20:DoctoRelacionado') as $doc) {
+                            $serie           = (string) $doc['Serie'];
+                            $folio           = (string) $doc['Folio'];
+                            $numParcialidad  = (string) $doc['NumParcialidad'];
+                            $impSaldoAnt     = (float) $doc['ImpSaldoAnt'];
+                            $impPagado       = (float) $doc['ImpPagado'];
+                            $uuid            = (string) $doc['IdDocumento'] ?: (string) $doc['UUID'] ?? null;
+
+                            // if ($uuid === $id) {
+                            if (in_array($uuid, $id)) {
+                                $factura['comprobantes'][] = [
+                                    'idRuta'                => $ruta['id'] ?? null,
+                                    'fecha'                 => $fechaPago,
+                                    'folio'                 => $folio ?? "-",
+                                    'serie'                 => $serie ?? "-",
+                                    'subTotal'              => $impPagado ?? "-",
+                                    'formaPago'             => $formaPagoP ?? "-",
+                                    'tComprobante'          => (string) $comprobante['TipoDeComprobante'],
+                                    'tComprobanteDesc'      => strtoupper($jsonTC[(string) $comprobante['TipoDeComprobante']]['descripcion'] . '-parc ' . $numParcialidad) ?? null,
+                                    'moneda'                => $monedaPago ?? "-",
+                                    'total'                 => $impSaldoAnt ?? "-",
+                                    'UUID'                  => $uuid,
+                                    'xml'                   => $ruta['xml'] ?? null,
+                                    'representacion_impresa' => $ruta['representacion_impresa'] ?? null,
+                                ];
+                            }
+                        }
+                    }
                 }
-            }
 
-            if ($index === 0) {
+                // Impuestos
+                $impuestos = $xml->xpath('//cfdi:Impuestos') ?? [];
+                foreach ($impuestos as $impuesto) {
+                    if (isset($impuesto['TotalImpuestosTrasladados'])) {
+                        $factura['impuestos'][] = (float) $impuesto['TotalImpuestosTrasladados'];
+                    }
+                }
+
+                // Datos emisor
                 $emisor = $xml->xpath('//cfdi:Emisor')[0] ?? null;
                 if ($emisor) {
                     $factura['emisor'] = [
-                        'rfc' => (string) $emisor['Rfc'],
-                        'nombre' => (string) $emisor['Nombre'],
-                        'regimenFiscal' => (string) $emisor['RegimenFiscal'],
-                        'regimenFiscalDesc' => $jsonRF[(string) $emisor['RegimenFiscal']]['descripcion'],
+                        'rfc'              => (string) $emisor['Rfc'],
+                        'nombre'           => (string) $emisor['Nombre'],
+                        'regimenFiscal'    => (string) $emisor['RegimenFiscal'],
+                        'regimenFiscalDesc' => $jsonRF[(string) $emisor['RegimenFiscal']]['descripcion'] ?? null,
                     ];
                 }
 
+                // Datos receptor
                 $receptor = $xml->xpath('//cfdi:Receptor')[0] ?? null;
                 if ($receptor) {
                     $factura['receptor'] = [
-                        'rfc' => (string) $receptor['Rfc'],
-                        'nombre' => (string) $receptor['Nombre'],
-                        'usoCFDI' => (string) $receptor['UsoCFDI'],
-                        'usoCFDIDesc' => $jsonUCfdi[(string) $receptor['UsoCFDI']]['descripcion'],
-                        'domicilioFiscalReceptor' => (string) $receptor['DomicilioFiscalReceptor'],
+                        'rfc'                    => (string) $receptor['Rfc'],
+                        'nombre'                 => (string) $receptor['Nombre'],
+                        'usoCFDI'                => (string) $receptor['UsoCFDI'],
+                        'usoCFDIDesc'            => $jsonUCfdi[(string) $receptor['UsoCFDI']]['descripcion'] ?? null,
+                        'domicilioFiscalReceptor' => (string) $receptor['DomicilioFiscalReceptor'] ?? null,
                     ];
                 }
+            } else {
+                //Respuesta en el caso que no tenga un XML
+                $factura['comprobantes'][] = [
+                    'idRuta'                => $ruta['id'] ?? null,
+                    'fecha'                 => $ruta['fecha'],
+                    'folio'                 => " - ",
+                    'serie'                 => " - ",
+                    'subTotal'              => 0,
+                    'formaPago'             => " - ",
+                    'tComprobante'          => " - ",
+                    'tComprobanteDesc'      => (string) strtoupper(str_replace("_", " ", $ruta['tipo_documento'])),
+                    'moneda'                => " - ",
+                    'total'                 => 0,
+                    'UUID'                  => " - ",
+                    'xml'                   => $ruta['xml'] ?? null,
+                    'representacion_impresa' => $ruta['representacion_impresa'] ?? null,
+                ];
             }
         }
-
-        return response()->json(['factura' => $factura], 200);
+        return $factura;
     }
 
-
+    /**
+    * Descarga un archivo directamente del servidor 
+    * @param string $folder -> nombre del folder del tipo de documento en el storage ej: docsOrdenCompra
+    * @param int $id -> id con el que se nombra la subcarpeta ej:  id_orden_compra: 2 
+    * @param int $file -> archivo junto con su extension: factura_xml9820251754754870.xml 
+    */
     public function downloadXML($folder, $id, $file)
     {
         $filePath = storage_path("app/$folder/$id/$file");
@@ -330,7 +472,14 @@ class DocumentosOrdenesComprasController extends Controller
         ]);
     }
 
-    
+
+    /**
+     * Sube y guarda documentos relacionados con una factura.
+     *
+     * @param Request $request -> debe contener:  
+     *  'orden_compra_id': int, 'tipo_documento': string, 'archivo_xml': file, 'archivo': file, 'idFactura': int
+     * @return response json 
+     */
     public function subirDocumento(Request $request)
     {
         $data = $request;
@@ -345,11 +494,11 @@ class DocumentosOrdenesComprasController extends Controller
 
         if ($data->hasFile('archivo_xml')) {
             $nombreArchivo = $data['tipo_documento'] . $hoy . $time . "." . $data->file('archivo_xml')->getClientOriginalExtension();
-            $docsFactura->archivo_xml = $data->file('archivo_xml')->storeAs($carpetaOrdenCompra, $nombreArchivo);
+            $docsFactura->xml = $data->file('archivo_xml')->storeAs($carpetaOrdenCompra, $nombreArchivo);
         }
         if ($data->hasFile('archivo')) {
             $nombreArchivo = $data['tipo_documento'] . $hoy . $time . "." . $data->file('archivo')->getClientOriginalExtension();
-            $docsFactura->archivo = $data->file('archivo')->storeAs($carpetaOrdenCompra, $nombreArchivo);
+            $docsFactura->representacion_impresa = $data->file('archivo')->storeAs($carpetaOrdenCompra, $nombreArchivo);
         }
         $docsFactura->com_documentos_ordenes_compra_id = $data['idFactura'];
         $docsFactura->fecha = date('Y-m-d H:i:s') ?? now();
