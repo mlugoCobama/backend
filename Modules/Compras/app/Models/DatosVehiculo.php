@@ -14,7 +14,7 @@ class DatosVehiculo extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'marca', 
+        'marca',
         'submarca',
         'modelo',
         'no_serie',
@@ -22,7 +22,11 @@ class DatosVehiculo extends Model
         'tipo',
         'id_sucursal',
         'id',
-        'activo'
+        'activo',
+        'tipo_combustible',
+        'nro_economico',
+        'ruta',
+        'estatus',
     ];
      /**
      * Nombre de la tabla

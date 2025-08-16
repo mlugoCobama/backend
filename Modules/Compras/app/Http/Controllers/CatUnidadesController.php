@@ -202,21 +202,23 @@ class CatUnidadesController extends Controller
         while (($row = fgetcsv($handle, 1000, ',')) !== false) {
 
             $auto = DatosVehiculo::create([
-                'marca' => $row[0] ?? 'NA',
-                'submarca' =>  $row[1] ?? 'NA',
-                'modelo' => $row[2] ?? 'NA',
-                'no_serie' =>  $row[3] ?? 'NA',
-                'placas' => $row[4] ?? 'NA', 
-                'id_sucursal' =>  10 ?? 'NA',
+                'nro_economico' => $row[0] ?? 'NA',
+                'estatus' => $row[2] ?? 'NA',
+                'marca' => $row[3] ?? 'NA',
+                'submarca' =>  $row[4] ?? 'NA',
+                'modelo' => $row[5] ?? 'NA',
+                'no_serie' =>  $row[6] ?? 'NA',
+                'placas' => $row[7] ?? 'NA', 
+                'id_sucursal' =>  $row[13],
             ]);
                 
             DatosTanque::create([
-                'marca' => $row[5] ?? 'NA', 
-                'anio_fabricacion' => $row[6] ?? 'NA',
-                'capacidad' => $row[7] ?? 'NA',
-                'serie' => $row[8] ?? 'NA',
-                'tipo_medidor' => $row[9] ?? 'NA',
-                'id_sucursal' => 10,
+                'marca' => $row[8] ?? 'NA', 
+                'anio_fabricacion' => $row[9] ?? 'NA',
+                'capacidad' => $row[10] ?? 'NA',
+                'serie' => $row[11] ?? 'NA',
+                'tipo_medidor' => $row[12] ?? 'NA',
+                'id_sucursal' => $row[13],
                 'com_datos_vehiculo_id' => $auto->id,
             ]);
         }

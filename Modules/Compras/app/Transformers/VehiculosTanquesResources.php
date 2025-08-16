@@ -16,6 +16,7 @@ class VehiculosTanquesResources extends JsonResource
 
         return [
             "id" => $this->id,
+            "eco" => $this->nro_economico,
             "marca_vehiculo" => $this->marca_vehiculo,
             "submarca" => $this->submarca,
             "modelo" => $this->modelo,

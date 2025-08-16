@@ -43,7 +43,7 @@ class SolicitudesCompraController extends Controller
      **************************************************************/
     public function index(int $intercompania, ?int $id = null)
     {
-        $usuariosCompra = array_flip([413, 2039, 2364]);
+        $usuariosCompra = array_flip([413, 2039, 2364, 2395]);
         $isCompras = isset($usuariosCompra[$id]);
 
         if($intercompania === 333 && $isCompras){
@@ -51,6 +51,7 @@ class SolicitudesCompraController extends Controller
         }
 
         else{
+
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->where('empresa', $intercompania)->active()->orderBy('fecha', 'desc')->get()));
         }
         

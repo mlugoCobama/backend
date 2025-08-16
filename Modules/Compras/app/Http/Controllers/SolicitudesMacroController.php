@@ -27,10 +27,12 @@ class SolicitudesMacroController extends Controller
      */
     public function index(int $intercompania, ?int $id = null)
     {
-        $usuariosMacro = array_flip([170, 167, 371,381]);
+        $usuariosMacro = array_flip([170, 167, 371, 381, 2395]);
+        $usuariosCompra = array_flip([413, 2039, 2364, 2395]);
+        $isCompras = isset($usuariosCompra[$id]);
         $isMacro = isset($usuariosMacro[$id]); 
 
-        if( $intercompania === 333){
+        if( $isCompras){
             $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacro()"));
             $tipo = 'compras';
         }
@@ -40,7 +42,7 @@ class SolicitudesMacroController extends Controller
             $tipo = 'macro';
         }
 
-        if($intercompania !== 333 && !$isMacro)
+        if(!$isMacro && !$isCompras)
         {
             $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacroGasera($intercompania)"));
             $tipo = 'gasera';

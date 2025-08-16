@@ -58,7 +58,7 @@ class OrdenCompraPdfController extends Controller
         $pdf->SetFont('Arial', 'B', 6);
 
         $pdf->SetXY(65, 24.2);
-        $pdf->Write(0, $data['ordenCompra']['id']);
+        // $pdf->Write(0, $data['ordenCompra']['id']);
         $usuarioSolicita = utf8_decode('' . $data['solicita'][0]->firstname . ' ' . $data['solicita'][0]->realname . '');
         $pdf->SetXY(80, 24.2);
         $pdf->Write(0, $usuarioSolicita);
@@ -194,6 +194,7 @@ class OrdenCompraPdfController extends Controller
             $yBefore = $pdf->GetY();
 
             // Multicel: Se utiliza para campos con textos largos
+            //* $pdf->MultiCell(101, 5, utf8_decode($descripcion), 0, 'C'); 
             $pdf->MultiCell(21.5, 5, utf8_decode($descripcion), 0, 'C'); 
             
             // Ancho y alto de línea
@@ -218,6 +219,12 @@ class OrdenCompraPdfController extends Controller
 
             // actualizar para siguiente fila
             $y += $lineHeight;
+
+            //* Dibuja la línea inferior al final de la fila
+            $pdf->SetDrawColor(0, 0, 0);
+            $pdf->SetLineWidth(0.2);
+            $pdf->Line(15.7, $y, 200.2, $y);
+
             $pdf->SetY($y); 
             $totalImporte += $importe;
         }

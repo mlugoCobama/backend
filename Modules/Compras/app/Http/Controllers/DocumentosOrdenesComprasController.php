@@ -428,18 +428,18 @@ class DocumentosOrdenesComprasController extends Controller
             } else {
                 //Respuesta en el caso que no tenga un XML
                 $factura['comprobantes'][] = [
-                    'idRuta'                => $ruta['id'] ?? null,
-                    'fecha'                 => $ruta['fecha'],
-                    'folio'                 => " - ",
-                    'serie'                 => " - ",
-                    'subTotal'              => 0,
-                    'formaPago'             => " - ",
-                    'tComprobante'          => " - ",
-                    'tComprobanteDesc'      => (string) strtoupper(str_replace("_", " ", $ruta['tipo_documento'])),
-                    'moneda'                => " - ",
-                    'total'                 => 0,
-                    'UUID'                  => " - ",
-                    'xml'                   => $ruta['xml'] ?? null,
+                    'idRuta'                 => $ruta['id'] ?? null,
+                    'fecha'                  => $ruta['fecha'],
+                    'folio'                  => " - ",
+                    'serie'                  => " - ",
+                    'subTotal'               => 0,
+                    'formaPago'              => " - ",
+                    'tComprobante'           => " - ",
+                    'tComprobanteDesc'       => (string) strtoupper(str_replace("_", " ", $ruta['tipo_documento'])),
+                    'moneda'                 => " - ",
+                    'total'                  => 0,
+                    'UUID'                   => " - ",
+                    'xml'                    => $ruta['xml'] ?? null,
                     'representacion_impresa' => $ruta['representacion_impresa'] ?? null,
                 ];
             }

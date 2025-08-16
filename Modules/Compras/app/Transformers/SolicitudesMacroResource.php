@@ -21,7 +21,7 @@ class SolicitudesMacroResource extends JsonResource
         $estadoInfo = $this->asignarEstado($this->estatus);
         // $datosUnidad = $this->getUnidad($this->usuario_destino);
         $datosCC = $this->asignarDescripcionCC($this->c_c);
-        $claseEmpresa = $this->asignarBadges($this->id_suc);
+        // $claseEmpresa = $this->asignarBadges($this->id_suc);
         return [
             'id' => $this->id_solicitud,
             'folio' => $this->folio,
@@ -35,7 +35,7 @@ class SolicitudesMacroResource extends JsonResource
             'estatus' => $this->estatus,
             'estado' => $estadoInfo['estado'],
             'claseEstado' => $estadoInfo['claseEstado'],
-            'claseEmpresa' => $claseEmpresa['clase'],
+            // 'claseEmpresa' => $claseEmpresa['clase'],
             'auto_admin' => $this->auto_admin,
             'auto_gg' => $this->auto_gg,
             'auto_macro' => $this->auto_macro,
