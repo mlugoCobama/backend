@@ -43,14 +43,19 @@ class SolicitudesCompraController extends Controller
      **************************************************************/
     public function index(int $intercompania, ?int $id = null)
     {
-        $usuariosCompra = array_flip([413, 2039, 2364, 2395]);
+        $usuariosCompra = array_flip([2039, 2364, 2395]);
         $isCompras = isset($usuariosCompra[$id]);
 
-        if($intercompania === 333 && $isCompras){
+        $usuariosRT = array_flip([413, 2395]);
+        $isRT = isset($usuariosRT[$id]);        
+        if($isRT){
+            $data = SolicitudesComprasResource::collection((SolicitudesCompra::rtecnologicos()->active()->autorizadas()->orderBy('updated_at', 'desc')->get()));
+        }
+        if($isCompras){
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->autorizadas()->orderBy('updated_at', 'desc')->get()));
         }
-
-        else{
+        
+        if(!$isRT && !$isCompras){
 
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->where('empresa', $intercompania)->active()->orderBy('fecha', 'desc')->get()));
         }
@@ -74,11 +79,11 @@ class SolicitudesCompraController extends Controller
         try {
             DB::beginTransaction();
 
-            $idSolicitud = $this->storeSolicitudCompra($data);
-            $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
+            $solicitud = $this->storeSolicitudCompra($data);
+            $this->storeDetalleSolicitudCompra($data['detalles'], $solicitud['id'], $files, (int)$solicitud['destino'] );
             //TODO MODIFICAR ESTO PARA QUE SE ENVIÉ EL CORREO
             //$correos = $this->getGerente($data['empresa']);
-            //?$this->sendSolicitudAutorizacion($idSolicitud, $correos);
+            //?$this->sendSolicitudAutorizacion($solicitud['id'], $correos);
             DB::commit();
 
             return response()->json([
@@ -209,6 +214,9 @@ class SolicitudesCompraController extends Controller
      **********************************************************************/
     private function storeSolicitudCompra($data)
     {
+        $usuariosInfra = array_flip([2395, 1939, 1965, 1687, 2296, 413]);
+        $isInfra = isset($usuariosInfra[$data["usuario_solicita"]]);
+
         $dataSolicitud = new SolicitudesCompra();
         $dataSolicitud->folio = $this->generarFolioSc();
         $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
@@ -217,14 +225,22 @@ class SolicitudesCompraController extends Controller
         $dataSolicitud->motivo = $data["motivo"];
         $dataSolicitud->fecha = date('Y-m-d H:i:s') ?? now();
         $dataSolicitud->c_c = $data["c_c"];
+                
+        if($isInfra){
+           $dataSolicitud->tipo = 3;
+        }
+
         $dataSolicitud->save();
-        return $dataSolicitud->id;
+        return [
+            'id' => $dataSolicitud->id,
+            'destino' => $data["usuario_destino"]
+            ];
     }
 
     /** ***************************************************************************
      * Amacena los detalles de la solicitud
      *****************************************************************************/
-    private function storeDetalleSolicitudCompra($detalles, $idSolicitud, $files)
+    private function storeDetalleSolicitudCompra($detalles, $idSolicitud, $files, $destino)
     {
         foreach ($detalles as $index => $detalle) {
             $detalleSolicitud = new DetalleSolicitud();

@@ -44,6 +44,10 @@ class DatosVehiculo extends Model
         return $this->hasOne(DatosTanque::class,'com_datos_vehiculo_id' ,'id' );
     }
 
+    public function DetalleAutotanque(){
+        return $this->hasMany(DetalleAutotanque::class,'com_datos_vehiculos_id' ,'id' );
+    }
+
     protected static function newFactory(): DatosVehiculoFactory
     {
         //return DatosVehiculoFactory::new();

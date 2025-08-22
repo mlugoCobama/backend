@@ -25,6 +25,7 @@ class StoreSolicitudMacroRequest extends FormRequest
             'data.detalles.*.descripcion' => 'required|string',
             'data.detalles.*.observaciones' => 'nullable|string',
             'data.detalles.*.cat_unidades_medida_id' => 'required|integer',
+            'data.detalles.*.vehiculo' => 'nullable',
             'img_referencia_*' => 'required|file|mimes:jpg,jpeg,png|max:51200'
         ];
     }
@@ -44,6 +45,7 @@ class StoreSolicitudMacroRequest extends FormRequest
             'data.motivo.required' => 'Motivo es obligatorio',
             'data.detalles.required' => 'Los detalles son obligatorios',
             'data.detalles.*.cantidad.min' => 'La cantidad minima es 1',
+            'data.detalles.*.vehiculo' => 'Autotanque es requerido',
             'data.detalles.*.descripcion.required' => 'Agrega una descripción',
             'data.detalles.*.cat_unidades_medida_id.required' => 'Agrega una unidad de medida',
             'img_referencia_*.mimes' => 'La imagen debe de ser de tipo jpg,jpeg o png',

@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/macro",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Macro\\": "app/",
+            "Modules\\Macro\\Database\\Factories\\": "database/factories/",
+            "Modules\\Macro\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Macro\\Tests\\": "tests/"
+        }
+    }
+}

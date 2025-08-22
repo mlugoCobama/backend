@@ -182,6 +182,13 @@ class OrdenCompraPdfController extends Controller
             $tipo = $detalle->detalle_solicitud->unidadMedida->nombre;
             $descripcion = $detalle->detalle_solicitud->descripcion;
             $observaciones = $detalle->detalle_solicitud->observaciones;
+            $eco = '';
+
+            $detalleAutotanque = $detalle->detalle_solicitud->DetalleAutotanque;
+            if(!empty($detalleAutotanque)){
+               $eco = "ECO: ". $detalle->detalle_solicitud->DetalleAutotanque->DatosVehiculo->nro_economico;
+            }
+
             $importe = $cantidad * $precio_unitario;
 
             // Guardar la posición actual
@@ -206,7 +213,7 @@ class OrdenCompraPdfController extends Controller
             
             //Posición siguiente celda
             $pdf->SetXY($x + 46, $yBefore); 
-            $pdf->MultiCell(55, 5, utf8_decode($observaciones), 0,'C');
+            $pdf->MultiCell(55, 5, utf8_decode($eco), 0,'C');
 
             $obsLineHeight = $pdf->GetY() - $yBefore;
             

@@ -16,6 +16,7 @@ use App\Enums\EstatusSolicitud;
 use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\Proveedores;
+use Modules\Compras\Models\DetalleAutotanque;
 use Modules\Compras\Transformers\AutotanqueResource;
 use Modules\Compras\Transformers\UsersResource;
 
@@ -78,20 +79,22 @@ class SolicitudesMacroController extends Controller
         try {
             DB::beginTransaction();
 
-            $idSolicitud = $this->storeSolicitudCompra($data);
-            $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
+            $solicitud = $this->storeSolicitudCompra($data);
+            // $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
+            $this->storeDetalleSolicitudCompra($data['detalles'], $solicitud['id'], $files, (int)$solicitud['destino'] );
+
             
-            $this->storeOrdenTrabajo($idSolicitud, $data);
+            $this->storeOrdenTrabajo($solicitud['id'], $data);
 
             if(isset($files["file_cotizacion"]) && !empty($files["file_cotizacion"])){
-                $cotizacion = $this->storeCotizacion($idSolicitud);
+                $cotizacion = $this->storeCotizacion($solicitud['id']);
                 $cotProv = $this->storeCotizacionProveedor($cotizacion);
                 $this->storeFile($cotProv, $files["file_cotizacion"]);
             }
 
             //TODO MODIFICAR ESTO PARA QUE SE ENVIÉ EL CORREO
             //$correos = $this->getGerente($data['empresa']);
-            //$this->sendSolicitudAutorizacion($idSolicitud, $correos);
+            //$this->sendSolicitudAutorizacion($solicitud['id'], $correos);
             DB::commit();
 
             return response()->json([
@@ -225,7 +228,12 @@ class SolicitudesMacroController extends Controller
         $dataSolicitud->c_c = $data["c_c"];
         $dataSolicitud->tipo = 2;
         $dataSolicitud->save();
-        return $dataSolicitud->id;
+        // return $dataSolicitud->id;
+
+         return [
+            'id' => $dataSolicitud->id,
+            'destino' => $data["usuario_destino"]
+            ];
     }
 
     /**
@@ -252,7 +260,7 @@ class SolicitudesMacroController extends Controller
         $dataCotizacion = new Cotizaciones();
         $dataCotizacion->folio = $folio;
         $dataCotizacion->fecha = date('Y-m-d H:i:s') ?? now();
-        $dataCotizacion->consideraciones = "Cotizacion precargada a por la planta";
+        $dataCotizacion->consideraciones = "Cotización precargada por la planta";
         $dataCotizacion->solicitudes_compra_id = $idSolicitud;
         $dataCotizacion->save();
         return $dataCotizacion->id;
@@ -294,7 +302,7 @@ class SolicitudesMacroController extends Controller
      * @param int $idSolicitud ID de la solicitud de compra a la que se asociarán los detalles.
      * @param array $files Array de archivos subidos, con claves como 'img_referencia_0', 'img_referencia_1', etc.
      */
-    private function storeDetalleSolicitudCompra($detalles, $idSolicitud, $files)
+    private function storeDetalleSolicitudCompra($detalles, $idSolicitud, $files, $destino)
     {
         foreach ($detalles as $index => $detalle) {
             $detalleSolicitud = new DetalleSolicitud();
@@ -312,6 +320,19 @@ class SolicitudesMacroController extends Controller
 
             $detalleSolicitud->solicitudes_compra_id = $idSolicitud;
             $detalleSolicitud->save();
+
+            if( $destino == 602){
+                 $this->storeDetalleAutotanque( $detalle["vehiculo"], $detalleSolicitud->id);
+            }
         }
     }
+
+    public function storeDetalleAutotanque( $idVehiculo, $idDetalle){
+
+        $detalleAuto = new DetalleAutotanque();
+        $detalleAuto->com_detalle_solicitud_id = $idDetalle;
+        $detalleAuto->com_datos_vehiculos_id = $idVehiculo;
+        $detalleAuto->save();
+
+    } 
 }

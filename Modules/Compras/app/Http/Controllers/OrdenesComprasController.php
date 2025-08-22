@@ -325,7 +325,7 @@ class OrdenesComprasController extends Controller
     {
         $solicitudCompra = SolicitudesCompra::where('id', $id)->first();
         if($solicitudCompra->tipo == 2){
-            $user = UsersResource::collection(DB::connection('dashboard')->select("call SP_GetDataAutotanque($solicitudCompra->usuario_destino)"));
+            $user = UsersResource::collection(DB::connection('dashboard')->select("call SP_GetDataAutotanque($solicitudCompra->usuario_destino, $solicitudCompra->empresa )"));
         }else{
             $user = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')'));
         }
@@ -354,13 +354,13 @@ class OrdenesComprasController extends Controller
         ];
 
         //Llamada a la funcion quue genera el formato
-        $pdf = new OrdenCompraPdfController();
-        $file = $pdf->OrdenCompraFormatoInterno($data);
+            $pdf = new OrdenCompraPdfController();
+            $file = $pdf->OrdenCompraFormatoInterno($data);
 
         //Devuelvo el pdf hacia el front
-         return response($file, 200)
-             ->header('Content-Type', 'application/pdf')
-           ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
+            return response($file, 200)
+                 ->header('Content-Type', 'application/pdf')
+               ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
 
     }
 }

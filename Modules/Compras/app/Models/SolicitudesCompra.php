@@ -22,7 +22,8 @@ class SolicitudesCompra extends Model
         'fecha',
         'estatus',
         'activo',
-        'empresa'
+        'empresa',
+        'tipo',
     ];
 
     /**
@@ -46,6 +47,12 @@ class SolicitudesCompra extends Model
      */
     public function scopeMacrotaller($query) {
         return $query->where('tipo', 2);
+    }
+    /**
+     * Función para obtener las compras de macro taller
+     */
+    public function scopeRtecnologicos($query) {
+        return $query->where('tipo', 3);
     }
     /**
      * Función para obtener las compras en estatus solicitada

@@ -22,6 +22,7 @@ class DetalleSolicitudCompraResource extends JsonResource
             'img_referencia' => $this->img_referencia ? url('storage/' . $this->img_referencia) : null,
             'solicitudes_compra_id' => $this->solicitudes_compra_id,
             'confirmado' => $this->confirmado,
+            'DetalleAutotanque' =>  $this->DetalleAutotanque ? new DetalleAutotanqueResource($this->DetalleAutotanque) : null,
         ];
     }
 }

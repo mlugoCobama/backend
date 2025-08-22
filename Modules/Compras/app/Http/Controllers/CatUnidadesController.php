@@ -10,6 +10,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Modules\Compras\Models\DatosTanque;
 use Modules\Compras\Models\DatosVehiculo;
+use Modules\Compras\Models\DetallesCotizacion;
+use Modules\Compras\Transformers\DetallesCotizacionResource;
 use Modules\Compras\Transformers\VehiculosTanquesResources;
 
 class CatUnidadesController extends Controller
@@ -96,8 +98,11 @@ class CatUnidadesController extends Controller
      */
     public function edit($id)
     {
-        return view('compras::edit');
     }
+
+
+
+
 
     /**
      * Update the specified resource in storage.
@@ -249,7 +254,10 @@ class CatUnidadesController extends Controller
         $dataVehiculo->modelo = $datosVehiculos['modelo'];
         $dataVehiculo->no_serie = $datosVehiculos['no_serie'];
         $dataVehiculo->placas = $datosVehiculos['placas'];
-        $dataVehiculo->tipo = $datosVehiculos['tipo_vehiculo'];
+        $dataVehiculo->nro_economico = $datosVehiculos['nro_economico'];
+        $dataVehiculo->tipo_combustible = $datosVehiculos['tipo_combustible'];
+        $dataVehiculo->estatus = $datosVehiculos['estatus'];
+
         $dataVehiculo->save();
 
         return $dataVehiculo->id;
@@ -293,6 +301,9 @@ class CatUnidadesController extends Controller
         'no_serie' => $data['no_serie'],
         'placas' => $data['placas'],
         'tipo' => $data['tipo_vehiculo'],
+        'nro_economico' => $data['nro_economico'],
+        'tipo_combustible' => $data['tipo_combustible'],
+        'estatus' => $data['estatus'],
         ]);
 
     }

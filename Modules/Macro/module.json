@@ -1,0 +1,11 @@
+{
+    "name": "Macro",
+    "alias": "macro",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Macro\\Providers\\MacroServiceProvider"
+    ],
+    "files": []
+}

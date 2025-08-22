@@ -50,6 +50,12 @@ class DetalleSolicitud extends Model
         return $this->belongsTo(SolicitudesCompra::class, 'id');
     }
 
+    public function DetalleAutotanque()
+    {
+        // return $this->hasOne(DetalleAutotanque::class, 'id', 'com_detalle_solicitud_id');
+        return $this->hasOne(DetalleAutotanque::class, 'com_detalle_solicitud_id', 'id');
+    }
+
     /**
      * Scopes
      */
