@@ -17,8 +17,8 @@ class SolicitudesComprasResource extends JsonResource
 
 
     {
-        $usuarioDestino =  $this->getNombreUsuario( $this->tipo ,$this->usuario_destino);
-        $usuarioSolicita =  $this->getNombreUsuario( 1 ,$this->usuario_solicita);
+        $usuarioDestino =  $this->getNombreUsuario( $this->tipo ,$this->usuario_destino, $this->empresa);
+        $usuarioSolicita =  $this->getNombreUsuario( 1 ,$this->usuario_solicita, $this->empresa);
         $estadoInfo = $this->asignarEstado($this->estatus);
         $datosCC = $this->asignarDescripcionCC($this->c_c);
         $ordenTrabajo = $this->getOrdenTrabajo($this->id);
@@ -30,6 +30,7 @@ class SolicitudesComprasResource extends JsonResource
             'fecha' => $this->fecha,
             'c_c' => $this->c_c,
             'centro_costo' => $datosCC['descripcion'],
+            'id' => $this->usuario_destino,
             'usuario_destino' => $usuarioDestino['nombre_completo'],
             'empresa' => $usuarioDestino['empresa'],
             'usuario_solicita' => $usuarioSolicita['nombre_completo'],
@@ -47,10 +48,10 @@ class SolicitudesComprasResource extends JsonResource
     /**
      *  Recupera los datos del usuario para asignarlos a la consulta
      */
-    private function getNombreUsuario($tipoSolicitud ,$usuarioId)
+    private function getNombreUsuario($tipoSolicitud , $usuarioId, $empresa)
     {
         if($tipoSolicitud == 2){
-            $usuario = UsersResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetDataAutotanque('. $usuarioId.')'));
+            $usuario = UsersResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetDataAutotanque('. $usuarioId.','.$empresa.')'));
         }else{
             $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' .  $usuarioId . ')'));
         }
