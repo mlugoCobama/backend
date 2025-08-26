@@ -30,7 +30,6 @@ class SolicitudesComprasResource extends JsonResource
             'fecha' => $this->fecha,
             'c_c' => $this->c_c,
             'centro_costo' => $datosCC['descripcion'],
-            'id' => $this->usuario_destino,
             'usuario_destino' => $usuarioDestino['nombre_completo'],
             'empresa' => $usuarioDestino['empresa'],
             'usuario_solicita' => $usuarioSolicita['nombre_completo'],
@@ -51,11 +50,11 @@ class SolicitudesComprasResource extends JsonResource
     private function getNombreUsuario($tipoSolicitud , $usuarioId, $empresa)
     {
         if($tipoSolicitud == 2){
-            $usuario = UsersResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetDataAutotanque('. $usuarioId.','.$empresa.')'));
+             $usuario = UsersResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetDataAutotanque('. $usuarioId.','.$empresa.')'));
         }else{
             $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' .  $usuarioId . ')'));
         }
-        // $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')');
+        $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')');
 
         if (count($usuario) > 0) {
             return [
