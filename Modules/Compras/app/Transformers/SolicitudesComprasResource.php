@@ -19,7 +19,7 @@ class SolicitudesComprasResource extends JsonResource
     {
         $usuarioDestino =  $this->getNombreUsuario( $this->tipo ,$this->usuario_destino, $this->empresa);
         $usuarioSolicita =  $this->getNombreUsuario( 1 ,$this->usuario_solicita, $this->empresa);
-        $estadoInfo = $this->asignarEstado($this->estatus);
+        $estadoInfo = $this->asignarEstado($this->estatus, $this->auto_gg, $this->auto_admin, $this->tipo);
         $datosCC = $this->asignarDescripcionCC($this->c_c);
         $ordenTrabajo = $this->getOrdenTrabajo($this->id);
 
@@ -40,7 +40,12 @@ class SolicitudesComprasResource extends JsonResource
             'auto_gg' => $this->auto_gg,
             'auto_macro' => $this->auto_macro,
             'tipo' => $this->tipo,
-            'orden_trabajo' => $ordenTrabajo
+            'orden_trabajo' => $ordenTrabajo,
+            'id_orden_trabajo' => $this->id_orden_trabajo ?? null,
+            'folio_requisicion' => $this->folio_requisicion ?? null,
+            'formato_orden' => $this->formato_orden ?? null,
+            'tipo_mantenimiento' => $this->tipo_mantenimiento ?? null,
+            'sistema' => $this->sistema ?? null,
         ];
     }
 
@@ -54,7 +59,6 @@ class SolicitudesComprasResource extends JsonResource
         }else{
             $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' .  $usuarioId . ')'));
         }
-        $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')');
 
         if (count($usuario) > 0) {
             return [
@@ -68,10 +72,12 @@ class SolicitudesComprasResource extends JsonResource
     /**
      * Asigna los datos del status como una etiqueta y una clase css
      */
-    private function asignarEstado($estatus)
+    private function asignarEstado($estatus, $gg, $admin, $tipo )
     {
+        $label = ($gg == 1  && $admin == 1 && $tipo == 2 ) ? "ESP. AUT. MACRO" : "ESP. AUT. PLANTA";
+
         $estados = [
-            1 => ['estado' => 'ESP. AUT. PLANTA', 'claseEstado' => 'badge-soft-info'],
+            1 => ['estado' => $label, 'claseEstado' => 'badge-soft-info'],
             2 => ['estado' => 'SOLICITADO', 'claseEstado' => 'bg-info'],
             3 => ['estado' => 'EN COTIZACIÓN', 'claseEstado' => 'badge-soft-warning'],
             5 => ['estado' => 'ORDEN DE COMPRA', 'claseEstado' => 'bg-warning'],

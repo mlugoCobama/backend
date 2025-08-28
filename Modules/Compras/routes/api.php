@@ -55,6 +55,7 @@ Route::prefix('compras')->group(function () {
     Route::get('expedientes/{id}/{file}', [ExpedientesProveedoresController::class, 'getFile'])->name('ExpedientesProveedores.getFile');
     Route::get('cotizaciones/{id}/{file}', [CotizacionesController::class, 'getFile'])->name('Cotizaciones.getFile');
     Route::get('docsOrdenCompra/{id}/{file}', [DocumentosOrdenesComprasController::class, 'getFile'])->name('DocumentosOrdenesCompras.getFile');
+    Route::get('ordenesTrabajo/{id}/{file}', [SolicitudesMacroController::class, 'getFile'])->name('SolicitudesMacro.getFile');
 
     //*Ruta para enviar un email de prueba, no funciona pero va funcionar
     Route::post('/enviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'enviarSolicitudCotizacion'])->name('SolicitudesCompra.enviarSolicitudCotizacion');

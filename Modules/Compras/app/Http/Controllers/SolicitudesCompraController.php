@@ -50,17 +50,21 @@ class SolicitudesCompraController extends Controller
         $isRT = isset($usuariosRT[$id]);        
         if($isRT){
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::rtecnologicos()->active()->autorizadas()->orderBy('updated_at', 'desc')->get()));
+            $tipo = 'RT';
         }
         if($isCompras){
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->autorizadas()->orderBy('updated_at', 'desc')->get()));
+            $tipo = 'compras';
         }
         
         if(!$isRT && !$isCompras){
 
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->where('empresa', $intercompania)->active()->orderBy('fecha', 'desc')->get()));
+            $tipo = 'empresa';
         }
         
         return response()->json([
+            'tipo' => $tipo,
             'status' => 'success',
             'message' => 'Consulta generada correctamente',
             'data' => $data

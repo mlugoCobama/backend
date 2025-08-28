@@ -12,6 +12,7 @@ use Modules\Compras\Models\DocumentosOrdenesCompra;
 //Utilities
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Modules\Compras\Http\Requests\SubirDocumentoRequest;
 use Modules\Compras\Models\DocumentosFactura;
 use ZipArchive;
 
@@ -480,9 +481,9 @@ class DocumentosOrdenesComprasController extends Controller
      *  'orden_compra_id': int, 'tipo_documento': string, 'archivo_xml': file, 'archivo': file, 'idFactura': int
      * @return response json 
      */
-    public function subirDocumento(Request $request)
+    public function subirDocumento(SubirDocumentoRequest $request)
     {
-        $data = $request;
+        $data = $request->validated();
         $hoy = date("jnY"); //Recuperar la fecha del dia de hoy para diferenciar el registro nuevo
         $time = time(); //Marca temporal del momento en el que se subió
 
@@ -500,6 +501,7 @@ class DocumentosOrdenesComprasController extends Controller
             $nombreArchivo = $data['tipo_documento'] . $hoy . $time . "." . $data->file('archivo')->getClientOriginalExtension();
             $docsFactura->representacion_impresa = $data->file('archivo')->storeAs($carpetaOrdenCompra, $nombreArchivo);
         }
+
         $docsFactura->com_documentos_ordenes_compra_id = $data['idFactura'];
         $docsFactura->fecha = date('Y-m-d H:i:s') ?? now();
         $docsFactura->save();

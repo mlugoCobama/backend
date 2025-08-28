@@ -14,13 +14,18 @@ class Tecnico extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        '',
-        '',
-        '',
-        '',
-        '',
-
+        'nombre',
+        'apellidos',
+        'tipo',
+        'intercompania',
+        'activo',
+        
     ];
+
+     /**
+     * Nombre de la tabla
+     */
+    protected $table = 'mcr_tecnicos';   
 
     protected static function newFactory(): TecnicoFactory
     {

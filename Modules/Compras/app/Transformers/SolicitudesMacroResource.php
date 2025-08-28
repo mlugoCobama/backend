@@ -18,7 +18,7 @@ class SolicitudesMacroResource extends JsonResource
     
     {
         $usuarioSolicita =  $this->getNombreUsuario($this->usuario_solicita);
-        $estadoInfo = $this->asignarEstado($this->estatus);
+        $estadoInfo = $this->asignarEstado($this->estatus, $this->auto_admin, $this->auto_gg);
         // $datosUnidad = $this->getUnidad($this->usuario_destino);
         $datosCC = $this->asignarDescripcionCC($this->c_c);
         // $claseEmpresa = $this->asignarBadges($this->id_suc);
@@ -42,6 +42,8 @@ class SolicitudesMacroResource extends JsonResource
             'tipo' => $this->tipo,
             'id_orden_trabajo' => $this->id_orden_trabajo,
             'orden_trabajo' => $this->orden_trabajo,
+            'folio_requisicion' => $this->folio_requisicion,
+            'formato_orden' => $this->formato_orden,
             'tipo_mantenimiento' => $this->tipo_mantenimiento,
             'sistema' => $this->sistema,
             // 'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
@@ -71,10 +73,12 @@ class SolicitudesMacroResource extends JsonResource
     /**
      * Asigna los datos del status como una etiqueta y una clase css
      */
-    private function asignarEstado($estatus)
+    private function asignarEstado($estatus, $admin, $gg)
     {
+        $label = ($gg == 1  && $admin == 1 ) ? "ESP. AUT. MACRO" : "ESP. AUT. PLANTA";
+
         $estados = [
-            1 => ['estado' => 'ESP. AUT. PLANTA', 'claseEstado' => 'badge-soft-info'],
+            1 => ['estado' => $label, 'claseEstado' => 'badge-soft-info'],
             2 => ['estado' => 'SOLICITADO', 'claseEstado' => 'bg-info'],
             3 => ['estado' => 'EN COTIZACIÓN', 'claseEstado' => 'badge-soft-warning'],
             5 => ['estado' => 'ORDEN DE COMPRA', 'claseEstado' => 'bg-warning'],

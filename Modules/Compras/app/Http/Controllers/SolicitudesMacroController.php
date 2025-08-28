@@ -4,6 +4,7 @@ namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -84,7 +85,7 @@ class SolicitudesMacroController extends Controller
             $this->storeDetalleSolicitudCompra($data['detalles'], $solicitud['id'], $files, (int)$solicitud['destino'] );
 
             
-            $this->storeOrdenTrabajo($solicitud['id'], $data);
+            $this->storeOrdenTrabajo($solicitud['id'], $data, $files["file_orden"] );
 
             if(isset($files["file_cotizacion"]) && !empty($files["file_cotizacion"])){
                 $cotizacion = $this->storeCotizacion($solicitud['id']);
@@ -162,7 +163,7 @@ class SolicitudesMacroController extends Controller
 
          $solicitudCompra = SolicitudesCompra::findOrFail($id);
             $solicitudCompra->com_cat_sistemas_auto_id = $data['sistema'];
-            $solicitudCompra->com_cat_tipos_mantenimiento_id = $data['tipoMantenimiento'];;
+            $solicitudCompra->com_cat_tipos_mantenimiento_id = $data['tipoMantenimiento'];
             $solicitudCompra->save();
 
          return response()->json([
@@ -227,6 +228,9 @@ class SolicitudesMacroController extends Controller
         $dataSolicitud->fecha = date('Y-m-d H:i:s') ?? now();
         $dataSolicitud->c_c = $data["c_c"];
         $dataSolicitud->tipo = 2;
+        $dataSolicitud->com_cat_sistemas_auto_id = $data['sistema'];
+        $dataSolicitud->com_cat_tipos_mantenimiento_id = $data['tipoMantenimiento'];
+        $dataSolicitud->folio_requisicion = $data['folio_requisicion'];
         $dataSolicitud->save();
         // return $dataSolicitud->id;
 
@@ -243,9 +247,17 @@ class SolicitudesMacroController extends Controller
    *                     "orden_trabajo":string, "usuario_destino":int
    * @param int $idSolicitud de la solicitud de compra
    */
-    private function storeOrdenTrabajo($idSolicitud, $data){
+    private function storeOrdenTrabajo($idSolicitud, $data, $file){
         $dataOrdenTrabajo = new OrdenTrabajo();
         $dataOrdenTrabajo->orden_trabajo = $data["orden_trabajo"];
+
+        if(isset($file) && !empty($file)){
+            $folderPath = 'ordenesTrabajo/' . $idSolicitud;
+            $fileName = $data["orden_trabajo"] . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs($folderPath, $fileName);
+            $dataOrdenTrabajo->formato_orden = $path;
+        }
+
         $dataOrdenTrabajo->com_datos_vehiculo_id = $data["usuario_destino"];
         $dataOrdenTrabajo->com_solicitudes_compra_id = $idSolicitud;
         $dataOrdenTrabajo->save();
@@ -335,4 +347,22 @@ class SolicitudesMacroController extends Controller
         $detalleAuto->save();
 
     } 
+
+    /**
+     * Recupera un archivo relacionado con una orden de compra desde el servidor.
+     *
+     * @param int $id ID de la orden de compra.
+     * @param string $file Nombre del archivo que se desea recuperar.
+     * @return \Illuminate\Http\Response Archivo solicitado como respuesta HTTP con cabecera Content-Type.
+     */
+    public function getFile($id, $file)
+    {
+        $path = storage_path("app/ordenesTrabajo/$id/$file");
+        if (!File::exists($path)) {
+            abort(404);
+        }
+        $fileContent = File::get($path);
+        $type = File::mimeType($path);
+        return response($fileContent, 200)->header("Content-Type", $type);
+    }
 }

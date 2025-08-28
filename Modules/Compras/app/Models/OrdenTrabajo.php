@@ -14,6 +14,7 @@ class OrdenTrabajo extends Model
      */
     protected $fillable = [
         'orden_trabajo',
+        'formato_orden',
         'com_datos_vehiculo_id',
         'com_solicitudes_compra_id',
     ];

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Macro\Http\Controllers\MacroController;
+use Modules\Macro\Http\Controllers\TecnicoController;
 
 /*
  *--------------------------------------------------------------------------
@@ -14,6 +15,9 @@ use Modules\Macro\Http\Controllers\MacroController;
  *
 */
 
-Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
+Route::
+    // middleware(['auth:sanctum'])->
+    prefix('macrotaller')->group(function () {
     Route::apiResource('macro', MacroController::class)->names('macro');
+    Route::apiResource('tecnico', TecnicoController::class)->names('tecnico');
 });
