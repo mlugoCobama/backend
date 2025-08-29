@@ -109,7 +109,25 @@ class TecnicoController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $tecnico = Tecnico::where('id', $id);
+        
+        if(!$tecnico){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El registro que intentas eliminar no existe',
+                'data' => ''
+            ]);
+        }
+
+        $tecnico->update([
+            'activo' => 0
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Se ha eliminado correctamente',
+            'data' => ''
+        ]);
     }
 
     public function storeTecnico($data){

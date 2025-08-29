@@ -43,10 +43,10 @@ class SolicitudesCompraController extends Controller
      **************************************************************/
     public function index(int $intercompania, ?int $id = null)
     {
-        $usuariosCompra = array_flip([2039, 2364, 2395]);
+        $usuariosCompra = array_flip([2039, 2364, 2395, 1796]);
         $isCompras = isset($usuariosCompra[$id]);
 
-        $usuariosRT = array_flip([413, 2395]);
+        $usuariosRT = array_flip([413, 2395, 2404, 1796]);
         $isRT = isset($usuariosRT[$id]);        
         if($isRT){
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::rtecnologicos()->active()->autorizadas()->orderBy('updated_at', 'desc')->get()));
