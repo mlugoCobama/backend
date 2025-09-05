@@ -5,6 +5,7 @@ namespace Modules\Compras\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Compras\Database\Factories\DetalleSolicitudFactory;
+use Modules\Macro\Models\Almacen;
 
 class DetalleSolicitud extends Model
 {
@@ -18,7 +19,8 @@ class DetalleSolicitud extends Model
         'descripcion',
         'observaciones',
         'img_referencia',
-        'confirmado'
+        'confirmado',
+        'estatus_almacen',
     ];
     /**
      * Nombre de la tabla
@@ -56,11 +58,29 @@ class DetalleSolicitud extends Model
         return $this->hasOne(DetalleAutotanque::class, 'com_detalle_solicitud_id', 'id');
     }
 
+    public function Almacen()
+    {
+        // return $this->hasOne(DetalleAutotanque::class, 'id', 'com_detalle_solicitud_id');
+        return $this->hasOne(Almacen::class, 'com_detalle_solicitud_id', 'id');
+    }
+
     /**
      * Scopes
      */
     public function scopeConfirmadas($query) {
         return $query->where('confirmado', 1);
+    }
+
+    public function scopePendientes($query) {
+        return $query->where('estatus_almacen', 0);
+    }
+
+    public function scopeAlmacenado($query) {
+        return $query->where('estatus_almacen', 1);
+    }
+
+    public function scopeUtlizado($query) {
+        return $query->where('estatus_almacen', 2);
     }
 
 }

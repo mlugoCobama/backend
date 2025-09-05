@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Macro\Http\Controllers\AlmacenController;
 use Modules\Macro\Http\Controllers\MacroController;
 use Modules\Macro\Http\Controllers\TecnicoController;
 
@@ -20,4 +21,12 @@ Route::
     prefix('macrotaller')->group(function () {
     Route::apiResource('macro', MacroController::class)->names('macro');
     Route::apiResource('tecnico', TecnicoController::class)->names('tecnico');
+    Route::apiResource('almacen', AlmacenController::class)->names('tecnico');
+
+    Route::get('/get-gaseras',[MacroController::class, 'getGaseras'])->name('Macro.getGaseras');
+    Route::get('/get-compra/{intercompania}',[AlmacenController::class, 'getCompra'])->name('Almacen.getCompra');
+    Route::get('/get-compras-almacenadas/{intercompania}',[AlmacenController::class, 'getComprasMacroAlmacenadas'])->name('Almacen.getCompra');
+    Route::get('/almacen-activo/{idSolicitud}',[AlmacenController::class, 'showDetallesOrdenTrabajo'])->name('Almacen.showDetallesOrdenTrabajo');
+
+    Route::post('/salida-almacen',[AlmacenController::class, 'salida'])->name('Almacen.guardarSalida');
 });

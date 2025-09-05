@@ -23,6 +23,7 @@ class DetalleSolicitudCompraResource extends JsonResource
             'solicitudes_compra_id' => $this->solicitudes_compra_id,
             'confirmado' => $this->confirmado,
             'DetalleAutotanque' =>  $this->DetalleAutotanque ? new DetalleAutotanqueResource($this->DetalleAutotanque) : null,
+            'estatus_almacen' => $this->estatus_almacen,
         ];
     }
 }

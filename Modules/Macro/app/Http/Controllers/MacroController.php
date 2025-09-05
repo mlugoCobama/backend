@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class MacroController extends Controller
 {
@@ -63,5 +64,22 @@ class MacroController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function getGaseras(){
+
+        $empresas = DB::connection('intranet')
+        ->table('glpi_entities')
+            ->select('name','intercompania')
+            ->where('intercompania', '>', '0')
+            ->where('division', '=', 'ENERGETICOS')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $empresas,
+            'message' => 'Datos recuperados correctamente'
+        ]);
+
     }
 }

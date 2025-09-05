@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\Macro\Models\Tecnico;
 use Illuminate\Support\Facades\DB;
+use Modules\Macro\Transformers\TecnicoResource;
 use PhpParser\Node\Stmt\Return_;
 
 class TecnicoController extends Controller
@@ -18,7 +19,7 @@ class TecnicoController extends Controller
     public function index()
     {
         $empresas = DB::connection('intranet')->table('glpi_entities')->select('name','intercompania')->where('intercompania', '>', '0')->get();
-        $data = Tecnico::get();
+        $data = Tecnico::active()->get();
 
         $resultado = $data->map(function ($tecnico) use ($empresas) {
             // Buscamos la empresa que coincide con el intercompania del técnico
@@ -35,7 +36,7 @@ class TecnicoController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => $resultado,
+            'data' => TecnicoResource::collection($resultado),
             'empresas' => $empresas,
             'message' => 'datos recuperados correctamente'
         ]);

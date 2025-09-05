@@ -22,10 +22,17 @@ class Tecnico extends Model
         
     ];
 
-     /**
+    /**
      * Nombre de la tabla
      */
     protected $table = 'mcr_tecnicos';   
+    
+    /**
+     * Función para obtener los datos activos
+     */
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
+    }
 
     protected static function newFactory(): TecnicoFactory
     {
