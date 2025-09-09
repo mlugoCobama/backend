@@ -18,7 +18,10 @@ class TecnicoController extends Controller
      */
     public function index()
     {
-        $empresas = DB::connection('intranet')->table('glpi_entities')->select('name','intercompania')->where('intercompania', '>', '0')->get();
+        $empresas = DB::connection('intranet')->table('glpi_entities')->select('name','intercompania')
+        ->where('intercompania', '>', '0')
+        ->where('intercompania', '<', '700')
+        ->get();
         $data = Tecnico::active()->get();
 
         $resultado = $data->map(function ($tecnico) use ($empresas) {
