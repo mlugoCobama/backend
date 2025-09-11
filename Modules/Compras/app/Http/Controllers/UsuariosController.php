@@ -16,9 +16,17 @@ class UsuariosController extends Controller
     {
         $data = DB::connection('intranet')->table('glpi_entities')->select('name','intercompania')->where('intercompania', '>', '0')->get();
 
+        $dataArray = $data->toArray();
+
+        $dataArray[] = (object)[
+            'name' => 'MACRO TALLER',
+            'intercompania' => 119,
+            'isAgencia' => false
+            ];
+
         return response()->json([
             'status' => 'success',
-            'data' =>  CatEmpresasResource::collection($data),
+            'data' =>  CatEmpresasResource::collection($dataArray),
             'message' => 'Datos recuperados correctamente'
         ]);
     }

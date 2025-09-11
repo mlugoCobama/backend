@@ -18,7 +18,7 @@ class SolicitudesMacroResource extends JsonResource
     
     {
         $usuarioSolicita =  $this->getNombreUsuario($this->usuario_solicita);
-        $estadoInfo = $this->asignarEstado($this->estatus, $this->auto_admin, $this->auto_gg);
+        $estadoInfo = $this->asignarEstado($this->estatus, $this->auto_admin, $this->auto_gg, $this->auto_macro);
         // $datosUnidad = $this->getUnidad($this->usuario_destino);
         $datosCC = $this->asignarDescripcionCC($this->c_c);
         // $claseEmpresa = $this->asignarBadges($this->id_suc);
@@ -73,14 +73,15 @@ class SolicitudesMacroResource extends JsonResource
     /**
      * Asigna los datos del status como una etiqueta y una clase css
      */
-    private function asignarEstado($estatus, $admin, $gg)
+    private function asignarEstado($estatus, $admin, $gg, $macro )
     {
         $label = ($gg == 1  && $admin == 1 ) ? "ESP. AUT. MACRO" : "ESP. AUT. PLANTA";
+        $label2 = ($gg == 1 && $admin == 1  && $macro == 0) ? "ESP. AUT. MACRO" : "EN COTIZACIÓN";
 
         $estados = [
             1 => ['estado' => $label, 'claseEstado' => 'badge-soft-info'],
             2 => ['estado' => 'SOLICITADO', 'claseEstado' => 'bg-info'],
-            3 => ['estado' => 'EN COTIZACIÓN', 'claseEstado' => 'badge-soft-warning'],
+            3 => ['estado' => $label2, 'claseEstado' => 'badge-soft-warning'],
             5 => ['estado' => 'ORDEN DE COMPRA', 'claseEstado' => 'bg-warning'],
             4 => ['estado' => 'CANCELADA', 'claseEstado' => 'bg-danger'],
             6 => ['estado' => 'AUTORIZADA', 'claseEstado' => 'badge-soft-success'],

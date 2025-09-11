@@ -19,7 +19,7 @@ class SolicitudesComprasResource extends JsonResource
     {
         $usuarioDestino =  $this->getNombreUsuario( $this->tipo ,$this->usuario_destino, $this->empresa);
         $usuarioSolicita =  $this->getNombreUsuario( 1 ,$this->usuario_solicita, $this->empresa);
-        $estadoInfo = $this->asignarEstado($this->estatus, $this->auto_gg, $this->auto_admin, $this->tipo);
+        $estadoInfo = $this->asignarEstado($this->estatus, $this->auto_gg, $this->auto_admin, $this->auto_macro, $this->tipo);
         $datosCC = $this->asignarDescripcionCC($this->c_c);
         $ordenTrabajo = $this->getOrdenTrabajo($this->id);
 
@@ -72,14 +72,14 @@ class SolicitudesComprasResource extends JsonResource
     /**
      * Asigna los datos del status como una etiqueta y una clase css
      */
-    private function asignarEstado($estatus, $gg, $admin, $tipo )
+    private function asignarEstado($estatus, $gg, $admin, $macro, $tipo )
     {
         $label = ($gg == 1  && $admin == 1 && $tipo == 2 ) ? "ESP. AUT. MACRO" : "ESP. AUT. PLANTA";
-
+        $label2 = ($gg == 1 && $admin == 1  && $macro == 0 && $tipo == 2) ? "ESP. AUT. MACRO" : "EN COTIZACIÓN";
         $estados = [
             1 => ['estado' => $label, 'claseEstado' => 'badge-soft-info'],
             2 => ['estado' => 'SOLICITADO', 'claseEstado' => 'bg-info'],
-            3 => ['estado' => 'EN COTIZACIÓN', 'claseEstado' => 'badge-soft-warning'],
+            3 => ['estado' => $label2, 'claseEstado' => 'badge-soft-warning'],
             5 => ['estado' => 'ORDEN DE COMPRA', 'claseEstado' => 'bg-warning'],
             4 => ['estado' => 'CANCELADA', 'claseEstado' => 'bg-danger'],
             6 => ['estado' => 'AUTORIZADA', 'claseEstado' => 'badge-soft-success'],
