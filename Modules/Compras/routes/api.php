@@ -51,12 +51,6 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores'])->name('Proveedores.getProveedores');
     Route::get('/SolicitudCompra/{id}',[SolicitudesCompraController::class, 'getSolicitud'])->name('SolicitudesCompras.getSolicitud');
 
-    //*Ruta para mostra archivos 
-    Route::get('expedientes/{id}/{file}', [ExpedientesProveedoresController::class, 'getFile'])->name('ExpedientesProveedores.getFile');
-    Route::get('cotizaciones/{id}/{file}', [CotizacionesController::class, 'getFile'])->name('Cotizaciones.getFile');
-    Route::get('docsOrdenCompra/{id}/{file}', [DocumentosOrdenesComprasController::class, 'getFile'])->name('DocumentosOrdenesCompras.getFile');
-    Route::get('ordenesTrabajo/{id}/{file}', [SolicitudesMacroController::class, 'getFile'])->name('SolicitudesMacro.getFile');
-
     //*Ruta para enviar un email de prueba, no funciona pero va funcionar
     Route::post('/enviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'enviarSolicitudCotizacion'])->name('SolicitudesCompra.enviarSolicitudCotizacion');
     Route::post('/enviar-solicitud-surtido', [OrdenesComprasController::class, 'enviarSolicitudSurtido'])->name('OrdenesCompras.enviarSolicitudSurtido');
@@ -73,11 +67,6 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::get('/leer-xml/{id}',[OrdenesComprasController::class, 'leerXML'])->name('OrdenesCompras.leerXML');
     Route::get('/get-data-xml/{id}', [DocumentosOrdenesComprasController::class, 'leerYProcesarXML'])->name('OrdenesCompras.leerYProcesarXML');
     
-    //*Rutas descarga zip
-    Route::get('/descargar-facturas/{id}',[DocumentosOrdenesComprasController::class, 'downloadFacturas'])->name('DocumentosOrdenesCompras.downloadFacturas');
-    Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente'])->name('ExpedientesProveedores.downloadExpediente');
-    Route::get('/download-xml/{folder}/{id}/{file}', [DocumentosOrdenesComprasController::class, 'downloadXML'])->name('DocumentosOrdenesCompras.downloadXML');
-
     Route::get('/getUserByEmail/{correo}', [UsuariosController::class, 'getDataUsuario'])->name('Usuarios.getDataUsuario');
     Route::get('/getUserById/{correo}', [UsuariosController::class, 'showById'])->name('Usuarios.showById');
 
@@ -88,5 +77,18 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
 
     // Ruta test
     Route::post('/save-files-factura', [DocumentosOrdenesComprasController::class, 'subirDocumento'])->name('DocumentosOrdenesCompras.saveFilesFactura');
+});
+
+Route::prefix('compras')->group(function(){
+    //*Ruta para mostra archivos 
+    Route::get('expedientes/{id}/{file}', [ExpedientesProveedoresController::class, 'getFile'])->name('ExpedientesProveedores.getFile');
+    Route::get('cotizaciones/{id}/{file}', [CotizacionesController::class, 'getFile'])->name('Cotizaciones.getFile');
+    Route::get('docsOrdenCompra/{id}/{file}', [DocumentosOrdenesComprasController::class, 'getFile'])->name('DocumentosOrdenesCompras.getFile');
+    Route::get('ordenesTrabajo/{id}/{file}', [SolicitudesMacroController::class, 'getFile'])->name('SolicitudesMacro.getFile');
+
+    //*Rutas descarga zip
+    Route::get('/descargar-facturas/{id}',[DocumentosOrdenesComprasController::class, 'downloadFacturas'])->name('DocumentosOrdenesCompras.downloadFacturas');
+    Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente'])->name('ExpedientesProveedores.downloadExpediente');
+    Route::get('/download-xml/{folder}/{id}/{file}', [DocumentosOrdenesComprasController::class, 'downloadXML'])->name('DocumentosOrdenesCompras.downloadXML');
 });
 

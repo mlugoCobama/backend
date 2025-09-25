@@ -5,9 +5,12 @@ namespace Modules\Capacitaciones\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Capacitaciones\Database\Factories\CatalogoFuncionesAsFactory;
+use App\Traits\Auditable;
 
 class CatalogoFuncionesAs extends Model
 {
+
+    use Auditable;
     use HasFactory;
 
     /**
