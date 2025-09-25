@@ -30,8 +30,8 @@ use Modules\Compras\Http\Controllers\CatTiposMantenimientoController;
  *
 */
 
-// Route::middleware(['auth:sanctum'])->group(function () {
-Route::prefix('compras')->group(function () {
+Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
+// Route::prefix('compras')->group(function () {
     Route::resource('CatalogoUnidades', CatUnidadesController::class);
     Route::resource('CatalogoUnidadesMedida', CatUnidadesMedidaController::class);
     Route::resource('Proveedores', ProveedoresController::class);

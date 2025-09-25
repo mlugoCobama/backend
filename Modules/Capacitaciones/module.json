@@ -1,0 +1,11 @@
+{
+    "name": "Capacitaciones",
+    "alias": "capacitaciones",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Capacitaciones\\Providers\\CapacitacionesServiceProvider"
+    ],
+    "files": []
+}

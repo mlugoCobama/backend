@@ -17,11 +17,11 @@ use Modules\Macro\Http\Controllers\TecnicoController;
 */
 
 Route::
-    // middleware(['auth:sanctum'])->
+    middleware(['auth:sanctum'])->
     prefix('macrotaller')->group(function () {
-    Route::apiResource('macro', MacroController::class)->names('macro');
-    Route::apiResource('tecnico', TecnicoController::class)->names('tecnico');
-    Route::apiResource('almacen', AlmacenController::class)->names('almacen');
+    Route::resource('macro', MacroController::class)->names('macro');
+    Route::resource('tecnico', TecnicoController::class)->names('tecnico');
+    Route::resource('almacen', AlmacenController::class)->names('almacen');
 
     Route::get('/get-gaseras',[MacroController::class, 'getGaseras'])->name('Macro.getGaseras');
     Route::get('/get-compra/{intercompania}',[AlmacenController::class, 'getCompra'])->name('Almacen.getCompra');

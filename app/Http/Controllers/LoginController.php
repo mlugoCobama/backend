@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Modules\Compras\Transformers\AuthResource;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class LoginController extends Controller
@@ -20,9 +21,7 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        $user = new AuthResource(User::where('name', $fields['email'])
-                    // ->where('activo', '1')
-                    ->first());
+        $user = User::where('name', $fields['email'])->first();
 
         if (!$user || !( md5($fields['password']) === $user->password)) {
             if (!$user || !( sha1($fields['password']) === $user->password)) {
@@ -42,8 +41,9 @@ class LoginController extends Controller
         return response()->json([
             'success' => true,
             'token' => $token,
-            'role' => $user, // include user role in response
-            'permisos' => $permisos
+            'role' => new AuthResource($user), // include user role in response
+            'permisos' => $permisos,
+            'ip' => $request->ip()
         ]);
     }
 
@@ -60,9 +60,26 @@ class LoginController extends Controller
             ->join('model_has_permissions as mp', 'p.id', '=', 'mp.permission_id')
             ->select('p.name', 'p.guard_name')
             ->where('model_id', '=', $id)
-            ->get();
+            // ->get()
+            ;
 
-        return $permisos;
+        $permisos_as = 
+            DB::table('permissions as p')
+                ->join('permission_has_puesto as pp', 'p.id', '=', 'pp.permiso_id')
+                ->join('cap_cataologo_puestos as cp', function ($join) {
+                    $join->on('cp.id', '=', 'pp.puesto_id')
+                        ->where('cp.activo', '=', 1);
+                })
+                ->join('usuario_puesto as up', function ($join) {
+                    $join->on('cp.id', '=', 'up.id_puesto')
+                        ->where('up.activo', '=', 1);
+                })
+                ->where('up.id_usuario', '=', $id)
+                ->select('p.name', 'p.guard_name')
+            ; 
+
+        $union = $permisos->union($permisos_as)->get();    
+        return $union;
 
     }
 

@@ -2,6 +2,7 @@
 
 namespace Modules\Compras\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Compras\Database\Factories\DetalleSolicitudFactory;
@@ -10,6 +11,7 @@ use Modules\Macro\Models\Almacen;
 class DetalleSolicitud extends Model
 {
     use HasFactory;
+    use Auditable;
 
     /**
      * The attributes that are mass assignable.

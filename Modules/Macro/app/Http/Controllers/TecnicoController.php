@@ -145,12 +145,12 @@ class TecnicoController extends Controller
 
     public function updateTecnico($data){
 
-        $proveedor = Tecnico::find($data['id']);
-        if (!$proveedor) {
-            throw new \Exception("Proveedor no encontrado");
+        $tecnico = Tecnico::find($data['id']);
+        if (!$tecnico) {
+            throw new \Exception("tecnico no encontrado");
         }
 
-        $proveedor->update([
+        $tecnico->update([
             'nombre' => $data["nombre"],
             'apellidos' => $data["apellidos"],
             'tipo' => $data["tipo"],

@@ -5,10 +5,12 @@ namespace Modules\Compras\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Compras\Database\Factories\SolicitudesCompraFactory;
+use App\Traits\Auditable;
 
 class SolicitudesCompra extends Model
 {
     use HasFactory;
+    use Auditable;
 
     /**
      * The attributes that are mass assignable.

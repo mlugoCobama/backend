@@ -140,7 +140,7 @@ class SolicitudesCompraController extends Controller
     public function destroy($id)
     {
 
-        $solicitudCompra = SolicitudesCompra::where('id', $id);
+        $solicitudCompra = SolicitudesCompra::find($id);
 
         if (!$solicitudCompra) {
             return response()->json([

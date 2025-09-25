@@ -2,12 +2,14 @@
 
 namespace Modules\Compras\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Compras\Database\Factories\CatalogoUnidadesMedidasFactory;
 
 class CatUnidadesMedidas extends Model
 {
+    use Auditable;
     use HasFactory;
 
     /**
@@ -15,7 +17,8 @@ class CatUnidadesMedidas extends Model
      */
     protected $fillable = [
         'nombre',
-        'abreviatura'
+        'abreviatura',
+        'activo'
     ];
 
     /**

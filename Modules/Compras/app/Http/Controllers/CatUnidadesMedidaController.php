@@ -78,7 +78,7 @@ class CatUnidadesMedidaController extends Controller
      */
     public function destroy($id)
     {
-        $unidadMedida = CatUnidadesMedidas::where('id', $id);
+        $unidadMedida = CatUnidadesMedidas::find($id);
         
         if(!$unidadMedida){
             return response()->json([

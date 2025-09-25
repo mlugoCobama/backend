@@ -9,6 +9,7 @@ use Modules\Compras\Database\Factories\CatUnidadesMedidaFactory;
 class CatUnidadesMedida extends Model
 {
     use HasFactory;
+    use Auditable;
 
     /**
      * The attributes that are mass assignable.
