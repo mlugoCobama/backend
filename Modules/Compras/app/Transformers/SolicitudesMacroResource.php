@@ -29,7 +29,7 @@ class SolicitudesMacroResource extends JsonResource
             'fecha' => $this->fecha,
             'c_c' => $this->c_c,
             'centro_costo' => $datosCC['descripcion'],
-            'usuario_destino' => "ECO: $this->eco MOD: $this->marca_vehiculo $this->submarca $this->modelo PLACAS: $this->placas",
+            'usuario_destino' => "ECO: $this->eco MOD: $this->marca_vehiculo $this->submarca $this->modelo PLACAS: $this->placas No. SERIE: $this->no_serie",
             'empresa' => $this->empresa,
             'usuario_solicita' =>  $usuarioSolicita['nombre_completo'],
             'estatus' => $this->estatus,
