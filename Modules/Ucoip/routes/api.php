@@ -22,6 +22,6 @@ Route::middleware([])->prefix('ucoip')->group(function () {
     Route::apiResource('ucoip', UcoipController::class)->names('ucoip');
     Route::apiResource('hardware', HardwareController::class)->names('hardware');
     Route::apiResource('cat-hardware', CatHardwareController::class)->names('cat-hardware');
-    Route::apiResource('modulos', ModulosController::class)->names('modulos');
+    Route::apiResource('modulos', ModulosController::class)->names('modulos-sistema');
     Route::apiResource('permisos', PermisosController::class)->names('permisos');
 });
