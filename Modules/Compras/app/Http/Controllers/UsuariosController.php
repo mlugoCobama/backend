@@ -14,7 +14,15 @@ class UsuariosController extends Controller
      *******************************************************************/
     public function index()
     {
-        $data = DB::connection('intranet')->table('glpi_entities')->select('name','intercompania')->where('intercompania', '>', '0')->get();
+         $idsAExcluir = [7074, 7072, 7075, 7102];
+
+        $data = DB::connection('intranet')
+        ->table('glpi_entities')
+        ->select('name','intercompania')
+        ->where('intercompania', '>', '0')
+        ->whereNotIn('id', $idsAExcluir)
+        ->orderBy('name')->get();
+        
 
         $dataArray = $data->toArray();
 
@@ -62,6 +70,7 @@ class UsuariosController extends Controller
      ************************************************************/
     public function show($id)
     {
+        
         $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetDataUsuarios(' . $id . ')');
         
         return response()->json([

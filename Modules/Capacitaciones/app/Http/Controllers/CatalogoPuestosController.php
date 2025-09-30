@@ -22,7 +22,7 @@ class CatalogoPuestosController extends Controller
     public function index()
     {
 
-        $data =  CatalogoPuestos::active()->get();
+        $data =  CatalogoPuestos::active()->orderBy('nombre')->get();
         
         //$catModulos = CatalogoModulosAs::with([
         //     'ModulosSubmodulos.Submodulo',
@@ -149,6 +149,7 @@ class CatalogoPuestosController extends Controller
      */
     public function update(Request $request, $id)
     {
+        DB::beginTransaction();
         try {
             $data = $request->all();
             $idPuesto = $id;

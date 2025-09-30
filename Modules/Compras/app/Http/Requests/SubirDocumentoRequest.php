@@ -34,6 +34,8 @@ class SubirDocumentoRequest extends FormRequest
             'archivo_xml.mimes'    => 'El archivo XML debe tener extensión .xml.',
             'archivo.required'     => 'La representación impresa es obligatoria.',
             'archivo.mimes'        => 'La representación impresa debe ser PDF, JPEG o PNG.',
+            'archivo.file'        => 'El campo representación impresa debe de ser un archivo.',
+            'archivo_xml.file'        => 'El campo archivo XML debe de ser un archivo.',
         ];
     }
 }

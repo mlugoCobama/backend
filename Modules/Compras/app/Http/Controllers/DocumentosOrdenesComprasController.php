@@ -493,13 +493,13 @@ class DocumentosOrdenesComprasController extends Controller
         $docsFactura = new DocumentosFactura();
         $docsFactura->tipo_documento = $data['tipo_documento'];
 
-        if ($data->hasFile('archivo_xml')) {
-            $nombreArchivo = $data['tipo_documento'] . $hoy . $time . "." . $data->file('archivo_xml')->getClientOriginalExtension();
-            $docsFactura->xml = $data->file('archivo_xml')->storeAs($carpetaOrdenCompra, $nombreArchivo);
+        if ($request->hasFile('archivo_xml')) {
+            $nombreArchivo = $data['tipo_documento'] . $hoy . $time . "." . $request->file('archivo_xml')->getClientOriginalExtension();
+            $docsFactura->xml = $request->file('archivo_xml')->storeAs($carpetaOrdenCompra, $nombreArchivo);
         }
-        if ($data->hasFile('archivo')) {
-            $nombreArchivo = $data['tipo_documento'] . $hoy . $time . "." . $data->file('archivo')->getClientOriginalExtension();
-            $docsFactura->representacion_impresa = $data->file('archivo')->storeAs($carpetaOrdenCompra, $nombreArchivo);
+        if ($request->hasFile('archivo')) {
+            $nombreArchivo = $data['tipo_documento'] . $hoy . $time . "." . $request->file('archivo')->getClientOriginalExtension();
+            $docsFactura->representacion_impresa = $request->file('archivo')->storeAs($carpetaOrdenCompra, $nombreArchivo);
         }
 
         $docsFactura->com_documentos_ordenes_compra_id = $data['idFactura'];
@@ -507,7 +507,7 @@ class DocumentosOrdenesComprasController extends Controller
         $docsFactura->save();
 
         return response()->json([
-            'status' => 'succes',
+            'status' => 'success',
             'message' => 'Documento guardado correctamente',
             'data' => []
         ]);

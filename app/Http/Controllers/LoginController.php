@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Hash;
 use Modules\Compras\Transformers\AuthResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Modules\Compras\Http\Controllers\UsuariosController;
+use Modules\Compras\Transformers\UsersResource;
 
 class LoginController extends Controller
 {
@@ -38,12 +40,15 @@ class LoginController extends Controller
 
         $permisos = $this->getPermisos($user->id);
 
+        $usuarioActivo = $this->getUsuarioActivo($fields['email']);
+
         return response()->json([
             'success' => true,
             'token' => $token,
             'role' => new AuthResource($user), // include user role in response
             'permisos' => $permisos,
-            'ip' => $request->ip()
+            'ip' => $request->ip(),
+            'usuarioActivo' => $usuarioActivo,
         ]);
     }
 
@@ -81,6 +86,11 @@ class LoginController extends Controller
         $union = $permisos->union($permisos_as)->get();    
         return $union;
 
+    }
+
+    private function getUsuarioActivo($correo){
+        $data = DB::connection('intranet')->select("call SOPORTEZM.SP_GetUsuarioEmail('$correo')");
+        return  UsersResource::collection($data);
     }
 
 }
