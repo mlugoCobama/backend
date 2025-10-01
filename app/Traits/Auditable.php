@@ -26,7 +26,7 @@ trait Auditable
             }
 
             if (!empty($old)) {
-                $event = (array_key_exists('activo', $old) && $new['activo'] == 0) ? 'borrado_logico' : 'updated';
+                $event = (array_key_exists('activo', $old) && $new['activo'] == 0) ? 'logical_deletion' : 'updated';
                 self::saveAuditLog($model, $event, $old, $new);
             }
         });

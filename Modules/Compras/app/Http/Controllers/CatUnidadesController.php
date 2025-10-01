@@ -4,6 +4,7 @@ namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sucursales;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -13,6 +14,7 @@ use Modules\Compras\Models\DatosVehiculo;
 use Modules\Compras\Models\DetallesCotizacion;
 use Modules\Compras\Transformers\DetallesCotizacionResource;
 use Modules\Compras\Transformers\VehiculosTanquesResources;
+use Modules\Macro\Models\SeguroVehiculo;
 
 class CatUnidadesController extends Controller
 {
@@ -341,4 +343,49 @@ class CatUnidadesController extends Controller
             "message" => "Datos recuperados correctamente"
         ]);
     }
+
+
+
+public function importarDatosSeguro(Request $request)
+    {
+        // Validar que se envió el archivo
+        $request->validate([
+            'archivo_csv' => 'required|file|mimes:csv,txt',
+        ]);
+
+        $archivo = $request->file('archivo_csv');
+        $ruta = $archivo->getRealPath();
+
+        $handle = fopen($ruta, 'r');
+        $encabezados = fgetcsv($handle);
+
+        while (($fila = fgetcsv($handle)) !== false) {
+            $datos = array_combine($encabezados, $fila);
+
+            $vehiculo = DatosVehiculo::where('no_serie', $datos['SERIE'])->first();
+
+            if ($vehiculo) {
+                 SeguroVehiculo::create([
+                    'id_com_datos_vehiculo' => $vehiculo->id,
+                    'aseguradora' => 'Banorte', 
+                    'inciso_vehiculo' => $datos['INCISOV'] ?? null,
+                    'cobertura' => $datos['COBERTURA'] ?? null,
+                    'inicio_vigencia' => $datos['VIGENCIAI'] ?? null,
+                    'fin_vigencia' => $datos['VIGENCIAF'] ?? null, 
+                    'inciso_foltilla' => $datos['INCISOF'] ?? null,
+                    'flotilla' => $datos['FLOTILLA'] ?? null, 
+                    'activo' => 1,
+
+                ]);
+
+
+            }
+        }
+
+        fclose($handle);
+
+        return response()->json(['mensaje' => 'Importación completada'], 200);
+    }
+
+
 }
