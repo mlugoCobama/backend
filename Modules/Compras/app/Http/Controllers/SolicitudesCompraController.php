@@ -161,6 +161,33 @@ class SolicitudesCompraController extends Controller
         ]);
     }
 
+
+    public function cancelarSolicitud(Request $request)
+    {
+        $data = $request->all();
+
+        $solicitudCompra = SolicitudesCompra::find($data['id']);
+
+        if (!$solicitudCompra) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'El registro que intentas actualizar no existe',
+                'data' => []
+            ]);
+        }
+
+        $solicitudCompra->update([
+            'estatus' => EstatusSolicitud::CANCELADA,
+            'razon_cancelacion' => $data['razonCancelacion']
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Se ha eliminado correctamente',
+            'data' => []
+        ]);
+    }
+
     /** *********************************************************** 
      * Genera un nuevo folio consecutivo en base al ultimo folio
      *************************************************************/

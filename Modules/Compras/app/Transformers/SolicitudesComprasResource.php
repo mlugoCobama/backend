@@ -46,6 +46,7 @@ class SolicitudesComprasResource extends JsonResource
             'formato_orden' => $this->formato_orden ?? null,
             'tipo_mantenimiento' => $this->tipo_mantenimiento ?? null,
             'sistema' => $this->sistema ?? null,
+            'razon_cancelacion' => $this->razon_cancelacion ?? null,
         ];
     }
 

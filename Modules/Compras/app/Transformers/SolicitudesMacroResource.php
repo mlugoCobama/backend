@@ -46,6 +46,7 @@ class SolicitudesMacroResource extends JsonResource
             'formato_orden' => $this->formato_orden,
             'tipo_mantenimiento' => $this->tipo_mantenimiento,
             'sistema' => $this->sistema,
+            'razon_cancelacion' => $this->razon_cancelacion ?? null,
             // 'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
         ];
     }

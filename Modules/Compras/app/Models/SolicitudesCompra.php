@@ -23,6 +23,7 @@ class SolicitudesCompra extends Model
         'motivo',
         'fecha',
         'estatus',
+        'razon_cancelacion',
         'activo',
         'empresa',
         'tipo',

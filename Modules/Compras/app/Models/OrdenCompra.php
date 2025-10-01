@@ -21,6 +21,7 @@ class OrdenCompra extends Model
         'fecha',
         'entrega',
         'observaciones',
+        'razon_cancelacion',
         'estatus',
         'cotizaciones_id'
     ];

@@ -163,6 +163,52 @@ class OrdenesComprasController extends Controller
         } 
     }
 
+    public function rechazarOrdenCompra(Request $request)
+    {
+        $data = $request->all();
+
+        try {
+            DB::beginTransaction();
+
+            $solicitud = SolicitudesCompra::find($data['id']);
+            if ($solicitud) {
+                $solicitud->estatus = EstatusSolicitud::CANCELADA;
+                $solicitud->razon_cancelacion = $data['razonCancelacion'];
+                $solicitud->save(); // Esto dispara eventos Eloquent
+            }
+
+            // Obtener cotización relacionada
+            $cotizacion = Cotizaciones::where('solicitudes_compra_id', $data['id'])->first();
+
+            // Actualizar OrdenCompra
+            if ($cotizacion) {
+                $orden = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
+                if ($orden) {
+                    $orden->estatus = EstatusOrdenCompra::CANCELADA;
+                    $orden->razon_cancelacion = $data['razonCancelacion'];
+                    $orden->save(); // También dispara eventos
+                }
+            }
+
+                
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha realizado correctamente',
+                'data' => []
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error inesperado',
+                'error' => $e->getMessage()
+            ]);
+
+        } 
+    }
+
     /** ********************************************************************************
      * Marca la solicitud como autorizada y envía un correo al proveedor seleccionado
      **********************************************************************************/
