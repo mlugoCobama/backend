@@ -63,7 +63,7 @@ class SolicitudesCompraController extends Controller
         }
 
         if($isAdmin){
-            $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->orderBy('updated_at', 'desc')->get()));
+            $data = SolicitudesComprasResource::collection((SolicitudesCompra::active()->orderBy('updated_at', 'desc')->get()));
             $tipo = 'compras';
         }
         
@@ -183,7 +183,7 @@ class SolicitudesCompraController extends Controller
     {
         $data = $request->all();
 
-        $solicitudCompra = SolicitudesCompra::find($data['id']);
+        $solicitudCompra = SolicitudesCompra::find($data['id'] ?? $data[0]);
 
         if (!$solicitudCompra) {
             return response()->json([
@@ -194,7 +194,7 @@ class SolicitudesCompraController extends Controller
         }
 
         $solicitudCompra->estatus = EstatusSolicitud::CANCELADA;
-        $solicitudCompra->razon_cancelacion = $data['razonCancelacion'];
+        $solicitudCompra->razon_cancelacion = $data['razonCancelacion'] ?? null;
         $solicitudCompra->save();
 
         // $solicitudCompra->update([
