@@ -58,7 +58,7 @@ class CatUnidadesController extends Controller
 
             $vehiculo = $this->storeVehiculo($datosVehiculo, $numIntercompania);
 
-            if($datosVehiculo['tipo_vehiculo'] == "reparto"){
+            if($datosVehiculo['tipo_vehiculo'] == "reparto" ){
                 $this->storeTanque($vehiculo, $datosTanque, $numIntercompania);
             }
 

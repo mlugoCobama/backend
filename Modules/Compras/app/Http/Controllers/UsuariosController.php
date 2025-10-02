@@ -20,7 +20,7 @@ class UsuariosController extends Controller
         ->table('glpi_entities')
         ->select('name','intercompania')
         ->where('intercompania', '>', '0')
-        ->whereNotIn('id', $idsAExcluir)
+        ->whereNotIn('intercompania', $idsAExcluir)
         ->orderBy('name')->get();
         
 

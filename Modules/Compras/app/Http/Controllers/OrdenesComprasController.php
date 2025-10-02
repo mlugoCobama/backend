@@ -37,24 +37,31 @@ class OrdenesComprasController extends Controller
      ************************************************************/
     public function store(Request $request)
     {
-
-        try{
+        try {
             DB::beginTransaction();
 
-                // Genera el registro de orden de compra
-                OrdenCompra::create([
-                    'folio_oc' => $this->generarFolio(),
-                    'fecha' => date('Y-m-d H:i:s') ?? now(),
-                    'observaciones' => $request->input('observaciones'),
-                    'cotizaciones_id' => $request->input('cotizaciones_id'),
-                    'entrega' => $request->input('entrega'),
-                ]);
+            // Genera el registro de orden de compra
+            OrdenCompra::create([
+                'folio_oc' => $this->generarFolio(),
+                'fecha' => now(),
+                'observaciones' => $request->input('observaciones'),
+                'cotizaciones_id' => $request->input('cotizaciones_id'),
+                'entrega' => $request->input('entrega'),
+            ]);
 
-                // Actualiza al proveedor seleccionado
-                CotizacionesProveedores::where('id', $request->input('id_cotizacion_prov'))->update(['seleccionado' => 1]);
+            // Actualiza al proveedor seleccionado
+            $cotizacionProv = CotizacionesProveedores::find($request->input('id_cotizacion_prov'));
+            if ($cotizacionProv) {
+                $cotizacionProv->seleccionado = 1;
+                $cotizacionProv->save();
+            }
 
-                // Actualiza estado de la solicitud
-                SolicitudesCompra::where('id', $request->input('id_solicitud_compra'))->update(['estatus' => EstatusSolicitud::EN_ORDEN_COMPRA]);
+            // Actualiza estado de la solicitud
+            $solicitud = SolicitudesCompra::find($request->input('id_solicitud_compra'));
+            if ($solicitud) {
+                $solicitud->estatus = EstatusSolicitud::EN_ORDEN_COMPRA;
+                $solicitud->save();
+            }
 
             DB::commit();
 
@@ -63,9 +70,7 @@ class OrdenesComprasController extends Controller
                 'message' => 'Se ha actualizado correctamente',
                 'data' => []
             ]);
-
-        }catch(\Exception $e){
-
+        } catch (\Exception $e) {
             DB::rollback();
 
             return response()->json([
@@ -105,12 +110,19 @@ class OrdenesComprasController extends Controller
     
         try {
             DB::beginTransaction();
-                //Actualiza el estatus de Orden compra a 5 (Pagado)
-                OrdenCompra::where('id', $id)->update(['estatus' => EstatusOrdenCompra::PAGADA]);
+                // Actualiza el estatus de OrdenCompra a 5 (Pagado)
+                    $orden = OrdenCompra::find($id);
+                    if ($orden) {
+                        $orden->estatus = EstatusOrdenCompra::PAGADA;
+                        $orden->save();
+                    }
 
-                //Actualiza el estatus de Solicitud Compra a 7 (Pagado)
-                SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::PAGADA]);
-
+                    // Actualiza el estatus de SolicitudCompra a 7 (Pagado)
+                    $solicitud = SolicitudesCompra::find($idSc);
+                    if ($solicitud) {
+                        $solicitud->estatus = EstatusSolicitud::PAGADA;
+                        $solicitud->save(); 
+                    }
             DB::commit();
 
             return response()->json([
@@ -257,9 +269,18 @@ class OrdenesComprasController extends Controller
                 Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
                             ->notify(new SolicitudSurtido($datos));
 
-                SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::EN_SURTIDO]);
+                $solicitud = SolicitudesCompra::find($idSc);
+                if ($solicitud) {
+                    $solicitud->estatus = EstatusSolicitud::EN_SURTIDO;
+                    $solicitud->save(); 
+                }
 
-                OrdenCompra::where('id', $idOc)->update(['estatus' => EstatusOrdenCompra::EN_SURTIDO]);
+                $orden = OrdenCompra::find($idOc);
+                if ($orden) {
+                    $orden->estatus = EstatusOrdenCompra::EN_SURTIDO;
+                    $orden->save();
+                }
+
 
             DB::commit();
 
@@ -294,9 +315,19 @@ class OrdenesComprasController extends Controller
         try {
             DB::beginTransaction();
 
-                SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::AUTORIZADA]);
-                
-                OrdenCompra::where('id', $idOc)->update(['estatus' => EstatusOrdenCompra::AUTORIZADA]);
+                $solicitud = SolicitudesCompra::find($idSc);
+                if ($solicitud) {
+                    $solicitud->estatus = EstatusSolicitud::AUTORIZADA;
+                    $solicitud->save();
+                }
+
+                $orden = OrdenCompra::find($idOc);
+                if ($orden) {
+                    $orden->estatus = EstatusOrdenCompra::AUTORIZADA;
+                    $orden->save();
+                }
+
+
 
             DB::commit();
 

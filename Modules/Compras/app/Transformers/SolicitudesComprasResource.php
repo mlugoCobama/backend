@@ -22,6 +22,7 @@ class SolicitudesComprasResource extends JsonResource
         $estadoInfo = $this->asignarEstado($this->estatus, $this->auto_gg, $this->auto_admin, $this->auto_macro, $this->tipo);
         $datosCC = $this->asignarDescripcionCC($this->c_c);
         $ordenTrabajo = $this->getOrdenTrabajo($this->id);
+        $multiUnidad = $this->isMultiple($this->tipo ,$this->usuario_destino);
 
         return [
             'id' => $this->id,
@@ -47,6 +48,7 @@ class SolicitudesComprasResource extends JsonResource
             'tipo_mantenimiento' => $this->tipo_mantenimiento ?? null,
             'sistema' => $this->sistema ?? null,
             'razon_cancelacion' => $this->razon_cancelacion ?? null,
+            'multiUnidad' => $multiUnidad
         ];
     }
 
@@ -109,5 +111,12 @@ class SolicitudesComprasResource extends JsonResource
     private function getOrdenTrabajo($idSolictud){
         $ordenTrabajo = OrdenTrabajo::where('com_solicitudes_compra_id', $idSolictud)->first();
         return $ordenTrabajo->orden_trabajo ?? null;
+    }
+
+    private function isMultiple($tipo ,$usuario_destino){
+        if($tipo == 2 && $usuario_destino == 602) {
+            return true;
+        }
+        return false;
     }
 }

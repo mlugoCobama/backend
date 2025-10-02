@@ -21,6 +21,7 @@ class SolicitudesMacroResource extends JsonResource
         $estadoInfo = $this->asignarEstado($this->estatus, $this->auto_admin, $this->auto_gg, $this->auto_macro);
         // $datosUnidad = $this->getUnidad($this->usuario_destino);
         $datosCC = $this->asignarDescripcionCC($this->c_c);
+        $multiUnidad = $this->isMultiple($this->tipo, $this->id);
         // $claseEmpresa = $this->asignarBadges($this->id_suc);
         return [
             'id' => $this->id_solicitud,
@@ -47,6 +48,7 @@ class SolicitudesMacroResource extends JsonResource
             'tipo_mantenimiento' => $this->tipo_mantenimiento,
             'sistema' => $this->sistema,
             'razon_cancelacion' => $this->razon_cancelacion ?? null,
+            'multiUnidad' => $multiUnidad
             // 'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
         ];
     }
@@ -129,6 +131,13 @@ class SolicitudesMacroResource extends JsonResource
         $jsonCC = json_decode(json: $rawCentrosCosto, associative: true);
         $dataCC = $jsonCC[$cc];
         return $dataCC;
+    }
+
+    private function isMultiple($tipo ,$usuario_destino){
+        if($tipo == 2 && $usuario_destino == 602) {
+            return true;
+        }
+        return false;
     }
 
 }

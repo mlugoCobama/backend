@@ -78,12 +78,14 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
 
     // Ruta test
     Route::post('/save-files-factura', [DocumentosOrdenesComprasController::class, 'subirDocumento'])->name('DocumentosOrdenesCompras.saveFilesFactura');
+    Route::get('/get-seguimiento-solicitud/{idSolicitud}', [SolicitudesCompraController::class, 'getSeguimientoSolicitud'])->name('SolicitudesCompras.getSeguimientoSolicitud');
 
     Route::post('/cancelar-solicitud', [SolicitudesCompraController::class, 'cancelarSolicitud'])->name('SolicitudesCompras.cancelarSolicitud');
     Route::post('/rechazar-orden-compra', [OrdenesComprasController::class, 'rechazarOrdenCompra'])->name('OrdenesCompra.rechazarOrdenCompra');
 });
 
 Route::prefix('compras')->group(function(){
+    Route::get('/get-seguimiento-solicitud/{idSolicitud}', [SolicitudesCompraController::class, 'getSeguimientoSolicitud'])->name('SolicitudesCompras.getSeguimientoSolicitud');
     //*Ruta para mostra archivos 
     Route::get('expedientes/{id}/{file}', [ExpedientesProveedoresController::class, 'getFile'])->name('ExpedientesProveedores.getFile');
     Route::get('cotizaciones/{id}/{file}', [CotizacionesController::class, 'getFile'])->name('Cotizaciones.getFile');

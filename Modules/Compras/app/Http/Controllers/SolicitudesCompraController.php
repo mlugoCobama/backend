@@ -28,12 +28,13 @@ use App\Notifications\SolicitudCotizacionNotification;
 use Modules\Compras\Notifications\AutorizacionEmail;
 // Jobs
 use App\Jobs\EnviarCorreoSolicitudCotizacion;
-
+use App\Models\LogEventos;
 //Request validation
 use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
 use Modules\Compras\Http\Requests\SendSolicitudCotizacionRequest;
 use Modules\Compras\Transformers\EmailAutorizarSolicitud;
 use Modules\Compras\Transformers\EmailAutorizarSolicitudResource;
+use Modules\Compras\Transformers\SeguimientoResource;
 
 class SolicitudesCompraController extends Controller
 {
@@ -43,21 +44,30 @@ class SolicitudesCompraController extends Controller
      **************************************************************/
     public function index(int $intercompania, ?int $id = null)
     {
-        $usuariosCompra = array_flip([2039, 2364, 2395, 1796]);
+        $usuariosCompra = array_flip([2039, 2364, 1796]);
         $isCompras = isset($usuariosCompra[$id]);
 
-        $usuariosRT = array_flip([413, 2395, 2404, 1796]);
+        $usuariosAdmin = array_flip([2395]);
+        $isAdmin = isset($usuariosAdmin[$id]);
+
+        $usuariosRT = array_flip([413, 2404, 1796]);
         $isRT = isset($usuariosRT[$id]);        
         if($isRT){
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::rtecnologicos()->active()->autorizadas()->orderBy('updated_at', 'desc')->get()));
             $tipo = 'RT';
         }
+
         if($isCompras){
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->autorizadas()->orderBy('updated_at', 'desc')->get()));
             $tipo = 'compras';
         }
+
+        if($isAdmin){
+            $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->orderBy('updated_at', 'desc')->get()));
+            $tipo = 'compras';
+        }
         
-        if(!$isRT && !$isCompras){
+        if(!$isRT && !$isCompras && !$isAdmin ){
 
             $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->where('empresa', $intercompania)->active()->orderBy('fecha', 'desc')->get()));
             $tipo = 'empresa';
@@ -121,9 +131,16 @@ class SolicitudesCompraController extends Controller
      */
     public function update(Request $request, $id)
     {
-        SolicitudesCompra::where('id', $id)->update(
-            ["$request->campo" => $request->value]
-        );
+        // SolicitudesCompra::where('id', $id)->update(
+        //     ["$request->campo" => $request->value]
+        // );
+
+        $solicitud = SolicitudesCompra::find($id);
+            $campo = $request->campo;
+            $valor = $request->value;
+
+            $solicitud->$campo = $valor;
+            $solicitud->save();
 
         $this->validarCotizacion($id);
         
@@ -176,10 +193,14 @@ class SolicitudesCompraController extends Controller
             ]);
         }
 
-        $solicitudCompra->update([
-            'estatus' => EstatusSolicitud::CANCELADA,
-            'razon_cancelacion' => $data['razonCancelacion']
-        ]);
+        $solicitudCompra->estatus = EstatusSolicitud::CANCELADA;
+        $solicitudCompra->razon_cancelacion = $data['razonCancelacion'];
+        $solicitudCompra->save();
+
+        // $solicitudCompra->update([
+        //     'estatus' => EstatusSolicitud::CANCELADA,
+        //     'razon_cancelacion' => $data['razonCancelacion']
+        // ]);
 
         return response()->json([
             'status' => 'success',
@@ -334,7 +355,10 @@ class SolicitudesCompraController extends Controller
             $idSolicitudC = $data['solicitudes_compra_id'];
 
             // Actualiza el estatus de la Solicitud a COTIZACION
-            SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => EstatusSolicitud::EN_COTIZACION]);
+            $solicitud = SolicitudesCompra::find($idSolicitudC);
+            $solicitud->estatus = EstatusSolicitud::EN_COTIZACION;
+            $solicitud->save();
+            // SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => EstatusSolicitud::EN_COTIZACION]);
 
             DB::commit();
 
@@ -425,11 +449,23 @@ class SolicitudesCompraController extends Controller
             $solicitud->save();
             }
 
-            if(!empty($cotizacionesDisponibles)){
+            // if(!empty($cotizacionesDisponibles)){
+            //     foreach ($cotizacionesDisponibles as $cotizacion) {
+            //         CotizacionesProveedores::where('id', $cotizacion->id)->where('ruta','!=','null')->update(['autorizado' => 1]);
+            //     }
+            // }
+
+            if (!empty($cotizacionesDisponibles)) {
                 foreach ($cotizacionesDisponibles as $cotizacion) {
-                    CotizacionesProveedores::where('id', $cotizacion->id)->where('ruta','!=','null')->update(['autorizado' => 1]);
+                    $modelo = CotizacionesProveedores::find($cotizacion->id);
+
+                    if ($modelo && $modelo->ruta !== null) {
+                        $modelo->autorizado = 1;
+                        $modelo->save();
+                    }
                 }
             }
+
 
         }
     }
@@ -541,5 +577,17 @@ class SolicitudesCompraController extends Controller
                 'autoNecesarias' => $autoNecesarias
             ];
         }
+    }
+
+    public function getSeguimientoSolicitud($idSolicitud){
+        $eventos = LogEventos::where('table_name', 'com_solicitudes_compra')->where('record_id', $idSolicitud)->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => SeguimientoResource::collection($eventos),
+            'message' => 'datos recuperados correctamente'
+        ]);
+
+
     }
 }
