@@ -64,6 +64,10 @@ class SolicitudesCompra extends Model
         return $query->where('estatus', '>', 1);
     }
 
+    public function scopeAdministrador($query) {
+        return $query->whereIn('tipo', [1, 3]);
+    }
+
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

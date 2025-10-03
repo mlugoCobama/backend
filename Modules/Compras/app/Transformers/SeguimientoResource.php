@@ -44,6 +44,14 @@ class SeguimientoResource extends JsonResource
                 return 'Se creó tu solicitud con folio: ' . ($values['folio'] ?? 'SIN FOLIO');
 
             case 'updated':
+                
+                if (
+                array_key_exists('auto_gg', $values) && $values['auto_gg'] === 0 ||
+                array_key_exists('auto_admin', $values) && $values['auto_admin'] === 0
+                ) {
+                    return 'Se requiere autorización de gerencia administrativa y gerencia general';
+                }
+
                 $autorizaciones = [
                     'auto_gg' => 'Autorizó gerencia general',
                     'auto_admin' => 'Autorizó gerencia administrativa',

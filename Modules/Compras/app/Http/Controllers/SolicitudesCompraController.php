@@ -63,7 +63,7 @@ class SolicitudesCompraController extends Controller
         }
 
         if($isAdmin){
-            $data = SolicitudesComprasResource::collection((SolicitudesCompra::active()->orderBy('updated_at', 'desc')->get()));
+            $data = SolicitudesComprasResource::collection((SolicitudesCompra::administrador()->active()->orderBy('updated_at', 'desc')->get()));
             $tipo = 'compras';
         }
         
