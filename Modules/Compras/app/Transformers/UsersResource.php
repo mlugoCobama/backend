@@ -42,7 +42,7 @@ class UsersResource extends JsonResource
 
     private function multiselect($intercompania)
     {
-        $interAgencias = array_flip([333, 131, 130, 251, 210, 111, 250, 133, 354, 119]);
+        $interAgencias = array_flip([333, 131, 130, 251, 210, 111, 250, 133, 354, 119, 110]);
         return isset($interAgencias[$intercompania]); 
     }
 
@@ -56,6 +56,7 @@ class UsersResource extends JsonResource
             250 =>  [250, 251],
             133 =>  [354, 133],
             354 =>  [354, 133],
+            110 =>  [110, 119],
         ];
 
         return $empresas[$intercompania] ??  null;
