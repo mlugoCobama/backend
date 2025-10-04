@@ -55,7 +55,7 @@ class SeguimientoResource extends JsonResource
                 $autorizaciones = [
                     'auto_gg' => 'Autorizó gerencia general',
                     'auto_admin' => 'Autorizó gerencia administrativa',
-                    'auto_macro' => 'Autorizó gerencia administrativa',
+                    'auto_macro' => 'Autorizó macro taller',
                 ];
 
                 foreach ($autorizaciones as $key => $mensaje) {

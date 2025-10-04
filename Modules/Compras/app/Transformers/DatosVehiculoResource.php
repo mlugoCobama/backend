@@ -14,6 +14,7 @@ class DatosVehiculoResource extends JsonResource
     {
         return [
             'eco' => "ECO: $this->nro_economico",
+            'no_serie' => "No. Serie: $this->no_serie",
             // 'nombre' => $this->nombre,
             // 'capacidad' => $this->capacidad,
             // 'tipo_combustible' => $this->tipo_combustible,
