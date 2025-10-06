@@ -96,5 +96,7 @@ Route::prefix('compras')->group(function(){
     Route::get('/descargar-facturas/{id}',[DocumentosOrdenesComprasController::class, 'downloadFacturas'])->name('DocumentosOrdenesCompras.downloadFacturas');
     Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente'])->name('ExpedientesProveedores.downloadExpediente');
     Route::get('/download-xml/{folder}/{id}/{file}', [DocumentosOrdenesComprasController::class, 'downloadXML'])->name('DocumentosOrdenesCompras.downloadXML');
+
+    Route::post('/subir-doc-cotizacion-destiempo', [CotizacionesController::class, 'uploadOutTimeCotizacion']);
 });
 

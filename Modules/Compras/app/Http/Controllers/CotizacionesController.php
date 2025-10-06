@@ -33,35 +33,28 @@ class CotizacionesController extends Controller
 
         try {
             DB::beginTransaction();
+            if(isset($data['precios'])){
+                foreach ($data['precios'] as $detalleId => $proveedores) {
+                    foreach ($proveedores as $proveedorId => $precio) {
 
-            foreach ($data['precios'] as $detalleId => $proveedores) {
-                foreach ($proveedores as $proveedorId => $precio) {
+                        //validar que la relación sea valida
 
-                    //validar que la relación sea valida
-
-                    DetallesCotizacion::create([
-                        'detalle_solicitud_id' => $detalleId,
-                        'cotizaciones_proveedores_proveedores_id' => $proveedorId,
-                        'importe_unitario' => $precio,
-                    ]);
-                }
+                        DetallesCotizacion::create([
+                            'detalle_solicitud_id' => $detalleId,
+                            'cotizaciones_proveedores_proveedores_id' => $proveedorId,
+                            'importe_unitario' => $precio,
+                        ]);
+                    }
             }
+            }
+            
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $cotizacionProveedorId => $file) {
-                    $cotizacionProveedor = CotizacionesProveedores::find($cotizacionProveedorId);
 
-                    if ($cotizacionProveedor) {
-                        $folderPath = 'cotizaciones/' . $cotizacionProveedor->cotizaciones_id;
-                        $fileName = $cotizacionProveedor->proveedores_id . '.' . $file->getClientOriginalExtension();
-
-                        $path = $file->storeAs($folderPath, $fileName);
-
-                        $cotizacionProveedor->update(['ruta' => $path]);
-                    } else {
-                        throw new Exception("Cotizacion-Proveedor con ID {$cotizacionProveedorId} no encontrada");
-                    }
+                    $this->storeDocCotizacion( $cotizacionProveedorId, $file);
                 }
             }
+            
             DB::commit();
 
             return response()->json([
@@ -207,6 +200,41 @@ class CotizacionesController extends Controller
             'status' => 'Success',
             'message' => 'Actualizado con exito',
             'data' => []
+        ]);
+    }
+
+    public function storeDocCotizacion($cotizacionProveedorId, $file){
+        $cotizacionProveedor = CotizacionesProveedores::find($cotizacionProveedorId);
+
+        if ($cotizacionProveedor) {
+            $folderPath = 'cotizaciones/' . $cotizacionProveedor->cotizaciones_id;
+            $fileName = $cotizacionProveedor->proveedores_id . '.' . $file->getClientOriginalExtension();
+
+            $path = $file->storeAs($folderPath, $fileName);
+
+            $cotizacionProveedor->update(['ruta' => $path]);
+        } else {
+            throw new Exception("Cotizacion-Proveedor con ID {$cotizacionProveedorId} no encontrada");
+        }
+    }
+
+    public function uploadOutTimeCotizacion(Request $request){
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $cotizacionProveedorId => $file) {
+
+                $this->storeDocCotizacion($cotizacionProveedorId, $file);
+            }
+
+            return response()->json([
+                "status" => "success",
+                'data' => [],
+                'message' => 'Cotización subida correctamente'
+            ]);
+        }
+        return response()->json([
+            "status" => "success",
+            'data' => [],
+            'message' => 'No contiene archivo'
         ]);
     }
 }
