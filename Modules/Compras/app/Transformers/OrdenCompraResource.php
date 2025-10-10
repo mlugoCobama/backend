@@ -24,7 +24,10 @@ class OrdenCompraResource extends JsonResource
             'estatus' => $this->estatus,
             'cotizaciones_id' => $this->cotizaciones_id,
             'entrega' => $lugarEntrega,
+            'modo_pago' => $this->modo_pago,
+            'tipo_pago' => $this->modoPagoToString($this->modo_pago),
             'documentos' => DocsOrdenCompraResource::collection($this->documentos),
+            'acuses_entrega' => AcuseEntregaResource::collection($this->acusesEntrega),
         ];
     }
 
@@ -37,4 +40,12 @@ class OrdenCompraResource extends JsonResource
         $dataEntrega = $jsonE[$intercompania];
         return $dataEntrega;    
     } 
+
+    private function modoPagoToString($modoPago){
+        if(!empty($modoPago)){
+            return $modoPago == 1 ? 'Contado' : 'Credito';
+        }
+
+        return null;
+    }
 }

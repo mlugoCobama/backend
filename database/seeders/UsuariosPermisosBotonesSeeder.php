@@ -20,23 +20,23 @@ class UsuariosPermisosBotonesSeeder extends Seeder
         //! DB::connection('dashboard')->statement('SET FOREIGN_KEY_CHECKS = 0;');
         DB::connection('dashboard')->table('model_has_permissions')->insert([
             //Ver boton gaurdar precios compra
-                ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 200],
+            ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 200],
             //Ver btn cancelar 
-                ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 201],
+            ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 201],
             //Ver botón subir comprobante de pago
-                // ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 202],
+            ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 202],
             //Ver botón subir complemento de pago
-                // ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 203],
+            ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 203],
             //Ver boton gaurdar precios compra
-                ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 204],
+            ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 204],
             //Ver panel autorizar oc
-                ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 205],
+            ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 205],
             //Ver boton editar detalles sc
-                ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 206],
+            ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 206],
             //Ver boton generear orden de compra
-                ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 207],
+            ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 207],
             // Ver boton cotizar
-                ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 208],
+            ['model_id' => 2395, 'model_type' => 'App\Models\User', 'permission_id' => 208],
             
             /**
              * Compras puede 
@@ -62,6 +62,7 @@ class UsuariosPermisosBotonesSeeder extends Seeder
             ['model_id' => 2364, 'model_type' => 'App\Models\User', 'permission_id' => 207],
             ['model_id' => 2364, 'model_type' => 'App\Models\User', 'permission_id' => 208],
             ['model_id' => 2364, 'model_type' => 'App\Models\User', 'permission_id' => 201],
+            ['model_id' => 2364, 'model_type' => 'App\Models\User', 'permission_id' => 205],
 
             // Macro
             ['model_id' => 371, 'model_type' => 'App\Models\User', 'permission_id' => 201],

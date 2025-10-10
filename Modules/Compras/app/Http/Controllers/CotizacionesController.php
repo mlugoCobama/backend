@@ -38,12 +38,11 @@ class CotizacionesController extends Controller
                     foreach ($proveedores as $proveedorId => $precio) {
 
                         //validar que la relación sea valida
-
-                        DetallesCotizacion::create([
-                            'detalle_solicitud_id' => $detalleId,
-                            'cotizaciones_proveedores_proveedores_id' => $proveedorId,
-                            'importe_unitario' => $precio,
-                        ]);
+                        $detalleCotizacion = new DetallesCotizacion();
+                        $detalleCotizacion->detalle_solicitud_id = $detalleId;
+                        $detalleCotizacion->cotizaciones_proveedores_proveedores_id = $proveedorId;
+                        $detalleCotizacion->importe_unitario = $precio;
+                        $detalleCotizacion->save();
                     }
             }
             }
@@ -54,7 +53,7 @@ class CotizacionesController extends Controller
                     $this->storeDocCotizacion( $cotizacionProveedorId, $file);
                 }
             }
-            
+
             DB::commit();
 
             return response()->json([

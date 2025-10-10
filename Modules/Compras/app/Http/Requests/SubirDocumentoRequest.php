@@ -15,8 +15,8 @@ class SubirDocumentoRequest extends FormRequest
             'tipo_documento'   => 'required|string',
             'orden_compra_id'  => 'required|integer',
             'idFactura'        => 'required|integer',
-            'archivo_xml'      => 'nullable|file|mimes:xml,application/xml|max:10240',
-            'archivo'          => 'required|file|mimes:pdf,jpeg,png|max:20480',
+            'archivo_xml'      => 'nullable|file',
+            'archivo'          => 'required|file|mimes:pdf,jpeg,png',
         ];
     }
 

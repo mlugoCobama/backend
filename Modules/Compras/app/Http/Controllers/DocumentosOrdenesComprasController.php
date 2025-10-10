@@ -6,14 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Models\Complementos;
 use Modules\Compras\Http\Requests\UploadDocsOCRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 //Model
 use Modules\Compras\Models\DocumentosOrdenesCompra;
+
+use App\Enums\EstatusOrdenCompra;
+use App\Enums\EstatusSolicitud;
 
 //Utilities
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Modules\Compras\Http\Requests\SubirDocumentoRequest;
+use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\DocumentosFactura;
+use Modules\Compras\Models\OrdenCompra;
+use Modules\Compras\Models\SolicitudesCompra;
 use ZipArchive;
 
 
@@ -50,6 +57,27 @@ class DocumentosOrdenesComprasController extends Controller
 
             $docsOrdenCompra->save();
 
+            if($data->hasFile('comprobante_pago')){
+                $orden = OrdenCompra::find($data["orden_compra_id"]);
+                if($orden->modo_pago == 1 ){
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+                }else{
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
+                }
+                
+            }
+
+            if($data->hasFile('factura_xml') && $data->hasFile('factura_pdf')){
+                $orden = OrdenCompra::find($data["orden_compra_id"]);
+                if($orden->modo_pago == 1 ){
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
+                }else{
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::SOLICITADO_PAGO, EstatusSolicitud::SOLICITADO_PAGO);
+                }
+            }
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha guardado correctamente',
@@ -76,7 +104,32 @@ class DocumentosOrdenesComprasController extends Controller
     {
         // $registro = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get();
 
-        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['id', 'fecha', 'ruta_xml_factura as xml', 'ruta_pdf_factura as representacion_impresa']);
+        // $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['id', 'fecha', 'ruta_xml_factura as xml', 'ruta_pdf_factura as representacion_impresa']);
+        $rutasQuery = DB::table('com_documentos_ordenes_compra')
+            ->select([
+                'id',
+                'fecha',
+                DB::raw("'factura' as tipo_documento"),
+                'ruta_pdf_factura as representacion_impresa',
+                'ruta_xml_factura as xml'
+            ])
+            ->where('orden_compra_id', $id)
+            ->whereNotNull('ruta_pdf_factura')
+            ->where('ruta_pdf_factura', '!=', '');
+
+        // Segundo conjunto: comprobante
+        $comprobanteQuery = DB::table('com_documentos_ordenes_compra')
+            ->select([
+                'id',
+                'fecha',
+                DB::raw("'comprobante_pago' as tipo_documento"),
+                'comprobante_pago as representacion_impresa',
+                DB::raw("'' as xml")
+            ])
+            ->where('orden_compra_id', $id)
+            ->whereNotNull('comprobante_pago')
+            ->where('comprobante_pago', '!=', '');
+        $rutas = $rutasQuery->union($comprobanteQuery)->get();
 
         $rutaIds = $rutas->pluck('id')->toArray();
 
@@ -128,6 +181,27 @@ class DocumentosOrdenesComprasController extends Controller
 
             $registro->save();
 
+            if($data->hasFile('comprobante_pago')){
+                $orden = OrdenCompra::find($data["orden_compra_id"]);
+                if($orden->modo_pago == 1 ){
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+                }else{
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO ,EstatusSolicitud::CARGA_COMPLEMENTO);
+                }
+                
+            }
+
+            if($data->hasFile('factura_xml') && $data->hasFile('factura_pdf')){
+                $orden = OrdenCompra::find($data["orden_compra_id"]);
+                if($orden->modo_pago == 1 ){
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'],EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
+                }else{
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::SOLICITADO_PAGO, EstatusSolicitud::SOLICITADO_PAGO);
+                }
+            }
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha actualizado correctamente',
@@ -149,9 +223,52 @@ class DocumentosOrdenesComprasController extends Controller
 
     public function leerYProcesarXML($id)
     {
-        $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['id', 'fecha', 'ruta_xml_factura as xml', 'ruta_pdf_factura as representacion_impresa']);
+        // $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['id', 'fecha', 'ruta_xml_factura as xml', 'ruta_pdf_factura as representacion_impresa']);
 
-        $rutaIds = $rutas->pluck('id')->toArray();
+        // $comprobante = DocumentosOrdenesCompra::where('orden_compra_id', $id)
+        // ->first([
+        //     'id',
+        //     'fecha',
+        //     DB::raw("'comprobante_pago' as tipo_documento"),
+        //     'comprobante_pago as representacion_impresa',
+        //     'ruta_xml_factura as xml'
+        // ]);
+
+        // Primer conjunto: rutas
+        $rutasQuery = DB::table('com_documentos_ordenes_compra')
+            ->select([
+                'id',
+                'fecha',
+                DB::raw("'factura' as tipo_documento"),
+                'ruta_pdf_factura as representacion_impresa',
+                'ruta_xml_factura as xml'
+            ])
+            ->where('orden_compra_id', $id)
+            ->whereNotNull('ruta_pdf_factura')
+            ->where('ruta_pdf_factura', '!=', '');
+
+        // Segundo conjunto: comprobante
+        $comprobanteQuery = DB::table('com_documentos_ordenes_compra')
+            ->select([
+                'id',
+                'fecha',
+                DB::raw("'comprobante_pago' as tipo_documento"),
+                'comprobante_pago as representacion_impresa',
+                DB::raw("'' as xml")
+            ])
+            ->where('orden_compra_id', $id)
+            ->whereNotNull('comprobante_pago')
+            ->where('comprobante_pago', '!=', '');
+
+
+
+
+        // Unión de ambas consultas
+        $documentos = $rutasQuery->union($comprobanteQuery)->get();
+        $rutas = json_decode(json_encode($documentos), true);
+
+
+        $rutaIds = $documentos->pluck('id')->toArray();
 
         $docsFactura = DocumentosFactura::whereIn('com_documentos_ordenes_compra_id', $rutaIds)->get(['id', 'fecha', 'tipo_documento', 'xml', 'representacion_impresa']);
 
@@ -286,7 +403,7 @@ class DocumentosOrdenesComprasController extends Controller
 
         foreach ($rutas as $index => $ruta) {
             // Valida que la tenga un archivo xml que pueda leer
-            if ($ruta[$key] != null) {
+            if ($ruta[$key] != null && !empty($ruta[$key])) {
                 $rutaXML = storage_path('app/' . $ruta[$key]);
                 if (!file_exists($rutaXML)) {
                     return response()->json([
@@ -428,21 +545,24 @@ class DocumentosOrdenesComprasController extends Controller
                 }
             } else {
                 //Respuesta en el caso que no tenga un XML
-                $factura['comprobantes'][] = [
-                    'idRuta'                 => $ruta['id'] ?? null,
-                    'fecha'                  => $ruta['fecha'],
-                    'folio'                  => " - ",
-                    'serie'                  => " - ",
-                    'subTotal'               => 0,
-                    'formaPago'              => " - ",
-                    'tComprobante'           => " - ",
-                    'tComprobanteDesc'       => (string) strtoupper(str_replace("_", " ", $ruta['tipo_documento'])),
-                    'moneda'                 => " - ",
-                    'total'                  => 0,
-                    'UUID'                   => " - ",
-                    'xml'                    => $ruta['xml'] ?? null,
-                    'representacion_impresa' => $ruta['representacion_impresa'] ?? null,
-                ];
+                if( $ruta['tipo_documento'] == 'comprobante_pago'){
+                    $factura['comprobantes'][] = [
+                        'idRuta'                 => $ruta['id'] ?? null,
+                        'fecha'                  => $ruta['fecha'],
+                        'folio'                  => " - ",
+                        'serie'                  => " - ",
+                        'subTotal'               => 0,
+                        'formaPago'              => " - ",
+                        'tComprobante'           => " - ",
+                        'tComprobanteDesc'       => (string) strtoupper(str_replace("_", " ", $ruta['tipo_documento'])),
+                        'moneda'                 => " - ",
+                        'total'                  => 0,
+                        'UUID'                   => " - ",
+                        'xml'                    => $ruta['xml'] ?? null,
+                        'representacion_impresa' => $ruta['representacion_impresa'] ?? null,
+                    ];
+                }
+                
             }
         }
         return $factura;
@@ -506,10 +626,42 @@ class DocumentosOrdenesComprasController extends Controller
         $docsFactura->fecha = date('Y-m-d H:i:s') ?? now();
         $docsFactura->save();
 
+        if($data['tipo_documento'] ==  'complemento_pago'){
+                $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
+            }
+
+            if($data['tipo_documento'] ==  'comprobante_pago'){
+                 $orden = OrdenCompra::find($data["orden_compra_id"]);
+                if($orden->modo_pago == 1 ){
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+                }else{
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
+                }
+            }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Documento guardado correctamente',
             'data' => []
         ]);
+    }
+
+    public function actStatusOrdenSolicitud($idOrdenCompra, $statusOrdenCompra, $estatusSolicitud){
+
+        $orden = OrdenCompra::where('id', $idOrdenCompra)->first();
+        if ($orden) {
+            $orden->estatus = $statusOrdenCompra;
+            $orden->save(); 
+        }
+
+        $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
+
+        $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
+        if ($solicitud) {
+            $solicitud->estatus = $estatusSolicitud;
+            $solicitud->save(); 
+        }
+
     }
 }

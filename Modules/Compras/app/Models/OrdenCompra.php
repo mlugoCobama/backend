@@ -23,7 +23,8 @@ class OrdenCompra extends Model
         'observaciones',
         'razon_cancelacion',
         'estatus',
-        'cotizaciones_id'
+        'cotizaciones_id',
+        'modo_pago',
     ];
     /**
      * Nombre de la tabla
@@ -46,5 +47,12 @@ class OrdenCompra extends Model
     public function documentos() {
        return $this->hasMany(DocumentosOrdenesCompra::class);
     }
+
+    public function acusesEntrega()
+    {
+        return $this->hasMany( AcuseEntrega::class, 'orden_compra_id', 'id');
+    }
+
+
     
 }

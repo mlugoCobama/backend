@@ -27,6 +27,7 @@ class DatosVehiculo extends Model
         'activo',
         'tipo_combustible',
         'nro_economico',
+        'id_cre',
         'ruta',
         'estatus',
     ];
@@ -48,6 +49,17 @@ class DatosVehiculo extends Model
 
     public function DetalleAutotanque(){
         return $this->hasMany(DetalleAutotanque::class,'com_datos_vehiculos_id' ,'id' );
+    }
+
+    public function comentariosVehiculos(){
+        return $this->hasMany(ObservacionVehiculo::class,'datos_vehiculo_id' ,'id' );
+    }
+
+    /**
+     * Función para obtener los datos activos
+     */
+    public function scopeAutorizadas ($query) {
+        return $query->where('estatus', 1);
     }
 
     protected static function newFactory(): DatosVehiculoFactory

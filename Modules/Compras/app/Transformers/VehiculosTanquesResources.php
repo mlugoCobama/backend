@@ -35,9 +35,24 @@ class VehiculosTanquesResources extends JsonResource
             "id_sucursal" => $this->id_sucursal,
             "sucursal" => $this->sucursal,
             "entidad" => $this->entidad, 
+            "idSeguro" => $this->idSeguro ?? null,
+            "aseguradora" => $this->aseguradora ?? null,
+            "cobertura" => $this->cobertura ?? null,
+            "inciso_vehiculo" => $this->inciso_vehiculo ?? null,
+            "inicio_vigencia" => $this->formatFecha($this->inicio_vigencia)  ?? null,
+            "fin_vigencia" => $this->formatFecha($this->fin_vigencia) ?? null,
+            "flotilla" => $this->flotilla ?? null,
+            "inciso_foltilla" => $this->inciso_foltilla ?? null,
             "clase" => $clase['clase']
         ];
         
+    }
+
+    public function formatFecha($fecha_original){
+        if(isset($fecha_original) && !empty($fecha_original)){
+            return date("Y-m-d", strtotime(str_replace("/", "-", $fecha_original)));
+        }
+        return null;
     }
 
      private function asignarBadges($entidad)

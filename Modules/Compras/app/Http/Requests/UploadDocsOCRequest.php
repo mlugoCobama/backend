@@ -13,11 +13,11 @@ class UploadDocsOCRequest extends FormRequest
     {
         return [
           'orden_compra_id' => 'nullable|exists:com_orden_compra,id',
-          'factura_xml' => 'nullable|file|mimes:xml|max:2048',
-          'factura_pdf' => 'nullable|file|mimes:pdf|max:2048',
-          'complemento_pago_xml' => 'nullable|file|mimes:xml|max:2048',
-          'complemento_pago_pdf' => 'nullable|file|mimes:pdf|max:2048',
-          'comprobante_pago' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+          'factura_xml' => 'nullable|file',
+          'factura_pdf' => 'nullable|file|mimes:pdf',
+          'complemento_pago_xml' => 'nullable|file',
+          'complemento_pago_pdf' => 'nullable|file|mimes:pdf',
+          'comprobante_pago' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
         ];
     }
 

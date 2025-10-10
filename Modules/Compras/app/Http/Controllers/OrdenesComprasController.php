@@ -2,9 +2,10 @@
 
 namespace Modules\Compras\Http\Controllers;
 
-use App\Enums\EstatusOrdenCompra;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Enums\EstatusOrdenCompra;
 use App\Enums\EstatusSolicitud;
 
 //Models
@@ -29,6 +30,7 @@ use App\Notifications\SolicitudSurtido;
 use Modules\Compras\Transformers\AutotanqueResource;
 use Modules\Compras\Transformers\OrdenCompraResource;
 use Modules\Compras\Transformers\UsersResource;
+use PhpParser\Node\Stmt\Return_;
 
 class OrdenesComprasController extends Controller
 {
@@ -186,19 +188,19 @@ class OrdenesComprasController extends Controller
             if ($solicitud) {
                 $solicitud->estatus = EstatusSolicitud::CANCELADA;
                 $solicitud->razon_cancelacion = $data['razonCancelacion'];
-                $solicitud->save(); // Esto dispara eventos Eloquent
+                $solicitud->save(); 
             }
 
-            // Obtener cotización relacionada
+            
             $cotizacion = Cotizaciones::where('solicitudes_compra_id', $data['id'])->first();
 
-            // Actualizar OrdenCompra
+            
             if ($cotizacion) {
                 $orden = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
                 if ($orden) {
                     $orden->estatus = EstatusOrdenCompra::CANCELADA;
                     $orden->razon_cancelacion = $data['razonCancelacion'];
-                    $orden->save(); // También dispara eventos
+                    $orden->save(); 
                 }
             }
 
@@ -378,6 +380,37 @@ class OrdenesComprasController extends Controller
 
     }
 
+    public function autorizarOrdenPago(Request $request){
+        
+        $data = $request->all();
+        
+        $orden = OrdenCompra::where('id', $data['id'])->first();
+        if ($orden) {
+            $orden->estatus = EstatusOrdenCompra::AUTORIZADO_A_PAGO;
+            $orden->modo_pago = $data['modo_pago'];
+            $orden->save(); 
+        }
+
+        $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
+
+        $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
+        if ($solicitud) {
+            $solicitud->estatus = EstatusSolicitud::AUTORIZADO_A_PAGO;
+            $solicitud->save(); 
+            }
+
+        if($orden->modo_pago == 1){
+            $this->actStatusOrdenSolicitud( $data['id'], EstatusOrdenCompra::SOLICITADO_PAGO , EstatusSolicitud::SOLICITADO_PAGO);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $data,
+            'message' => 'Se ha solicitado el pago de la orden de compra'
+        ]);
+            
+    }
+
     /** ************************************************************
      * Genera un nuevo folio consecutivo en base al ultimo folio
      **************************************************************/
@@ -438,6 +471,47 @@ class OrdenesComprasController extends Controller
             return response($file, 200)
                  ->header('Content-Type', 'application/pdf')
                ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
+
+    }
+
+    public function  solicitarSurtido(Request $request){
+        $data = $request->all();
+        $idOrdenCompra = $data['id_orden_compra'];
+        if($data['tipo'] == 1){
+            $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
+            // $this->enviarSolicitudSurtido();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [],
+                'message' => 'Se marco la solicitud como en surtido y se envió tu solicitud de surtido por correo al proveedor '
+            ]);
+        }else{
+            $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
+            return response()->json([
+                'status' => 'success',
+                'data' => [],
+                'message' => 'Se ha macado la solicitud como en surtido, ponte en contacto con tu proveedor'
+            ]);
+        }
+    }
+
+
+    public function actStatusOrdenSolicitud($idOrdenCompra, $statusOrdenCompra, $estatusSolicitud){
+
+        $orden = OrdenCompra::where('id', $idOrdenCompra)->first();
+        if ($orden) {
+            $orden->estatus = $statusOrdenCompra;
+            $orden->save(); 
+        }
+
+        $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
+
+        $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
+        if ($solicitud) {
+            $solicitud->estatus = $estatusSolicitud;
+            $solicitud->save(); 
+        }
 
     }
 }

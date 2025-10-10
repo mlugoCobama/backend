@@ -12,12 +12,14 @@ use Modules\Compras\Http\Controllers\DocumentosOrdenesComprasController;
 use Modules\Compras\Http\Controllers\CatUnidadesController;
 use Modules\Compras\Http\Controllers\SolicitudesMacroController;
 use Modules\Compras\Http\Controllers\CatSistemasAutoController;
+use Modules\Compras\Http\Controllers\AcuseEntregaController;
 use Modules\Compras\Models\Cotizaciones;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Modules\Compras\Http\Controllers\UsuariosController;
 use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Http\Controllers\DetalleSolicitudController;
 use Modules\Compras\Http\Controllers\CatTiposMantenimientoController;
+use Modules\Compras\Models\AcuseEntrega;
 
 /*
  *--------------------------------------------------------------------------
@@ -45,6 +47,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::resource('DetallesSolicitud', DetalleSolicitudController::class);
     Route::resource('CatalogoSistemasAuto', CatSistemasAutoController::class);
     Route::resource('CatalogoTiposMantenimiento', CatTiposMantenimientoController::class);
+    Route::resource('AcuseEntrega', AcuseEntregaController::class);
     
     Route::get('/Solicitudes/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
     Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
@@ -55,6 +58,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::post('/enviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'enviarSolicitudCotizacion'])->name('SolicitudesCompra.enviarSolicitudCotizacion');
     Route::post('/enviar-solicitud-surtido', [OrdenesComprasController::class, 'enviarSolicitudSurtido'])->name('OrdenesCompras.enviarSolicitudSurtido');
     Route::post('/autorizar-orden-compra', [OrdenesComprasController::class, 'autorizarOrden'])->name('OrdenesCompras.autorizarOrden');
+    Route::post('/autorizar-apago-orden-compra', [OrdenesComprasController::class, 'autorizarOrdenPago'])->name('OrdenesCompras.autorizarOrdenPago');
 
     //Route::get('/autorizacion-solicitud-gerencia/{id}', [SolicitudesCompraController::class, 'autorizeFromEmail']);
     Route::get('/autorizacion-solicitud-gerencia/{campo}/{necesarias}/{id}', [SolicitudesCompraController::class, 'autorizeFromEmail'])->name('confirm.accion')->middleware('signed');
@@ -82,6 +86,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
 
     Route::post('/cancelar-solicitud', [SolicitudesCompraController::class, 'cancelarSolicitud'])->name('SolicitudesCompras.cancelarSolicitud');
     Route::post('/rechazar-orden-compra', [OrdenesComprasController::class, 'rechazarOrdenCompra'])->name('OrdenesCompra.rechazarOrdenCompra');
+    Route::post('/solictar-surtido-orden-compra', [OrdenesComprasController::class, 'solicitarSurtido'])->name('OrdenesCompra.solicitarSurtido');
 });
 
 Route::prefix('compras')->group(function(){
@@ -91,7 +96,7 @@ Route::prefix('compras')->group(function(){
     Route::get('cotizaciones/{id}/{file}', [CotizacionesController::class, 'getFile'])->name('Cotizaciones.getFile');
     Route::get('docsOrdenCompra/{id}/{file}', [DocumentosOrdenesComprasController::class, 'getFile'])->name('DocumentosOrdenesCompras.getFile');
     Route::get('ordenesTrabajo/{id}/{file}', [SolicitudesMacroController::class, 'getFile'])->name('SolicitudesMacro.getFile');
-
+    Route::get('acuses/{id}/{file}', [AcuseEntregaController::class, 'getFile'])->name('SolicitudesMacro.getFile');
     //*Rutas descarga zip
     Route::get('/descargar-facturas/{id}',[DocumentosOrdenesComprasController::class, 'downloadFacturas'])->name('DocumentosOrdenesCompras.downloadFacturas');
     Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente'])->name('ExpedientesProveedores.downloadExpediente');

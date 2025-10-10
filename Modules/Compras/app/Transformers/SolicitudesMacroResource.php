@@ -85,14 +85,17 @@ class SolicitudesMacroResource extends JsonResource
             1 => ['estado' => $label, 'claseEstado' => 'badge-soft-info'],
             2 => ['estado' => 'SOLICITADO', 'claseEstado' => 'bg-info'],
             3 => ['estado' => $label2, 'claseEstado' => 'badge-soft-warning'],
-            5 => ['estado' => 'ORDEN DE COMPRA', 'claseEstado' => 'bg-warning'],
             4 => ['estado' => 'CANCELADA', 'claseEstado' => 'bg-danger'],
+            5 => ['estado' => 'ORDEN DE COMPRA', 'claseEstado' => 'bg-warning'],
             6 => ['estado' => 'AUTORIZADA', 'claseEstado' => 'badge-soft-success'],
-            7 => ['estado' => 'EN SURTIDO', 'claseEstado' => 'badge-soft-secondary'],
-            8 => ['estado' => 'ENTREGADA', 'claseEstado' => 'badge-soft-dark'],
-            9 => ['estado' => 'PAGANDO', 'claseEstado' => 'bg-primary'],
-            10 => ['estado' => 'PAGADA', 'claseEstado' => 'bg-success'],
-            11 => ['estado' => 'RECHAZADA', 'claseEstado' => 'bg-danger'],
+            7 => ['estado' => 'AUTO. A PAGO', 'claseEstado' => 'badge-soft-primary'],
+            8 => ['estado' => 'EN SURTIDO', 'claseEstado' => 'bg-primary'],
+            9 => ['estado' => 'ENTREGADO', 'claseEstado' => 'badge-soft-dark'],
+            10 => ['estado' => 'FACTURADO', 'claseEstado' => 'badge-soft-primary'],
+            11 => ['estado' => 'PAGO SOLICITADO', 'claseEstado' => 'bg-warning'],
+            12 => ['estado' => 'PAGADO', 'claseEstado' => 'bg-success'],
+            13 => ['estado' => 'CARGA COMPLEMENTO', 'claseEstado' => 'bg-secondary'],
+            14 => ['estado' => 'FINALIZADO', 'claseEstado' => 'bg-dark'],
         ];
 
         return $estados[$estatus] ?? ['estado' => 'DESCONOCIDO', 'claseEstado' => 'bg-secondary'];
