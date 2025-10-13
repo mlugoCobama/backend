@@ -79,6 +79,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::post('/importar-datos-seguro', [CatUnidadesController::class, 'importarDatosSeguro']);
     Route::get('/recuperar-autotanques/{intercompania}', [CatUnidadesController::class, 'getAutotanques']);
     Route::get('/recuperar-gastos-vehiculo/{id}', [CatUnidadesController::class, 'getGastoUnidad']);
+    // Route::get('/recuperar-comentarios-vehiculo/{id}', [CatUnidadesController::class, 'getObservaciones']);
 
     // Ruta test
     Route::post('/save-files-factura', [DocumentosOrdenesComprasController::class, 'subirDocumento'])->name('DocumentosOrdenesCompras.saveFilesFactura');
@@ -96,7 +97,7 @@ Route::prefix('compras')->group(function(){
     Route::get('cotizaciones/{id}/{file}', [CotizacionesController::class, 'getFile'])->name('Cotizaciones.getFile');
     Route::get('docsOrdenCompra/{id}/{file}', [DocumentosOrdenesComprasController::class, 'getFile'])->name('DocumentosOrdenesCompras.getFile');
     Route::get('ordenesTrabajo/{id}/{file}', [SolicitudesMacroController::class, 'getFile'])->name('SolicitudesMacro.getFile');
-    Route::get('acuses/{id}/{file}', [AcuseEntregaController::class, 'getFile'])->name('SolicitudesMacro.getFile');
+    Route::get('acuses/{id}/{file}', [AcuseEntregaController::class, 'getFile'])->name('AcuseEntrega.getFile');
     //*Rutas descarga zip
     Route::get('/descargar-facturas/{id}',[DocumentosOrdenesComprasController::class, 'downloadFacturas'])->name('DocumentosOrdenesCompras.downloadFacturas');
     Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente'])->name('ExpedientesProveedores.downloadExpediente');
