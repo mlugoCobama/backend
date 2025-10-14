@@ -14,9 +14,11 @@ use Modules\Compras\Models\DatosVehiculo;
 use Modules\Compras\Models\DetallesCotizacion;
 use Modules\Compras\Models\ObservacionVehiculo;
 use Modules\Compras\Transformers\DetallesCotizacionResource;
+use Modules\Compras\Transformers\ObservacionesVehiculoResource;
 use Modules\Compras\Transformers\VehiculosTanquesResources;
 use Modules\Macro\Models\SeguroVehiculo;
 use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Stmt\Else_;
 
 class CatUnidadesController extends Controller
 {
@@ -50,24 +52,37 @@ class CatUnidadesController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
+        $userId = $request->user()->id;
 
         try {
             $datosVehiculo = $data['datosVehiculo'];
-            $datosTanque = $data['datosTanque'];
-            $datosPoliza = $data['datosPoliza'];
+            $datosTanque = $data['datosTanque'] ?? null;
+            $datosPoliza = $data['datosPoliza'] ?? null;
             $numIntercompania = $data['intercompania'];
 
             DB::beginTransaction();
+            if (isset($data['datosVehiculo'])) {
+                $vehiculo = $this->storeVehiculo($datosVehiculo, $numIntercompania, $userId);
 
-            $vehiculo = $this->storeVehiculo($datosVehiculo, $numIntercompania);
+                if (
+                    $datosVehiculo['tipo_vehiculo'] == "reparto"
+                    || $datosVehiculo['tipo_vehiculo'] = "auto tanque"
+                    || $datosVehiculo['tipo_combustible'] = "gas_lp"
+                ) {
+                    if (isset($data['datosTanque'])) {
+                        $this->storeTanque($vehiculo, $datosTanque, $numIntercompania);
+                    }
+                }
 
-            if($datosVehiculo['tipo_vehiculo'] == "reparto"
-                || $datosVehiculo['tipo_vehiculo'] = "auto tanque" 
-                || $datosVehiculo['tipo_combustible'] = "gas_lp"){
-                $this->storeTanque($vehiculo, $datosTanque, $numIntercompania);
+                if( $data['hasDatosSeguro'] ){
+                    if (isset($data['datosPoliza'])) {
+                        $this->storeDatosPoliza($datosPoliza, $vehiculo);
+                    }
+                }
+                
             }
-
-            $this->storeDatosPoliza($datosPoliza, $vehiculo);
+            
+            
 
             DB::commit();
 
@@ -119,11 +134,12 @@ class CatUnidadesController extends Controller
     public function update(Request $request, $id)
     {
         $data = $request->all();
+        $userId = $request->user()->id;
 
         try {
             $datosVehiculo = $data['datosVehiculo'];
-            $datosTanque = $data['datosTanque'];
-            $datosPoliza = $data['datosPoliza'];
+            $datosTanque = $data['datosTanque'] ??  null;
+            $datosPoliza = $data['datosPoliza'] ?? null;
 
             $numIntercompania = $id;
 
@@ -134,7 +150,7 @@ class CatUnidadesController extends Controller
             DB::beginTransaction();
 
 
-            $this->updateVehiculo($datosVehiculo, $id_vehiculo);
+            $this->updateVehiculo($datosVehiculo, $id_vehiculo, $userId);
 
             if($datosVehiculo['tipo_vehiculo'] == "reparto" 
                 || $datosVehiculo['tipo_vehiculo'] = "auto tanque" 
@@ -142,7 +158,9 @@ class CatUnidadesController extends Controller
                 $this->updateTanque($datosTanque, $id_tanque, $id_vehiculo, $numIntercompania);
             }
 
-            $this->updateDatosPoliza($datosPoliza, $id_vehiculo, $id_poliza);
+            if($data['hasDatosSeguro'] ){
+                $this->updateDatosPoliza($datosPoliza, $id_vehiculo, $id_poliza);
+            }
 
             DB::commit();
 
@@ -192,6 +210,17 @@ class CatUnidadesController extends Controller
             'message' => 'Se ha eliminado correctamente',
             'data' => $vehiculo
         ]);
+    }
+
+    public function getComentarios($id){
+       
+       $observaciones = ObservacionVehiculo::where('datos_vehiculo_id', $id);
+
+       return response()->json([
+        'status' => 'success',
+        'data' => $observaciones,
+        'message' => 'Observaciones recuperadas correctamente'
+       ]);
     }
 
     /**
@@ -262,7 +291,7 @@ class CatUnidadesController extends Controller
      * @param array $intercompania
      * @return number $dataVehiculo->id
      */
-    public function storeVehiculo($data, $intercompania){
+    public function storeVehiculo($data, $intercompania, $userId){
 
         $datosVehiculos =  $data;
 
@@ -275,14 +304,15 @@ class CatUnidadesController extends Controller
         $dataVehiculo->no_serie = $datosVehiculos['no_serie'];
         $dataVehiculo->placas = $datosVehiculos['placas'];
         $dataVehiculo->nro_economico = $datosVehiculos['nro_economico'];
-        $dataVehiculo->id_cre = $datosVehiculos['id_cre'];
+        // $dataVehiculo->id_cre = $datosVehiculos['id_cre'];
         $dataVehiculo->tipo_combustible = $datosVehiculos['tipo_combustible'];
+        $dataVehiculo->tipo = $datosVehiculos['tipo_vehiculo'];
         $dataVehiculo->estatus = $datosVehiculos['estatus'];
 
         $dataVehiculo->save();
 
         if(isset($datosVehiculos['observacion']) && !empty($datosVehiculos['observacion'])){
-            $this->saveObservacionVehiculo($datosVehiculos['observacion'], $dataVehiculo->id); 
+            $this->saveObservacionVehiculo($datosVehiculos['observacion'], $dataVehiculo->id, $userId); 
         }
 
         return $dataVehiculo->id;
@@ -327,7 +357,7 @@ class CatUnidadesController extends Controller
         $dataPoliza->save();
     }
 
-    public function updateVehiculo($data, $id){
+    public function updateVehiculo($data, $id, $userId){
         $vehiculo = DatosVehiculo::find($id);
         if (!$vehiculo) {
             throw new \Exception("Vehiculo no encontrado");
@@ -347,7 +377,7 @@ class CatUnidadesController extends Controller
             ]);
 
         if(isset($data['observacion']) && !empty($data['observacion'])){
-            $this->saveObservacionVehiculo($data['observacion'], $id); 
+            $this->saveObservacionVehiculo($data['observacion'], $id, $userId); 
         }
 
     }
@@ -359,6 +389,7 @@ class CatUnidadesController extends Controller
         if (!$tanque || empty($id))  {
             $this->storeTanque($id_vehiculo, $data, $numIntercompania) ;
         }
+
         else{
             $tanque->update([
             'marca' => $data['marca_tanque'],
@@ -390,8 +421,6 @@ class CatUnidadesController extends Controller
 
             ]);
         }
-
-        
         
     }
 
@@ -455,19 +484,110 @@ public function importarDatosSeguro(Request $request)
         return response()->json(['mensaje' => 'Importación completada'], 200);
     }
 
-    public function saveObservacionVehiculo($comentario, $id_vehiculo){
+        public function actualizarDatosPV(Request $request)
+    {
+        // Validar que se envió el archivo
+        $request->validate([
+            'archivo_csv' => 'required|file|mimes:csv,txt',
+        ]);
+
+        $archivo = $request->file('archivo_csv');
+        $ruta = $archivo->getRealPath();
+
+        $handle = fopen($ruta, 'r');
+        $encabezados = fgetcsv($handle);
+
+        $status = [
+            "ACTIVA" => 1,
+            "EN TALLER" => 2,
+            "VENDIDA" => 3,
+            "NO IDENTIFICADA" => 4,
+            "FUERA DE CIRCULACION" => 0,
+            "DESCOMPUESTA" => 5,
+            "FISCALIA" => 6,
+            "CORRALON" => 7,
+            "CHATARRA" => 8,
+            "VENDIDA  COMO CHATARRA" => 9,
+            "BAJA" => 10
+        ];
+
+        while (($fila = fgetcsv($handle)) !== false) {
+            $datos = array_combine($encabezados, $fila);
+
+
+
+            if (isset($datos['numero_serie_v']) && !empty($datos['numero_serie_v'])) {
+                $vehiculo = DatosVehiculo::where('no_serie', $datos['numero_serie_v'])->first();
+
+                if ($vehiculo) {
+                    // Actualizar datos del vehiculo
+                    $vehiculo->update([
+                        "id_cre" => $datos['id_cre'],
+                        // "nro_economico " => $datos['no_economico'],
+                        // "marca" => $datos['marca_v'],
+                        // "submarca" => $datos['submarca_v'],
+                        // "modelo" => $datos['modelo_v'],
+                        // "no_serie" => $datos['numero_serie_v'],
+                        // "placas" => $datos['placas'],
+                        // "id_sucursal" => $datos['id_sucursal'],
+                        "tipo" => strtolower($datos['uso_vehiculo']),            
+                        "estatus" => $status[$datos['status']] ?? 1,
+                        "propietario" => $datos['propietario']
+                    ]);
+                } else {
+                    if (!empty($datos['numero_serie_v'])) {
+                        // Crear nuevo vehículo
+                        $auto = DatosVehiculo::create([
+                            "id_cre" => $datos['id_cre'] ?? null,
+                            "nro_economico " => $datos['no_economico'] ?? null,
+                            "marca" => $datos['marca_v'] ?? null,
+                            "submarca" => $datos['submarca_v'] ?? null,
+                            "modelo" => $datos['modelo_v'] ?? null,
+                            "no_serie" => $datos['numero_serie_v'] ?? null,
+                            "placas" => $datos['placas'] ?? null,
+                            "id_sucursal" => $datos['id_sucursal'] ,
+                            "tipo" => $datos['uso_vehiculo'] ?? null,                        
+                            "estatus" => $status[$datos['status']] ?? 1,
+                            "propietario" => $datos['propietario'] ?? null
+                        ]);
+
+                        if( $datos['uso_vehiculo'] == 'autotanque'){
+                            DatosTanque::create([
+                            'marca' => $datos['marca_t'] ?? 'NA',
+                            'anio_fabricacion' => $datos['anio_fab'] ?? 'NA',
+                            'capacidad' => $datos['capacidad'] ?? 'NA',
+                            'serie' => $datos['numero_serie_t'] ?? 'NA',
+                            'tipo_medidor' => $datos['tipo_medidor'] ?? 'NA',
+                            'id_sucursal' => $datos['id_sucursal'],
+                            'com_datos_vehiculo_id' => $auto->id,
+                        ]);
+                        }
+                        
+                    }
+                }
+            }
+        }
+
+        fclose($handle);
+
+        return response()->json(['mensaje' => 'Importación completada'], 200);
+    }
+
+    public function saveObservacionVehiculo($comentario, $id_vehiculo, $userId){
         $dataObservacion = new ObservacionVehiculo();
         $dataObservacion->observaciones = $comentario;
         $dataObservacion->datos_vehiculo_id = $id_vehiculo;
+        $dataObservacion->user_id = $userId;
         $dataObservacion->save();
     }
 
     public function getObservaciones($id){
-        $observaciones = ObservacionVehiculo::where('datos_vehiculo_id', $id);
+
+        $observaciones = ObservacionVehiculo::where('datos_vehiculo_id', $id)->orderBy('created_at', 'desc')->get();
 
         return response()->json([
             'status' => 'success',
-            'data' => $observaciones,
+            'data' => ObservacionesVehiculoResource::collection($observaciones),
             'message' => 'Observaciones recuperadas correctamente'
         ]);
         

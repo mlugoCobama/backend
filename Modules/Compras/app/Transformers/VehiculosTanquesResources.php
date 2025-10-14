@@ -16,6 +16,7 @@ class VehiculosTanquesResources extends JsonResource
 
         return [
             "id" => $this->id,
+            'id_cre' => $this->id_cre,
             "eco" => $this->nro_economico,
             "marca_vehiculo" => $this->marca_vehiculo,
             "submarca" => $this->submarca,
@@ -39,8 +40,8 @@ class VehiculosTanquesResources extends JsonResource
             "aseguradora" => $this->aseguradora ?? null,
             "cobertura" => $this->cobertura ?? null,
             "inciso_vehiculo" => $this->inciso_vehiculo ?? null,
-            "inicio_vigencia" => $this->formatFecha($this->inicio_vigencia)  ?? null,
-            "fin_vigencia" => $this->formatFecha($this->fin_vigencia) ?? null,
+            "inicio_vigencia" => $this->formatFecha($this->inicio_vigencia ?? null),
+            "fin_vigencia" => $this->formatFecha($this->fin_vigencia ??  null),
             "flotilla" => $this->flotilla ?? null,
             "inciso_foltilla" => $this->inciso_foltilla ?? null,
             "clase" => $clase['clase']
@@ -52,6 +53,7 @@ class VehiculosTanquesResources extends JsonResource
         if(isset($fecha_original) && !empty($fecha_original)){
             return date("Y-m-d", strtotime(str_replace("/", "-", $fecha_original)));
         }
+
         return null;
     }
 

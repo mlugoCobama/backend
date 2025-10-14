@@ -75,11 +75,11 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::get('/getUserById/{correo}', [UsuariosController::class, 'showById'])->name('Usuarios.showById');
 
     //*Rutas para el catalogo de vehiculos
-    Route::post('/importar-autotanques', [CatUnidadesController::class, 'importarCSV']);
+    
     Route::post('/importar-datos-seguro', [CatUnidadesController::class, 'importarDatosSeguro']);
     Route::get('/recuperar-autotanques/{intercompania}', [CatUnidadesController::class, 'getAutotanques']);
     Route::get('/recuperar-gastos-vehiculo/{id}', [CatUnidadesController::class, 'getGastoUnidad']);
-    // Route::get('/recuperar-comentarios-vehiculo/{id}', [CatUnidadesController::class, 'getObservaciones']);
+    Route::get('/recuperar-comentarios-vehiculo/{id}', [CatUnidadesController::class, 'getObservaciones']);
 
     // Ruta test
     Route::post('/save-files-factura', [DocumentosOrdenesComprasController::class, 'subirDocumento'])->name('DocumentosOrdenesCompras.saveFilesFactura');
@@ -91,6 +91,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
 });
 
 Route::prefix('compras')->group(function(){
+    Route::post('/importar-autotanques', [CatUnidadesController::class, 'actualizarDatosPV']);
     Route::get('/get-seguimiento-solicitud/{idSolicitud}', [SolicitudesCompraController::class, 'getSeguimientoSolicitud'])->name('SolicitudesCompras.getSeguimientoSolicitud');
     //*Ruta para mostra archivos 
     Route::get('expedientes/{id}/{file}', [ExpedientesProveedoresController::class, 'getFile'])->name('ExpedientesProveedores.getFile');
