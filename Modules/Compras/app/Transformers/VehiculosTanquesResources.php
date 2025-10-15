@@ -2,6 +2,7 @@
 
 namespace Modules\Compras\Transformers;
 
+use BcMath\Number;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -13,7 +14,7 @@ class VehiculosTanquesResources extends JsonResource
     public function toArray(Request $request): array
     {
          $clase = $this->asignarBadges($this->id_sucursal);
-
+        $estilosEstatus = $this->getColorEstatus($this->estatus);
         return [
             "id" => $this->id,
             'id_cre' => $this->id_cre,
@@ -44,7 +45,11 @@ class VehiculosTanquesResources extends JsonResource
             "fin_vigencia" => $this->formatFecha($this->fin_vigencia ??  null),
             "flotilla" => $this->flotilla ?? null,
             "inciso_foltilla" => $this->inciso_foltilla ?? null,
-            "clase" => $clase['clase']
+            "clase" => $clase['clase'],
+            "activo" => $this->activo,
+            'color_estatus' => $estilosEstatus['color'],
+            'status_dsc' => $estilosEstatus['dsc'],
+
         ];
         
     }
@@ -82,4 +87,25 @@ class VehiculosTanquesResources extends JsonResource
 
         return $estados[$entidad] ?? ['clase' => 'badge badge rounded-pill bg-secondary'];
     }
+
+    private function getColorEstatus($estatus)
+    {
+        return match ($estatus) {
+            "1" => ['color'=> '#28a745', 'dsc' => 'Activa'] , 
+            "0" => ['color'=> '#df2727ff', 'dsc' => 'Fuera de circulación'] ,
+            "2" => ['color'=> '#ffc107', 'dsc' => 'En taller'] ,
+            "3" => ['color'=> '#17a2b8', 'dsc' => 'Vendida'] ,
+            "4" => ['color'=> '#343a40', 'dsc' => 'No identificada'] ,
+            "5" => ['color'=> '#e83e8c', 'dsc' => 'Descompuesta']   , 
+            "6" => ['color'=> '#007bff', 'dsc' => 'En Fiscalía'] , 
+            "7" => ['color'=> '#6610f2', 'dsc' => 'En Depósito vehicular'] ,
+            "8" => ['color'=> '#495057', 'dsc' => 'Chatarra'] , 
+            "9" => ['color'=> '#fd7e14', 'dsc' => 'Vendida como chatarra'] ,
+            "10" => ['color'=> '#dc3545', 'dsc' => 'Baja'] , 
+            default => ['color'=> '#adb5bd', 'dsc' => 'Desconocido'] ,
+        };
+
+    }
+
+
 }

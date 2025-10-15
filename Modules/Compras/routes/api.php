@@ -80,6 +80,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::get('/recuperar-autotanques/{intercompania}', [CatUnidadesController::class, 'getAutotanques']);
     Route::get('/recuperar-gastos-vehiculo/{id}', [CatUnidadesController::class, 'getGastoUnidad']);
     Route::get('/recuperar-comentarios-vehiculo/{id}', [CatUnidadesController::class, 'getObservaciones']);
+    Route::post('/autorizar-alta-vehiculo', [CatUnidadesController::class, 'autorizarVehiculo']);
 
     // Ruta test
     Route::post('/save-files-factura', [DocumentosOrdenesComprasController::class, 'subirDocumento'])->name('DocumentosOrdenesCompras.saveFilesFactura');

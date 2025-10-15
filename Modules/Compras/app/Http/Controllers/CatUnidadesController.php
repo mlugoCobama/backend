@@ -66,8 +66,8 @@ class CatUnidadesController extends Controller
 
                 if (
                     $datosVehiculo['tipo_vehiculo'] == "reparto"
-                    || $datosVehiculo['tipo_vehiculo'] = "auto tanque"
-                    || $datosVehiculo['tipo_combustible'] = "gas_lp"
+                    || $datosVehiculo['tipo_vehiculo'] == "autotanque"
+                    || $datosVehiculo['tipo_combustible'] == "gas_lp"
                 ) {
                     if (isset($data['datosTanque'])) {
                         $this->storeTanque($vehiculo, $datosTanque, $numIntercompania);
@@ -107,13 +107,24 @@ class CatUnidadesController extends Controller
      * 
      * @param $id int numero intercompania de la empresa
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $data = VehiculosTanquesResources::collection(DB::select("call SistemaTickets.SP_GetDataAutotanques($id)"));
+        $usuario = $request->user()->id;
+
+        $allAcces = [ 2247, 2395 ];
+
+        if(in_array($usuario, $allAcces)){
+            $limite =  2;
+        }else{
+            $limite =  1;
+        }
+
+        $data = VehiculosTanquesResources::collection(DB::select("call SistemaTickets.SP_GetDataAutotanques($id , $limite)"));
         return response()->json([
             "status" => "Success",
             "data" => $data,
-            "message" => "Datos recuperados correctamente"
+            "message" => "Datos recuperados correctamente",
+            'usuario' => $request->user()->id
         ]);
     }
 
@@ -153,8 +164,8 @@ class CatUnidadesController extends Controller
             $this->updateVehiculo($datosVehiculo, $id_vehiculo, $userId);
 
             if($datosVehiculo['tipo_vehiculo'] == "reparto" 
-                || $datosVehiculo['tipo_vehiculo'] = "auto tanque" 
-                || $datosVehiculo['tipo_combustible'] = "gas_lp"){
+                || $datosVehiculo['tipo_vehiculo'] == "auto tanque" 
+                || $datosVehiculo['tipo_combustible'] == "gas_lp"){
                 $this->updateTanque($datosTanque, $id_tanque, $id_vehiculo, $numIntercompania);
             }
 
@@ -304,10 +315,11 @@ class CatUnidadesController extends Controller
         $dataVehiculo->no_serie = $datosVehiculos['no_serie'];
         $dataVehiculo->placas = $datosVehiculos['placas'];
         $dataVehiculo->nro_economico = $datosVehiculos['nro_economico'];
-        // $dataVehiculo->id_cre = $datosVehiculos['id_cre'];
+        $dataVehiculo->id_cre = $datosVehiculos['id_cre'];
         $dataVehiculo->tipo_combustible = $datosVehiculos['tipo_combustible'];
         $dataVehiculo->tipo = $datosVehiculos['tipo_vehiculo'];
         $dataVehiculo->estatus = $datosVehiculos['estatus'];
+        $dataVehiculo->activo = 2;
 
         $dataVehiculo->save();
 
@@ -421,7 +433,7 @@ class CatUnidadesController extends Controller
 
             ]);
         }
-        
+
     }
 
     public function getIdSucursal($intercompania){
@@ -593,6 +605,33 @@ public function importarDatosSeguro(Request $request)
         
     }
 
+    public function autorizarVehiculo(Request $request){
+        $data =  request()->all();
+        $idVehiculo = $data['idVehiculo'];
+        $userId = $request->user()->id;
+        $vehiculo = DatosVehiculo::find($idVehiculo);
+        if($vehiculo){
+            $vehiculo->update([
+            'activo' => 1,
+            ]);
 
+            if(isset($data['observacion']) && !empty($data['observacion'])){
+                $this->saveObservacionVehiculo($data['observacion'], $idVehiculo, $userId); 
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [],
+                'message' => "Unidad autorizada correctamente"
+            ]);
+        }else{
+            return response()->json([
+                'status' => 'error',
+                'data' => [],
+                'message' => "No se puedo encontrar la unidad que se intenta autorizar"
+            ]);
+        }
+        
+    }
 
 }
