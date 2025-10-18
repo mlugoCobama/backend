@@ -38,23 +38,31 @@ class SolicitudesMacroController extends Controller
         $isAdmin = isset($usuariosAdmin[$id]);
 
         if( $isCompras){
-            $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacro()"));
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTest(?, ?, ?, ?)",[null, 1, 1, 1 ]);
+            // DB::select("call SistemaTickets.SP_GetSolicitudesMacro()")
+            $data = SolicitudesMacroResource::collection($query);
             $tipo = 'compras';
         }
 
         if($isMacro){
-            $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacroTaller()"));
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTest(?, ?, ?, ?)",[null, 1, 1, 0 ]);
+            // DB::select("call SistemaTickets.SP_GetSolicitudesMacroTaller()")
+            $data = SolicitudesMacroResource::collection( $query );
             $tipo = 'macro';
         }
 
         if($isAdmin){
-            $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacroAdmin()"));
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTest(?, ?, ?, ?)",[null, 0, 0, 0 ]);
+            // DB::select("call SistemaTickets.SP_GetSolicitudesMacroAdmin()")
+            $data = SolicitudesMacroResource::collection($query);
             $tipo = 'macro';
         }
 
         if(!$isMacro && !$isCompras && !$isAdmin)
         {
-            $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudesMacroGasera($intercompania)"));
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTest(?, ?, ?, ?)",[$intercompania, 0, 0, 0 ]);
+            // DB::select("call SistemaTickets.SP_GetSolicitudesMacroGasera($intercompania)")
+            $data = SolicitudesMacroResource::collection( $query );
             $tipo = 'gasera';
         }
         
@@ -173,6 +181,7 @@ class SolicitudesMacroController extends Controller
             $solicitudCompra->com_cat_sistemas_auto_id = $data['sistema'];
             $solicitudCompra->com_cat_tipos_mantenimiento_id = $data['tipoMantenimiento'];
             $solicitudCompra->auto_macro = 1;
+            $solicitudCompra->estatus = 2;
             $solicitudCompra->observaciones = $data['observacion'] ?? null;
             $solicitudCompra->save();
 

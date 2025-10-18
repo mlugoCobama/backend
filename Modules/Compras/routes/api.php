@@ -80,6 +80,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::get('/recuperar-autotanques/{intercompania}', [CatUnidadesController::class, 'getAutotanques']);
     Route::get('/recuperar-gastos-vehiculo/{id}', [CatUnidadesController::class, 'getGastoUnidad']);
     Route::get('/recuperar-comentarios-vehiculo/{id}', [CatUnidadesController::class, 'getObservaciones']);
+    Route::get('/recuperar-polizas-vehiculo/{id}', [CatUnidadesController::class, 'getDatosPoliza']);
     Route::post('/autorizar-alta-vehiculo', [CatUnidadesController::class, 'autorizarVehiculo']);
 
     // Ruta test
@@ -106,5 +107,10 @@ Route::prefix('compras')->group(function(){
     Route::get('/download-xml/{folder}/{id}/{file}', [DocumentosOrdenesComprasController::class, 'downloadXML'])->name('DocumentosOrdenesCompras.downloadXML');
 
     Route::post('/subir-doc-cotizacion-destiempo', [CotizacionesController::class, 'uploadOutTimeCotizacion']);
+
+    // Rutas de consulta de solicitudes sin autenticación
+    Route::get('/SolicitudesNa/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudesNa');
+    Route::get('/SolicitudesNa/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudesNa');
+
 });
 

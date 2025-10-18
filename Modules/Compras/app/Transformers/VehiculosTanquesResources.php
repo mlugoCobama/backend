@@ -17,7 +17,7 @@ class VehiculosTanquesResources extends JsonResource
         $estilosEstatus = $this->getColorEstatus($this->estatus);
         return [
             "id" => $this->id,
-            'id_cre' => $this->id_cre,
+            'id_cre' => $this->id_cre ?? null,
             "eco" => $this->nro_economico,
             "marca_vehiculo" => $this->marca_vehiculo,
             "submarca" => $this->submarca,
@@ -46,7 +46,7 @@ class VehiculosTanquesResources extends JsonResource
             "flotilla" => $this->flotilla ?? null,
             "inciso_foltilla" => $this->inciso_foltilla ?? null,
             "clase" => $clase['clase'],
-            "activo" => $this->activo,
+            "activo" => $this->activo ?? null,
             'color_estatus' => $estilosEstatus['color'],
             'status_dsc' => $estilosEstatus['dsc'],
 

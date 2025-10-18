@@ -21,7 +21,7 @@ class SolicitudesComprasResource extends JsonResource
         $usuarioSolicita =  $this->getNombreUsuario( 1 ,$this->usuario_solicita, $this->empresa);
         $estadoInfo = $this->asignarEstado($this->estatus, $this->auto_gg, $this->auto_admin, $this->auto_macro, $this->tipo);
         $datosCC = $this->asignarDescripcionCC($this->c_c);
-        $ordenTrabajo = $this->getOrdenTrabajo($this->id);
+        $ordenTrabajo = $this->getOrdenTrabajo($this->id, $this->tipo);
         $multiUnidad = $this->isMultiple($this->tipo ,$this->usuario_destino);
 
         return [
@@ -39,16 +39,20 @@ class SolicitudesComprasResource extends JsonResource
             'claseEstado' => $estadoInfo['claseEstado'],
             'auto_admin' => $this->auto_admin,
             'auto_gg' => $this->auto_gg,
-            'auto_macro' => $this->auto_macro,
+            'auto_macro' => $this->auto_macro ?? null,
             'tipo' => $this->tipo,
-            'orden_trabajo' => $ordenTrabajo,
+            'orden_trabajo' => $ordenTrabajo ?? null,
             'id_orden_trabajo' => $this->id_orden_trabajo ?? null,
             'folio_requisicion' => $this->folio_requisicion ?? null,
             'formato_orden' => $this->formato_orden ?? null,
             'tipo_mantenimiento' => $this->tipo_mantenimiento ?? null,
             'sistema' => $this->sistema ?? null,
             'razon_cancelacion' => $this->razon_cancelacion ?? null,
-            'multiUnidad' => $multiUnidad
+            'multiUnidad' => $multiUnidad,
+            'observaciones' => $this->observaciones ?? null,
+            'total_orden' => $this->total_orden ?? 0,
+            'proveedor' => $this->proveedor ?? '-',
+            'folio_oc' => $this->folio_oc ?? '-'
         ];
     }
 
@@ -113,9 +117,14 @@ class SolicitudesComprasResource extends JsonResource
         return $dataCC;
     }
 
-    private function getOrdenTrabajo($idSolictud){
-        $ordenTrabajo = OrdenTrabajo::where('com_solicitudes_compra_id', $idSolictud)->first();
+    private function getOrdenTrabajo($idSolictud, $tipoSolicitud){
+
+        if($tipoSolicitud == 2){
+            $ordenTrabajo = OrdenTrabajo::where('com_solicitudes_compra_id', $idSolictud)->first();
         return $ordenTrabajo->orden_trabajo ?? null;
+        }
+
+        return null;
     }
 
     private function isMultiple($tipo ,$usuario_destino){

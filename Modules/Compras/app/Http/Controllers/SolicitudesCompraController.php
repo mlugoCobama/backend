@@ -53,23 +53,38 @@ class SolicitudesCompraController extends Controller
         $usuariosRT = array_flip([413, 2404, 1796]);
         $isRT = isset($usuariosRT[$id]);        
         if($isRT){
-            $data = SolicitudesComprasResource::collection((SolicitudesCompra::rtecnologicos()->active()->autorizadas()->orderBy('updated_at', 'desc')->get()));
+            
+            $query = DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?)', [ null , 1, 1, 3]);
+            // (SolicitudesCompra::rtecnologicos()->active()->autorizadas()->orderBy('updated_at', 'desc')->get())
+            $data = SolicitudesComprasResource::collection( $query );
             $tipo = 'RT';
+
+
         }
 
         if($isCompras){
-            $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->active()->autorizadas()->orderBy('updated_at', 'desc')->get()));
+
+            $query = DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?)', [ null , 1, 1, 3]);
+            // (SolicitudesCompra::compras()->active()->autorizadas()->orderBy('updated_at', 'desc')->get())
+            $data = SolicitudesComprasResource::collection( $query );
             $tipo = 'compras';
         }
 
         if($isAdmin){
-            $data = SolicitudesComprasResource::collection((SolicitudesCompra::administrador()->active()->orderBy('updated_at', 'desc')->get()));
+            $query = DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?)', [ null , 0, 0, null]);
+            // (SolicitudesCompra::administrador()->active()->orderBy('updated_at', 'desc')->get())
+            $data = SolicitudesComprasResource::collection(
+            $query    
+            );
             $tipo = 'compras';
         }
         
         if(!$isRT && !$isCompras && !$isAdmin ){
-
-            $data = SolicitudesComprasResource::collection((SolicitudesCompra::compras()->where('empresa', $intercompania)->active()->orderBy('fecha', 'desc')->get()));
+            $query = DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?)', [ $intercompania , 0, 0, null]);
+            // (SolicitudesCompra::compras()->where('empresa', $intercompania)->active()->orderBy('fecha', 'desc')->get())
+            $data = SolicitudesComprasResource::collection(
+                $query
+            );
             $tipo = 'empresa';
         }
         
@@ -214,7 +229,7 @@ class SolicitudesCompraController extends Controller
      *************************************************************/
     public function generarFolioSc()
     {
-        $ultimaOrden = SolicitudesCompra::compras()->orderBy('id', 'desc')->first('folio');
+        $ultimaOrden = SolicitudesCompra::administrador()->orderBy('id', 'desc')->first('folio');
         if ($ultimaOrden) {
             $ultimoFolio = $ultimaOrden->folio;
             $numero = intval(substr($ultimoFolio, 3)) + 1;

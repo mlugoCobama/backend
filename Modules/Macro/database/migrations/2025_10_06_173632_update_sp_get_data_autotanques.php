@@ -15,10 +15,11 @@ return new class extends Migration
         DB::unprepared("DROP PROCEDURE IF EXISTS SP_GetDataAutotanques;");
         
         DB::unprepared("
-        CREATE PROCEDURE SP_GetDataAutotanques(IN intercompania INT)
+        CREATE PROCEDURE SP_GetDataAutotanques(IN intercompania INT, IN limite INT)
         BEGIN
             SELECT 
                 dv.id,
+                dv.id_cre,
                 dv.nro_economico,
                 dv.marca AS marca_vehiculo,
                 dv.submarca,
@@ -38,28 +39,29 @@ return new class extends Migration
                 dSuc.nombre AS sucursal,
                 dSuc.num_intercompania,
                 dEnt.nombre AS entidad,
-                sv.id as idSeguro,
-                sv.aseguradora,
-                sv.inciso_vehiculo,
-                sv.cobertura,
-                sv.inicio_vigencia,
-                sv.fin_vigencia,
-                sv.flotilla,
-                sv.inciso_foltilla,
-                sv.id_com_datos_vehiculo
+                -- sv.id as idSeguro,
+                -- sv.aseguradora,
+                -- sv.inciso_vehiculo,
+                -- sv.cobertura,
+                -- sv.inicio_vigencia,
+                -- sv.fin_vigencia,
+                -- sv.flotilla,
+                -- sv.inciso_foltilla,
+                -- sv.id_com_datos_vehiculo,
+                dv.activo
             FROM
                 com_datos_vehiculos AS dv
                     LEFT JOIN
                 com_datos_tanque AS dt ON dv.id = dt.com_datos_vehiculo_id
-                    LEFT JOIN
-                mcr_seguro_vehiculos AS sv ON dv.id = sv.id_com_datos_vehiculo
+                    -- LEFT JOIN
+                -- mcr_seguro_vehiculos AS sv ON dv.id = sv.id_com_datos_vehiculo
                     INNER JOIN
                 Dashboard.sucursales AS dSuc ON dSuc.id = dv.id_sucursal
                     INNER JOIN
                 Dashboard.entidades AS dEnt ON dSuc.entidad_id = dEnt.id
             WHERE
                 dSuc.num_intercompania = intercompania
-                    AND dv.activo = 1;
+			AND dv.activo > 0 AND dv.activo <= limite;
                     END;
     ");
 

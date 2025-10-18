@@ -24,6 +24,7 @@ class SeguroVehiculo extends Model
         'fin_vigencia',
         'flotilla',
         'inciso_foltilla',
+        'fecha_renovacion',
         'id_com_datos_vehiculo',
         'activo',
         

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('com_orden_compra', function (Blueprint $table) {
             $table->mediumText('modo_pago')->nullable();
+            $table->integer('surtido_solcitado')->default(0);
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('com_orden_compra', function (Blueprint $table) {
             $table->dropColumn('modo_pago');
+            $table->dropColumn('surtido_solcitado');
         });
     }
 };

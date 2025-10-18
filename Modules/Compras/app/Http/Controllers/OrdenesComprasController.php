@@ -502,6 +502,9 @@ class OrdenesComprasController extends Controller
         $orden = OrdenCompra::where('id', $idOrdenCompra)->first();
         if ($orden) {
             $orden->estatus = $statusOrdenCompra;
+            if($statusOrdenCompra === EstatusOrdenCompra::EN_SURTIDO){
+                $orden->surtido_solcitado = 1;
+            }
             $orden->save(); 
         }
 

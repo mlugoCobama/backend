@@ -25,6 +25,7 @@ class OrdenCompraResource extends JsonResource
             'cotizaciones_id' => $this->cotizaciones_id,
             'entrega' => $lugarEntrega,
             'modo_pago' => $this->modo_pago,
+            'surtido_solicitado' => $this->surtido_solcitado,
             'tipo_pago' => $this->modoPagoToString($this->modo_pago),
             'documentos' => DocsOrdenCompraResource::collection($this->documentos),
             'acuses_entrega' => AcuseEntregaResource::collection($this->acusesEntrega),

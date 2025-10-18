@@ -29,6 +29,8 @@ class SolicitudesMacroResource extends JsonResource
             'motivo' => $this->motivo,
             'fecha' => $this->fecha,
             'c_c' => $this->c_c,
+            'eco' => "ECO: $this->eco" ?? "ECO: 0",
+            'serie' => "No. SERIE: $this->no_serie" ?? "No. SERIE: N/D",
             'centro_costo' => $datosCC['descripcion'],
             'usuario_destino' => "ECO: $this->eco MOD: $this->marca_vehiculo $this->submarca $this->modelo PLACAS: $this->placas No. SERIE: $this->no_serie",
             'empresa' => $this->empresa,
@@ -48,7 +50,11 @@ class SolicitudesMacroResource extends JsonResource
             'tipo_mantenimiento' => $this->tipo_mantenimiento,
             'sistema' => $this->sistema,
             'razon_cancelacion' => $this->razon_cancelacion ?? null,
-            'multiUnidad' => $multiUnidad
+            'multiUnidad' => $multiUnidad,
+            'observaciones' => $this->observaciones ??  null,
+            'total_orden' => $this->total_orden ?? 0,
+            'proveedor' => $this->proveedor ?? '-',
+            'folio_oc' => $this->folio_oc ?? '-'
             // 'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
         ];
     }
