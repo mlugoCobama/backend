@@ -51,10 +51,14 @@ class SolicitudesCompraController extends Controller
         $isAdmin = isset($usuariosAdmin[$id]);
 
         $usuariosRT = array_flip([413, 2404, 1796]);
-        $isRT = isset($usuariosRT[$id]);        
+        $isRT = isset($usuariosRT[$id]);    
+
+        $usuariosTG = array_flip([394 , 169]);
+        $isTG = isset($usuariosTG[$id]); 
+        
         if($isRT){
             
-            $query = DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?)', [ null , 1, 1, 3]);
+            $query = $this->getSolicitudesCompras(null , 1, 1, 3, null);
             // (SolicitudesCompra::rtecnologicos()->active()->autorizadas()->orderBy('updated_at', 'desc')->get())
             $data = SolicitudesComprasResource::collection( $query );
             $tipo = 'RT';
@@ -63,24 +67,30 @@ class SolicitudesCompraController extends Controller
         }
 
         if($isCompras){
-
-            $query = DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?)', [ null , 1, 1, 3]);
+            $query = $this->getSolicitudesCompras(null , 1, 1, 1, null);
             // (SolicitudesCompra::compras()->active()->autorizadas()->orderBy('updated_at', 'desc')->get())
             $data = SolicitudesComprasResource::collection( $query );
             $tipo = 'compras';
         }
 
         if($isAdmin){
-            $query = DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?)', [ null , 0, 0, null]);
+            $query = $this->getSolicitudesCompras(null , 0, 0, null, null);
             // (SolicitudesCompra::administrador()->active()->orderBy('updated_at', 'desc')->get())
             $data = SolicitudesComprasResource::collection(
             $query    
             );
             $tipo = 'compras';
         }
+
+        if($isTG){
+            $query = $this->getSolicitudesCompras(null, 1, 1, 1, 394);
+            $data = SolicitudesComprasResource::collection( $query);
+            $tipo = 'empresa';
+
+        }
         
-        if(!$isRT && !$isCompras && !$isAdmin ){
-            $query = DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?)', [ $intercompania , 0, 0, null]);
+        if(!$isRT && !$isCompras && !$isAdmin  && !$isTG){
+            $query = $this->getSolicitudesCompras($intercompania , 0, 0, null, null);
             // (SolicitudesCompra::compras()->where('empresa', $intercompania)->active()->orderBy('fecha', 'desc')->get())
             $data = SolicitudesComprasResource::collection(
                 $query
@@ -94,6 +104,19 @@ class SolicitudesCompraController extends Controller
             'message' => 'Consulta generada correctamente',
             'data' => $data
         ]);
+    }
+
+    /**
+     * Recupera las solicitudes de compra con el folio y total de la orden de compra
+     * 
+     * @param mixed $intercompania Numero de intercompania de la empresa
+     * @param mixed $autoga Autorizacion de gerencia administrativa (0 o 1)
+     * @param mixed $autoga Autorizacion de gerencia (0 o 1)
+     * @param mixed $tipoSolicitud tipo de solicitud (1= compras, 2 = rt, null = ambas)
+     * @param mixed $idUserObjetivo usuario objetivo (null = no aplica el filtro)
+     */
+    public function getSolicitudesCompras($intercompania, $autoga, $autogg, $tipoSolicitud, $idUserObjetivo){
+        return DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?, ?)', [ $intercompania , $autoga, $autogg, $tipoSolicitud, $idUserObjetivo]);
     }
 
     /** *************************************************************************************

@@ -24,8 +24,24 @@ class AcuseEntregaController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
-        return view('compras::index');
+    {   
+        $data = [];
+
+        $solicitudesCompras =  SolicitudesCompra::get();
+
+        foreach ($solicitudesCompras as $solicitud) {
+            $detalles = $solicitud->DetallesSolicitud;
+            $cotizaciones = $solicitud->Cotizaciones;
+
+            $data["solicitud $solicitud->folio"] = $solicitud;
+            $data["solicitud $solicitud->folio"]['detalles'] =  $detalles;
+            $data["solicitud $solicitud->folio"]['cotización'] = $cotizaciones;
+        }
+        
+        return response()->json([
+            'data' => $data
+        ]);
+
     }
 
     /**

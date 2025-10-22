@@ -50,7 +50,7 @@ class SolicitudesComprasResource extends JsonResource
             'razon_cancelacion' => $this->razon_cancelacion ?? null,
             'multiUnidad' => $multiUnidad,
             'observaciones' => $this->observaciones ?? null,
-            'total_orden' => $this->total_orden ?? 0,
+            'total_orden' => (float) $this->total_orden ?? 0,
             'proveedor' => $this->proveedor ?? '-',
             'folio_oc' => $this->folio_oc ?? '-'
         ];
