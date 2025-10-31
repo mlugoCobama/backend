@@ -13,21 +13,41 @@ class SendSolicitudCotizacionRequest extends FormRequest
     {
         return [
             'consideraciones' => 'nullable|string',
-            'proveedor1' => 'required|integer',
-            'proveedor2' => 'nullable|integer',
-            'proveedor3' => 'nullable|integer',
-            'solicitudes_compra_id' => 'required|integer',
+            'proveedores' => 'required|array|min:1',
+            'proveedores.*' => 'required|integer|exists:com_proveedores,id',
+            'solicitudes_compra_id' => 'required|integer|exists:com_solicitudes_compra,id',
         ];
+    }
+
+    /**
+     * Validación para evitar que coticen con el mismo proveedor dos veces
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            // Validar que no haya proveedores duplicados
+            $proveedores = $this->input('proveedores', []);
+            if (count($proveedores) !== count(array_unique($proveedores))) {
+                $validator->errors()->add(
+                    'proveedores',
+                    'No puedes seleccionar el mismo proveedor más de una vez.'
+                );
+            }
+        });
     }
 
     public function messages()
     {
-        return
-        [
-            'proveedor1.required' => 'El proveedor 1 es obligatorio para continuar',
-            'proveedor2.required' => 'El proveedor 2 es obligatorio para continuar',
-            'proveedor3.required' => 'El proveedor 3 es obligatorio para continuar',
-            'proveedor3.required' => 'Selecciona una solicitud de compra',
+        return [
+            'proveedores.required' => 'Debes seleccionar al menos un proveedor',
+            'proveedores.array' => 'El formato de proveedores es inválido',
+            'proveedores.min' => 'Debes seleccionar al menos un proveedor',
+            'proveedores.*.required' => 'Cada proveedor es obligatorio',
+            'proveedores.*.integer' => 'El ID del proveedor debe ser un número entero',
+            'proveedores.*.exists' => 'Uno o más proveedores seleccionados no existen',
+            'solicitudes_compra_id.required' => 'La solicitud de compra es obligatoria',
+            'solicitudes_compra_id.integer' => 'El ID de la solicitud debe ser un número entero',
+            'solicitudes_compra_id.exists' => 'La solicitud de compra no existe',
         ];
     }
     /**

@@ -63,7 +63,8 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     //Route::get('/autorizacion-solicitud-gerencia/{id}', [SolicitudesCompraController::class, 'autorizeFromEmail']);
     Route::get('/autorizacion-solicitud-gerencia/{campo}/{necesarias}/{id}', [SolicitudesCompraController::class, 'autorizeFromEmail'])->name('confirm.accion')->middleware('signed');
     //*Ruta para generar pdf
-    Route::get('/consulta-datos-pdf/{id}',[OrdenesComprasController::class, 'consultaDatosPDF'])->name('OrdenesCompras.consultaDatosPDF');
+    Route::get('/consulta-datos-pdf/{id}',[OrdenesComprasController::class, 'descargarOrdenCompra'])->name('OrdenesCompras.consultaDatosPDF');
+    Route::get('/preview-orden-compra-pdf/{id}',[OrdenesComprasController::class, 'previewOrdenCompra'])->name('OrdenesCompras.previewOrdenCompra');
     Route::put('/autorizar-cotizacion/{id}',[CotizacionesController::class, 'autorizarCotizacion'])->name('Cotizaciones.autorizarCotizacion');
     Route::get('/solicitar-autorizacion/{id}',[CotizacionesController::class, 'limpiarAutorizaciones'])->name('Cotizaciones.solicitaAutorizacion');
 
@@ -111,6 +112,6 @@ Route::prefix('compras')->group(function(){
     // Rutas de consulta de solicitudes sin autenticación
     Route::get('/SolicitudesNa/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudesNa');
     Route::get('/SolicitudesNa/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudesNa');
-
+    Route::get('/download/SolicutdesCompras',[SolicitudesCompraController::class, 'downloadSolicitudes'])->name('SolicitudesMacro.downloadSolicitudes');
 });
 

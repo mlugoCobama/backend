@@ -4,6 +4,7 @@ namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Enums\EstatusSolicitud;
+use App\Exports\SolicitudesExport;
 use Illuminate\Http\Request;
 
 //Models
@@ -29,6 +30,7 @@ use Modules\Compras\Notifications\AutorizacionEmail;
 // Jobs
 use App\Jobs\EnviarCorreoSolicitudCotizacion;
 use App\Models\LogEventos;
+use Maatwebsite\Excel\Facades\Excel;
 //Request validation
 use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
 use Modules\Compras\Http\Requests\SendSolicitudCotizacionRequest;
@@ -365,21 +367,35 @@ class SolicitudesCompraController extends Controller
             // Almacenar la cotización
             $idCotizacion = $this->storeCotizacion($data);
 
-            //Adecuación nuevo front
-            $idsProv = [$data['proveedor1'], $data['proveedor2'], $data['proveedor3']];
-            $data['proveedores'] = [];
-            
-            foreach ($idsProv as $id) {
-                if(!empty($id)){
-                    $proveedor = Proveedores::where("id", $id)->first();
-                    $data['proveedores'][] =  $proveedor;
-                }
+            // Obtener los proveedores completos desde la base de datos
+            $proveedoresIds = $data['proveedores'];
+            $proveedores = Proveedores::whereIn('id', $proveedoresIds)->get();
+
+            // Verificar que todos los proveedores tengan correo asignado
+            $proveedoresSinCorreo = $proveedores->filter(function ($proveedor) {
+                return empty($proveedor->correo);
+            });
+
+            if ($proveedoresSinCorreo->isNotEmpty()) {
+                DB::rollback();
+                $nombres = $proveedoresSinCorreo->pluck('nombre')->implode(', ');
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Algunos proveedores no tienen correo asignado',
+                    'errors' => [
+                        'proveedores_sin_correo' => $nombres
+                    ]
+                ], 422);
             }
 
-            $data['detalles'] =  DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])->confirmadas()->get();
+            $data['proveedores'] = $proveedores->toArray();
+            $data['detalles'] = DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])
+                ->confirmadas()
+                ->get();
 
             // Almacenar la relación entre cotización y proveedores
-            $this->storeCotizacionProveedores($data['proveedores'], $idCotizacion);
+            $this->storeCotizacionProveedores($proveedores, $idCotizacion);
+
 
             //Queue para despachar el correo
             //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
@@ -388,11 +404,12 @@ class SolicitudesCompraController extends Controller
              * !Habiltar para que se envíen los correos 
              * 
              *******************************************************************************************/
-            // $this->enviaCorreoProveedores($data['proveedores'], $data);
-            
-            $idSolicitudC = $data['solicitudes_compra_id'];
+            // $this->enviaCorreoProveedores($proveedores, $data);
+
+
 
             // Actualiza el estatus de la Solicitud a COTIZACION
+            $idSolicitudC = $data['solicitudes_compra_id'];
             $solicitud = SolicitudesCompra::find($idSolicitudC);
             $solicitud->estatus = EstatusSolicitud::EN_COTIZACION;
             $solicitud->save();
@@ -403,14 +420,18 @@ class SolicitudesCompraController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Correos enviados correctamente',
-                'data' => $data
+                'data' => [
+                    'cotizacion_id' => $idCotizacion,
+                    'proveedores_count' => $proveedores->count(),
+                    'solicitud_id' => $idSolicitudC
+                ]
             ]);
         } catch (\Exception $e) {
             DB::rollback();
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Algo fallo',
+                'message' => 'Ocurrió un error al procesar la solicitud',
                 'error' => $e->getMessage(),
                 'data' => $data
             ]);
@@ -514,11 +535,11 @@ class SolicitudesCompraController extends Controller
     {
         $dataCotizacion = new Cotizaciones();
         $dataCotizacion->folio = $this->generarFolioCo();
-        $dataCotizacion->fecha = date('Y-m-d H:i:s') ?? now();
-        $dataCotizacion->consideraciones = $data["consideraciones"];
+        $dataCotizacion->fecha = now();
+        $dataCotizacion->consideraciones = $data["consideraciones"] ?? null;
         $dataCotizacion->solicitudes_compra_id = $data["solicitudes_compra_id"];
-
         $dataCotizacion->save();
+        
         return $dataCotizacion->id;
     }
 
@@ -528,15 +549,16 @@ class SolicitudesCompraController extends Controller
     public function storeCotizacionProveedores($proveedores, $idCotizacion)
     {
         $idsCotProv = [];
-
+        
         foreach ($proveedores as $proveedor) {
             $datacotProv = new CotizacionesProveedores();
-            $datacotProv->proveedores_id = $proveedor['id'];
+            $datacotProv->proveedores_id = $proveedor->id;
             $datacotProv->cotizaciones_id = $idCotizacion;
             $datacotProv->save();
+            
             $idsCotProv[] = $datacotProv->id;
         }
-
+        
         return $idsCotProv;
     }
 
@@ -546,10 +568,15 @@ class SolicitudesCompraController extends Controller
     public function enviaCorreoProveedores($proveedores, $data)
     {
         foreach ($proveedores as $proveedor) {
-            //Mail::to($correo)->send(new SolicitudCotizacion($data));
-            Notification::route('mail', $proveedor['correo'])
-                ->notify(new SolicitudCotizacionNotification($data));
-        }
+        if (!empty($proveedor->correo)) {
+                try {
+                    Notification::route('mail', $proveedor->correo)
+                        ->notify(new SolicitudCotizacionNotification($data));
+                } catch (\Exception $e) {
+                    // \Log::error("Error al enviar correo a proveedor {$proveedor->id}: " . $e->getMessage());
+                }
+            }
+    }
     }
 
     /**
@@ -628,4 +655,61 @@ class SolicitudesCompraController extends Controller
 
 
     }
+
+    public function downloadSolicitudes()
+    {
+        $solicitudes = SolicitudesCompra::with('DetallesSolicitud')->where('estatus', '2')->where('tipo', '1')->get()->map(function ($solicitud) {
+            $empresas =
+                [
+                    333    =>    'CORPORACION ADMINISTRATIVA DEL SUR',
+                    201    =>    'AGRUPAMIENTO',
+                    131    =>    'AZTECA GAS',
+                    130    =>    'SATELITE GAS',
+                    251    =>    'FLAMAMEX',
+                    210    =>    'REYES GAS',
+                    155    =>    'GASAMEX',
+                    135    =>    'SEGAS',
+                    110    =>    'GARZA GAS',
+                    111    =>    'GARZA SUR',
+                    250    =>    'GAS FLAMAZUL',
+                    132    =>    'GAS PREMIO',
+                    200    =>    'TANQUES SONI',
+                    119    =>    'TANQUES GARZA GAS',
+                    190    =>    'ZUGAS',
+                    133    =>    'GASERA MULTIREGIONAL',
+                    353    =>    'GAS URBANO',
+                    710    =>    'NISSAN UNIVERSIDAD',
+                    7051    =>    'NISSAN AZCAPOTZALCO',
+                    712    =>    'NISSAN CAMPESTRE',
+                    700    =>    'CORPORATIVO AUTOS SONI',
+                    240    =>    'SERVIGAS DEL VALLE',
+                    2000    =>    'SERVICIO EL ONCE',
+                    7064    =>    'RENAULT AZCAPOTZALCO',
+                    7062    =>    'RENAULT ECATEPEC',
+                    7063    =>    'RENAULT VALLEJO',
+                    7061    =>    'RENAULT PACHUCA',
+                    191    =>    'BARAGAS',
+                    354    =>    'IZTAGAS Y ENERGIA',
+                ];
+
+            return [
+                'Folio' => $solicitud->folio,
+                'Fecha' => date('d/m/Y H:i', strtotime($solicitud->fecha)),
+                'Empresa' => $empresas[$solicitud->empresa],
+                'Estado' => $solicitud->estatus,
+                'Detalles' => $solicitud->DetallesSolicitud->map(function ($detalle) {
+                    return
+                        "Cantidad: " . ($detalle->cantidad ?? '0') . ' ' .
+                        "Descripción: " . ($detalle->descripcion ?? '') . ' ' .
+                        "Observaciones: " . ($detalle->observaciones ?? '') . ' ' .
+                        "Unidad: " . ($detalle->unidadMedida->nombre ?? '') . ' ';
+                })->implode("\n"),
+            ];
+        });
+
+        return Excel::download(new SolicitudesExport($solicitudes), 'solicitudes_compras_generales.xlsx');
+    }
+    
+    
+
 }

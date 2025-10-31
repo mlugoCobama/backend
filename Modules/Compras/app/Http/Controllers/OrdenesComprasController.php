@@ -467,11 +467,34 @@ class OrdenesComprasController extends Controller
             $pdf = new OrdenCompraPdfController();
             $file = $pdf->OrdenCompraFormatoInterno($data);
 
-        //Devuelvo el pdf hacia el front
-            return response($file, 200)
-                 ->header('Content-Type', 'application/pdf')
-               ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
+            return $file;
 
+        //Devuelvo el pdf hacia el front
+            // return response($file, 200)
+            //      ->header('Content-Type', 'application/pdf')
+            //    ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
+
+    }
+
+    public function descargarOrdenCompra($id)
+    {
+        $file = $this->consultaDatosPDF($id);
+
+        return response($file, 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf"');
+    }
+
+
+    public function previewOrdenCompra($id)
+    {
+        $file = $this->consultaDatosPDF($id);
+
+        return response($file, 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="orden_compra.pdf"')
+            ->header('Cache-Control', 'no-cache, must-revalidate')
+            ->header('Pragma', 'no-cache');
     }
 
     public function  solicitarSurtido(Request $request){

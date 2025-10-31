@@ -19,6 +19,7 @@ class Proveedores extends Model
         //este id no va porque se me paso poer el AI en la bd
         'id',
         'nombre',
+        'rfc',
         'contacto',
         'telefono',
         'localidad',
@@ -26,6 +27,8 @@ class Proveedores extends Model
         'servicios',
         'correo',
         'dias_credito',
+        'horario_atencion',
+        'tiempo_entrega',
         'activo',
 
     ];
@@ -57,10 +60,18 @@ class Proveedores extends Model
      * Un proveedor pertenece a un expediente
      */
     public function Expediente(){
-        $this->belongsTo(ExpedientesProveedores::class);
+        return $this->hasOne(ExpedientesProveedores::class, 'proveedores_id', 'id');
     }
 
     public function CotizacionesProveedores(){
         $this->hasMany(CotizacionesProveedores::class);
+    }
+
+    public function contactos(){
+        return $this->hasMany(ProveedorContacto::class, 'proveedor_id', 'id');
+    }
+
+    public function productos(){
+        return $this->hasMany(ProveedorProducto::class, 'proveedor_id', 'id');
     }
 }

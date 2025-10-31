@@ -20,6 +20,7 @@ class PermisosController extends Controller
             $permisos = DB::table('ucoip_modulos as uc')
             ->join('permissions as p', 'uc.id', '=', 'p.ucoip_modulo_id')
             ->select('uc.id', 'uc.nombre', 'p.descripcion', 'p.name', 'p.id as permiso_id')
+            ->where('p.sistema', '=', '1')
             ->get();
 
             return $this->successResponse($permisos);

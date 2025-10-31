@@ -16,13 +16,15 @@ class ExpedientesProveedoresResource extends JsonResource
 
         return[
             // 'id'=> $this->id,
-        'constancia_fiscal' => $this->constancia_fiscal,
-        'ine'  => $this->constancia_fiscal,
-        'comprobante_domicilio'  => $this->constancia_fiscal,
-        'estado_cuenta'  => $this->constancia_fiscal,
-        'acta_constitutiva'  => $this->constancia_fiscal,
-        'proveedores_id'  => $this->constancia_fiscal,
-        'poder_notarial' => $this->constancia_fiscal
+        'constancia_fiscal' => $this->constancia_fiscal ?? null,
+        'ine'  => $this->ine ?? null,
+        'comprobante_domicilio'  => $this->comprobante_domicilio ?? null,
+        'estado_cuenta'  => $this->estado_cuenta ?? null,
+        'acta_constitutiva'  => $this->acta_constitutiva ?? null,
+        'proveedores_id'  => $this->proveedores_id ?? null,
+        'poder_notarial' => $this->poder_notarial ?? null,
+        'contrato' => $this->contrato ?? null,
+        'opinion_cumplimiento' => $this->opinion_cumplimiento ?? null,
         ];
 
     }

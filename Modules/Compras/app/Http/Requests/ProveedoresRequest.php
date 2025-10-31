@@ -11,33 +11,50 @@ class ProveedoresRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-         'nombre' => 'required|string',
-         'contacto' => 'required|string',
-         'telefono' => 'required|string|unique:com_proveedores,telefono',
-         'localidad' => 'required|string',
-         'condiciones' => 'required|string',
-         'servicios' => 'required|string',
-         'correo' => 'required|email |unique:com_proveedores,correo',
-         'dias_credito' => 'nullable|integer',
-         'horario_atencion' => 'required|string',
-         'tiempo_entrega' => 'required|string',
-         //Validacion para archivos
-         'constancia_fiscal' => 'nullable|file|mimes:pdf',
-         'ine' => 'nullable|file|mimes:pdf',
-         'comprobante_domicilio' => 'nullable|file|mimes:pdf',
-         'estado_cuenta' => 'nullable|file|mimes:pdf',
-         'acta_constitutiva' => 'nullable|file|mimes:pdf',
-         'poder_notarial' => 'nullable|file|mimes:pdf',
+          return [
+            // Validar proveedor
+            'proveedor.nombre' => 'required|string|max:255',
+            'proveedor.rfc' => 'required|string|max:13|unique:com_proveedores,rfc',
+            'proveedor.contacto' => 'nullable|string|max:255',
+            'proveedor.telefono' => 'nullable|string|unique:com_proveedores,telefono',
+            'proveedor.correo' => 'nullable|string|unique:com_proveedores,correo',
+            'proveedor.condiciones' => 'nullable|string',
+            'proveedor.horario_atencion' => 'nullable|string',
+            'proveedor.localidad' => 'nullable|string',
+            'proveedor.productos' => 'nullable|string',
+            // Validar contactos (si vienen)
+            'contactos.contactos' => 'array',
+            'contactos.contactos.*.nombre' => 'required_with:contactos.contactos|string',
+            'contactos.contactos.*.correo' => 'nullable|string',
+            'contactos.contactos.*.telefono' => 'nullable|string|max:20',
+            'contactos.contactos.*.zona' => 'nullable|string|max:20',
+            'constancia_fiscal' => 'nullable|file|mimes:pdf',
+            'ine' => 'nullable|file|mimes:pdf',
+            'comprobante_domicilio' => 'nullable|file|mimes:pdf',
+            'estado_cuenta' => 'nullable|file|mimes:pdf',
+            'acta_constitutiva' => 'nullable|file|mimes:pdf',
+            'poder_notarial' => 'nullable|file|mimes:pdf',
+            'contrato' => 'nullable|file|mimes:pdf',
+            'opinion_cumplimiento' => 'nullable|file|mimes:pdf',
         ];
     }
 
     public function messages(): array
 {
     return [
-        'correo.unique' => 'El correo ya es usado por otro proveedor',
-        'telefono.unique' => 'El telefono ya es usado por otro proveedor'
+        'proveedor.rfc.unique' => 'El RFC ya está registrado para otro proveedor.',
+        'proveedor.correo.unique' => 'El correo ya es usado por otro proveedor.',
+        'proveedor.telefono.unique' => 'El teléfono ya es usado por otro proveedor.',
     ];
+}
+
+public function prepareForValidation()
+{
+    // Decodificar los JSON enviados como string
+    $this->merge([
+        'proveedor' => json_decode($this->proveedor, true),
+        'contactos' => json_decode($this->contactos, true),
+    ]);
 }
 
     /**

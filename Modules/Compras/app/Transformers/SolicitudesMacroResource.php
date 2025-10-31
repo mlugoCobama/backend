@@ -2,6 +2,7 @@
 
 namespace Modules\Compras\Transformers;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +28,7 @@ class SolicitudesMacroResource extends JsonResource
             'id' => $this->id_solicitud,
             'folio' => $this->folio,
             'motivo' => $this->motivo,
-            'fecha' => $this->fecha,
+            'fecha' => $this->fecha ? Carbon::parse($this->fecha)->format('d/m/Y H:i'): null,
             'c_c' => $this->c_c,
             'eco' => "ECO: $this->eco" ?? "ECO: 0",
             'serie' => "No. SERIE: $this->no_serie" ?? "No. SERIE: N/D",
@@ -52,7 +53,7 @@ class SolicitudesMacroResource extends JsonResource
             'razon_cancelacion' => $this->razon_cancelacion ?? null,
             'multiUnidad' => $multiUnidad,
             'observaciones' => $this->observaciones ??  null,
-            'total_orden' => (float) $this->total_orden ?? 0,
+            'total_orden' => (float) $this->total_orden * 1.16 ?? 0,
             'proveedor' => $this->proveedor ?? '-',
             'folio_oc' => $this->folio_oc ?? '-'
             // 'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
