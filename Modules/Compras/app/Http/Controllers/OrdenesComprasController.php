@@ -540,4 +540,15 @@ class OrdenesComprasController extends Controller
         }
 
     }
+
+    public function markAsFinalizada($idOrdenCompra){
+
+        $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::FINALIZADA, EstatusSolicitud::FINALIZADA);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [],
+            'message' => 'Se ha macado la solicitud como Finalizada'
+        ]);
+    }
 }

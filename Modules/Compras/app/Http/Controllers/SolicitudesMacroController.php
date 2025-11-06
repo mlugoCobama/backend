@@ -358,8 +358,10 @@ class SolicitudesMacroController extends Controller
         }
     }
 
+    /**
+     * Almacena el detalle del autotanque
+     */
     public function storeDetalleAutotanque( $idVehiculo, $idDetalle){
-
         $detalleAuto = new DetalleAutotanque();
         $detalleAuto->com_detalle_solicitud_id = $idDetalle;
         $detalleAuto->com_datos_vehiculos_id = $idVehiculo;

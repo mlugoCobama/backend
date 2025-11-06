@@ -32,12 +32,15 @@ class SolicitudesExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
-            // 'ID Solicitud',
-             'Folio',
-             'Fecha',
-              'Empresa',
-               'Estado',
-                'Detalles JSON'];
+            'Folio',
+            'Fecha',
+            'Empresa',
+            'Estado',
+            'Cantidad',
+            'Descripción',
+            'Observaciones',
+            'Unidad',
+        ];
     }
 
     // public function registerEvents(): array

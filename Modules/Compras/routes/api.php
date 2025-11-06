@@ -91,6 +91,8 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::post('/cancelar-solicitud', [SolicitudesCompraController::class, 'cancelarSolicitud'])->name('SolicitudesCompras.cancelarSolicitud');
     Route::post('/rechazar-orden-compra', [OrdenesComprasController::class, 'rechazarOrdenCompra'])->name('OrdenesCompra.rechazarOrdenCompra');
     Route::post('/solictar-surtido-orden-compra', [OrdenesComprasController::class, 'solicitarSurtido'])->name('OrdenesCompra.solicitarSurtido');
+
+    Route::get('/marcar-como-finalizada/{idOrdenCompra}', [OrdenesComprasController::class, 'markAsFinalizada'])->name('OrdenesCompra.markAsFinalizada');
 });
 
 Route::prefix('compras')->group(function(){
@@ -112,6 +114,6 @@ Route::prefix('compras')->group(function(){
     // Rutas de consulta de solicitudes sin autenticación
     Route::get('/SolicitudesNa/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudesNa');
     Route::get('/SolicitudesNa/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudesNa');
-    Route::get('/download/SolicutdesCompras',[SolicitudesCompraController::class, 'downloadSolicitudes'])->name('SolicitudesMacro.downloadSolicitudes');
+    Route::get('/download/SolicutdesCompras/{tipo}/{estatus}',[SolicitudesCompraController::class, 'downloadSolicitudes'])->name('SolicitudesMacro.downloadSolicitudes');
 });
 

@@ -126,8 +126,16 @@ class CotizacionesController extends Controller
     {
         $data = $request->all();
         $idSc = $data['0'];
-        CotizacionesProveedores::where('id', $id)->update(['seleccionado' => 1]);
-        SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::EN_ORDEN_COMPRA]);
+        $cotProv = CotizacionesProveedores::find($id);
+        $cotProv->seleccionado = 1;
+        $cotProv->save();
+
+        $solicitudCompra = SolicitudesCompra::find($idSc);
+        $solicitudCompra->estatus = EstatusSolicitud::EN_ORDEN_COMPRA;
+        $solicitudCompra->save();
+
+        // CotizacionesProveedores::where('id', $id)->update(['seleccionado' => 1]);
+        // SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::EN_ORDEN_COMPRA]);
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha actualizado correctamente',
@@ -190,10 +198,15 @@ class CotizacionesController extends Controller
     }
 
     public function limpiarAutorizaciones($id){
-        SolicitudesCompra::where('id', $id)->update([
-            'auto_admin' => 0,
-            'auto_gg' => 0,
-        ]);
+        $solicitudCompra = SolicitudesCompra::find($id);
+        $solicitudCompra->auto_admin = 0;
+        $solicitudCompra->auto_gg = 0;
+        $solicitudCompra->save();
+
+        // SolicitudesCompra::where('id', $id)->update([
+        //     'auto_admin' => 0,
+        //     'auto_gg' => 0,
+        // ]);
         
         return response()->json([
             'status' => 'Success',
@@ -217,6 +230,10 @@ class CotizacionesController extends Controller
         }
     }
 
+
+    /**
+     * Funcion para subir a destieempr l
+     */
     public function uploadOutTimeCotizacion(Request $request){
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $cotizacionProveedorId => $file) {

@@ -2,6 +2,7 @@
 
 namespace Modules\Compras\Http\Controllers;
 
+use App\Enums\EstatusOrdenCompra;
 use App\Http\Controllers\Controller;
 use App\Enums\EstatusSolicitud;
 use App\Exports\SolicitudesExport;
@@ -34,6 +35,7 @@ use Maatwebsite\Excel\Facades\Excel;
 //Request validation
 use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
 use Modules\Compras\Http\Requests\SendSolicitudCotizacionRequest;
+use Modules\Compras\Models\OrdenCompra;
 use Modules\Compras\Transformers\EmailAutorizarSolicitud;
 use Modules\Compras\Transformers\EmailAutorizarSolicitudResource;
 use Modules\Compras\Transformers\SeguimientoResource;
@@ -113,7 +115,7 @@ class SolicitudesCompraController extends Controller
      * 
      * @param mixed $intercompania Numero de intercompania de la empresa
      * @param mixed $autoga Autorizacion de gerencia administrativa (0 o 1)
-     * @param mixed $autoga Autorizacion de gerencia (0 o 1)
+     * @param mixed $autogg Autorizacion de gerencia (0 o 1)
      * @param mixed $tipoSolicitud tipo de solicitud (1= compras, 2 = rt, null = ambas)
      * @param mixed $idUserObjetivo usuario objetivo (null = no aplica el filtro)
      */
@@ -237,10 +239,15 @@ class SolicitudesCompraController extends Controller
         $solicitudCompra->razon_cancelacion = $data['razonCancelacion'] ?? null;
         $solicitudCompra->save();
 
-        // $solicitudCompra->update([
-        //     'estatus' => EstatusSolicitud::CANCELADA,
-        //     'razon_cancelacion' => $data['razonCancelacion']
-        // ]);
+        $cotizacion = Cotizaciones::where('solicitudes_compra_id ', $solicitudCompra->id)->first();
+        if($cotizacion){
+            $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
+            if($ordenCompra){
+                $ordenCompra->estatus = EstatusOrdenCompra::CANCELADA;
+                $ordenCompra->razon_cancelacion = $data['razonCancelacion'] ?? null;
+                $ordenCompra->save();
+            }
+        }   
 
         return response()->json([
             'status' => 'success',
@@ -395,19 +402,13 @@ class SolicitudesCompraController extends Controller
 
             // Almacenar la relación entre cotización y proveedores
             $this->storeCotizacionProveedores($proveedores, $idCotizacion);
-
-
             //Queue para despachar el correo
             //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
-
             /** *****************************************************************************************
              * !Habiltar para que se envíen los correos 
              * 
              *******************************************************************************************/
             // $this->enviaCorreoProveedores($proveedores, $data);
-
-
-
             // Actualiza el estatus de la Solicitud a COTIZACION
             $idSolicitudC = $data['solicitudes_compra_id'];
             $solicitud = SolicitudesCompra::find($idSolicitudC);
@@ -644,6 +645,11 @@ class SolicitudesCompraController extends Controller
         }
     }
 
+
+    /**
+     * Recupera lo eventos de actualización de estatus de la solicitud de compra
+     * @param mixed $idSolicitud id de solicitud de orden de compra
+     */
     public function getSeguimientoSolicitud($idSolicitud){
         $eventos = LogEventos::where('table_name', 'com_solicitudes_compra')->where('record_id', $idSolicitud)->get();
 
@@ -656,40 +662,24 @@ class SolicitudesCompraController extends Controller
 
     }
 
-    public function downloadSolicitudes()
+    /**
+     * Descarga un listado de solicitudes de orden de compra en formato excel 
+     */
+    public function downloadSolicitudes1()
     {
         $solicitudes = SolicitudesCompra::with('DetallesSolicitud')->where('estatus', '2')->where('tipo', '1')->get()->map(function ($solicitud) {
             $empresas =
                 [
-                    333    =>    'CORPORACION ADMINISTRATIVA DEL SUR',
-                    201    =>    'AGRUPAMIENTO',
-                    131    =>    'AZTECA GAS',
-                    130    =>    'SATELITE GAS',
-                    251    =>    'FLAMAMEX',
-                    210    =>    'REYES GAS',
-                    155    =>    'GASAMEX',
-                    135    =>    'SEGAS',
-                    110    =>    'GARZA GAS',
-                    111    =>    'GARZA SUR',
-                    250    =>    'GAS FLAMAZUL',
-                    132    =>    'GAS PREMIO',
-                    200    =>    'TANQUES SONI',
-                    119    =>    'TANQUES GARZA GAS',
-                    190    =>    'ZUGAS',
-                    133    =>    'GASERA MULTIREGIONAL',
-                    353    =>    'GAS URBANO',
-                    710    =>    'NISSAN UNIVERSIDAD',
-                    7051    =>    'NISSAN AZCAPOTZALCO',
-                    712    =>    'NISSAN CAMPESTRE',
-                    700    =>    'CORPORATIVO AUTOS SONI',
-                    240    =>    'SERVIGAS DEL VALLE',
-                    2000    =>    'SERVICIO EL ONCE',
-                    7064    =>    'RENAULT AZCAPOTZALCO',
-                    7062    =>    'RENAULT ECATEPEC',
-                    7063    =>    'RENAULT VALLEJO',
-                    7061    =>    'RENAULT PACHUCA',
-                    191    =>    'BARAGAS',
-                    354    =>    'IZTAGAS Y ENERGIA',
+                    333    =>    'CORPORACION ADMINISTRATIVA DEL SUR', 201    =>    'AGRUPAMIENTO',
+                    131    =>    'AZTECA GAS', 130    =>    'SATELITE GAS', 251    =>    'FLAMAMEX',
+                    210    =>    'REYES GAS', 155    =>    'GASAMEX', 135    =>    'SEGAS', 110    =>    'GARZA GAS',
+                    111    =>    'GARZA SUR', 250    =>    'GAS FLAMAZUL', 132    =>    'GAS PREMIO',
+                    200    =>    'TANQUES SONI', 119    =>    'TANQUES GARZA GAS', 190    =>    'ZUGAS',
+                    133    =>    'GASERA MULTIREGIONAL', 353    =>    'GAS URBANO', 710    =>    'NISSAN UNIVERSIDAD',
+                    7051    =>    'NISSAN AZCAPOTZALCO', 712    =>    'NISSAN CAMPESTRE', 700    =>    'CORPORATIVO AUTOS SONI',
+                    240    =>    'SERVIGAS DEL VALLE', 2000    =>    'SERVICIO EL ONCE', 7064    =>    'RENAULT AZCAPOTZALCO',
+                    7062    =>    'RENAULT ECATEPEC', 7063    =>    'RENAULT VALLEJO',7061    =>    'RENAULT PACHUCA',
+                    191    =>    'BARAGAS', 354    =>    'IZTAGAS Y ENERGIA',
                 ];
 
             return [
@@ -709,7 +699,61 @@ class SolicitudesCompraController extends Controller
 
         return Excel::download(new SolicitudesExport($solicitudes), 'solicitudes_compras_generales.xlsx');
     }
-    
-    
+
+    public function downloadSolicitudes( $tipo, $estatus )
+    {
+        $empresas = [
+            333 => 'CORPORACION ADMINISTRATIVA DEL SUR', 201 => 'AGRUPAMIENTO',
+            131 => 'AZTECA GAS', 130 => 'SATELITE GAS', 251 => 'FLAMAMEX',
+            210 => 'REYES GAS', 155 => 'GASAMEX', 135 => 'SEGAS', 110 => 'GARZA GAS',
+            111 => 'GARZA SUR', 250 => 'GAS FLAMAZUL', 132 => 'GAS PREMIO',
+            200 => 'TANQUES SONI', 119 => 'TANQUES GARZA GAS', 190 => 'ZUGAS',
+            133 => 'GASERA MULTIREGIONAL', 353 => 'GAS URBANO', 710 => 'NISSAN UNIVERSIDAD',
+            7051 => 'NISSAN AZCAPOTZALCO', 712 => 'NISSAN CAMPESTRE', 700 => 'CORPORATIVO AUTOS SONI',
+            240 => 'SERVIGAS DEL VALLE', 2000 => 'SERVICIO EL ONCE', 7064 => 'RENAULT AZCAPOTZALCO',
+            7062 => 'RENAULT ECATEPEC', 7063 => 'RENAULT VALLEJO', 7061 => 'RENAULT PACHUCA',
+            191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA',
+        ];
+
+        $tipos = [
+            1 => 'compras_grales',
+            2 => 'compras_macro',
+            3 => 'compras_rt',
+        ];
+
+        $hoy = date('d_m_Y');
+
+        $solicitudes = SolicitudesCompra::with('DetallesSolicitud.unidadMedida')
+            ->where('estatus', $estatus)
+            ->where('tipo', $tipo)
+            ->get()
+            ->flatMap(function ($solicitud) use ($empresas) {
+                
+                $detalles = $solicitud->DetallesSolicitud;
+                return $detalles->map(function ($detalle, $index) use ($solicitud, $empresas) {
+                    $labels = EstatusSolicitud::labels();
+                    $label = $labels[$solicitud->estatus] ?? 'DESCONOCIDO';
+                    return [
+                        'Folio'        => $index === 0 ? $solicitud->folio : '',
+                        'Fecha'        => $index === 0 ? date('d/m/Y H:i', strtotime($solicitud->fecha)) : '',
+                        'Empresa'      => $index === 0 ? ($empresas[$solicitud->empresa] ?? 'N/A') : '',
+                        'Estado'       => $index === 0 ? $label : '',
+                        'Cantidad'     => $detalle->cantidad ?? 0,
+                        'Descripción'  => $detalle->descripcion ?? '',
+                        'Observaciones'=> $detalle->observaciones ?? '',
+                        'Unidad'       => $detalle->unidadMedida->nombre ?? '',
+                    ];
+                });
+            });
+
+        $filename = 'SC_'.$hoy.'_'.$estatus.'_'.$tipos[$tipo].'.xlsx';
+        return Excel::download(
+            new SolicitudesExport($solicitudes),
+            $filename,
+            null,
+            ['Content-Disposition' => 'attachment; filename="'.$filename.'"']
+        );
+    }
+
 
 }
