@@ -84,7 +84,7 @@ class ProveedoresController extends Controller
      */
     public function show($id)
     {
-        $archivos = ['constancia_fiscal', 'ine', 'comprobante_domicilio', 'estado_cuenta', 'acta_constitutiva', 'poder_notarial', 'contrato',];
+        $archivos = ['constancia_fiscal', 'ine', 'comprobante_domicilio', 'estado_cuenta', 'acta_constitutiva', 'poder_notarial', 'contrato', 'opinion_cumplimiento' ];
         $expediente = ExpedientesProveedores::where('proveedores_id', $id)->first();
 
         $archivosDisponibles = $this->validarExpediente($expediente, $archivos);
