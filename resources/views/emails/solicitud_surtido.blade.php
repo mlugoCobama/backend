@@ -5,13 +5,15 @@
 @endcomponent
 @endslot
 
-# Solicitud de cotización
+# Solicitud de surtido
 
 Estimado proveedor,
 
-Por medio del presente, el área de compras de **COBAMA** solicita atentamente la cotización de los siguientes insumos para la solicitud con folio: **{{ $data['solicitudCompra']->folio }}**
+Por medio del presente, el área de compras de **COBAMA** solicita el surtido de la orden de compra con folio: **{{ $datos['ordenCompra']->folio_oc }}** 
+de los siguientes insumos:
 
-## Insumos solicitados
+
+## Insumos a surtir
 
 <table style="width:100%; border-collapse:collapse; font-size:14px;">
     <thead style="background-color:#f2f2f2;">
@@ -20,12 +22,12 @@ Por medio del presente, el área de compras de **COBAMA** solicita atentamente l
             <th style="border:1px solid #ccc; padding:8px;">U. Medida</th>
             <th style="border:1px solid #ccc; padding:8px;">Descripción</th>
             <th style="border:1px solid #ccc; padding:8px;">Observaciones</th>
-            <th style="border:1px solid #ccc; padding:8px;">Img. Ref.</th>
+            <th style="border:1px solid #ccc; padding:8px;">Img Ref.</th>
         </tr>
     </thead>
     <tbody>
         @php $imageIndex = 1; @endphp
-        @foreach ($data['detalles'] as $detalle)
+        @foreach ($datos['detalles'] as $detalle)
             <tr>
                 <td style="border:1px solid #ccc; padding:8px;">{{ $detalle['cantidad'] }}</td>
                 <td style="border:1px solid #ccc; padding:8px;">{{ $detalle['unidadMedida']['nombre'] }}</td>
@@ -44,21 +46,21 @@ Por medio del presente, el área de compras de **COBAMA** solicita atentamente l
     </tbody>
 </table>
 
-@if (!empty($data['consideraciones']))
+**NOTA**:  Esta orden de compra fue generada con base en la cotización previamente solicitada mediante la solicitud de compra con folio **{{ $datos['solicitudCompra']->folio }}** 
 
-**Consideraciones adicionales:**  
-{{ $data['consideraciones'] }}
-@endif
-
-Para enviar tu cotización o realizar cualquier consulta relacionada, comunícate exclusivamente a los siguientes correos:
+Para cualquier aclaración o seguimiento, favor de contactar al área de compras exclusivamente en los siguientes correos:
 
 - compras@cobama.com.mx  
 - aux_compras@cobama.com.mx
 
 Este mensaje ha sido enviado desde una dirección no supervisada (no-reply). Por favor, no respondas directamente a este correo.
 
-Gracias por tu atención.  
-**Atentamente,**  
-Área de Compras - COBAMA
+**Saludos cordiales**,  
+**Área de Compras - COBAMA**
 
+@slot('footer')
+@component('mail::footer')
+COBAMA © {{ date('Y') }}
+@endcomponent
+@endslot
 @endcomponent

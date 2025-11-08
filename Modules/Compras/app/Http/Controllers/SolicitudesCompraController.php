@@ -394,7 +394,7 @@ class SolicitudesCompraController extends Controller
                     ]
                 ], 422);
             }
-
+            
             $data['proveedores'] = $proveedores->toArray();
             $data['detalles'] = DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])
                 ->confirmadas()
@@ -402,20 +402,17 @@ class SolicitudesCompraController extends Controller
 
             // Almacenar la relación entre cotización y proveedores
             $this->storeCotizacionProveedores($proveedores, $idCotizacion);
-            //Queue para despachar el correo
-            //!Habiltar para que se envíen los correos EnviarCorreoSolicitudCotizacion::dispatch($data); 
-            /** *****************************************************************************************
-             * !Habiltar para que se envíen los correos 
-             * 
-             *******************************************************************************************/
-            // $this->enviaCorreoProveedores($proveedores, $data);
-            // Actualiza el estatus de la Solicitud a COTIZACION
+            //Queue para despachar el correo EnviarCorreoSolicitudCotizacion::dispatch($data);
+            //!Habiltar para que se envíen los correos  
+            
+
             $idSolicitudC = $data['solicitudes_compra_id'];
             $solicitud = SolicitudesCompra::find($idSolicitudC);
             $solicitud->estatus = EstatusSolicitud::EN_COTIZACION;
             $solicitud->save();
             // SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => EstatusSolicitud::EN_COTIZACION]);
-
+            $data['solicitudCompra'] = $solicitud;
+            $this->enviaCorreoProveedores($proveedores, $data);
             DB::commit();
 
             return response()->json([
@@ -569,15 +566,17 @@ class SolicitudesCompraController extends Controller
     public function enviaCorreoProveedores($proveedores, $data)
     {
         foreach ($proveedores as $proveedor) {
-        if (!empty($proveedor->correo)) {
-                try {
-                    Notification::route('mail', $proveedor->correo)
-                        ->notify(new SolicitudCotizacionNotification($data));
-                } catch (\Exception $e) {
-                    // \Log::error("Error al enviar correo a proveedor {$proveedor->id}: " . $e->getMessage());
+            if (!empty($proveedor->correo)) {
+                    try {
+                        // Notification::route('mail', $proveedor->correo)
+                        //     ->notify(new SolicitudCotizacionNotification($data));
+                        Mail::to($proveedor->correo)->send(new SolicitudCotizacion($data));
+
+                    } catch (\Exception $e) {
+                        // \Log::error("Error al enviar correo a proveedor {$proveedor->id}: " . $e->getMessage());
+                    }
                 }
-            }
-    }
+        }
     }
 
     /**

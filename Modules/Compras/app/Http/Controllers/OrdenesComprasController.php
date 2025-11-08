@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Enums\EstatusOrdenCompra;
 use App\Enums\EstatusSolicitud;
-
 //Models
 use Modules\Compras\Models\OrdenCompra;
 use Modules\Compras\Models\DocumentosOrdenesCompra;
@@ -26,7 +25,9 @@ use Illuminate\Support\Facades\DB;
 
 use Illuminate\Support\Facades\Notification;
 //Mailables
-use App\Notifications\SolicitudSurtido;
+// use App\Notifications\SolicitudSurtido;
+use App\Mail\SolicitudSurtido;
+use Illuminate\Support\Facades\Mail;
 use Modules\Compras\Transformers\AutotanqueResource;
 use Modules\Compras\Transformers\OrdenCompraResource;
 use Modules\Compras\Transformers\UsersResource;
@@ -93,8 +94,8 @@ class OrdenesComprasController extends Controller
 
         return response()->json([
             'data' => $ordenCompra
-        ]);        
-        
+        ]);
+
     }
 
     public function edit($id)
@@ -109,7 +110,7 @@ class OrdenesComprasController extends Controller
     {
         $idSc = $request->all();
 
-    
+
         try {
             DB::beginTransaction();
                 // Actualiza el estatus de OrdenCompra a 5 (Pagado)
@@ -123,7 +124,7 @@ class OrdenesComprasController extends Controller
                     $solicitud = SolicitudesCompra::find($idSc);
                     if ($solicitud) {
                         $solicitud->estatus = EstatusSolicitud::PAGADA;
-                        $solicitud->save(); 
+                        $solicitud->save();
                     }
             DB::commit();
 
@@ -142,7 +143,7 @@ class OrdenesComprasController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
-        
+
     }
 
     /** ******************************************************************
@@ -158,7 +159,7 @@ class OrdenesComprasController extends Controller
                 $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
 
                 OrdenCompra::where('cotizaciones_id', $cotizacion->id)->update(['estatus' => EstatusOrdenCompra::CANCELADA]);
-                
+
             DB::commit();
             return response()->json([
                 'status' => 'success',
@@ -174,7 +175,7 @@ class OrdenesComprasController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-        } 
+        }
     }
 
     public function rechazarOrdenCompra(Request $request)
@@ -188,23 +189,23 @@ class OrdenesComprasController extends Controller
             if ($solicitud) {
                 $solicitud->estatus = EstatusSolicitud::CANCELADA;
                 $solicitud->razon_cancelacion = $data['razonCancelacion'];
-                $solicitud->save(); 
+                $solicitud->save();
             }
 
-            
+
             $cotizacion = Cotizaciones::where('solicitudes_compra_id', $data['id'])->first();
 
-            
+
             if ($cotizacion) {
                 $orden = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
                 if ($orden) {
                     $orden->estatus = EstatusOrdenCompra::CANCELADA;
                     $orden->razon_cancelacion = $data['razonCancelacion'];
-                    $orden->save(); 
+                    $orden->save();
                 }
             }
 
-                
+
             DB::commit();
             return response()->json([
                 'status' => 'success',
@@ -220,7 +221,7 @@ class OrdenesComprasController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-        } 
+        }
     }
 
     /** ********************************************************************************
@@ -229,60 +230,24 @@ class OrdenesComprasController extends Controller
     public function enviarSolicitudSurtido(Request $request)
     {
         $data = $request->all();
-        
+
         $idOc = $data['idOrdenCompra'];
         $idSc = $data['idSolicituCompra'];
 
-            DB::beginTransaction();
+        DB::beginTransaction();
 
         try {
-                $cotizacion = Cotizaciones::where('solicitudes_compra_id', $idSc)->first('id');
 
-                if(!$cotizacion){
-                    throw new \Exception('No se encontro la cotizacion asociada');
-                }
-                // Recupero los datos del proveedor seleccionado para mandarle el correo
-                 $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
-                     ->Seleccionado()->with(['datos_proveedor' => function ($query) {
-                        $query->select('id', 'nombre', 'correo');
-                    }])->first(['id', 'proveedores_id', 'seleccionado']);
-
-                    if(!$proveedorSeleccionado){
-                        throw new \Exception('No hay un proveedor seleccionado para esta cotizacion');
-                    }
-
-                // Recupero los detalles de la cotizacion para el cuerpo del correo
-                $detallesSC = DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $idSc)->get()));
-
-                if($detallesSC->isEmpty()){
-                    throw new \Exception('No se encontraron detalles');
-                }
-
-                // Datos para el correo
-                $datos = [
-                    'cotizacion' => $cotizacion,
-                    'proveedor' => $proveedorSeleccionado,
-                    'detalles' => $detallesSC,
-                ];
-
-                /** ********************************************************************************
-                *! Habilitar para envío de correo a proveedor
-                * ********************************************************************************/ 
-                Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
-                            ->notify(new SolicitudSurtido($datos));
-
-                $solicitud = SolicitudesCompra::find($idSc);
-                if ($solicitud) {
-                    $solicitud->estatus = EstatusSolicitud::EN_SURTIDO;
-                    $solicitud->save(); 
-                }
-
-                $orden = OrdenCompra::find($idOc);
+            $orden = OrdenCompra::where('id', $idOc)->first();
                 if ($orden) {
-                    $orden->estatus = EstatusOrdenCompra::EN_SURTIDO;
+                    $orden->estatus = EstatusOrdenCompra::AUTORIZADO_A_PAGO;
+                    $orden->modo_pago = 2;
                     $orden->save();
                 }
+                
+                $this->enviarCorreoSurtido($idOc);
 
+                $this->actStatusOrdenSolicitud($idOc, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO); 
 
             DB::commit();
 
@@ -301,6 +266,50 @@ class OrdenesComprasController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+
+    private function enviarCorreoSurtido($idOrdenCompra){
+
+        $ordenCompra =  OrdenCompra::where('id',  $idOrdenCompra )->first();
+
+        $cotizacion = Cotizaciones::where('id',  $ordenCompra->cotizaciones_id)->first();
+
+        if(!$cotizacion){
+            throw new \Exception('No se encontro la cotizacion asociada');
+        }
+
+        $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
+                     ->Seleccionado()->with(['datos_proveedor' => function ($query) {
+                        $query->select('id', 'nombre', 'correo');
+                }])->first(['id', 'proveedores_id', 'seleccionado']);
+
+        if(!$proveedorSeleccionado){
+                    throw new \Exception('No hay un proveedor seleccionado para esta cotizacion');
+        }
+
+                // Recupero los detalles de la cotizacion para el cuerpo del correo
+        $detallesSC = DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $cotizacion->solicitudes_compra_id)->get()));
+        $solicitudCompra = SolicitudesCompra::where('id',$cotizacion->solicitudes_compra_id )->first();
+
+        if($detallesSC->isEmpty()){
+            throw new \Exception('No se encontraron detalles');
+        }
+
+                // Datos para el correo
+        $datos = [
+                'ordenCompra'=> $ordenCompra,
+                'solicitudCompra' => $solicitudCompra,
+                'cotizacion' => $cotizacion,
+                'proveedor' => $proveedorSeleccionado,
+                'detalles' => $detallesSC,
+            ];
+
+        // Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
+        //                     ->notify(new SolicitudSurtido($datos));
+        $pdfContenido = $this->consultaDatosPDF($cotizacion->solicitudes_compra_id);
+
+        Mail::to($datos['proveedor']['datos_proveedor']['correo'])->send(new SolicitudSurtido($datos, $pdfContenido));
     }
 
     /** ********************************************************************************
@@ -366,14 +375,14 @@ class OrdenesComprasController extends Controller
             $rutaXML =  storage_path('app/' . $ruta['ruta_xml_factura']);
             if (file_exists($rutaXML)) {
                 $contenidoXML = file_get_contents($rutaXML);
-                $contenidosXML[] = $contenidoXML; 
+                $contenidosXML[] = $contenidoXML;
             }
             else{
                 return response()->json(['message' => 'Archivo no encontrado']);
             }
          }
 
-        // Envía el contenido hacia el fronted en json 
+        // Envía el contenido hacia el fronted en json
           return response()->json(['contenidos' => $contenidosXML], 200)
               ->header('Content-Type', 'application/json');
         // return $contenidosXML;
@@ -381,14 +390,14 @@ class OrdenesComprasController extends Controller
     }
 
     public function autorizarOrdenPago(Request $request){
-        
+
         $data = $request->all();
-        
+
         $orden = OrdenCompra::where('id', $data['id'])->first();
         if ($orden) {
             $orden->estatus = EstatusOrdenCompra::AUTORIZADO_A_PAGO;
             $orden->modo_pago = $data['modo_pago'];
-            $orden->save(); 
+            $orden->save();
         }
 
         $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
@@ -396,7 +405,7 @@ class OrdenesComprasController extends Controller
         $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
         if ($solicitud) {
             $solicitud->estatus = EstatusSolicitud::AUTORIZADO_A_PAGO;
-            $solicitud->save(); 
+            $solicitud->save();
             }
 
         if($orden->modo_pago == 1){
@@ -408,7 +417,7 @@ class OrdenesComprasController extends Controller
             'data' => $data,
             'message' => 'Se ha solicitado el pago de la orden de compra'
         ]);
-            
+
     }
 
     /** ************************************************************
@@ -451,7 +460,7 @@ class OrdenesComprasController extends Controller
         $proveedor = Proveedores::where('id', $cotizacionProveedor->proveedores_id)->first();
 
         $detalleCotizacion = DetallesCotizacionResource::collection((DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $cotizacionProveedor->id)->get()));
-        
+
         $data =  [
             'ordenCompra' => $ordenCompra,
             'cotizacion' => $cotizacion,
@@ -489,7 +498,6 @@ class OrdenesComprasController extends Controller
     public function previewOrdenCompra($id)
     {
         $file = $this->consultaDatosPDF($id);
-
         return response($file, 200)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'inline; filename="orden_compra.pdf"')
@@ -502,8 +510,7 @@ class OrdenesComprasController extends Controller
         $idOrdenCompra = $data['id_orden_compra'];
         if($data['tipo'] == 1){
             $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
-            // $this->enviarSolicitudSurtido();
-
+            $this->enviarCorreoSurtido($idOrdenCompra);
             return response()->json([
                 'status' => 'success',
                 'data' => [],
@@ -528,7 +535,7 @@ class OrdenesComprasController extends Controller
             if($statusOrdenCompra === EstatusOrdenCompra::EN_SURTIDO){
                 $orden->surtido_solcitado = 1;
             }
-            $orden->save(); 
+            $orden->save();
         }
 
         $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
@@ -536,7 +543,7 @@ class OrdenesComprasController extends Controller
         $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
         if ($solicitud) {
             $solicitud->estatus = $estatusSolicitud;
-            $solicitud->save(); 
+            $solicitud->save();
         }
 
     }

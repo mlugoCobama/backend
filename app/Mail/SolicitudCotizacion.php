@@ -8,48 +8,52 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\HtmlString;
 
 class SolicitudCotizacion extends Mailable
 {
     use Queueable, SerializesModels;
+
     public $data;
-    /**
-     * Create a new message instance.
-     */
+
     public function __construct($data)
     {
         $this->data = $data;
-        //
     }
 
-    /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
+    public function build()
     {
-        return new Envelope(
-            subject: 'Solicitud Cotización',
-        );
-    }
+        $mail = $this->subject('Solicitud de cotización - Folio ' . $this->data['solicitudCompra']->folio)
+            ->cc(['compras@cobama.com.mx', 'aux_compras@cobama.com.mx'])
+            ->markdown('emails.solicitud_cotizacion')
+            // ->view('emails.solicitud_cotizacion')
+            ->with(['data' => $this->data]);
 
-    /**
-     * Get the message content definition.
-     */
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.solicitud_cotizacion',
-            with: ['data' => $this->data],
-        );
-    }
+        // Adjuntar imágenes como image_1, image_2, etc.
+        $imageIndex = 1;
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
+        foreach ($this->data['detalles'] as $detalle) {
+            if (!empty($detalle['img_referencia'])) {
+                $formattedPath = str_replace("http://localhost:8000/storage/", "storage/", $detalle['img_referencia']);
+                $filePath = storage_path('app/public/' . str_replace('storage/', '', $formattedPath));
+                if (file_exists($filePath)) {
+                    $fileContent = file_get_contents($filePath);
+                    $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+                    $mimeType = match ($extension) {
+                        'png' => 'image/png',
+                        'jpg', 'jpeg' => 'image/jpeg',
+                        'gif' => 'image/gif',
+                        default => 'application/octet-stream',
+                    };
+                    $mail->attachData($fileContent, 'image_' . $imageIndex . '.' . $extension, [
+                        'mime' => $mimeType,
+                    ]);
+                    $imageIndex++;
+                }
+            }
+        }
+
+        return $mail;
     }
 }
+

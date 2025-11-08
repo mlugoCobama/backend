@@ -323,7 +323,7 @@ class CatUnidadesController extends Controller
         $dataVehiculo->tipo_combustible = $datosVehiculos['tipo_combustible'];
         $dataVehiculo->tipo = $datosVehiculos['tipo_vehiculo'];
         $dataVehiculo->estatus = $datosVehiculos['estatus'];
-        $dataVehiculo->activo = 1;
+        $dataVehiculo->activo = 2;
 
         $dataVehiculo->save();
 
