@@ -87,7 +87,7 @@ class SolicitudesCompraController extends Controller
         }
 
         if($isTG){
-            $query = $this->getSolicitudesCompras(null, 1, 1, 1, 394);
+            $query = $this->getSolicitudesCompras(null, 0, 0, 1, 394);
             $data = SolicitudesComprasResource::collection( $query);
             $tipo = 'empresa';
 

@@ -33,6 +33,7 @@ class SolicitudesComprasResource extends JsonResource
             'c_c' => $this->c_c,
             'centro_costo' => $datosCC['descripcion'],
             'usuario_destino' => $usuarioDestino['nombre_completo'],
+            'intercompania' => $this->intercompania ?? null,
             'empresa' => $usuarioDestino['empresa'],
             'usuario_solicita' => $usuarioSolicita['nombre_completo'],
             'estatus' => $this->estatus,

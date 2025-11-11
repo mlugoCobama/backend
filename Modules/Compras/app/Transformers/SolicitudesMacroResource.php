@@ -34,6 +34,7 @@ class SolicitudesMacroResource extends JsonResource
             'serie' => "No. SERIE: $this->no_serie" ?? "No. SERIE: N/D",
             'centro_costo' => $datosCC['descripcion'],
             'usuario_destino' => "ECO: $this->eco MOD: $this->marca_vehiculo $this->submarca $this->modelo PLACAS: $this->placas No. SERIE: $this->no_serie",
+            'intercompania' => $this->intercompania ?? null,
             'empresa' => $this->empresa,
             'usuario_solicita' =>  $usuarioSolicita['nombre_completo'],
             'estatus' => $this->estatus,
