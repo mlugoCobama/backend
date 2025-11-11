@@ -323,6 +323,8 @@ class CatUnidadesController extends Controller
         $dataVehiculo->tipo_combustible = $datosVehiculos['tipo_combustible'];
         $dataVehiculo->tipo = $datosVehiculos['tipo_vehiculo'];
         $dataVehiculo->estatus = $datosVehiculos['estatus'];
+        $dataVehiculo->categoria = $datosVehiculos['categoria'];
+        $dataVehiculo->gps = $datosVehiculos['gps'];
         $dataVehiculo->activo = 2;
 
         $dataVehiculo->save();
@@ -393,6 +395,8 @@ class CatUnidadesController extends Controller
             'id_cre' => $data['id_cre'],
             'tipo_combustible' => $data['tipo_combustible'],
             'estatus' => $data['estatus'],
+            'categoria' => $data['categoria'],
+            'gps' => $data['gps'],
         ]);
 
         if (isset($data['observacion']) && !empty($data['observacion'])) {
@@ -534,12 +538,21 @@ class CatUnidadesController extends Controller
 
 
             if (isset($datos['numero_serie_v']) && !empty($datos['numero_serie_v'])) {
+                
                 $vehiculo = DatosVehiculo::where('no_serie', $datos['numero_serie_v'])->first();
+
+                $gps = null;
+
+                if ($datos['GPS'] === "SI") {
+                    $gps = ($datos['STATUS GPS'] === 'OK' || empty($datos['STATUS GPS'])) ? 1 : 2;
+                } elseif (in_array($datos['GPS'], ["NO", "SIN GPS"]) || empty($datos['SIN GPS'])) {
+                    $gps = 3;
+                }
 
                 if ($vehiculo) {
                     // Actualizar datos del vehiculo
                     $vehiculo->update([
-                        "id_cre" => $datos['id_cre'],
+                        // "id_cre" => $datos['id_cre'],
                         // "nro_economico " => $datos['no_economico'],
                         // "marca" => $datos['marca_v'],
                         // "submarca" => $datos['submarca_v'],
@@ -547,40 +560,43 @@ class CatUnidadesController extends Controller
                         // "no_serie" => $datos['numero_serie_v'],
                         // "placas" => $datos['placas'],
                         // "id_sucursal" => $datos['id_sucursal'],
-                        "tipo" => strtolower($datos['uso_vehiculo']),
-                        "estatus" => $status[$datos['status']] ?? 1,
-                        "propietario" => $datos['propietario']
-                    ]);
-                } else {
-                    if (!empty($datos['numero_serie_v'])) {
-                        // Crear nuevo vehículo
-                        $auto = DatosVehiculo::create([
-                            "id_cre" => $datos['id_cre'] ?? null,
-                            "nro_economico " => $datos['no_economico'] ?? null,
-                            "marca" => $datos['marca_v'] ?? null,
-                            "submarca" => $datos['submarca_v'] ?? null,
-                            "modelo" => $datos['modelo_v'] ?? null,
-                            "no_serie" => $datos['numero_serie_v'] ?? null,
-                            "placas" => $datos['placas'] ?? null,
-                            "id_sucursal" => $datos['id_sucursal'],
-                            "tipo" => $datos['uso_vehiculo'] ?? null,
-                            "estatus" => $status[$datos['status']] ?? 1,
-                            "propietario" => $datos['propietario'] ?? null
-                        ]);
+                        // "tipo" => strtolower($datos['uso_vehiculo']),
+                        // "estatus" => $status[$datos['status']] ?? 1,
+                        // "propietario" => $datos['propietario'],
+                        "gps" => $gps,  
 
-                        if ($datos['uso_vehiculo'] == 'autotanque') {
-                            DatosTanque::create([
-                                'marca' => $datos['marca_t'] ?? 'NA',
-                                'anio_fabricacion' => $datos['anio_fab'] ?? 'NA',
-                                'capacidad' => $datos['capacidad'] ?? 'NA',
-                                'serie' => $datos['numero_serie_t'] ?? 'NA',
-                                'tipo_medidor' => $datos['tipo_medidor'] ?? 'NA',
-                                'id_sucursal' => $datos['id_sucursal'],
-                                'com_datos_vehiculo_id' => $auto->id,
-                            ]);
-                        }
-                    }
-                }
+                    ]);
+                } 
+                // else {
+                //     if (!empty($datos['numero_serie_v'])) {
+                //         // Crear nuevo vehículo
+                //         $auto = DatosVehiculo::create([
+                //             "id_cre" => $datos['id_cre'] ?? null,
+                //             "nro_economico " => $datos['no_economico'] ?? null,
+                //             "marca" => $datos['marca_v'] ?? null,
+                //             "submarca" => $datos['submarca_v'] ?? null,
+                //             "modelo" => $datos['modelo_v'] ?? null,
+                //             "no_serie" => $datos['numero_serie_v'] ?? null,
+                //             "placas" => $datos['placas'] ?? null,
+                //             "id_sucursal" => $datos['id_sucursal'],
+                //             "tipo" => $datos['uso_vehiculo'] ?? null,
+                //             "estatus" => $status[$datos['status']] ?? 1,
+                //             "propietario" => $datos['propietario'] ?? null
+                //         ]);
+
+                //         if ($datos['uso_vehiculo'] == 'autotanque') {
+                //             DatosTanque::create([
+                //                 'marca' => $datos['marca_t'] ?? 'NA',
+                //                 'anio_fabricacion' => $datos['anio_fab'] ?? 'NA',
+                //                 'capacidad' => $datos['capacidad'] ?? 'NA',
+                //                 'serie' => $datos['numero_serie_t'] ?? 'NA',
+                //                 'tipo_medidor' => $datos['tipo_medidor'] ?? 'NA',
+                //                 'id_sucursal' => $datos['id_sucursal'],
+                //                 'com_datos_vehiculo_id' => $auto->id,
+                //             ]);
+                //         }
+                //     }
+                // }
             }
         }
 

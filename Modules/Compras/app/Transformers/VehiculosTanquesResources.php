@@ -27,6 +27,8 @@ class VehiculosTanquesResources extends JsonResource
             "placas" => $this->placas,
             "estatus" => $this->estatus,
             "tipo_combustible" => $this->tipo_combustible,
+            "categoria" => $this->categoria,
+            "gps" => $this->gps,
             "id_tanque" => $this->id_tanque,
             "marca_tanque" => $this->marca_tanque,
             "anio_fabricacion" => $this->anio_fabricacion,

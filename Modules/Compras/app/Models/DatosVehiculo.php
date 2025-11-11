@@ -30,7 +30,9 @@ class DatosVehiculo extends Model
         'id_cre',
         'ruta',
         'estatus',
-        'propietario'
+        'propietario',
+        'categoria',
+        'gps',
     ];
      /**
      * Nombre de la tabla

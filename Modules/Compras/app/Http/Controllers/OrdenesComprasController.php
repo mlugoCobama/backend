@@ -309,7 +309,7 @@ class OrdenesComprasController extends Controller
         //                     ->notify(new SolicitudSurtido($datos));
         $pdfContenido = $this->consultaDatosPDF($cotizacion->solicitudes_compra_id);
 
-        Mail::to($datos['proveedor']['datos_proveedor']['correo'])->send(new SolicitudSurtido($datos, $pdfContenido));
+        Mail::to($datos['proveedor']['datos_proveedor']['correo'])->send(new SolicitudSurtido($datos, $pdfContenido['archivoPDF']));
     }
 
     /** ********************************************************************************
@@ -476,7 +476,14 @@ class OrdenesComprasController extends Controller
             $pdf = new OrdenCompraPdfController();
             $file = $pdf->OrdenCompraFormatoInterno($data);
 
-            return $file;
+            // return $file;
+            return [
+                'folioOrdenCompra' => $ordenCompra->folio_oc,
+                'folioSolicitudCompra' => $solicitudCompra->folio,
+                'archivoPDF' => $file
+            ];
+
+
 
         //Devuelvo el pdf hacia el front
             // return response($file, 200)
@@ -485,24 +492,32 @@ class OrdenesComprasController extends Controller
 
     }
 
+
     public function descargarOrdenCompra($id)
     {
         $file = $this->consultaDatosPDF($id);
-
-        return response($file, 200)
+        $fileName = ''.$file['folioOrdenCompra'].'_'. $file['folioSolicitudCompra'].'.pdf';
+        return response($file['archivoPDF'], 200)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf"');
+            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+            ->header('X-Filename', $fileName)
+            ->header('Access-Control-Expose-Headers', 'X-Filename');
+
+
     }
 
 
     public function previewOrdenCompra($id)
     {
         $file = $this->consultaDatosPDF($id);
-        return response($file, 200)
+        $fileName = ''.$file['folioOrdenCompra'].'_'. $file['folioSolicitudCompra'].'.pdf';
+        return response($file['archivoPDF'], 200)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="orden_compra.pdf"')
+            ->header('Content-Disposition', 'inline; filename="' . $fileName . '"')
             ->header('Cache-Control', 'no-cache, must-revalidate')
-            ->header('Pragma', 'no-cache');
+            ->header('Pragma', 'no-cache')
+            ->header('X-Filename', $fileName)
+            ->header('Access-Control-Expose-Headers', 'X-Filename');
     }
 
     public function  solicitarSurtido(Request $request){

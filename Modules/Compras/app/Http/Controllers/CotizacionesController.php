@@ -36,13 +36,24 @@ class CotizacionesController extends Controller
             if(isset($data['precios'])){
                 foreach ($data['precios'] as $detalleId => $proveedores) {
                     foreach ($proveedores as $proveedorId => $precio) {
+                        $detalleCotizacion = DetallesCotizacion::where('detalle_solicitud_id', $detalleId)
+                        ->where('cotizaciones_proveedores_proveedores_id', $proveedorId)
+                        ->first();
 
+                        if($detalleCotizacion){
+                            $detalleCotizacion->importe_unitario = $precio;
+                            $detalleCotizacion->save();
+                        }
+                        else{
                         //validar que la relación sea valida
-                        $detalleCotizacion = new DetallesCotizacion();
-                        $detalleCotizacion->detalle_solicitud_id = $detalleId;
-                        $detalleCotizacion->cotizaciones_proveedores_proveedores_id = $proveedorId;
-                        $detalleCotizacion->importe_unitario = $precio;
-                        $detalleCotizacion->save();
+                            $detalleCotizacion = new DetallesCotizacion();
+                            $detalleCotizacion->detalle_solicitud_id = $detalleId;
+                            $detalleCotizacion->cotizaciones_proveedores_proveedores_id = $proveedorId;
+                            $detalleCotizacion->importe_unitario = $precio;
+                            $detalleCotizacion->save();
+                        }
+                        
+                        
                     }
             }
             }
