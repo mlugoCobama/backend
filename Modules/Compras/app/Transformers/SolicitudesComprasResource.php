@@ -11,6 +11,10 @@ use Modules\Compras\Models\OrdenTrabajo;
 
 class SolicitudesComprasResource extends JsonResource
 {
+
+    // Caché local para evitar consultas repetidas
+    private static $usuariosCache = [];
+
     /**
      * Transform the resource into an array.
      */
@@ -61,24 +65,40 @@ class SolicitudesComprasResource extends JsonResource
     /**
      *  Recupera los datos del usuario para asignarlos a la consulta
      */
-    private function getNombreUsuario($tipoSolicitud , $usuarioId, $empresa)
+    private function getNombreUsuario($tipoSolicitud, $usuarioId, $empresa)
     {
-        if($tipoSolicitud == 2){
-             $usuario = UsersResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetDataAutotanque('. $usuarioId.','.$empresa.')'));
-             $nombreCompleto = trim($usuario[0]->firstname . ' ' . $usuario[0]->realname. ' No. Serie:'.$usuario[0]->name );
-        }else{
-            $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' .  $usuarioId . ')'));
+        $cacheKey = $tipoSolicitud . '_' . $usuarioId . '_' . $empresa;
+
+        if (isset(self::$usuariosCache[$cacheKey])) {
+            return self::$usuariosCache[$cacheKey];
+        }
+
+        if ($tipoSolicitud == 2) {
+            $usuario = UsersResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetDataAutotanque(' . $usuarioId . ',' . $empresa . ')'));
+
+            $nombreCompleto = trim($usuario[0]->firstname . ' ' . $usuario[0]->realname . ' No. Serie:' . $usuario[0]->name);
+        } else {
+            $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')'));
+
             $nombreCompleto = trim($usuario[0]->firstname . ' ' . $usuario[0]->realname);
         }
 
         if (count($usuario) > 0) {
-            return [
+            $resultado = [
                 'nombre_completo' => $nombreCompleto,
                 'empresa' => $usuario[0]->empresa ?? null,
             ];
+        } else {
+            $resultado = [
+                'nombre_completo' => 'No asignado',
+                'empresa' => null,
+            ];
         }
-        return ['nombre_completo' => 'No asignado', 'empresa' => null];
+
+        self::$usuariosCache[$cacheKey] = $resultado;
+        return $resultado;
     }
+
 
     /**
      * Asigna los datos del status como una etiqueta y una clase css

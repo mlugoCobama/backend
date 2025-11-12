@@ -239,7 +239,7 @@ class SolicitudesCompraController extends Controller
         $solicitudCompra->razon_cancelacion = $data['razonCancelacion'] ?? null;
         $solicitudCompra->save();
 
-        $cotizacion = Cotizaciones::where('solicitudes_compra_id ', $solicitudCompra->id)->first();
+        $cotizacion = Cotizaciones::where('solicitudes_compra_id', $solicitudCompra->id)->first();
         if($cotizacion){
             $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
             if($ordenCompra){

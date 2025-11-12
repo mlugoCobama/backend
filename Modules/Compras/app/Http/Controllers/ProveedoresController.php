@@ -15,7 +15,7 @@ use Modules\Compras\Http\Requests\ProveedoresRequest;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use Modules\Compras\Http\Requests\updateProveedoresRequest;
+use Modules\Compras\Http\Requests\UpdateProveedoresRequest;
 use Modules\Compras\Models\Categorias;
 use Modules\Compras\Models\ProveedorContacto;
 use Modules\Compras\Models\ProveedorProducto;

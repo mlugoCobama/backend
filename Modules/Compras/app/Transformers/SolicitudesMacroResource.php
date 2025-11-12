@@ -12,6 +12,7 @@ use Modules\Compras\Models\OrdenTrabajo;
 
 class SolicitudesMacroResource extends JsonResource
 {
+    private static $usuariosCache = [];
     /**
      * Transform the resource into an array.
      */
@@ -66,15 +67,28 @@ class SolicitudesMacroResource extends JsonResource
      */
     private function getNombreUsuario($usuarioId)
     {
+        if (isset(self::$usuariosCache[$usuarioId])) {
+            return self::$usuariosCache[$usuarioId];
+        }
+
         $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')');
+
         if (count($usuario) > 0) {
-            return [
+            $resultado = [
                 'nombre_completo' => trim($usuario[0]->firstname . ' ' . $usuario[0]->realname),
                 'empresa' => $usuario[0]->empresa ?? null,
             ];
+        } else {
+            $resultado = [
+                'nombre_completo' => 'No asignado',
+                'empresa' => null,
+            ];
         }
-        return ['nombre_completo' => 'No asignado', 'empresa' => null];
+        self::$usuariosCache[$usuarioId] = $resultado;
+        return $resultado;
     }
+
+
 
     private function getUnidad($unidadId){
 
