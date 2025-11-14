@@ -40,31 +40,34 @@ class OrdenesComprasController extends Controller
      ************************************************************/
     public function store(Request $request)
     {
+        
         try {
             DB::beginTransaction();
+                // Genera el registro de orden de compra
+                $data =  $request->all();
 
-            // Genera el registro de orden de compra
-            OrdenCompra::create([
-                'folio_oc' => $this->generarFolio(),
-                'fecha' => now(),
-                'observaciones' => $request->input('observaciones'),
-                'cotizaciones_id' => $request->input('cotizaciones_id'),
-                'entrega' => $request->input('entrega'),
-            ]);
+                $ordenCompra = new OrdenCompra();
+                $ordenCompra->folio_oc = $this->generarFolio();
+                $ordenCompra->fecha = now();
+                $ordenCompra->entrega = $data["entrega"];
+                $ordenCompra->modo_pago = $data["modoPago"];
+                $ordenCompra->observaciones = $data["observaciones"];
+                $ordenCompra->cotizaciones_id = $data["cotizaciones_id"];
+                $ordenCompra->save();
 
-            // Actualiza al proveedor seleccionado
-            $cotizacionProv = CotizacionesProveedores::find($request->input('id_cotizacion_prov'));
-            if ($cotizacionProv) {
-                $cotizacionProv->seleccionado = 1;
-                $cotizacionProv->save();
-            }
+                // Actualiza al proveedor seleccionado
+                $cotizacionProv = CotizacionesProveedores::find($data['id_cotizacion_prov']);
+                if ($cotizacionProv) {
+                    $cotizacionProv->seleccionado = 1;
+                    $cotizacionProv->save();
+                }
 
-            // Actualiza estado de la solicitud
-            $solicitud = SolicitudesCompra::find($request->input('id_solicitud_compra'));
-            if ($solicitud) {
-                $solicitud->estatus = EstatusSolicitud::EN_ORDEN_COMPRA;
-                $solicitud->save();
-            }
+                // Actualiza estado de la solicitud
+                $solicitud = SolicitudesCompra::find($data['id_solicitud_compra']);
+                if ($solicitud) {
+                    $solicitud->estatus = EstatusSolicitud::EN_ORDEN_COMPRA;
+                    $solicitud->save();
+                }
 
             DB::commit();
 
@@ -269,7 +272,7 @@ class OrdenesComprasController extends Controller
     }
 
 
-    private function enviarCorreoSurtido($idOrdenCompra){
+    public function enviarCorreoSurtido($idOrdenCompra){
 
         $ordenCompra =  OrdenCompra::where('id',  $idOrdenCompra )->first();
 
@@ -318,27 +321,21 @@ class OrdenesComprasController extends Controller
     public function autorizarOrden(Request $request)
     {
         $data = $request->all();
-
-        // Recuperar los datos (id solicitud de compra, id de orden de compra,)
         $idOc = $data['idOrdenCompra'];
         $idSc = $data['idSolicituCompra'];
 
         try {
             DB::beginTransaction();
 
-                $solicitud = SolicitudesCompra::find($idSc);
-                if ($solicitud) {
-                    $solicitud->estatus = EstatusSolicitud::AUTORIZADA;
-                    $solicitud->save();
-                }
+            $orden = OrdenCompra::find($idOc);
+            $this->actStatusOrdenSolicitud( $orden->id , EstatusSolicitud::AUTORIZADA , EstatusOrdenCompra::AUTORIZADA);
 
-                $orden = OrdenCompra::find($idOc);
-                if ($orden) {
-                    $orden->estatus = EstatusOrdenCompra::AUTORIZADA;
-                    $orden->save();
-                }
-
-
+            if($orden->modo_pago == 1){
+                $this->actStatusOrdenSolicitud( $orden->id, EstatusOrdenCompra::SOLICITADO_PAGO , EstatusSolicitud::SOLICITADO_PAGO);
+            }else{
+                $this->actStatusOrdenSolicitud($orden->id, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
+                $this->enviarCorreoSurtido($orden->id);
+            }
 
             DB::commit();
 
@@ -502,8 +499,6 @@ class OrdenesComprasController extends Controller
             ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
             ->header('X-Filename', $fileName)
             ->header('Access-Control-Expose-Headers', 'X-Filename');
-
-
     }
 
 
@@ -570,7 +565,7 @@ class OrdenesComprasController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [],
-            'message' => 'Se ha macado la solicitud como Finalizada'
+            'message' => 'Se ha marcado la solicitud como Finalizada'
         ]);
     }
 }

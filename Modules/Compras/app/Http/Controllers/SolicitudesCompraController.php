@@ -412,7 +412,7 @@ class SolicitudesCompraController extends Controller
             $solicitud->save();
             // SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => EstatusSolicitud::EN_COTIZACION]);
             $data['solicitudCompra'] = $solicitud;
-            $this->enviaCorreoProveedores($proveedores, $data);
+            // $this->enviaCorreoProveedores($proveedores, $data);
             DB::commit();
 
             return response()->json([

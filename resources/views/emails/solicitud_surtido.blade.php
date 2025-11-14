@@ -46,6 +46,11 @@ de los siguientes insumos:
     </tbody>
 </table>
 
+@if ($datos['ordenCompra']->modo_pago == 1 || $datos['ordenCompra']->modo_pago == '1' )
+> **Importante:** Le solicitamos atentamente que nos envíe las **facturas correspondientes** 
+a los insumos detallados en esta orden de compra, a fin de proceder con el proceso administrativo y contable correspondiente.
+@endif
+
 **NOTA**:  Esta orden de compra fue generada con base en la cotización previamente solicitada mediante la solicitud de compra con folio **{{ $datos['solicitudCompra']->folio }}** 
 
 Para cualquier aclaración o seguimiento, favor de contactar al área de compras exclusivamente en los siguientes correos:

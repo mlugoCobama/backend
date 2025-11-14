@@ -12,12 +12,14 @@ use Modules\Compras\Models\DocumentosOrdenesCompra;
 
 use App\Enums\EstatusOrdenCompra;
 use App\Enums\EstatusSolicitud;
-
+use App\Mail\PagoOrdenCompra;
 //Utilities
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Modules\Compras\Http\Requests\SubirDocumentoRequest;
 use Modules\Compras\Models\Cotizaciones;
+use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\DocumentosFactura;
 use Modules\Compras\Models\OrdenCompra;
 use Modules\Compras\Models\SolicitudesCompra;
@@ -61,9 +63,15 @@ class DocumentosOrdenesComprasController extends Controller
                 $orden = OrdenCompra::find($data["orden_compra_id"]);
                 if($orden->modo_pago == 1 ){
                     $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
+                    $this->enviarCorreoPago($orden, $docsOrdenCompra->comprobante_pago);    
+                    $controlerOC = new OrdenesComprasController;
+                    $controlerOC->enviarCorreoSurtido($orden->id);      
+                         
                 }else{
                     $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
                     $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
+                    $this->enviarCorreoPago($orden, $docsOrdenCompra->comprobante_pago);
                 }
                 
             }
@@ -185,9 +193,14 @@ class DocumentosOrdenesComprasController extends Controller
                 $orden = OrdenCompra::find($data["orden_compra_id"]);
                 if($orden->modo_pago == 1 ){
                     $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
+                    $controlerOC = new OrdenesComprasController;    
+                    $controlerOC->enviarCorreoSurtido($orden->id);      
+                    $this->enviarCorreoPago($orden, $registro->comprobante_pago);   
                 }else{
                     $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
                     $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO ,EstatusSolicitud::CARGA_COMPLEMENTO);
+                    $this->enviarCorreoPago($orden, $registro->comprobante_pago);  
                 }
                 
             }
@@ -652,6 +665,9 @@ class DocumentosOrdenesComprasController extends Controller
         $orden = OrdenCompra::where('id', $idOrdenCompra)->first();
         if ($orden) {
             $orden->estatus = $statusOrdenCompra;
+            if($statusOrdenCompra === EstatusOrdenCompra::EN_SURTIDO){
+                $orden->surtido_solcitado = 1;
+            }
             $orden->save(); 
         }
 
@@ -664,4 +680,39 @@ class DocumentosOrdenesComprasController extends Controller
         }
 
     }
+
+
+    public function enviarCorreoPago($ordenCompra, $rutaPago)
+    {       
+        $cotizacion = Cotizaciones::find($ordenCompra->cotizaciones_id);
+        if (!$cotizacion) {
+            throw new \Exception('No se encontró la cotización asociada');
+        }
+
+        $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
+            ->Seleccionado()
+            ->with(['datos_proveedor' => function ($query) {
+                $query->select('id', 'nombre', 'correo');
+            }])->first(['id', 'proveedores_id', 'seleccionado']);
+
+        if (!$proveedorSeleccionado) {
+            throw new \Exception('No hay un proveedor seleccionado para esta cotización');
+        }
+
+        $solicitudCompra = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
+        if (!$solicitudCompra) {
+            throw new \Exception('No se encontró la solicitud de compra');
+        }
+
+        $datos = [
+            'ordenCompra' => $ordenCompra,
+            'solicitudCompra' => $solicitudCompra,
+            'cotizacion' => $cotizacion,
+            'proveedor' => $proveedorSeleccionado,
+        ];
+
+        Mail::to($proveedorSeleccionado->datos_proveedor->correo)->send(new PagoOrdenCompra($datos, $rutaPago));
+    }
+
+
 }
