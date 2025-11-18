@@ -248,6 +248,9 @@ class SolicitudesMacroController extends Controller
         $dataSolicitud->c_c = $data["c_c"];
         $dataSolicitud->tipo = 2;
         $dataSolicitud->com_cat_sistemas_auto_id = $data['sistema'];
+        if($data['sistema'] == 24){
+            $dataSolicitud->auto_macro = 1;
+        }
         $dataSolicitud->com_cat_tipos_mantenimiento_id = $data['tipoMantenimiento'];
         $dataSolicitud->folio_requisicion = $data['folio_requisicion'];
         $dataSolicitud->save();
