@@ -43,9 +43,35 @@ class OrdenesComprasController extends Controller
         
         try {
             DB::beginTransaction();
-                // Genera el registro de orden de compra
+                 
                 $data =  $request->all();
-
+                // Validar que la orden de compra no exista
+                $ocExistente = OrdenCompra::where('cotizaciones_id', $data["cotizaciones_id"])->first();
+                // Si existe solo se modifica
+                if($ocExistente){
+                    $cotizacion = Cotizaciones::where('solicitudes_compra_id', $data["cotizaciones_id"])->first();
+                        if ($cotizacion) {
+                            // Quitar el proveedor seleccionado
+                            $cotProvSelec = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->where('seleccionado', 1)->first();
+                            if ($cotProvSelec) {
+                                $cotProvSelec->seleccionado = 0;
+                                $cotProvSelec->save();
+                            }
+                            //Asignar le nuevo proveedor seleccionado
+                            $newCotProvSelec = CotizacionesProveedores::find($data['id_cotizacion_prov']);
+                            if ($newCotProvSelec) {
+                                $newCotProvSelec->seleccionado = 1;
+                                $newCotProvSelec->save();
+                            }
+                            if ($ocExistente) {
+                                $ocExistente->observaciones = $data["observaciones"];
+                                $ocExistente->entrega = $data["entrega"];
+                                $ocExistente->modo_pago = $data["modoPago"];
+                                $ocExistente->save();
+                            }
+                        }
+                }
+                // Genera el registro de orden de compra
                 $ordenCompra = new OrdenCompra();
                 $ordenCompra->folio_oc = $this->generarFolio();
                 $ordenCompra->fecha = now();
@@ -479,16 +505,7 @@ class OrdenesComprasController extends Controller
                 'folioSolicitudCompra' => $solicitudCompra->folio,
                 'archivoPDF' => $file
             ];
-
-
-
-        //Devuelvo el pdf hacia el front
-            // return response($file, 200)
-            //      ->header('Content-Type', 'application/pdf')
-            //    ->header('Content-Disposition', 'attachment; filename="orden_compra.pdf');
-
     }
-
 
     public function descargarOrdenCompra($id)
     {
@@ -536,7 +553,6 @@ class OrdenesComprasController extends Controller
         }
     }
 
-
     public function actStatusOrdenSolicitud($idOrdenCompra, $statusOrdenCompra, $estatusSolicitud){
 
         $orden = OrdenCompra::where('id', $idOrdenCompra)->first();
@@ -567,5 +583,57 @@ class OrdenesComprasController extends Controller
             'data' => [],
             'message' => 'Se ha marcado la solicitud como Finalizada'
         ]);
+    }
+
+    public function cambiarProveedorSeleccionado(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+            $data = $request->all();
+            $idSolicitudCompra = $data['idSolicitudCompra'];
+            $idCotizacionProveedor = $data['idCotProv'];
+            $observaciones = $data['observaciones'];
+            $lugarEntrega = $data['entrega'];
+            $modoPago = $data['modoPago'];
+
+            $cotizacion = Cotizaciones::where('solicitudes_compra_id', $idSolicitudCompra)->first();
+            if ($cotizacion) {
+                // Quitar el proveedor seleccionado
+                $cotProvSelec = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->where('seleccionado', 1)->first();
+                if ($cotProvSelec) {
+                    $cotProvSelec->seleccionado = 0;
+                    $cotProvSelec->save();
+                }
+                //Asignar le nuevo proveedor seleccionado
+                $newCotProvSelec = CotizacionesProveedores::find($idCotizacionProveedor);
+                if ($newCotProvSelec) {
+                    $newCotProvSelec->seleccionado = 1;
+                    $newCotProvSelec->save();
+                }
+                // Modificar la orden de compra que ya existía
+                $ordenCompra =  OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
+                if ($ordenCompra) {
+                    $ordenCompra->observaciones = $observaciones;
+                    $ordenCompra->entrega = $lugarEntrega;
+                    $ordenCompra->modo_pago = $modoPago;
+                    $ordenCompra->save();
+                }
+            }
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'El cambio se realizo correctamente',
+                'data' => []
+            ]);
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error inesperado',
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }

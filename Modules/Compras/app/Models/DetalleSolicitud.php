@@ -45,7 +45,7 @@ class DetalleSolicitud extends Model
      */
     public function DetallesCotizacion()
     {
-        $this->hasMany(DetallesCotizacion::class);
+        return $this->hasMany(DetallesCotizacion::class);
     }
     /**
      * Un detalle de solicitud pertenece a una solicitud de compra

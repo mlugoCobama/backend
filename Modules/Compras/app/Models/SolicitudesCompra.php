@@ -84,7 +84,7 @@ class SolicitudesCompra extends Model
      * Una solicitud tiene varias cotizaciones
      */
     public function Cotizaciones(){
-        return $this->hasMany(Cotizaciones::class);
+        return $this->hasMany(Cotizaciones::class, 'solicitudes_compra_id', 'id');
     }
 
     /**
@@ -93,5 +93,9 @@ class SolicitudesCompra extends Model
     public function OrdenTrabajo()
     {
         return $this->hasOne(OrdenTrabajo::class, 'com_solicitudes_compra_id', 'id');
+    }
+
+    public function DestinoVehiculo(){
+        return $this->belongsTo(DatosVehiculo::class, 'usuario_destino', 'id' );
     }
 }

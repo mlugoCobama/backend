@@ -37,7 +37,7 @@ class DetallesCotizacion extends Model
         return $this->belongsTo(DetalleSolicitud::class);
     }
     public function CotizacionesProveedores(){
-        $this->belongsTo(CotizacionesProveedores::class);
+         return $this->belongsTo(CotizacionesProveedores::class, 'cotizaciones_proveedores_proveedores_id',  'id');
     }
     
     protected static function newFactory(): DetallesCotizacionFactory

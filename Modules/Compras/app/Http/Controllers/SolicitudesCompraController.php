@@ -110,19 +110,6 @@ class SolicitudesCompraController extends Controller
         ]);
     }
 
-    /**
-     * Recupera las solicitudes de compra con el folio y total de la orden de compra
-     * 
-     * @param mixed $intercompania Numero de intercompania de la empresa
-     * @param mixed $autoga Autorizacion de gerencia administrativa (0 o 1)
-     * @param mixed $autogg Autorizacion de gerencia (0 o 1)
-     * @param mixed $tipoSolicitud tipo de solicitud (1= compras, 2 = rt, null = ambas)
-     * @param mixed $idUserObjetivo usuario objetivo (null = no aplica el filtro)
-     */
-    public function getSolicitudesCompras($intercompania, $autoga, $autogg, $tipoSolicitud, $idUserObjetivo){
-        return DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?, ?)', [ $intercompania , $autoga, $autogg, $tipoSolicitud, $idUserObjetivo]);
-    }
-
     /** *************************************************************************************
      * Genera un el registro de la solicitud de compra junto con sus detalles
      * Valida y coordina el funcionamiento de storeSolicitudCOmpra y storeDetallesSolicitud
@@ -368,16 +355,14 @@ class SolicitudesCompraController extends Controller
     public function enviarSolicitudCotizacion(SendSolicitudCotizacionRequest $request)
     {
         $data = $request->validated();
-
         try {
             DB::beginTransaction();
-            // Almacenar la cotización
-            $idCotizacion = $this->storeCotizacion($data);
 
             // Obtener los proveedores completos desde la base de datos
             $proveedoresIds = $data['proveedores'];
-            $proveedores = Proveedores::whereIn('id', $proveedoresIds)->get();
+            $idSolicitudC = $data['solicitudes_compra_id'];
 
+            $proveedores = Proveedores::whereIn('id', $proveedoresIds)->get();
             // Verificar que todos los proveedores tengan correo asignado
             $proveedoresSinCorreo = $proveedores->filter(function ($proveedor) {
                 return empty($proveedor->correo);
@@ -394,25 +379,25 @@ class SolicitudesCompraController extends Controller
                     ]
                 ], 422);
             }
-            
-            $data['proveedores'] = $proveedores->toArray();
-            $data['detalles'] = DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])
-                ->confirmadas()
-                ->get();
-
+            //Buscar si existe la cotización 
+            $cotizacion = Cotizaciones::where('solicitudes_compra_id', $data['solicitudes_compra_id'])->first();
+            // Almacenar la cotización / Validar que exista la cotización para cargar nuevas cot-porv 
+            if($cotizacion){
+                $idCotizacion = $cotizacion->id;
+                $this->storeCotizacionProveedores($proveedores, $idCotizacion);
+                //Queue para despachar el correo EnviarCorreoSolicitudCotizacion::dispatch($data)
+                $this->enviaCorreoProveedores($proveedores, $data);
+            }else{
+                $idCotizacion = $this->storeCotizacion($data);
+                $this->storeCotizacionProveedores($proveedores, $idCotizacion);
+                //Queue para despachar el correo EnviarCorreoSolicitudCotizacion::dispatch($data)
+                $this->enviaCorreoProveedores($proveedores, $data);
+                $solicitud = SolicitudesCompra::find($idSolicitudC);
+                $solicitud->estatus = EstatusSolicitud::EN_COTIZACION;
+                $solicitud->save();
+            }
             // Almacenar la relación entre cotización y proveedores
-            $this->storeCotizacionProveedores($proveedores, $idCotizacion);
-            //Queue para despachar el correo EnviarCorreoSolicitudCotizacion::dispatch($data);
-            //!Habiltar para que se envíen los correos  
             
-
-            $idSolicitudC = $data['solicitudes_compra_id'];
-            $solicitud = SolicitudesCompra::find($idSolicitudC);
-            $solicitud->estatus = EstatusSolicitud::EN_COTIZACION;
-            $solicitud->save();
-            // SolicitudesCompra::where('id', $idSolicitudC)->update(['estatus' => EstatusSolicitud::EN_COTIZACION]);
-            $data['solicitudCompra'] = $solicitud;
-            $this->enviaCorreoProveedores($proveedores, $data);
             DB::commit();
 
             return response()->json([
@@ -565,6 +550,10 @@ class SolicitudesCompraController extends Controller
      ****************************************************************************/
     public function enviaCorreoProveedores($proveedores, $data)
     {
+        $data['proveedores'] = $proveedores->toArray();
+        $data['detalles'] = DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])->confirmadas()->get();
+        $data['solicitudCompra'] = SolicitudesCompra::find($data['solicitudes_compra_id']);
+        
         foreach ($proveedores as $proveedor) {
             if (!empty($proveedor->correo)) {
                     try {
@@ -644,6 +633,19 @@ class SolicitudesCompraController extends Controller
         }
     }
 
+    /**
+     * Recupera las solicitudes de compra con el folio y total de la orden de compra
+     * 
+     * @param mixed $intercompania Numero de intercompania de la empresa
+     * @param mixed $autoga Autorizacion de gerencia administrativa (0 o 1)
+     * @param mixed $autogg Autorizacion de gerencia (0 o 1)
+     * @param mixed $tipoSolicitud tipo de solicitud (1= compras, 2 = rt, null = ambas)
+     * @param mixed $idUserObjetivo usuario objetivo (null = no aplica el filtro)
+     */
+    public function getSolicitudesCompras($intercompania, $autoga, $autogg, $tipoSolicitud, $idUserObjetivo){
+        return DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?, ?)', [ $intercompania , $autoga, $autogg, $tipoSolicitud, $idUserObjetivo]);
+    }
+
 
     /**
      * Recupera lo eventos de actualización de estatus de la solicitud de compra
@@ -657,102 +659,5 @@ class SolicitudesCompraController extends Controller
             'data' => SeguimientoResource::collection($eventos),
             'message' => 'datos recuperados correctamente'
         ]);
-
-
     }
-
-    /**
-     * Descarga un listado de solicitudes de orden de compra en formato excel 
-     */
-    public function downloadSolicitudes1()
-    {
-        $solicitudes = SolicitudesCompra::with('DetallesSolicitud')->where('estatus', '2')->where('tipo', '1')->get()->map(function ($solicitud) {
-            $empresas =
-                [
-                    333    =>    'CORPORACION ADMINISTRATIVA DEL SUR', 201    =>    'AGRUPAMIENTO',
-                    131    =>    'AZTECA GAS', 130    =>    'SATELITE GAS', 251    =>    'FLAMAMEX',
-                    210    =>    'REYES GAS', 155    =>    'GASAMEX', 135    =>    'SEGAS', 110    =>    'GARZA GAS',
-                    111    =>    'GARZA SUR', 250    =>    'GAS FLAMAZUL', 132    =>    'GAS PREMIO',
-                    200    =>    'TANQUES SONI', 119    =>    'TANQUES GARZA GAS', 190    =>    'ZUGAS',
-                    133    =>    'GASERA MULTIREGIONAL', 353    =>    'GAS URBANO', 710    =>    'NISSAN UNIVERSIDAD',
-                    7051    =>    'NISSAN AZCAPOTZALCO', 712    =>    'NISSAN CAMPESTRE', 700    =>    'CORPORATIVO AUTOS SONI',
-                    240    =>    'SERVIGAS DEL VALLE', 2000    =>    'SERVICIO EL ONCE', 7064    =>    'RENAULT AZCAPOTZALCO',
-                    7062    =>    'RENAULT ECATEPEC', 7063    =>    'RENAULT VALLEJO',7061    =>    'RENAULT PACHUCA',
-                    191    =>    'BARAGAS', 354    =>    'IZTAGAS Y ENERGIA',
-                ];
-
-            return [
-                'Folio' => $solicitud->folio,
-                'Fecha' => date('d/m/Y H:i', strtotime($solicitud->fecha)),
-                'Empresa' => $empresas[$solicitud->empresa],
-                'Estado' => $solicitud->estatus,
-                'Detalles' => $solicitud->DetallesSolicitud->map(function ($detalle) {
-                    return
-                        "Cantidad: " . ($detalle->cantidad ?? '0') . ' ' .
-                        "Descripción: " . ($detalle->descripcion ?? '') . ' ' .
-                        "Observaciones: " . ($detalle->observaciones ?? '') . ' ' .
-                        "Unidad: " . ($detalle->unidadMedida->nombre ?? '') . ' ';
-                })->implode("\n"),
-            ];
-        });
-
-        return Excel::download(new SolicitudesExport($solicitudes), 'solicitudes_compras_generales.xlsx');
-    }
-
-    public function downloadSolicitudes( $tipo, $estatus )
-    {
-        $empresas = [
-            333 => 'CORPORACION ADMINISTRATIVA DEL SUR', 201 => 'AGRUPAMIENTO',
-            131 => 'AZTECA GAS', 130 => 'SATELITE GAS', 251 => 'FLAMAMEX',
-            210 => 'REYES GAS', 155 => 'GASAMEX', 135 => 'SEGAS', 110 => 'GARZA GAS',
-            111 => 'GARZA SUR', 250 => 'GAS FLAMAZUL', 132 => 'GAS PREMIO',
-            200 => 'TANQUES SONI', 119 => 'TANQUES GARZA GAS', 190 => 'ZUGAS',
-            133 => 'GASERA MULTIREGIONAL', 353 => 'GAS URBANO', 710 => 'NISSAN UNIVERSIDAD',
-            7051 => 'NISSAN AZCAPOTZALCO', 712 => 'NISSAN CAMPESTRE', 700 => 'CORPORATIVO AUTOS SONI',
-            240 => 'SERVIGAS DEL VALLE', 2000 => 'SERVICIO EL ONCE', 7064 => 'RENAULT AZCAPOTZALCO',
-            7062 => 'RENAULT ECATEPEC', 7063 => 'RENAULT VALLEJO', 7061 => 'RENAULT PACHUCA',
-            191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA',
-        ];
-
-        $tipos = [
-            1 => 'compras_grales',
-            2 => 'compras_macro',
-            3 => 'compras_rt',
-        ];
-
-        $hoy = date('d_m_Y');
-
-        $solicitudes = SolicitudesCompra::with('DetallesSolicitud.unidadMedida')
-            ->where('estatus', $estatus)
-            ->where('tipo', $tipo)
-            ->get()
-            ->flatMap(function ($solicitud) use ($empresas) {
-                
-                $detalles = $solicitud->DetallesSolicitud;
-                return $detalles->map(function ($detalle, $index) use ($solicitud, $empresas) {
-                    $labels = EstatusSolicitud::labels();
-                    $label = $labels[$solicitud->estatus] ?? 'DESCONOCIDO';
-                    return [
-                        'Folio'        => $index === 0 ? $solicitud->folio : '',
-                        'Fecha'        => $index === 0 ? date('d/m/Y H:i', strtotime($solicitud->fecha)) : '',
-                        'Empresa'      => $index === 0 ? ($empresas[$solicitud->empresa] ?? 'N/A') : '',
-                        'Estado'       => $index === 0 ? $label : '',
-                        'Cantidad'     => $detalle->cantidad ?? 0,
-                        'Descripción'  => $detalle->descripcion ?? '',
-                        'Observaciones'=> $detalle->observaciones ?? '',
-                        'Unidad'       => $detalle->unidadMedida->nombre ?? '',
-                    ];
-                });
-            });
-
-        $filename = 'SC_'.$hoy.'_'.$estatus.'_'.$tipos[$tipo].'.xlsx';
-        return Excel::download(
-            new SolicitudesExport($solicitudes),
-            $filename,
-            null,
-            ['Content-Disposition' => 'attachment; filename="'.$filename.'"']
-        );
-    }
-
-
 }

@@ -29,7 +29,7 @@ class OrdenCompraPdfController extends Controller
         $dataCC = $jsonCC[$data['solicitudCompra']['c_c']];
 
         $pdf = new Fpdi();
-        $pdf->AddPage();
+        $pdf->AddPage('P', 'Letter');
          
         //Plantilla PDF: Formato interno de compra
         // $pdf->setSourceFile(__DIR__ . "/../../../../../storage/app/modules/compras/orden_compra/formato_compras_v1.pdf");
@@ -196,8 +196,8 @@ class OrdenCompraPdfController extends Controller
 
             // Guardar la posición actual
             $pdf->SetXY(16.2, $y);
-            $pdf->Cell(12, 5, $cantidad, 0, 0, 'C');
-            $pdf->Cell(16, 5, $tipo, 0, 0, 'C');
+            $pdf->Cell(12, 4.5, $cantidad, 0, 0, 'C');
+            $pdf->Cell(16, 4.5, utf8_decode($tipo), 0, 0, 'C');
 
             
             $x = $pdf->GetX();
@@ -205,18 +205,18 @@ class OrdenCompraPdfController extends Controller
 
             // Multicel: Se utiliza para campos con textos largos
             //* $pdf->MultiCell(101, 5, utf8_decode($descripcion), 0, 'C'); 
-            $pdf->MultiCell(57, 5, utf8_decode($descripcion), 0, 'C'); 
+            $pdf->MultiCell(57, 4.5, utf8_decode($descripcion), 0, 'C'); 
             
             // Ancho y alto de línea
             $descLineHeight = $pdf->GetY() - $yBefore;
 
             // Posición siguiente celda
             $pdf->SetXY($x + 57, $yBefore); 
-            $pdf->MultiCell(44, 5, utf8_decode($observaciones), 0, 'C');
+            $pdf->MultiCell(44, 4.5, utf8_decode($observaciones), 0, 'C');
             
             //Posición siguiente celda
             $pdf->SetXY($x + 101.5, $yBefore); 
-            $pdf->MultiCell(10, 5, utf8_decode($eco), 0,'C');
+            $pdf->MultiCell(10, 4.5, utf8_decode($eco), 0,'C');
 
             $obsLineHeight = $pdf->GetY() - $yBefore;
             

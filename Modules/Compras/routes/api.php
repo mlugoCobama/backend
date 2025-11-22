@@ -20,6 +20,7 @@ use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Http\Controllers\DetalleSolicitudController;
 use Modules\Compras\Http\Controllers\CatTiposMantenimientoController;
 use Modules\Compras\Models\AcuseEntrega;
+use Modules\Compras\Http\Controllers\ReportesComprasController;
 
 /*
  *--------------------------------------------------------------------------
@@ -48,6 +49,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::resource('CatalogoSistemasAuto', CatSistemasAutoController::class);
     Route::resource('CatalogoTiposMantenimiento', CatTiposMantenimientoController::class);
     Route::resource('AcuseEntrega', AcuseEntregaController::class);
+    Route::resource('ReportesCompras', ReportesComprasController::class);
     
     Route::get('/Solicitudes/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
     Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
@@ -91,7 +93,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::post('/cancelar-solicitud', [SolicitudesCompraController::class, 'cancelarSolicitud'])->name('SolicitudesCompras.cancelarSolicitud');
     Route::post('/rechazar-orden-compra', [OrdenesComprasController::class, 'rechazarOrdenCompra'])->name('OrdenesCompra.rechazarOrdenCompra');
     Route::post('/solictar-surtido-orden-compra', [OrdenesComprasController::class, 'solicitarSurtido'])->name('OrdenesCompra.solicitarSurtido');
-
+    Route::post('/cambiar-proveedor-seleccionado', [OrdenesComprasController::class, 'cambiarProveedorSeleccionado'])->name('OrdenesCompra.cambiarProveedorSeleccionado');
     Route::get('/marcar-como-finalizada/{idOrdenCompra}', [OrdenesComprasController::class, 'markAsFinalizada'])->name('OrdenesCompra.markAsFinalizada');
 });
 
@@ -114,6 +116,25 @@ Route::prefix('compras')->group(function(){
     // Rutas de consulta de solicitudes sin autenticación
     Route::get('/SolicitudesNa/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudesNa');
     Route::get('/SolicitudesNa/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudesNa');
-    Route::get('/download/SolicutdesCompras/{tipo}/{estatus}',[SolicitudesCompraController::class, 'downloadSolicitudes'])->name('SolicitudesMacro.downloadSolicitudes');
+    Route::get('/download/SolicutdesCompras/{tipo}/{estatus}/{fechaInicial}/{fechaFinal}',[ReportesComprasController::class, 'downloadSolicitudes'])->name('SolicitudesMacro.downloadSolicitudes');
+
+    //* rutas para reportes mensuales
+
+    Route::get('/ReportesCompras/GatoMensualConcentrado/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'getGastoEmpresasConcentrado'])->name('ReportesCompras.getGastoEmpresasConcentrado');
+    Route::get('/ReportesCompras/GatoMensualDetalle/{intercompania}/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'getGastoEmpresaDetalle'])->name('ReportesCompras.getGastoEmpresaDetalle');
+
+    // Exportar solo una empresa
+    Route::get('/gasto-empresa/{empresa}/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'exportEmpresa']);
+    // Exportar concentrado
+    Route::get('/gastos-concentrado/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'exportConcentrado']);
+    // Exportar multireporte
+    Route::get('/gastos-mensuales/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'exportMulti']);
+
+    
+    // Multi-hoja
+    Route::get('/reportes/gastos/concentrado', [ReportesComprasController::class, 'descargarConcentrado']);
+
+    // Individual por empresa
+    Route::get('/reportes/gastos/detalle/{intercompania}', [ReportesComprasController::class, 'descargarDetalleEmpresa']);
 });
 

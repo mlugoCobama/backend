@@ -33,35 +33,31 @@ class CotizacionesController extends Controller
 
         try {
             DB::beginTransaction();
-            if(isset($data['precios'])){
+            if (isset($data['precios'])) {
                 foreach ($data['precios'] as $detalleId => $proveedores) {
                     foreach ($proveedores as $proveedorId => $precio) {
                         $detalleCotizacion = DetallesCotizacion::where('detalle_solicitud_id', $detalleId)
-                        ->where('cotizaciones_proveedores_proveedores_id', $proveedorId)
-                        ->first();
+                            ->where('cotizaciones_proveedores_proveedores_id', $proveedorId)
+                            ->first();
 
-                        if($detalleCotizacion){
+                        if ($detalleCotizacion) {
                             $detalleCotizacion->importe_unitario = $precio;
                             $detalleCotizacion->save();
-                        }
-                        else{
-                        //validar que la relación sea valida
+                        } else {
                             $detalleCotizacion = new DetallesCotizacion();
                             $detalleCotizacion->detalle_solicitud_id = $detalleId;
                             $detalleCotizacion->cotizaciones_proveedores_proveedores_id = $proveedorId;
                             $detalleCotizacion->importe_unitario = $precio;
                             $detalleCotizacion->save();
                         }
-                        
-                        
                     }
+                }
             }
-            }
-            
+
             if ($request->hasFile('files')) {
                 foreach ($request->file('files') as $cotizacionProveedorId => $file) {
 
-                    $this->storeDocCotizacion( $cotizacionProveedorId, $file);
+                    $this->storeDocCotizacion($cotizacionProveedorId, $file);
                 }
             }
 
@@ -72,7 +68,6 @@ class CotizacionesController extends Controller
                 'message' => 'Se ha guardado correctamente',
                 'data' => []
             ]);
-            
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -145,8 +140,6 @@ class CotizacionesController extends Controller
         $solicitudCompra->estatus = EstatusSolicitud::EN_ORDEN_COMPRA;
         $solicitudCompra->save();
 
-        // CotizacionesProveedores::where('id', $id)->update(['seleccionado' => 1]);
-        // SolicitudesCompra::where('id', $idSc)->update(['estatus' => EstatusSolicitud::EN_ORDEN_COMPRA]);
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha actualizado correctamente',
@@ -213,11 +206,6 @@ class CotizacionesController extends Controller
         $solicitudCompra->auto_admin = 0;
         $solicitudCompra->auto_gg = 0;
         $solicitudCompra->save();
-
-        // SolicitudesCompra::where('id', $id)->update([
-        //     'auto_admin' => 0,
-        //     'auto_gg' => 0,
-        // ]);
         
         return response()->json([
             'status' => 'Success',
