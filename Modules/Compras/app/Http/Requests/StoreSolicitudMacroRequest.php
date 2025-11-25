@@ -29,7 +29,9 @@ class StoreSolicitudMacroRequest extends FormRequest
             'data.detalles.*.observaciones' => 'nullable|string',
             'data.detalles.*.cat_unidades_medida_id' => 'required|integer',
             'data.detalles.*.vehiculo' => 'nullable',
-            'img_referencia_*' => 'required|file|mimes:jpg,jpeg,png|max:51200'
+            'img_referencia_*' => 'required|file|mimes:jpg,jpeg,png|max:51200',
+            'data.detalles.*.recuperar_costo' => 'required',
+            'data.requiere_anticipo' => 'required'
         ];
     }
 

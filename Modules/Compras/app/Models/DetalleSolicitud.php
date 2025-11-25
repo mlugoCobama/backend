@@ -23,6 +23,7 @@ class DetalleSolicitud extends Model
         'img_referencia',
         'confirmado',
         'estatus_almacen',
+        'recuperable',
     ];
     /**
      * Nombre de la tabla

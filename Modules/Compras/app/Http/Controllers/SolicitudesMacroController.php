@@ -181,7 +181,11 @@ class SolicitudesMacroController extends Controller
             $solicitudCompra->com_cat_sistemas_auto_id = $data['sistema'];
             $solicitudCompra->com_cat_tipos_mantenimiento_id = $data['tipoMantenimiento'];
             $solicitudCompra->auto_macro = 1;
-            $solicitudCompra->estatus = 2;
+            if($solicitudCompra->Cotizaciones){
+                $solicitudCompra->estatus = EstatusSolicitud::EN_COTIZACION;
+            }else{
+                $solicitudCompra->estatus = EstatusSolicitud::SOLICITADO;
+            }
             $solicitudCompra->observaciones = $data['observacion'] ?? null;
             $solicitudCompra->save();
 
@@ -251,6 +255,7 @@ class SolicitudesMacroController extends Controller
         if($data['sistema'] == 24){
             $dataSolicitud->auto_macro = 1;
         }
+        $dataSolicitud->requiere_anticipo = $data["requiere_anticipo"] == true ? 1 : 0 ;
         $dataSolicitud->com_cat_tipos_mantenimiento_id = $data['tipoMantenimiento'];
         $dataSolicitud->folio_requisicion = $data['folio_requisicion'];
         $dataSolicitud->save();
@@ -344,6 +349,7 @@ class SolicitudesMacroController extends Controller
             $detalleSolicitud->descripcion = $detalle["descripcion"];
             $detalleSolicitud->observaciones = $detalle["observaciones"];
             $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
+            $detalleSolicitud->recuperable = $detalle["recuperar_costo"];
 
             // Maneja el archivo de imagen
             $fileKey = "img_referencia_" . $index;

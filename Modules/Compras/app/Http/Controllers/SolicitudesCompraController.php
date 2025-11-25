@@ -311,6 +311,7 @@ class SolicitudesCompraController extends Controller
         $dataSolicitud->motivo = $data["motivo"];
         $dataSolicitud->fecha = date('Y-m-d H:i:s') ?? now();
         $dataSolicitud->c_c = $data["c_c"];
+        $dataSolicitud->requiere_anticipo = $data["requiere_anticipo"] == true ? 1 : 0 ;
                 
         if($isInfra){
            $dataSolicitud->tipo = 3;
@@ -334,6 +335,7 @@ class SolicitudesCompraController extends Controller
             $detalleSolicitud->descripcion = $detalle["descripcion"];
             $detalleSolicitud->observaciones = $detalle["observaciones"];
             $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
+            $detalleSolicitud->recuperable = $detalle["recuperar_costo"];
 
             // Maneja el archivo de imagen
             $fileKey = "img_referencia_" . $index;

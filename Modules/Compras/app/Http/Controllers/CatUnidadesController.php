@@ -162,7 +162,7 @@ class CatUnidadesController extends Controller
 
             if (
                 $datosVehiculo['tipo_vehiculo'] == "reparto"
-                || $datosVehiculo['tipo_vehiculo'] == "auto tanque"
+                || $datosVehiculo['tipo_vehiculo'] == "autotanque"
                 || $datosVehiculo['tipo_combustible'] == "gas_lp"
             ) {
                 $this->updateTanque($datosTanque, $id_tanque, $id_vehiculo, $numIntercompania);

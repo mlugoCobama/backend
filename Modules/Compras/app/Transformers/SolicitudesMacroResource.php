@@ -28,6 +28,7 @@ class SolicitudesMacroResource extends JsonResource
         return [
             'id' => $this->id_solicitud,
             'folio' => $this->folio,
+            'requiere_anticipo' => $this->requiere_anticipo,
             'motivo' => $this->motivo,
             'fecha' => $this->fecha ? Carbon::parse($this->fecha)->format('d/m/Y H:i'): null,
             'c_c' => $this->c_c,

@@ -27,6 +27,7 @@ class SolicitudesCompra extends Model
         'activo',
         'empresa',
         'tipo',
+        'requiere_anticipo',
     ];
 
     /**
