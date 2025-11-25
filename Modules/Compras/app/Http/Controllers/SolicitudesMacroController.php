@@ -181,7 +181,8 @@ class SolicitudesMacroController extends Controller
             $solicitudCompra->com_cat_sistemas_auto_id = $data['sistema'];
             $solicitudCompra->com_cat_tipos_mantenimiento_id = $data['tipoMantenimiento'];
             $solicitudCompra->auto_macro = 1;
-            if($solicitudCompra->Cotizaciones){
+            $hasCotizacion = Cotizaciones::where('solicitudes_compra_id', $id )->first();
+            if($hasCotizacion){
                 $solicitudCompra->estatus = EstatusSolicitud::EN_COTIZACION;
             }else{
                 $solicitudCompra->estatus = EstatusSolicitud::SOLICITADO;
