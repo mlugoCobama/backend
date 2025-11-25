@@ -311,7 +311,7 @@ class SolicitudesCompraController extends Controller
         $dataSolicitud->motivo = $data["motivo"];
         $dataSolicitud->fecha = date('Y-m-d H:i:s') ?? now();
         $dataSolicitud->c_c = $data["c_c"];
-        $dataSolicitud->requiere_anticipo = $data["requiere_anticipo"] == true ? 1 : 0 ;
+        $dataSolicitud->requiere_anticipo =  ($data["requiere_anticipo"] === "true") ? 1 : 0 ;
                 
         if($isInfra){
            $dataSolicitud->tipo = 3;

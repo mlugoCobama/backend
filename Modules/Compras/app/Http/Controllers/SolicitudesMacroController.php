@@ -255,7 +255,7 @@ class SolicitudesMacroController extends Controller
         if($data['sistema'] == 24){
             $dataSolicitud->auto_macro = 1;
         }
-        $dataSolicitud->requiere_anticipo = $data["requiere_anticipo"] == true ? 1 : 0 ;
+        $dataSolicitud->requiere_anticipo =  ($data["requiere_anticipo"] === "true") ? 1 : 0 ;
         $dataSolicitud->com_cat_tipos_mantenimiento_id = $data['tipoMantenimiento'];
         $dataSolicitud->folio_requisicion = $data['folio_requisicion'];
         $dataSolicitud->save();
