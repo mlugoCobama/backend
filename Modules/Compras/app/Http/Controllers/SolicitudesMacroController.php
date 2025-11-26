@@ -29,13 +29,14 @@ class SolicitudesMacroController extends Controller
      */
     public function index(int $intercompania, ?int $id = null)
     {
-        $usuariosMacro = array_flip([170, 167, 371, 381, 1796]);
-        $usuariosCompra = array_flip([413, 2039, 2364, 1796, 2208]);
-        $isCompras = isset($usuariosCompra[$id]);
-        $isMacro = isset($usuariosMacro[$id]);
+        $usuariosCompra = explode(',', env('USERS_MACRO_COMPRAS')); 
+        $isCompras = in_array($id, $usuariosCompra );
 
-        $usuariosAdmin = array_flip([2395]);
-        $isAdmin = isset($usuariosAdmin[$id]);
+        $usuariosMacro = explode(',', env('USERS_MACRO_MACRO')); 
+        $isMacro = in_array($id, $usuariosMacro );
+        
+        $usuariosAdmin = explode(',', env('USERS_MACRO_ADMIN')); 
+        $isAdmin = in_array($id, $usuariosAdmin );
 
         if( $isCompras){
             $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTest(?, ?, ?, ?)",[null, 1, 1, 1 ]);

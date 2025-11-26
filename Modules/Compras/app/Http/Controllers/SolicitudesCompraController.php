@@ -50,16 +50,16 @@ class SolicitudesCompraController extends Controller
      **************************************************************/
     public function index(int $intercompania, ?int $id = null)
     {
-        $usuariosCompra = array(2039, 2364, 2208); 
+        $usuariosCompra = explode(',', env('USERS_COMPRAS_COMPRAS')); 
         $isCompras = in_array($id, $usuariosCompra );
 
-        $usuariosAdmin = array(2395, 1796); 
+        $usuariosAdmin = explode(',', env('USERS_COMPRAS_ADMIN'));
         $isAdmin = in_array($id, $usuariosAdmin );
 
-        $usuariosRT = array(413, 2404); 
+        $usuariosRT = explode(',', env('USERS_COMPRAS_RT'));
         $isRT = in_array($id, $usuariosRT );
 
-        $usuariosTG = array(394, 169); 
+        $usuariosTG = explode(',', env('USERS_COMPRAS_TG'));
         $isTG = in_array($id, $usuariosTG );
         
         if($isRT){
