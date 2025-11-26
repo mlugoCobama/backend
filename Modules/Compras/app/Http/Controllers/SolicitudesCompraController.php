@@ -5,8 +5,8 @@ namespace Modules\Compras\Http\Controllers;
 use App\Enums\EstatusOrdenCompra;
 use App\Http\Controllers\Controller;
 use App\Enums\EstatusSolicitud;
-use App\Exports\SolicitudesExport;
 use Illuminate\Http\Request;
+use App\Models\LogEventos;
 
 //Models
 use Modules\Compras\Models\SolicitudesCompra;
@@ -15,10 +15,14 @@ use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\DetallesCotizacion;
 use Modules\Compras\Models\Proveedores;
+use Modules\Compras\Models\OrdenCompra;
 
 //Transformers
 use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
 use Modules\Compras\Transformers\SolicitudesComprasResource;
+use Modules\Compras\Transformers\EmailAutorizarSolicitudResource;
+use Modules\Compras\Transformers\SeguimientoResource;
+
 //Utilities
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
@@ -28,17 +32,15 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\SolicitudCotizacion;
 use App\Notifications\SolicitudCotizacionNotification;
 use Modules\Compras\Notifications\AutorizacionEmail;
+use Modules\Compras\Transformers\EmailAutorizarSolicitud;
 // Jobs
 use App\Jobs\EnviarCorreoSolicitudCotizacion;
-use App\Models\LogEventos;
-use Maatwebsite\Excel\Facades\Excel;
+
 //Request validation
 use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
 use Modules\Compras\Http\Requests\SendSolicitudCotizacionRequest;
-use Modules\Compras\Models\OrdenCompra;
-use Modules\Compras\Transformers\EmailAutorizarSolicitud;
-use Modules\Compras\Transformers\EmailAutorizarSolicitudResource;
-use Modules\Compras\Transformers\SeguimientoResource;
+
+
 
 class SolicitudesCompraController extends Controller
 {
@@ -48,41 +50,33 @@ class SolicitudesCompraController extends Controller
      **************************************************************/
     public function index(int $intercompania, ?int $id = null)
     {
-        $usuariosCompra = array_flip([2039, 2364, 1796]);
-        $isCompras = isset($usuariosCompra[$id]);
+        $usuariosCompra = array(2039, 2364, 2208); 
+        $isCompras = in_array($id, $usuariosCompra );
 
-        $usuariosAdmin = array_flip([2395]);
-        $isAdmin = isset($usuariosAdmin[$id]);
+        $usuariosAdmin = array(2395, 1796); 
+        $isAdmin = in_array($id, $usuariosAdmin );
 
-        $usuariosRT = array_flip([413, 2404, 1796]);
-        $isRT = isset($usuariosRT[$id]);    
+        $usuariosRT = array(413, 2404); 
+        $isRT = in_array($id, $usuariosRT );
 
-        $usuariosTG = array_flip([394 , 169]);
-        $isTG = isset($usuariosTG[$id]); 
+        $usuariosTG = array(394, 169); 
+        $isTG = in_array($id, $usuariosTG );
         
         if($isRT){
-            
             $query = $this->getSolicitudesCompras(null , 1, 1, 3, null);
-            // (SolicitudesCompra::rtecnologicos()->active()->autorizadas()->orderBy('updated_at', 'desc')->get())
             $data = SolicitudesComprasResource::collection( $query );
             $tipo = 'RT';
-
-
         }
 
         if($isCompras){
             $query = $this->getSolicitudesCompras(null , 1, 1, 1, null);
-            // (SolicitudesCompra::compras()->active()->autorizadas()->orderBy('updated_at', 'desc')->get())
             $data = SolicitudesComprasResource::collection( $query );
             $tipo = 'compras';
         }
 
         if($isAdmin){
             $query = $this->getSolicitudesCompras(null , 0, 0, null, null);
-            // (SolicitudesCompra::administrador()->active()->orderBy('updated_at', 'desc')->get())
-            $data = SolicitudesComprasResource::collection(
-            $query    
-            );
+            $data = SolicitudesComprasResource::collection($query);
             $tipo = 'compras';
         }
 
@@ -90,12 +84,10 @@ class SolicitudesCompraController extends Controller
             $query = $this->getSolicitudesCompras(null, 0, 0, 1, 394);
             $data = SolicitudesComprasResource::collection( $query);
             $tipo = 'empresa';
-
         }
         
         if(!$isRT && !$isCompras && !$isAdmin  && !$isTG){
             $query = $this->getSolicitudesCompras($intercompania , 0, 0, null, null);
-            // (SolicitudesCompra::compras()->where('empresa', $intercompania)->active()->orderBy('fecha', 'desc')->get())
             $data = SolicitudesComprasResource::collection(
                 $query
             );
@@ -160,16 +152,11 @@ class SolicitudesCompraController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // SolicitudesCompra::where('id', $id)->update(
-        //     ["$request->campo" => $request->value]
-        // );
-
         $solicitud = SolicitudesCompra::find($id);
-            $campo = $request->campo;
-            $valor = $request->value;
-
-            $solicitud->$campo = $valor;
-            $solicitud->save();
+        $campo = $request->campo;
+        $valor = $request->value;
+        $solicitud->$campo = $valor;
+        $solicitud->save();
 
         $this->validarCotizacion($id);
         
@@ -493,26 +480,18 @@ class SolicitudesCompraController extends Controller
             $solicitud->save();
             }
 
-            // if(!empty($cotizacionesDisponibles)){
-            //     foreach ($cotizacionesDisponibles as $cotizacion) {
-            //         CotizacionesProveedores::where('id', $cotizacion->id)->where('ruta','!=','null')->update(['autorizado' => 1]);
-            //     }
-            // }
-
             if (!empty($cotizacionesDisponibles)) {
                 foreach ($cotizacionesDisponibles as $cotizacion) {
                     $modelo = CotizacionesProveedores::find($cotizacion->id);
-
                     if ($modelo && $modelo->ruta !== null) {
                         $modelo->autorizado = 1;
                         $modelo->save();
                     }
                 }
             }
-
-
         }
     }
+
     /** ***********************************************************************
      * Almacena la cotización y devuelve el id del registro creado
      ************************************************************************/
@@ -568,6 +547,17 @@ class SolicitudesCompraController extends Controller
                     }
                 }
         }
+    }
+
+    public function reenviarCorreo(Request $request){
+        $data = $request->all();
+        $proveedores = Proveedores::whereIn('id', $data['proveedores'])->get();
+        $this->enviaCorreoProveedores( $proveedores, $data);
+        return response()->json([
+            'data' => [],
+            'status' => 'success',
+            'message' => 'Correo re enviado correctamente'
+        ]);
     }
 
     /**

@@ -30,7 +30,7 @@ class SolicitudesMacroController extends Controller
     public function index(int $intercompania, ?int $id = null)
     {
         $usuariosMacro = array_flip([170, 167, 371, 381, 1796]);
-        $usuariosCompra = array_flip([413, 2039, 2364, 1796]);
+        $usuariosCompra = array_flip([413, 2039, 2364, 1796, 2208]);
         $isCompras = isset($usuariosCompra[$id]);
         $isMacro = isset($usuariosMacro[$id]);
 
