@@ -431,11 +431,11 @@ class OrdenCompraPdfController extends Controller
                 $x = $pdf->GetX();
                 $yBefore = $pdf->GetY();
 
-                $pdf->MultiCell(57, 4.5, utf8_decode($descripcion. ($descLineHeight ?? 0) ), 0, 'C'); 
+                $pdf->MultiCell(57, 4.5, utf8_decode($descripcion), 0, 'C'); 
                 $descLineHeight = $pdf->GetY() - $yBefore;
 
                 $pdf->SetXY($x + 57, $yBefore); 
-                $pdf->MultiCell(44, 4.5, utf8_decode($observaciones. ($obsLineHeight ?? 0) ), 0, 'C');
+                $pdf->MultiCell(44, 4.5, utf8_decode($observaciones), 0, 'C');
                 
                 $pdf->SetXY($x + 101.5, $yBefore); 
                 $pdf->MultiCell(10, 4.5, utf8_decode($eco), 0,'C');
