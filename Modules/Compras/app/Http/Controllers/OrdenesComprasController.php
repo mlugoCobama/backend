@@ -27,6 +27,8 @@ use Illuminate\Support\Facades\Notification;
 //Mailables
 // use App\Notifications\SolicitudSurtido;
 use App\Mail\SolicitudSurtido;
+use App\Models\User;
+use App\Notifications\StatusChangedNotification;
 use Illuminate\Support\Facades\Mail;
 use Modules\Compras\Transformers\AutotanqueResource;
 use Modules\Compras\Transformers\OrdenCompraResource;
@@ -554,7 +556,6 @@ class OrdenesComprasController extends Controller
     }
 
     public function actStatusOrdenSolicitud($idOrdenCompra, $statusOrdenCompra, $estatusSolicitud){
-
         $orden = OrdenCompra::where('id', $idOrdenCompra)->first();
         if ($orden) {
             $orden->estatus = $statusOrdenCompra;
@@ -571,7 +572,6 @@ class OrdenesComprasController extends Controller
             $solicitud->estatus = $estatusSolicitud;
             $solicitud->save();
         }
-
     }
 
     public function markAsFinalizada($idOrdenCompra){

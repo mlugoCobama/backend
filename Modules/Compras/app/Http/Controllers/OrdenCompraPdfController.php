@@ -352,8 +352,8 @@ class OrdenCompraPdfController extends Controller
                 $lineasDescripcion = max(1, ceil(strlen($descripcion) / 45)); // ~45 caracteres por línea
                 $lineasObservaciones = max(1, ceil(strlen($observaciones) / 35)); // ~35 caracteres por línea
                 
-                $alturaFila = max($lineasDescripcion, $lineasObservaciones) * 4.5;
-                // $alturaFila = $lineasDescripcion * 4.5;
+                // $alturaFila = max($lineasDescripcion, $lineasObservaciones) * 4.5;
+                $alturaFila = $lineasDescripcion * 4.5;
 
                 $alturasFilas[] = $alturaFila;
                 
@@ -436,7 +436,9 @@ class OrdenCompraPdfController extends Controller
 
                 $pdf->SetXY($x + 57, $yBefore); 
                 $pdf->MultiCell(44, 4.5, utf8_decode($observaciones), 0, 'C');
-                
+                // $pdf->MultiCell(44, 4.5, utf8_decode( substr($observaciones, 0, (strlen($descripcion) * 0.70))), 0, 'C');
+
+    
                 $pdf->SetXY($x + 101.5, $yBefore); 
                 $pdf->MultiCell(10, 4.5, utf8_decode($eco), 0,'C');
 

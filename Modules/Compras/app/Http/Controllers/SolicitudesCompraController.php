@@ -55,7 +55,7 @@ class SolicitudesCompraController extends Controller
 
         $usuariosAdmin = explode(',', env('USERS_COMPRAS_ADMIN'));
         $isAdmin = in_array($id, $usuariosAdmin );
-
+        
         $usuariosRT = explode(',', env('USERS_COMPRAS_RT'));
         $isRT = in_array($id, $usuariosRT );
 
@@ -142,7 +142,7 @@ class SolicitudesCompraController extends Controller
      *********************************************************************/
     public function show($id)
     {
-        return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->get()));
+        return DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $id)->with('unidadMedida')->get()));
     }
 
 

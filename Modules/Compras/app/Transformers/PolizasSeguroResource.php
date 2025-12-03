@@ -14,8 +14,12 @@ class PolizasSeguroResource extends JsonResource
     {
         return [
             "aseguradora" =>  $this->aseguradora,
-            "inciso_vehiculo" => $this->inciso_vehiculo,
+            "inciso_vehiculo" => $this->inciso_flotilla,
             "cobertura" =>  $this->cobertura,
+            "ramo" => $this->ramo,
+            "sub_ramo" => $this->sub_ramo,
+            "tipo_movimiento" => $this->tipo_movimiento,
+            "prima_total" => $this->prima_total,
             "inicio_vigencia" => $this->formatFecha($this->inicio_vigencia),
             "fin_vigencia" =>  $this->formatFecha($this->fin_vigencia),
             "flotilla" =>  $this->flotilla,

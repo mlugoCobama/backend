@@ -97,11 +97,22 @@ class AlmacenController extends Controller
     public function show($id)
     {
         $detalles = DetalleSolicitudCompraResource::collection(
-            (DetalleSolicitud::where('solicitudes_compra_id', $id)
+            (DetalleSolicitud::where('solicitudes_compra_id', $id)->with('unidadMedida')->with('DetallesCotizacion.CotizacionesProveedores')
                 ->confirmadas()
                 ->pendientes()
                 ->get())
         );
+
+        // $detalles = DetalleSolicitudCompraResource::collection(
+        //     DetalleSolicitud::where('solicitudes_compra_id', $id)
+        //         ->whereHas('DetallesCotizacion.CotizacionesProveedores', function ($query) {
+        //             $query->where('seleccionado', 1); // opcional si el campo de precio puede ser nulo
+        //         })
+        //         ->confirmadas()
+        //         ->pendientes()
+        //         ->get()
+        // );
+
 
         return response()->json([
             'status' => 'success',

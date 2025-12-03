@@ -15,6 +15,7 @@ use Modules\Compras\Http\Controllers\CatSistemasAutoController;
 use Modules\Compras\Http\Controllers\AcuseEntregaController;
 use Modules\Compras\Models\Cotizaciones;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Modules\Compras\Http\Controllers\AlmacenComprasConrollerController;
 use Modules\Compras\Http\Controllers\UsuariosController;
 use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Http\Controllers\DetalleSolicitudController;
@@ -50,6 +51,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::resource('CatalogoTiposMantenimiento', CatTiposMantenimientoController::class);
     Route::resource('AcuseEntrega', AcuseEntregaController::class);
     Route::resource('ReportesCompras', ReportesComprasController::class);
+    Route::resource('AlmacenCompras', AlmacenComprasConrollerController::class);
     
     Route::get('/Solicitudes/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
     Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');

@@ -366,14 +366,19 @@ class CatUnidadesController extends Controller
         $datosPoliza =  $data;
         $dataPoliza = new SeguroVehiculo();
         $dataPoliza->aseguradora = $datosPoliza['aseguradora'];
-        $dataPoliza->inciso_vehiculo = $datosPoliza['inciso_vehiculo'];
         $dataPoliza->cobertura = $datosPoliza['cobertura'];
+        $dataPoliza->fecha_renovacion = $datosPoliza['fecha_emision'];
         $dataPoliza->inicio_vigencia = $datosPoliza['inicio_vigencia'];
         $dataPoliza->fin_vigencia = $datosPoliza['fin_vigencia'];
-        $dataPoliza->flotilla = $datosPoliza['flotilla'];
-        $dataPoliza->inciso_foltilla = $datosPoliza['inciso_foltilla'];
-        $dataPoliza->fecha_renovacion = $datosPoliza['fecha_renovacion'];
+        $dataPoliza->flotilla = $datosPoliza['numero_poliza'];
+        $dataPoliza->inciso_foltilla = $datosPoliza['inciso'];
+        // $dataPoliza->inciso_vehiculo = $datosPoliza['inciso'];
         $dataPoliza->id_com_datos_vehiculo = $idVehiculo;
+        $dataPoliza->ramo = $datosPoliza['ramo'];
+        $dataPoliza->sub_ramo = $datosPoliza['subramo'];
+        $dataPoliza->prima_total = $datosPoliza['prima_total'];
+        $dataPoliza->tipo_movimiento = $datosPoliza['tipo_movimiento'];
+        $dataPoliza->periodicidad_pago = $datosPoliza['periodicidad_pago']; 
         $dataPoliza->save();
     }
 

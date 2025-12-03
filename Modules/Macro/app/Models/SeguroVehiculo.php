@@ -17,17 +17,19 @@ class SeguroVehiculo extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'aseguradora',
-        'inciso_vehiculo',
-        'cobertura',
-        'inicio_vigencia',
-        'fin_vigencia',
-        'flotilla',
-        'inciso_foltilla',
-        'fecha_renovacion',
-        'id_com_datos_vehiculo',
-        'activo',
-        
+        'aseguradora',              //* Nombre aseguradora
+        'cobertura',                // Descripcion cobertura contatadas (Ej, Responsabilidad civil, Amplia, Etc.)
+        'fecha_renovacion',         // Fecha de emision, contratación de la póliza
+        'inicio_vigencia',          // Fecha de inicio de vigencia        
+        'fin_vigencia',             // Fecha de termino de vigencia
+        'flotilla',                 // Numero de poliza
+        'inciso_foltilla',          // Numero (Inciso) que ocupa el vehículo dentro de la póliza
+        'id_com_datos_vehiculo',    // Relación con el vehículo
+        'activo',                   // Borrado lógico
+        'ramo',                     // Categoría que asegura
+        'sub_ramo',                 // Tipo de vehículo asegurado
+        'tipo_movimiento',          // Flotilla o Vehiculo Individual
+        'prima_total',              // Costo total de seguro por vehiculo
     ];
 
     /**

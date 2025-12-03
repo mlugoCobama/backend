@@ -8,15 +8,17 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\Compras\Models\AcuseEntrega;
+use Modules\Compras\Models\AlmacenCompras;
+
 use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\OrdenCompra;
 use Modules\Compras\Models\SolicitudesCompra;
 
 use App\Enums\EstatusOrdenCompra;
 use App\Enums\EstatusSolicitud;
-
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-
+use Modules\Compras\Models\DetalleSolicitud;
 
 class AcuseEntregaController extends Controller
 {
@@ -57,41 +59,72 @@ class AcuseEntregaController extends Controller
      */
     public function store(Request $request)
     {
+    try {
+        DB::beginTransaction();
+
+        $userId = $request->user()->id;
+
         $validated = $request->validate([
             'archivo' => 'required|file|mimes:pdf',
             'observaciones' => 'nullable|string',
             'orden_compra_id' => 'required|integer',
+            'detalles_entrada' => 'nullable',
         ]);
 
         $ordenCompraId = $validated['orden_compra_id'];
-        $fechaSubida = now()->format('Y-m-d'); 
-        $nombreArchivo = "entrega_orden_{$ordenCompraId}_{$fechaSubida}." . $request->file('archivo')->getClientOriginalExtension();
+        $file = $request->file('archivo');
 
-        $carpeta = 'acuses/' . $ordenCompraId;
-        $rutaArchivo = $request->file('archivo')->storeAs($carpeta, $nombreArchivo);
+        // Tus procesos
+        $this->storeAcuse($ordenCompraId, $file, $validated);
+        $this->ingresarAlmacen($validated['detalles_entrada'], $userId);
+        $this->actStatusOrdenSolicitud(
+            $ordenCompraId,
+            EstatusOrdenCompra::ENTREGADA,
+            EstatusSolicitud::ENTREGADA
+        );
 
+        DB::commit();
 
-        $acuse = AcuseEntrega::create([
-            'ruta' => $rutaArchivo,
-            'comentario' => $validated['observaciones'],
-            'fecha' => Carbon::now()->format('Y-m-d'),
-            'orden_compra_id' => $validated['orden_compra_id'],
-        ]);
-
-        $this->actStatusOrdenSolicitud($ordenCompraId, EstatusOrdenCompra::ENTREGADA, EstatusSolicitud::ENTREGADA );
         return response()->json([
             'status' => 'success',
             'message' => 'Acuse de entrega creado correctamente',
             'data' => []
         ], 201);
+
+    } catch (\Throwable $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Error al crear el acuse de entrega',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
+
+
 
     /**
      * Show the specified resource.
      */
     public function show($id)
     {
-        return view('compras::show');
+        $detalles = (DetalleSolicitud::where('solicitudes_compra_id', $id)->with('unidadMedida')->with('almacenCompras')
+                ->confirmadas()
+                // ->pendientes()
+                ->get());
+
+        $todasEnCero = $detalles->every(function ($detalle) {
+            return ($detalle->cantidad - ($detalle->almacenCompras->existencia ?? 0)) === 0;
+        });
+        
+                
+        return response()->json([
+            'status' => 'success',
+            'data' => $detalles,
+            'todasEnCero' => $todasEnCero,
+            'message' => 'Datos obtenidos correctamente'
+        ]);
     }
 
     /**
@@ -143,7 +176,7 @@ class AcuseEntregaController extends Controller
      * @param string $file Nombre del archivo que se desea recuperar.
      * @return \Illuminate\Http\Response Archivo solicitado como respuesta HTTP con cabecera Content-Type.
      */
-    public function getFile($id, $file)
+    public function getFile($id, $file, )
     {
         $path = storage_path("app/acuses/$id/$file");
         if (!File::exists($path)) {
@@ -153,4 +186,63 @@ class AcuseEntregaController extends Controller
         $type = File::mimeType($path);
         return response($fileContent, 200)->header("Content-Type", $type);
     }
+
+    public function storeAcuse($ordenCompraId, $file, $validated){
+        $fechaSubida = now()->format('Y-m-d'); 
+        $nombreArchivo = "entrega_orden_{$ordenCompraId}_{$fechaSubida}." . $file->getClientOriginalExtension();
+
+        $carpeta = 'acuses/' . $ordenCompraId;
+        $rutaArchivo = $file->storeAs($carpeta, $nombreArchivo);
+
+        $acuse = new AcuseEntrega();
+        $acuse->ruta = $rutaArchivo;
+        $acuse->comentario = $validated['observaciones'];
+        $acuse->fecha = Carbon::now()->format('Y-m-d');
+        $acuse->orden_compra_id = $validated['orden_compra_id'];
+        $acuse->save();
+    }
+
+    public function ingresarAlmacen($dataDetalles,  $idUsuario){
+        $datos = json_decode($dataDetalles, true);
+        foreach ($datos as  $dato) {
+            $itemAlmacen = AlmacenCompras::where('com_detalle_solicitud_id', $dato['id'])->first();
+            if(!$itemAlmacen){
+                $itemAlmacen = new AlmacenCompras();
+            }
+            $itemAlmacen->fecha_actualizacion = Carbon::now()->format('Y-m-d');
+            $itemAlmacen->existencia = $this->calcularExistencia( $dato['id'], $dato['recibidos'], 1 );
+            $itemAlmacen->cantidad = $dato['cantidad'];
+            $itemAlmacen->com_detalle_solicitud_id = $dato['id'];
+            $itemAlmacen->codigo_producto = null;
+            $itemAlmacen->id_usuario = $idUsuario;
+            $itemAlmacen->save();
+            if($itemAlmacen->existencia == $itemAlmacen->cantidad){
+                $this->updateStatusAlmacen($dato['id'], 1);
+            } 
+        }
+
+    }
+
+    public function calcularExistencia( $idDetalle,  $valorEntrante, $tipo){
+        $itemAlmacen = AlmacenCompras::where('com_detalle_solicitud_id', $idDetalle)->first();
+        if($itemAlmacen){
+            $existencia = $itemAlmacen->existencia + ($valorEntrante * $tipo);
+        }else{
+            $existencia = ($valorEntrante * $tipo);   
+        }
+        return $existencia;
+    }
+
+    public function updateStatusAlmacen($idDetSol, $status)
+    {
+        $detalle = DetalleSolicitud::find($idDetSol);
+        $detalle->estatus_almacen = $status;
+        $detalle->save();
+    }
+
+    public function generarEntrada(){
+
+    }
+
+
 }

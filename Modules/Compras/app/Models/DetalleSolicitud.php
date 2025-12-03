@@ -67,6 +67,10 @@ class DetalleSolicitud extends Model
         return $this->hasOne(Almacen::class, 'com_detalle_solicitud_id', 'id');
     }
 
+    public function almacenCompras(){
+        return $this->hasOne(AlmacenCompras::class, 'com_detalle_solicitud_id', 'id');
+    }
+
     /**
      * Scopes
      */
