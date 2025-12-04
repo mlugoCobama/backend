@@ -34,34 +34,43 @@ class SolicitudesMacroController extends Controller
 
         $usuariosMacro = explode(',', env('USERS_MACRO_MACRO')); 
         $isMacro = in_array($id, $usuariosMacro );
+
+        $usuariosAdminz = explode(',', env('USERS_COMPRAS_ADMINZ'));
+        $isAdminz = in_array($id, $usuariosAdminz );
         
         $usuariosAdmin = explode(',', env('USERS_MACRO_ADMIN')); 
         $isAdmin = in_array($id, $usuariosAdmin );
 
         if( $isCompras){
-            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTest(?, ?, ?, ?)",[null, 1, 1, 1 ]);
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTesting(?, ?, ?, ?, ?)",[null, 1, 1, 1,'compras']);
             // DB::select("call SistemaTickets.SP_GetSolicitudesMacro()")
             $data = SolicitudesMacroResource::collection($query);
             $tipo = 'compras';
         }
 
+        if($isAdminz){
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTesting(?, ?, ?, ?, ?)",[null, 1, 1, 1,'adminz']);
+            $data = SolicitudesMacroResource::collection($query);
+            $tipo = 'compras';
+        }
+
         if($isMacro){
-            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTest(?, ?, ?, ?)",[null, 1, 1, 0 ]);
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTesting(?, ?, ?, ?, ?)",[null, 1, 1, 0,'macro']);
             // DB::select("call SistemaTickets.SP_GetSolicitudesMacroTaller()")
             $data = SolicitudesMacroResource::collection( $query );
             $tipo = 'macro';
         }
 
         if($isAdmin){
-            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTest(?, ?, ?, ?)",[null, 0, 0, 0 ]);
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTesting(?, ?, ?, ?, ?)",[null, 0, 0, 0,'admin']);
             // DB::select("call SistemaTickets.SP_GetSolicitudesMacroAdmin()")
             $data = SolicitudesMacroResource::collection($query);
             $tipo = 'macro';
         }
 
-        if(!$isMacro && !$isCompras && !$isAdmin)
+        if(!$isMacro && !$isCompras && !$isAdmin && !$isAdminz)
         {
-            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTest(?, ?, ?, ?)",[$intercompania, 0, 0, 0 ]);
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTest(?, ?, ?, ?, ?)",[$intercompania, 0, 0, 0,'empresa']);
             // DB::select("call SistemaTickets.SP_GetSolicitudesMacroGasera($intercompania)")
             $data = SolicitudesMacroResource::collection( $query );
             $tipo = 'gasera';
@@ -221,7 +230,7 @@ class SolicitudesMacroController extends Controller
         // Buscar la última orden para ese código de entidad
         $ultimaOrden = SolicitudesCompra::macrotaller()
             ->where('folio', 'like', $prefijo . '%')
-            ->active()
+            // ->active()
             ->orderBy('id', 'desc')
             ->first('folio');
 

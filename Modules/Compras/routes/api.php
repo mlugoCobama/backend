@@ -139,5 +139,7 @@ Route::prefix('compras')->group(function(){
 
     // Individual por empresa
     Route::get('/reportes/gastos/detalle/{intercompania}', [ReportesComprasController::class, 'descargarDetalleEmpresa']);
+
+    Route::post('/asignar-permisos-kanban', [UsuariosController::class, 'asignar']);
 });
 

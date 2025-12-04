@@ -55,6 +55,9 @@ class SolicitudesCompraController extends Controller
 
         $usuariosAdmin = explode(',', env('USERS_COMPRAS_ADMIN'));
         $isAdmin = in_array($id, $usuariosAdmin );
+
+        $usuariosAdminz = explode(',', env('USERS_COMPRAS_ADMINZ'));
+        $isAdminz = in_array($id, $usuariosAdminz );
         
         $usuariosRT = explode(',', env('USERS_COMPRAS_RT'));
         $isRT = in_array($id, $usuariosRT );
@@ -63,31 +66,37 @@ class SolicitudesCompraController extends Controller
         $isTG = in_array($id, $usuariosTG );
         
         if($isRT){
-            $query = $this->getSolicitudesCompras(null , 1, 1, 3, null);
+            $query = $this->getSolicitudesCompras(null , 1, 1, 3, null, 'rt');
             $data = SolicitudesComprasResource::collection( $query );
             $tipo = 'RT';
         }
 
         if($isCompras){
-            $query = $this->getSolicitudesCompras(null , 1, 1, 1, null);
+            $query = $this->getSolicitudesCompras(null , 1, 1, 1, null, 'compras');
             $data = SolicitudesComprasResource::collection( $query );
             $tipo = 'compras';
         }
 
         if($isAdmin){
-            $query = $this->getSolicitudesCompras(null , 0, 0, null, null);
+            $query = $this->getSolicitudesCompras(null , 0, 0, null, null, 'admin');
+            $data = SolicitudesComprasResource::collection($query);
+            $tipo = 'compras';
+        }
+
+        if($isAdminz){
+            $query = $this->getSolicitudesCompras(null , 1, 1, null, null, 'adminz');
             $data = SolicitudesComprasResource::collection($query);
             $tipo = 'compras';
         }
 
         if($isTG){
-            $query = $this->getSolicitudesCompras(null, 0, 0, 1, 394);
+            $query = $this->getSolicitudesCompras(null, 0, 0, 1, 394, 'empresa');
             $data = SolicitudesComprasResource::collection( $query);
             $tipo = 'empresa';
         }
         
-        if(!$isRT && !$isCompras && !$isAdmin  && !$isTG){
-            $query = $this->getSolicitudesCompras($intercompania , 0, 0, null, null);
+        if(!$isRT && !$isCompras && !$isAdmin  && !$isTG && !$isAdminz){
+            $query = $this->getSolicitudesCompras($intercompania , 0, 0, null, null, 'empresa');
             $data = SolicitudesComprasResource::collection(
                 $query
             );
@@ -235,7 +244,9 @@ class SolicitudesCompraController extends Controller
      *************************************************************/
     public function generarFolioSc()
     {
-        $ultimaOrden = SolicitudesCompra::administrador()->orderBy('id', 'desc')->active()->first('folio');
+        $ultimaOrden = SolicitudesCompra::administrador()->orderBy('id', 'desc')
+        // ->active()
+        ->first('folio');
         if ($ultimaOrden) {
             $ultimoFolio = $ultimaOrden->folio;
             $numero = intval(substr($ultimoFolio, 3)) + 1;
@@ -634,8 +645,8 @@ class SolicitudesCompraController extends Controller
      * @param mixed $tipoSolicitud tipo de solicitud (1= compras, 2 = rt, null = ambas)
      * @param mixed $idUserObjetivo usuario objetivo (null = no aplica el filtro)
      */
-    public function getSolicitudesCompras($intercompania, $autoga, $autogg, $tipoSolicitud, $idUserObjetivo){
-        return DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?, ?)', [ $intercompania , $autoga, $autogg, $tipoSolicitud, $idUserObjetivo]);
+    public function getSolicitudesCompras($intercompania, $autoga, $autogg, $tipoSolicitud, $idUserObjetivo, $tipoUsuario){
+        return DB::select('CALL SP_GetSolicitudesComprasTesting(?, ?, ?, ?, ?, ?)', [ $intercompania , $autoga, $autogg, $tipoSolicitud, $idUserObjetivo, $tipoUsuario]);
     }
 
 

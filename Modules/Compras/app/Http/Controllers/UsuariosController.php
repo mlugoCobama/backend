@@ -114,4 +114,65 @@ class UsuariosController extends Controller
             'message' => 'Datos recuperados correctamente'
         ]);
     }
+
+    function asignarPermisosPorTipo($id, string $tipo)
+    {
+        // Definimos los arrays de permisos por tipo
+        $permisosAdmin   = [255, 254, 253,252,251,250,249,248,247,246,245,244,243,242];
+        $permisosCompras = [255, 254, 253,252,251,250,249,248,247,246,245,244,243];
+        $permisosAdminz  = [253,252,251,250,249,248,247];
+        $permisosEmpresas= [255, 254, 253,252,251,250,249,248,243,242];
+        $permisosMacro= [255,254, 253,252,251,250,249,248,247,246,245,244,243];
+
+
+        // Diccionario de referencia
+        $rolesPermisos = [
+            'admin'    => $permisosAdmin,
+            'compras'  => $permisosCompras,
+            'adminz'   => $permisosAdminz,
+            'empresas' => $permisosEmpresas,
+            'macro' => $permisosMacro,
+        ];
+
+        // Validamos que el tipo exista
+        if (!array_key_exists($tipo, $rolesPermisos)) {
+            throw new \Exception("El tipo {$tipo} no está definido en los permisos.");
+        }
+
+        // Construimos el bloque de inserción
+        $data = [];
+        foreach ($rolesPermisos[$tipo] as $permisoId) {
+             $existe = DB::table('model_has_permissions')
+            ->where('permission_id', $permisoId)
+            ->where('model_id', $id)
+            ->where('model_type', 'App\\Models\\User')
+            ->exists();
+            if(!$existe){
+                $data[] = [
+                'permission_id' => $permisoId,
+                'model_type'    => 'App\\Models\\User', // Ajusta según tu modelo
+                'model_id'      => $id,
+            ];
+            }
+        }
+
+        // Insertamos todos los permisos de golpe
+        DB::table('model_has_permissions')->insert($data);
+    }
+
+    public function asignar(Request $request)
+    {
+        $id   = $request->input('id');
+        $tipo = $request->input('tipo'); // admin, compras, adminz, empresas
+
+        $this->asignarPermisosPorTipo($id, $tipo);
+
+        return response()->json([
+            'message' => "Permisos asignados correctamente al usuario {$id} con tipo {$tipo}"
+        ]);
+    }
+
+
+
+
 }
