@@ -235,7 +235,7 @@ class SolicitudesCompraController extends Controller
      *************************************************************/
     public function generarFolioSc()
     {
-        $ultimaOrden = SolicitudesCompra::administrador()->orderBy('id', 'desc')->first('folio');
+        $ultimaOrden = SolicitudesCompra::administrador()->orderBy('id', 'desc')->active()->first('folio');
         if ($ultimaOrden) {
             $ultimoFolio = $ultimaOrden->folio;
             $numero = intval(substr($ultimoFolio, 3)) + 1;

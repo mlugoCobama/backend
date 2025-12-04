@@ -221,6 +221,7 @@ class SolicitudesMacroController extends Controller
         // Buscar la última orden para ese código de entidad
         $ultimaOrden = SolicitudesCompra::macrotaller()
             ->where('folio', 'like', $prefijo . '%')
+            ->active()
             ->orderBy('id', 'desc')
             ->first('folio');
 
