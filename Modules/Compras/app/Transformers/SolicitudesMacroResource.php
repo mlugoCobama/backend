@@ -58,7 +58,9 @@ class SolicitudesMacroResource extends JsonResource
             'observaciones' => $this->observaciones ??  null,
             'total_orden' => (float) $this->total_orden * 1.16 ?? 0,
             'proveedor' => $this->proveedor ?? '-',
-            'folio_oc' => $this->folio_oc ?? '-'
+            'folio_oc' => $this->folio_oc ?? '-',
+            'modo_pago' =>  $this->labelModoPago($this->modo_pago ?? null),
+            'pagado' => $this->labelFlagPagado($this->pagado ?? null),
             // 'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
         ];
     }
@@ -165,5 +167,21 @@ class SolicitudesMacroResource extends JsonResource
         }
         return false;
     }
+
+    private function labelFlagPagado($value) {
+    $labels = [
+        0 => 'PENDIENTE DE PAGO',
+        1 => 'PAGADO'
+    ];
+    return $labels[$value] ?? null;
+    }
+
+    private function labelModoPago($value) {
+    $labels = [
+        2 => 'CREDITO',
+        1 => 'CONTADO'
+    ];
+    return $labels[$value] ?? null;
+}
 
 }

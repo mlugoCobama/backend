@@ -26,6 +26,7 @@ class OrdenCompra extends Model
         'cotizaciones_id',
         'modo_pago',
         'surtido_solcitado',
+        'pagado',
     ];
     /**
      * Nombre de la tabla

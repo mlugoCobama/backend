@@ -505,7 +505,7 @@ class DocumentosOrdenesComprasController extends Controller
                             $uuid            = (string) $doc['IdDocumento'] ?: (string) $doc['UUID'] ?? null;
 
                             // if ($uuid === $id) {
-                            if (in_array($uuid, $id)) {
+                            if (is_array($id) && in_array($uuid, $id)) {
                                 $factura['comprobantes'][] = [
                                     'idRuta'                => $ruta['id'] ?? null,
                                     'fecha'                 => $fechaPago,
@@ -643,15 +643,15 @@ class DocumentosOrdenesComprasController extends Controller
                 $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
             }
 
-            if($data['tipo_documento'] ==  'comprobante_pago'){
-                 $orden = OrdenCompra::find($data["orden_compra_id"]);
-                if($orden->modo_pago == 1 ){
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+        if($data['tipo_documento'] ==  'comprobante_pago'){
+                $orden = OrdenCompra::find($data["orden_compra_id"]);
+        if($orden->modo_pago == 1 ){
+            $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
                 }else{
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
-                }
+                $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+                $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
             }
+        }
 
         return response()->json([
             'status' => 'success',
@@ -667,6 +667,9 @@ class DocumentosOrdenesComprasController extends Controller
             $orden->estatus = $statusOrdenCompra;
             if($statusOrdenCompra === EstatusOrdenCompra::EN_SURTIDO){
                 $orden->surtido_solcitado = 1;
+            }
+            if($statusOrdenCompra === EstatusOrdenCompra::PAGADA){
+                $orden->pagado = 1;
             }
             $orden->save(); 
         }
