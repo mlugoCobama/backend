@@ -70,7 +70,7 @@ class SolicitudesMacroController extends Controller
 
         if(!$isMacro && !$isCompras && !$isAdmin && !$isAdminz)
         {
-            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTest(?, ?, ?, ?, ?)",[$intercompania, 0, 0, 0,'empresa']);
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTesting(?, ?, ?, ?, ?)",[$intercompania, 0, 0, 0,'empresa']);
             // DB::select("call SistemaTickets.SP_GetSolicitudesMacroGasera($intercompania)")
             $data = SolicitudesMacroResource::collection( $query );
             $tipo = 'gasera';
