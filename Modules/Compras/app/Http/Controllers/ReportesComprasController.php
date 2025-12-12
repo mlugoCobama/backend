@@ -235,6 +235,7 @@ class ReportesComprasController extends Controller
         'DetallesSolicitud.DetallesCotizacion.CotizacionesProveedores.datos_proveedor'
     ])
     ->where('estatus','>', 7)
+    ->where('activo', 1)
     ->where('tipo', $tipo)
     ->where('empresa', $empresa)
     ->whereBetween('fecha', [$fechaInicio, $fechaFin])
@@ -357,6 +358,7 @@ class ReportesComprasController extends Controller
 
         $solicitudes = SolicitudesCompra::with('DetallesSolicitud.unidadMedida')
             ->where('estatus', $estatus)
+            ->where('activo', 1)
             ->where('tipo', $tipo)
             ->whereBetween('fecha', [$fechaInicial, $fechaFinal])
             ->get()

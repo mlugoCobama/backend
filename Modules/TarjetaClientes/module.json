@@ -1,0 +1,11 @@
+{
+    "name": "TarjetaClientes",
+    "alias": "tarjetaclientes",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\TarjetaClientes\\Providers\\TarjetaClientesServiceProvider"
+    ],
+    "files": []
+}

@@ -39,7 +39,7 @@ class SolicitudesComprasResource extends JsonResource
             'centro_costo' => $datosCC['descripcion'],
             'usuario_destino' => $usuarioDestino['nombre_completo'],
             'intercompania' => $this->intercompania ?? null,
-            'empresa' => $usuarioDestino['empresa'],
+            'empresa' => $this->c_c > 0 ?  $this->setAgenciaName($this->intercompania)  :  $usuarioDestino['empresa'],
             'usuario_solicita' => $usuarioSolicita['nombre_completo'],
             'estatus' => $this->estatus,
             'estado' => $estadoInfo['estado'],
@@ -175,5 +175,15 @@ class SolicitudesComprasResource extends JsonResource
             1 => 'CONTADO'
         ];
         return $labels[$value] ?? null;
+    }
+
+    private function setAgenciaName($intercompania){
+        $empresas = [710 => 'NISSAN UNIVERSIDAD', 7051 => 'NISSAN AZCAPOTZALCO', 
+            712 => 'NISSAN CAMPESTRE', 700 => 'CORPORATIVO AUTOS SONI',
+            240 => 'SERVIGAS DEL VALLE', 7064 => 'RENAULT AZCAPOTZALCO',
+            7062 => 'RENAULT ECATEPEC', 7063 => 'RENAULT VALLEJO', 7061 => 'RENAULT PACHUCA',
+        ];
+
+        return  $empresas[$intercompania] ?? 'Agencia default';
     }
 }
