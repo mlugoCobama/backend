@@ -316,6 +316,7 @@ class SolicitudesCompraController extends Controller
            $dataSolicitud->tipo = 3;
            $dataSolicitud->auto_admin = 1;
            $dataSolicitud->auto_gg = 1;
+           $dataSolicitud->estatus = 2;
         }
 
         $dataSolicitud->save();
