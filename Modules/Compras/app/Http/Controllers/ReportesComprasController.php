@@ -361,7 +361,14 @@ class ReportesComprasController extends Controller
             ->where('activo', 1)
             ->where('tipo', $tipo)
             ->whereBetween('fecha', [$fechaInicial, $fechaFinal])
-            ->get()
+            ->when($tipo == 2 && $estatus > 1, function ($query) {
+                    $query->where('auto_admin', 1)
+                            ->where('auto_gg', 1)
+                            ->where('auto_macro', 1);
+            })
+            ->when(($tipo == 1) && $estatus > 1, function ($query) {
+                    $query->where('auto_admin', 1)->where('auto_gg', 1);
+            })->get()
             ->flatMap(function ($solicitud) use ($empresas) {
                 
                 $detalles = $solicitud->DetallesSolicitud;
