@@ -298,8 +298,9 @@ class SolicitudesCompraController extends Controller
      **********************************************************************/
     private function storeSolicitudCompra($data)
     {
-        $usuariosInfra = array_flip([2395, 1939, 1965, 1687, 2296, 413]);
-        $isInfra = isset($usuariosInfra[$data["usuario_solicita"]]);
+
+        $usuariosRT = explode(',', env('USERS_COMPRAS_RT'));
+        $isInfra = in_array($data["usuario_solicita"], $usuariosRT );
 
         $dataSolicitud = new SolicitudesCompra();
         $dataSolicitud->folio = $this->generarFolioSc();
@@ -313,6 +314,8 @@ class SolicitudesCompraController extends Controller
                 
         if($isInfra){
            $dataSolicitud->tipo = 3;
+           $dataSolicitud->auto_admin = 1;
+           $dataSolicitud->auto_gg = 1;
         }
 
         $dataSolicitud->save();
