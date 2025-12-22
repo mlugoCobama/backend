@@ -27,6 +27,7 @@ use Modules\Compras\Transformers\SeguimientoResource;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use App\Helpers\NotificationHelper;
 
 // Mailiables
 use App\Mail\SolicitudCotizacion;
@@ -35,7 +36,7 @@ use Modules\Compras\Notifications\AutorizacionEmail;
 use Modules\Compras\Transformers\EmailAutorizarSolicitud;
 // Jobs
 use App\Jobs\EnviarCorreoSolicitudCotizacion;
-
+use App\Notifications\CambioEstatusSolicitudCompra;
 //Request validation
 use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
 use Modules\Compras\Http\Requests\SendSolicitudCotizacionRequest;
@@ -66,7 +67,11 @@ class SolicitudesCompraController extends Controller
         $isTG = in_array($id, $usuariosTG );
         
         if($isRT){
-            $query = $this->getSolicitudesCompras(null , 1, 1, 3, null, 'rt');
+            if(!in_array($id, [2395, 2404])){
+                $query = $this->getSolicitudesCompras(null,0,0,1,3,null,'rt');
+            }else{
+                $query = $this->getSolicitudesCompras(null,0,0,3,null,'rt');
+            }
             $data = SolicitudesComprasResource::collection( $query );
             $tipo = 'RT';
         }
@@ -129,6 +134,7 @@ class SolicitudesCompraController extends Controller
             //$correos = $this->getGerente($data['empresa']);
             //?$this->sendSolicitudAutorizacion($solicitud['id'], $correos);
             DB::commit();
+            NotificationHelper::sendNotificationEstatusChange($solicitud['id'], 'Solicitud creada');
 
             return response()->json([
                 'status' => 'success',
@@ -231,6 +237,8 @@ class SolicitudesCompraController extends Controller
                 $ordenCompra->save();
             }
         }   
+
+        NotificationHelper::sendNotificationEstatusChange($solicitudCompra->id, 'Cancelada: Razón - '. $solicitudCompra->razon_cancelacion);
 
         return response()->json([
             'status' => 'success',
@@ -404,6 +412,8 @@ class SolicitudesCompraController extends Controller
             
             DB::commit();
 
+            NotificationHelper::sendNotificationEstatusChange($idSolicitudC, 'En Cotización');
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Correos enviados correctamente',
@@ -473,12 +483,14 @@ class SolicitudesCompraController extends Controller
         $solicitud = SolicitudesCompra::findOrFail($id);
         if ($solicitud->auto_admin === 1 && $solicitud->auto_gg === 1 && $solicitud->tipo === 1) {
             $solicitud->estatus = EstatusSolicitud::SOLICITADO;
+            NotificationHelper::sendNotificationEstatusChange($solicitud->id, 'Solicitado');
             $solicitud->save();
         }
 
         if ($solicitud->auto_admin === 1 && $solicitud->auto_gg 
             && $solicitud->auto_macro === 1 && $solicitud->tipo === 2) {
             $solicitud->estatus = EstatusSolicitud::SOLICITADO;
+            NotificationHelper::sendNotificationEstatusChange($solicitud->id, 'Solicitado');
             $solicitud->save();
         }
     }

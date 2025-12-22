@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Enums\EstatusOrdenCompra;
 use App\Enums\EstatusSolicitud;
+use App\Helpers\NotificationHelper;
 //Models
 use Modules\Compras\Models\OrdenCompra;
 use Modules\Compras\Models\DocumentosOrdenesCompra;
@@ -69,34 +70,36 @@ class OrdenesComprasController extends Controller
                                 $ocExistente->observaciones = $data["observaciones"];
                                 $ocExistente->entrega = $data["entrega"];
                                 $ocExistente->modo_pago = $data["modoPago"];
+                                $ocExistente->fecha_entrega = $data["fechaEntrega"];
                                 $ocExistente->save();
                             }
                         }
-                }
-                // Genera el registro de orden de compra
-                $ordenCompra = new OrdenCompra();
-                $ordenCompra->folio_oc = $this->generarFolio();
-                $ordenCompra->fecha = now();
-                $ordenCompra->entrega = $data["entrega"];
-                $ordenCompra->modo_pago = $data["modoPago"];
-                $ordenCompra->observaciones = $data["observaciones"];
-                $ordenCompra->cotizaciones_id = $data["cotizaciones_id"];
-                $ordenCompra->save();
+                }else{
+                    // Genera el registro de orden de compra
+                    $ordenCompra = new OrdenCompra();
+                    $ordenCompra->folio_oc = $this->generarFolio();
+                    $ordenCompra->fecha = now();
+                    $ordenCompra->entrega = $data["entrega"];
+                    $ordenCompra->modo_pago = $data["modoPago"];
+                    $ordenCompra->observaciones = $data["observaciones"];
+                    $ordenCompra->cotizaciones_id = $data["cotizaciones_id"];
+                    $ordenCompra->fecha_entrega = $data["fechaEntrega"];
+                    $ordenCompra->save();
 
-                // Actualiza al proveedor seleccionado
-                $cotizacionProv = CotizacionesProveedores::find($data['id_cotizacion_prov']);
-                if ($cotizacionProv) {
-                    $cotizacionProv->seleccionado = 1;
-                    $cotizacionProv->save();
-                }
+                    // Actualiza al proveedor seleccionado
+                    $cotizacionProv = CotizacionesProveedores::find($data['id_cotizacion_prov']);
+                    if ($cotizacionProv) {
+                        $cotizacionProv->seleccionado = 1;
+                        $cotizacionProv->save();
+                    }
 
-                // Actualiza estado de la solicitud
-                $solicitud = SolicitudesCompra::find($data['id_solicitud_compra']);
-                if ($solicitud) {
-                    $solicitud->estatus = EstatusSolicitud::EN_ORDEN_COMPRA;
-                    $solicitud->save();
+                    // Actualiza estado de la solicitud
+                    $solicitud = SolicitudesCompra::find($data['id_solicitud_compra']);
+                    if ($solicitud) {
+                        $solicitud->estatus = EstatusSolicitud::EN_ORDEN_COMPRA;
+                        $solicitud->save();
+                    }
                 }
-
             DB::commit();
 
             return response()->json([
@@ -568,9 +571,12 @@ class OrdenesComprasController extends Controller
         $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
 
         $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
+        $labels = EstatusSolicitud::labels();
+        $label = $labels[$estatusSolicitud] ?? 'DESCONOCIDO';
         if ($solicitud) {
             $solicitud->estatus = $estatusSolicitud;
             $solicitud->save();
+            NotificationHelper::sendNotificationEstatusChange($solicitud->id, $label);
         }
     }
 

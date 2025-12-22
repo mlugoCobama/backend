@@ -23,8 +23,14 @@ class SolicitudCotizacion extends Mailable
 
     public function build()
     {
+        $tipoCorreo = [
+            "1" => ['compras@cobama.com.mx', 'aux_compras@cobama.com.mx'],
+            "2" => ['compras@cobama.com.mx', 'aux_compras@cobama.com.mx'],
+            "3" => ['auditor_admon_01@cobama.com.mx'],
+        ];
+
         $mail = $this->subject('Solicitud de cotización - Folio ' . $this->data['solicitudCompra']->folio)
-            ->cc(['compras@cobama.com.mx', 'aux_compras@cobama.com.mx'])
+            ->cc($tipoCorreo[$this->data['solicitudCompra']['tipo'] ])
             ->markdown('emails.solicitud_cotizacion')
             // ->view('emails.solicitud_cotizacion')
             ->with(['data' => $this->data]);

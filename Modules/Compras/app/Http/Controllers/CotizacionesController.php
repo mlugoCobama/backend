@@ -5,7 +5,7 @@ namespace Modules\Compras\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Enums\EstatusSolicitud;
-
+use App\Helpers\NotificationHelper;
 //Models
 use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
@@ -138,6 +138,7 @@ class CotizacionesController extends Controller
 
         $solicitudCompra = SolicitudesCompra::find($idSc);
         $solicitudCompra->estatus = EstatusSolicitud::EN_ORDEN_COMPRA;
+        NotificationHelper::sendNotificationEstatusChange($solicitudCompra->id, 'En Orden de Compra');
         $solicitudCompra->save();
 
         return response()->json([

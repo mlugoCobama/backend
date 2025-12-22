@@ -45,6 +45,12 @@ class PagoOrdenCompra extends Mailable
 
     public function build()
     {
+        $tipoCorreo = [
+            "1" => ['compras@cobama.com.mx', 'aux_compras@cobama.com.mx'],
+            "2" => ['compras@cobama.com.mx', 'aux_compras@cobama.com.mx'],
+            "3" => ['auditor_admon_01@cobama.com.mx'],
+        ];
+
         $extension = pathinfo($this->comprobantePath, PATHINFO_EXTENSION);
         $mimeTypes = [
             'pdf' => 'application/pdf',
@@ -55,7 +61,7 @@ class PagoOrdenCompra extends Mailable
         $mime = $mimeTypes[strtolower($extension)] ?? 'application/octet-stream';
 
         return $this->subject($this->asunto)
-                    ->cc(['compras@cobama.com.mx', 'aux_compras@cobama.com.mx'])
+                    ->cc($tipoCorreo[$this->datos['solicitudCompra']['tipo'] ])
                     ->markdown('emails.pago_orden_compra')
                     ->with([
                         'mensajeExtra' => $this->mensajeExtra,

@@ -12,6 +12,7 @@ use Modules\Compras\Models\DocumentosOrdenesCompra;
 
 use App\Enums\EstatusOrdenCompra;
 use App\Enums\EstatusSolicitud;
+use App\Helpers\NotificationHelper;
 use App\Mail\PagoOrdenCompra;
 //Utilities
 use Illuminate\Support\Facades\File;
@@ -64,7 +65,7 @@ class DocumentosOrdenesComprasController extends Controller
                 if($orden->modo_pago == 1 ){
                     $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
                     $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
-                    $this->enviarCorreoPago($orden, $docsOrdenCompra->comprobante_pago);    
+                    $this->enviarCorreoPago($orden, $docsOrdenCompra->comprobante_pago); 
                     $controlerOC = new OrdenesComprasController;
                     $controlerOC->enviarCorreoSurtido($orden->id);      
                          
@@ -680,6 +681,9 @@ class DocumentosOrdenesComprasController extends Controller
         if ($solicitud) {
             $solicitud->estatus = $estatusSolicitud;
             $solicitud->save(); 
+            $labels = EstatusSolicitud::labels();
+            $label = $labels[$estatusSolicitud] ?? 'DESCONOCIDO';
+            NotificationHelper::sendNotificationEstatusChange($solicitud->id, $label);
         }
 
     }

@@ -55,8 +55,12 @@ a los insumos detallados en esta orden de compra, a fin de proceder con el proce
 
 Para cualquier aclaración o seguimiento, favor de contactar al área de compras exclusivamente en los siguientes correos:
 
+@if ($datos['solicitudCompra']->tipo == 3 )
+- auditor_admon_01@cobama.com.mx
+@else
 - compras@cobama.com.mx  
 - aux_compras@cobama.com.mx
+@endif
 
 Este mensaje ha sido enviado desde una dirección no supervisada (no-reply). Por favor, no respondas directamente a este correo.
 

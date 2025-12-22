@@ -121,8 +121,8 @@ class UsuariosController extends Controller
         $permisosAdmin   = [255, 254, 253,252,251,250,249,248,247,246,245,244,243,242];
         $permisosCompras = [255, 254, 253,252,251,250,249,248,247,246,245,244,243];
         $permisosAdminz  = [253,252,251,250,249,248,247];
-        $permisosEmpresas= [255, 254, 253,252,251,250,249,248,243,242];
-        $permisosMacro= [255,254, 253,252,251,250,249,248,247,246,245,244,243];
+        $permisosEmpresas= [255, 254, 253,252,251, 249,248,243,242];
+        $permisosMacro= [255,254, 253,252,251,250,249,248,247,246,245,244,243,242];
 
 
         // Diccionario de referencia

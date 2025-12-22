@@ -14,6 +14,7 @@ use Modules\Compras\Transformers\SolicitudesMacroResource;
 use Modules\Compras\Models\DetalleSolicitud;
 use Modules\Compras\Models\OrdenTrabajo;
 use App\Enums\EstatusSolicitud;
+use App\Helpers\NotificationHelper;
 use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\Proveedores;
@@ -124,6 +125,8 @@ class SolicitudesMacroController extends Controller
             //$this->sendSolicitudAutorizacion($solicitud['id'], $correos);
             DB::commit();
 
+            NotificationHelper::sendNotificationEstatusChange($solicitud, 'Solicitud creada - Es necesario autorizar la solicitud');
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha guardado correctamente',
@@ -194,8 +197,10 @@ class SolicitudesMacroController extends Controller
             $hasCotizacion = Cotizaciones::where('solicitudes_compra_id', $id )->first();
             if($hasCotizacion){
                 $solicitudCompra->estatus = EstatusSolicitud::EN_COTIZACION;
+                NotificationHelper::sendNotificationEstatusChange($solicitudCompra->id, 'En cotización');
             }else{
                 $solicitudCompra->estatus = EstatusSolicitud::SOLICITADO;
+                NotificationHelper::sendNotificationEstatusChange($solicitudCompra->id, 'Solicitado');
             }
             $solicitudCompra->observaciones = $data['observacion'] ?? null;
             $solicitudCompra->save();

@@ -31,8 +31,15 @@ class SolicitudSurtido extends Mailable
      */
     public function build()
     {
+        $tipoCorreo = [
+            "1" => ['compras@cobama.com.mx', 'aux_compras@cobama.com.mx'],
+            "2" => ['compras@cobama.com.mx', 'aux_compras@cobama.com.mx'],
+            "3" => ['auditor_admon_01@cobama.com.mx'],
+        ];
+        
+
         $mail = $this->subject('Solicitud de surtido de orden de compra - '. $this->datos['ordenCompra']->folio_oc)
-            ->cc(['compras@cobama.com.mx', 'aux_compras@cobama.com.mx'])
+            ->cc($tipoCorreo[$this->datos['solicitudCompra']['tipo'] ])
             ->markdown('emails.solicitud_surtido')
             ->with(['datos' => $this->datos]);
 

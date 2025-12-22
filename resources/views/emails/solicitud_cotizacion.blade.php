@@ -52,8 +52,14 @@ Por medio del presente, el área de compras de **COBAMA** solicita atentamente l
 
 Para enviar tu cotización o realizar cualquier consulta relacionada, comunícate exclusivamente a los siguientes correos:
 
+@if ($data['solicitudCompra']->tipo == 3 )
+- auditor_admon_01@cobama.com.mx
+@else
 - compras@cobama.com.mx  
 - aux_compras@cobama.com.mx
+@endif
+
+
 
 Este mensaje ha sido enviado desde una dirección no supervisada (no-reply). Por favor, no respondas directamente a este correo.
 

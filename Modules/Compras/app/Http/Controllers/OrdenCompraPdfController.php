@@ -528,8 +528,23 @@ class OrdenCompraPdfController extends Controller
             $pdf->SetXY(57, 63.6);
             $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['telefono'])));
             $pdf->SetXY(57, 66.1);
-            $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['condiciones'])));
+            // $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['condiciones'])));
+            
+            $fechaE = 'Dato No Disponible';
+            $modoPago = $data['proveedor']['condiciones'];
 
+            if(!empty($data['ordenCompra']['modo_pago'])){
+                $modoPago = $data['ordenCompra']['modo_pago'] == 1 ? 'CONTADO' : 'CREDITO';
+            }
+
+            if(!empty($data['ordenCompra']['fecha_entrega'])){
+                $fechaOriginalE = $data['ordenCompra']['fecha_entrega'] ;
+                $fechaE = date("d/m/Y", strtotime($fechaOriginalE));
+            }
+
+            $pdf->Write(0, strtoupper(utf8_decode($modoPago)));
+            $pdf->SetXY(150, 66.1);
+            $pdf->Write(0, strtoupper(utf8_decode('Fecha de entrega: '. $fechaE)));
             // Datos de referencia de cotización
             $pdf->SetXY(173.6, 58.6);
             $pdf->Write(0, utf8_decode($data['cotizacion']['folio']));
