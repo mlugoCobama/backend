@@ -15,8 +15,17 @@ class CatTiposMantenimientoController extends Controller
      */
     public function index()
     {
-        $data = CatTiposMantenimiento::get();
+        $data = CatTiposMantenimiento::where('tipo', 2)->get();
+        return response()->json([
+            'satatus' => 'success',
+            'message' => 'Conulta realizada correctamente',
+            'data' => $data
+        ]);
+    }
 
+    public function tiposMantenimientoInfra()
+    {
+        $data = CatTiposMantenimiento::where('tipo', 2)->get();
         return response()->json([
             'satatus' => 'success',
             'message' => 'Conulta realizada correctamente',
@@ -45,7 +54,13 @@ class CatTiposMantenimientoController extends Controller
      */
     public function show($id)
     {
-        return view('compras::show');
+       $data = CatTiposMantenimiento::where('tipo', $id)->get();
+
+        return response()->json([
+            'satatus' => 'success',
+            'message' => 'Conulta realizada correctamente',
+            'data' => $data
+        ]);
     }
 
     /**

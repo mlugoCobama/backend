@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\Compras\Models\CatSistemasAuto;
+use Modules\Compras\Models\CatTiposMantenimiento;
 
 class CatSistemasAutoController extends Controller
 {
@@ -16,8 +17,8 @@ class CatSistemasAutoController extends Controller
     public function index()
     {
 
-        $data = CatSistemasAuto::get();
-
+        $data = CatSistemasAuto::where('tipo', 2)->get();
+        
         return response()->json([
             'satatus' => 'success',
             'message' => 'Conulta realizada correctamente',
@@ -47,7 +48,15 @@ class CatSistemasAutoController extends Controller
      */
     public function show($id)
     {
-        return view('compras::show');
+        $data = CatSistemasAuto::where('tipo', $id)->get();
+        $data2 = CatTiposMantenimiento::where('tipo', $id)->get();
+
+        return response()->json([
+            'satatus' => 'success',
+            'message' => 'Conulta realizada correctamente',
+            'data' => $data,
+            'data2' => $data2
+        ]);
     }
 
     /**
