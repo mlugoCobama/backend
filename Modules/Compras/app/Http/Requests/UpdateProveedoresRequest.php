@@ -12,7 +12,7 @@ class   UpdateProveedoresRequest extends FormRequest
      */
     public function rules()
     {
-        $proveedorId = $this->route('Proveedore');
+        $proveedorId = $this->route('id');
 
         return [
             // Validar proveedor
@@ -21,7 +21,6 @@ class   UpdateProveedoresRequest extends FormRequest
                 'required',
                 'string',
                 'max:13',
-                // Evitar conflicto con su propio RFC al actualizar
                 Rule::unique('com_proveedores', 'rfc')->ignore($proveedorId),
             ],
             'proveedor.contacto' => 'nullable|string|max:255',

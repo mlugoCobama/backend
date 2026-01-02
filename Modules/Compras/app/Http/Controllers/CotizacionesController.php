@@ -206,6 +206,7 @@ class CotizacionesController extends Controller
         $solicitudCompra = SolicitudesCompra::find($id);
         $solicitudCompra->auto_admin = 0;
         $solicitudCompra->auto_gg = 0;
+        $solicitudCompra->estatus = 1;
         $solicitudCompra->save();
 
         NotificationHelper::sendNotificationEstatusChange( $solicitudCompra->id, 'En cotización: Necesita autorización supero el limite establecido ($ 50,000)');
