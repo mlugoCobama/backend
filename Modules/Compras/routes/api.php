@@ -22,6 +22,7 @@ use Modules\Compras\Http\Controllers\DetalleSolicitudController;
 use Modules\Compras\Http\Controllers\CatTiposMantenimientoController;
 use Modules\Compras\Models\AcuseEntrega;
 use Modules\Compras\Http\Controllers\ReportesComprasController;
+use Modules\Compras\Http\Controllers\SyncController;
 
 /*
  *--------------------------------------------------------------------------
@@ -103,6 +104,10 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
 });
 
 Route::prefix('compras')->group(function(){
+    Route::resource('SyncFacturas', SyncController::class);
+    
+    Route::get('/documentos/{id}/archivos',[SyncController::class, 'obtenerArchivos']);
+
     Route::post('/importar-autotanques', [CatUnidadesController::class, 'actualizarDatosPV']);
     Route::get('/get-seguimiento-solicitud/{idSolicitud}', [SolicitudesCompraController::class, 'getSeguimientoSolicitud'])->name('SolicitudesCompras.getSeguimientoSolicitud');
     //*Ruta para mostra archivos 

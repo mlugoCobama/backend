@@ -23,6 +23,8 @@ class DocumentosOrdenesCompra extends Model
         'complemento_pago_pdf',
         'comprobante_pago',
         'orden_compra_id',
+        'sync',
+        'syncned_at'
     ];
     /**
      * Nombre de la tabla
