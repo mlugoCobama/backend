@@ -68,7 +68,7 @@ class SolicitudesCompraController extends Controller
         
         if($isRT){
             if(!in_array($id, [2395, 2404])){
-                $query = $this->getSolicitudesCompras(null,0,0,1,3,null,'rt');
+                $query = $this->getSolicitudesCompras(null,0,0,3,$id,'rt');
             }else{
                 $query = $this->getSolicitudesCompras(null,0,0,3,null,'rt');
             }
