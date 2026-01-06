@@ -125,7 +125,7 @@ class SolicitudesMacroController extends Controller
             //$this->sendSolicitudAutorizacion($solicitud['id'], $correos);
             DB::commit();
 
-            NotificationHelper::sendNotificationEstatusChange($solicitud, 'Solicitud creada - Es necesario autorizar la solicitud');
+            NotificationHelper::sendNotificationEstatusChange($solicitud['id'], 'Solicitud creada - Es necesario autorizar la solicitud');
 
             return response()->json([
                 'status' => 'success',
