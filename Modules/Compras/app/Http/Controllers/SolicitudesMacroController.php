@@ -230,6 +230,14 @@ class SolicitudesMacroController extends Controller
     public function generarFolioMc($codigoEntidad)
     {
     // Ejemplo: $codigoEntidad = 'GGA'
+
+        $interExcepciones = explode(',', env('INTER_EXECPCIONES')); 
+        $isExcepcion = in_array($codigoEntidad, $interExcepciones );
+
+        if($isExcepcion){
+            $codigoEntidad = substr($codigoEntidad, 0, 3);
+        }
+
         $prefijo = 'MC-' . strtoupper($codigoEntidad) . '-';
 
         // Buscar la última orden para ese código de entidad

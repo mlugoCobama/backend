@@ -15,6 +15,8 @@ class SolicitudesComprasResource extends JsonResource
     // Caché local para evitar consultas repetidas
     private static $usuariosCache = [];
 
+    private static $empresasCache = [];
+
     /**
      * Transform the resource into an array.
      */
@@ -38,8 +40,8 @@ class SolicitudesComprasResource extends JsonResource
             'c_c' => $this->c_c,
             'centro_costo' => $datosCC['descripcion'],
             'usuario_destino' => $usuarioDestino['nombre_completo'],
-            'intercompania' => $this->intercompania ?? null,
-            'empresa' => $this->c_c > 0 ?  $this->setAgenciaName($this->intercompania)  :  $usuarioDestino['empresa'],
+            'intercompania' => $this->intercompania ?? $this->empresa,
+            'empresa' => $this->c_c > 0 ?  $this->setAgenciaName($this->intercompania?? $this->empresa)  :  $this->setEmpresaName($this->intercompania ?? $this->empresa),
             'usuario_solicita' => $usuarioSolicita['nombre_completo'],
             'estatus' => $this->estatus,
             'estado' => $estadoInfo['estado'],
@@ -186,4 +188,22 @@ class SolicitudesComprasResource extends JsonResource
 
         return  $empresas[$intercompania] ?? 'Agencia default';
     }
+
+    private function setEmpresaName($intercompania)
+{
+    if (isset(self::$empresasCache[$intercompania])) {
+        return self::$empresasCache[$intercompania];
+    }
+    $empresas = DB::connection('intranet')->select('CALL SP_GetEmpresas()');
+
+    foreach ($empresas as $empresa) {
+        self::$empresasCache[$empresa->intercompania] = $empresa->name;
+    }
+
+    return self::$empresasCache[$intercompania] ?? null;
+}
+
+
+
+    
 }

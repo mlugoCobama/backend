@@ -15,7 +15,7 @@ class CatEmpresasResource extends JsonResource
         $isAgencia = $this->setIsAgencia($this->intercompania);
         return [
             "name" => $this->name,
-            "intercompania" => $this->intercompania,
+            "intercompania" => (int)$this->intercompania,
             "isAgencia" => $isAgencia
         ];
     }

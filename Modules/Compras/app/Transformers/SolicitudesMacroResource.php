@@ -13,6 +13,9 @@ use Modules\Compras\Models\OrdenTrabajo;
 class SolicitudesMacroResource extends JsonResource
 {
     private static $usuariosCache = [];
+
+    
+    private static $empresasCache = [];
     /**
      * Transform the resource into an array.
      */
@@ -37,7 +40,7 @@ class SolicitudesMacroResource extends JsonResource
             'centro_costo' => $datosCC['descripcion'],
             'usuario_destino' => "ECO: $this->eco MOD: $this->marca_vehiculo $this->submarca $this->modelo PLACAS: $this->placas No. SERIE: $this->no_serie",
             'intercompania' => $this->intercompania ?? null,
-            'empresa' => $this->empresa,
+            'empresa' => $this->setEmpresaName($this->intercompania),
             'usuario_solicita' =>  $usuarioSolicita['nombre_completo'],
             'estatus' => $this->estatus,
             'estado' => $estadoInfo['estado'],
@@ -182,6 +185,20 @@ class SolicitudesMacroResource extends JsonResource
         1 => 'CONTADO'
     ];
     return $labels[$value] ?? null;
+}
+
+private function setEmpresaName($intercompania)
+{
+    if (isset(self::$empresasCache[$intercompania])) {
+        return self::$empresasCache[$intercompania];
+    }
+    $empresas = DB::connection('intranet')->select('CALL SP_GetEmpresas()');
+
+    foreach ($empresas as $empresa) {
+        self::$empresasCache[$empresa->intercompania] = $empresa->name;
+    }
+
+    return self::$empresasCache[$intercompania] ?? null;
 }
 
 }

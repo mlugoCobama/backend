@@ -243,6 +243,16 @@ class CatUnidadesController extends Controller
      */
     public function getAutotanques($intercompania)
     {
+        $interExcepciones = explode(',', env('INTER_EXECPCIONES')); 
+        $isExcepcion = in_array($intercompania, $interExcepciones );
+
+        if($isExcepcion){
+            $idUser = auth()->id(); 
+            $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $idUser . ')');
+            $intercompania = $data[0]->intercompania;
+        }
+
+        
         $data = DB::select("call SistemaTickets.SP_GetAutotanquesSucursal($intercompania)");
 
         return response()->json([

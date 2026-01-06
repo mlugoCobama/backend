@@ -14,27 +14,38 @@ class UsuariosController extends Controller
      *******************************************************************/
     public function index()
     {
-         $idsAExcluir = [7074, 7072, 7075, 7102];
+        // $idsAExcluir = [7074, 7072, 7075, 7102];
 
-        $data = DB::connection('intranet')
-        ->table('glpi_entities')
-        ->select('name','intercompania')
-        ->where('intercompania', '>', '0')
-        ->whereNotIn('intercompania', $idsAExcluir)
-        ->orderBy('name')->get();
-        
+        // $data = DB::connection('intranet')
+        // ->table('glpi_entities')
+        // ->select('name','intercompania')
+        // ->where('intercompania', '>', '0')
+        // ->whereNotIn('intercompania', $idsAExcluir)
+        // ->orderBy('name')->get();
+ 
+        $data = DB::connection('intranet')->select('CALL SP_GetEmpresas()');
 
-        $dataArray = $data->toArray();
+        // $dataArray = $data->toArray();
 
-        $dataArray[] = (object)[
-            'name' => 'MACRO TALLER',
-            'intercompania' => 119,
-            'isAgencia' => false
-            ];
+        // $dataArray[] = (object)[
+        //     'name' => 'MACRO TALLER',
+        //     'intercompania' => 119,
+        //     'isAgencia' => false
+        // ];
+        // $dataArray[] = (object)[
+        //     'name' => 'Flamamex - Flamazul',
+        //     'intercompania' => 250,
+        //     'isAgencia' => false
+        // ];
+        // $dataArray[] = (object)[
+        //     'name' => 'Garza Sur - Urbano',
+        //     'intercompania' => 111,
+        //     'isAgencia' => false
+        // ];
 
         return response()->json([
             'status' => 'success',
-            'data' =>  CatEmpresasResource::collection($dataArray),
+            'data' =>  CatEmpresasResource::collection($data),
             'message' => 'Datos recuperados correctamente'
         ]);
     }
@@ -70,7 +81,16 @@ class UsuariosController extends Controller
      ************************************************************/
     public function show($id)
     {
-        
+
+        $interExcepciones = explode(',', env('INTER_EXECPCIONES')); 
+        $isExcepcion = in_array($id, $interExcepciones );
+
+        if($isExcepcion){
+            $idUser = auth()->id(); 
+            $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $idUser . ')');
+            $id = $data[0]->intercompania;
+        }
+
         $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetDataUsuarios(' . $id . ')');
         
         return response()->json([
