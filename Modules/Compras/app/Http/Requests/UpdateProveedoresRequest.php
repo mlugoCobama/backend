@@ -53,6 +53,14 @@ class   UpdateProveedoresRequest extends FormRequest
 
             'change_productos' => 'nullable',
 
+            'change_datosPago' => 'nullable',
+
+            'datosPago.datosPago' => 'array',
+            'datosPago.datosPago.*.banco' => 'nullable',
+            'datosPago.datosPago.*.nro_cuenta' => 'nullable',
+            'datosPago.datosPago.*.clave_interbancaria' => 'nullable',
+            'datosPago.datosPago.*.beneficiario' => 'nullable',
+
             // Archivos
             'constancia_fiscal' => 'nullable|file|mimes:pdf',
             'ine' => 'nullable|file|mimes:pdf',
@@ -79,6 +87,7 @@ class   UpdateProveedoresRequest extends FormRequest
         $this->merge([
             'proveedor' => json_decode($this->proveedor, true),
             'contactos' => json_decode($this->contactos, true),
+            'datosPago' => json_decode($this->datosPago, true),
         ]);
     }
 

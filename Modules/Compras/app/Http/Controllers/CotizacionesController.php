@@ -100,7 +100,7 @@ class CotizacionesController extends Controller
                 $detalles = DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $proveedorId)->with('detalle_solicitud')
                     ->get(['id', 'importe_unitario', 'detalle_solicitud_id', 'cotizaciones_proveedores_proveedores_id']);
 
-                $nombreProveedor = Proveedores::where('id', $proveedor->proveedores_id)->get(['id', 'nombre', 'correo']);
+                $nombreProveedor = Proveedores::where('id', $proveedor->proveedores_id)->with('datosPago')->get(['id', 'nombre', 'correo']);
                 $proveedor->proveedores_id = $nombreProveedor;
                 $proveedor['detalles'] = $detalles;
 

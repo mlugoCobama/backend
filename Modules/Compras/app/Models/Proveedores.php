@@ -74,4 +74,11 @@ class Proveedores extends Model
     public function productos(){
         return $this->hasMany(ProveedorProducto::class, 'proveedor_id', 'id');
     }
+
+    public function datosPago()
+    {
+        return $this->hasMany(DatosPagoProveedor::class, 'proveedor_id', 'id');
+    }
+
+
 }

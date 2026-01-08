@@ -35,6 +35,7 @@ class ProveedoresResource extends JsonResource
             'activo'=> $this->activo,
             'expediente'=>  new ExpedientesProveedoresResource($this->Expediente),
             'contactos' => ProveedorContactosResource::collection($this->contactos),
+            'datosPago' => DatosPagoProveedorResource::collection($this->datosPago),
             'estatus' => strtoupper($estExpediente['label']),
             'faltantes' => $estExpediente['faltantes'],
             'documentos_faltantes_texto' => $estExpediente['faltantes_texto'],

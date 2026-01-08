@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Modules\Compras\Http\Requests\UpdateProveedoresRequest;
 use Modules\Compras\Models\Categorias;
+use Modules\Compras\Models\DatosPagoProveedor;
 use Modules\Compras\Models\ProveedorContacto;
 use Modules\Compras\Models\ProveedorProducto;
 use Modules\Compras\Models\ProveedorZona;
@@ -28,7 +29,13 @@ class ProveedoresController extends Controller
     */
     public function index()
     {
-        return ProveedoresResource::collection((Proveedores::active()->get()));
+        return ProveedoresResource::collection((Proveedores::with([
+            'datosPago', 
+            'contactos', 
+            'productos', 
+            'Expediente', 
+            'contactos.zona'
+             ])->active()->get()));
     }
 
     /** 
@@ -52,6 +59,10 @@ class ProveedoresController extends Controller
             // Almacenado de contactos
             if (isset($request['contactos']) && !empty($request['contactos']['contactos'])) {
                 $this->storeContacto($proveedor['id'], $request['contactos']['contactos']);
+            }
+
+            if (isset($request['datosPago']) && !empty($request['datosPago']['datosPago'])) {
+                $this->storeDatosPago($proveedor['id'], $request['datosPago']['datosPago']);
             }
 
             // Almacenado de expediente
@@ -129,6 +140,15 @@ class ProveedoresController extends Controller
                 $this->deleteProductoProveedor($id);
                 if (!empty($productos)) {
                     $this->storeProductos($id, $productos, $request['proveedor']['servicios']);
+                }
+            }
+
+            if (isset($request['change_datosPago']) && $request['change_datosPago'] == "1") {
+
+                if (isset($request['datosPago']) && !empty($request['datosPago']['datosPago'])) {
+                    $this->deleteDatosPago($id);
+                    $this->storeDatosPago($id, $request['datosPago']['datosPago']);
+                    // $this->storeZona($id, $request['contactos']['contactos']);
                 }
             }
 
@@ -464,6 +484,33 @@ class ProveedoresController extends Controller
             foreach ($productos as $producto) {
                 ProveedorProducto::where('id', $producto->id)->delete();
                 $producto->delete();
+            }
+        }
+    }
+
+    public function storeDatosPago($idProveedor, $dataPagos)
+    {
+        if(count($dataPagos) > 0){
+            foreach ($dataPagos as $datoPago) {
+            $datosPagoProveedor = new DatosPagoProveedor();
+            $datosPagoProveedor->proveedor_id = $idProveedor;
+            $datosPagoProveedor->banco = $datoPago['banco'];
+            $datosPagoProveedor->no_cuenta = $datoPago['no_cuenta'];
+            $datosPagoProveedor->clave_interbancaria = $datoPago['clave_interbancaria'];
+            $datosPagoProveedor->beneficiario = $datoPago['beneficiario'];
+            $datosPagoProveedor->save();
+        }
+        }   
+    }
+
+    public function deleteDatosPago($idProveedor)
+    {
+        $datosPago = DatosPagoProveedor::where('proveedor_id', $idProveedor)->get();
+
+        if ($datosPago) {
+            foreach ($datosPago as $datoPago) {
+                DatosPagoProveedor::where('id', $datoPago->id)->delete();
+                $datoPago->delete();
             }
         }
     }

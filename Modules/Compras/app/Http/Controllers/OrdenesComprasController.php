@@ -485,7 +485,7 @@ class OrdenesComprasController extends Controller
 
         $cotizacionProveedor = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->Seleccionado()->first();
 
-        $proveedor = Proveedores::where('id', $cotizacionProveedor->proveedores_id)->first();
+        $proveedor = Proveedores::where('id', $cotizacionProveedor->proveedores_id)->with(['datosPago'])->first();
 
         $detalleCotizacion = DetallesCotizacionResource::collection((DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $cotizacionProveedor->id)->get()));
 

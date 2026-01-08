@@ -527,6 +527,7 @@ class OrdenCompraPdfController extends Controller
             $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['contacto'])));
             $pdf->SetXY(57, 63.6);
             $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['telefono'])));
+            // $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['datosPago'])));
             $pdf->SetXY(57, 66.1);
             // $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['condiciones'])));
             
@@ -593,6 +594,24 @@ class OrdenCompraPdfController extends Controller
             $pdf->SetFont('Arial', '', 7);
             $pdf->SetXY(170, 255);
             $pdf->Cell(0, 0, utf8_decode("Página " . $paginaActual . " de " . $totalPaginas), 0, 0, 'C');
+
+
+            // if(isset($data['proveedor']['datosPago']) && !empty($data['proveedor']['datosPago'])){
+            //     $pdf->SetXY(60, 242);
+            //     $pdf->Write(0, 'Datos de pago: ');
+            //     $datosPago = $data['proveedor']['datosPago'];
+            //     $incio = 245;
+                
+            //     for ($i=0; $i < count($datosPago) ; $i++) { 
+            //        $texto = 'Banco: '.$datosPago[$i]['banco'].
+            //                 ' No. Cuenta: '.$datosPago[$i]['no_cuenta'].
+            //                 ' CLABE: '.$datosPago[$i]['clave_interbancaria'].
+            //                 ' Beneficiario: '.$datosPago[$i]['beneficiario'];
+            //        $pdf->SetXY(60, $incio);
+            //        $pdf->Write(0, $texto);
+            //        $incio +=4;
+            //     }
+            // }
         }
 
         private function agregarTotalesIntermedio($pdf)

@@ -28,6 +28,14 @@ class ProveedoresRequest extends FormRequest
             'contactos.contactos.*.correo' => 'nullable|string',
             'contactos.contactos.*.telefono' => 'nullable|string|max:20',
             'contactos.contactos.*.zona' => 'nullable|string|max:20',
+
+            // Validar datosPago (si vienen)
+            'datosPago.datosPago' => 'array',
+            'datosPago.datosPago.*.banco' => 'nullable',
+            'datosPago.datosPago.*.nro_cuenta' => 'nullable',
+            'datosPago.datosPago.*.clave_interbancaria' => 'nullable',
+            'datosPago.datosPago.*.beneficiario' => 'nullable',
+
             'constancia_fiscal' => 'nullable|file|mimes:pdf',
             'ine' => 'nullable|file|mimes:pdf',
             'comprobante_domicilio' => 'nullable|file|mimes:pdf',
@@ -54,6 +62,7 @@ public function prepareForValidation()
     $this->merge([
         'proveedor' => json_decode($this->proveedor, true),
         'contactos' => json_decode($this->contactos, true),
+        'datosPago' => json_decode($this->datosPago, true),
     ]);
 }
 
