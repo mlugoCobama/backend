@@ -18,8 +18,10 @@ use App\Models\VentasPostVenta;
 use App\Models\DatosGenerales;
 use App\Models\CostosFinancierosPrestamos;
 use App\Models\Complementos;
+use App\Models\Inventarios;
 use App\Models\UtilidadArea;
 use App\Models\OrdenesUnidades;
+use App\Models\Personal;
 
 class AgenciasRenaultController extends Controller
 {
@@ -29,15 +31,13 @@ class AgenciasRenaultController extends Controller
          9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
      ];
 
-    /**
-     * Relación entre las tablas y secciones
-     */
-    private $relTablas = [
+        private $relTablas = [
         "UNIDADES VENDIDAS" => "ordenes_unidades",
         "ORDENES DE SERVICIO" => "ordenes_unidades",
         "VENTAS DE POST VENTA" => "ventas_post_venta",
         "TOTAL DE GASTOS OPERATIVOS" => "datos_generales",
         "COSTO FINANCIERO CONSOLIDADO" => "costos_financieros_prestamos",
+        "PRESTAMOS" => "costos_financieros_prestamos",
         "BONOS MARCA" => "complementos",
         "OBJETIVOS" => "complementos",
         "UNO" => "datos_generales",
@@ -49,7 +49,6 @@ class AgenciasRenaultController extends Controller
         "INVENTARIOS" => "inventarios",
         "ANTIGÜEDAD INVENTARIOS NUEVOS" => "inventarios",
         "ANTIGÜEDAD INVENTARIOS SEMI" => "inventarios",
-
     ];
 
     /**
@@ -86,12 +85,13 @@ class AgenciasRenaultController extends Controller
         "Plan Piso Intereses" => "plan_piso_interes",
         "Nrf" => "nrf",
         "Nrf Intereses" => "nrf_interes",
+        "Bonos Marca" => "bonos",
         "Objetivo" => "objetivo",
         "Cumplimiento" => "cumplimiento",
         "Porcentaje" => "porcentaje",
-        "Servicio" => "servicios",
+        "Servicio" => "servicio",
+        "Servicios" => "servicios",
         "Apvs" => "apvs",
-        "Hyp" => "hyp",
         "Hyp" => "hyp",
         "Inv Nuevo 101" => "inv_nuevo_101",
         "Inv Nuevo 201" => "inv_nuevo_201",
@@ -101,6 +101,9 @@ class AgenciasRenaultController extends Controller
         "Inv Semi 201" => "inv_semi_201",
         "Inv Semi 301" => "inv_semi_301",
         "Inv Semi 401" => "inv_semi_401",
+        'Ventas' => 'ventas',
+        'Usados' => 'usados',
+        'Admin' => 'admin'
     ];
 
     
@@ -160,7 +163,7 @@ class AgenciasRenaultController extends Controller
             $fecha = $periodoBuscado;
             
             $data = $this->conjuntoDatos($fecha , $sub_division,  $dataAnio);
-            $nombreMes = $this->meses[intval($mes)];
+            $nombreMes = intval($mes) == 0 ? $this->meses[12] : $this->meses[intval($mes)];
             return response()->json(
             [
                 'success' => true,
@@ -235,27 +238,58 @@ class AgenciasRenaultController extends Controller
         // Procesamiento del array a json
         $jsonData = $this->procesarArraytoJson($dataMesAgencias, $request, $fecha);
 
+        // foreach ($jsonData as $agenciaId => $secciones) {
+        //     foreach ($secciones as $seccion => $valores) {
+        //         switch ($seccion) {
+        //             case 'ordenes_unidades':
+        //                 OrdenesUnidades::create(array_merge(['sucursales_id' => $agenciaId], $valores));
+        //                 break;
+        //             case 'ventas_post_venta':
+        //                 VentasPostVenta::create(array_merge(['sucursales_id' => $agenciaId], $valores));
+        //                 break;
+        //             case 'datos_generales':
+        //                 DatosGenerales::create(array_merge(['sucursales_id' => $agenciaId], $valores));
+        //                 break;
+        //             case 'costos_financieros_prestamos':
+        //                 CostosFinancierosPrestamos::create(array_merge(['sucursales_id' => $agenciaId], $valores));
+        //                 break;
+        //             case 'complementos':
+        //                 Complementos::create(array_merge(['sucursales_id' => $agenciaId], $valores));
+        //                 break;
+        //             case 'utilidad_area':
+        //                 UtilidadArea::create(array_merge(['sucursales_id' => $agenciaId], $valores));
+        //                 break;
+        //             case 'personal':
+        //                 Personal::create(array_merge(['sucursales_id' => $agenciaId], $valores));
+        //             case 'inventarios':
+        //                 Inventarios::create(array_merge(['sucursales_id' => $agenciaId], $valores));
+        //                 break;
+        //         }
+        //     }
+        // }
+
         foreach ($jsonData as $agenciaId => $secciones) {
             foreach ($secciones as $seccion => $valores) {
-                switch ($seccion) {
-                    case 'ordenes_unidades':
-                        OrdenesUnidades::create(array_merge(['sucursales_id' => $agenciaId], $valores));
-                        break;
-                    case 'ventas_post_venta':
-                        VentasPostVenta::create(array_merge(['sucursales_id' => $agenciaId], $valores));
-                        break;
-                    case 'datos_generales':
-                        DatosGenerales::create(array_merge(['sucursales_id' => $agenciaId], $valores));
-                        break;
-                    case 'costos_financieros_prestamos':
-                        CostosFinancierosPrestamos::create(array_merge(['sucursales_id' => $agenciaId], $valores));
-                        break;
-                    case 'complementos':
-                        Complementos::create(array_merge(['sucursales_id' => $agenciaId], $valores));
-                        break;
-                    case 'utilidad_area':
-                        UtilidadArea::create(array_merge(['sucursales_id' => $agenciaId], $valores));
-                        break;
+                $modelClass = match ($seccion) {
+                    'ordenes_unidades' => OrdenesUnidades::class,
+                    'ventas_post_venta' => VentasPostVenta::class,
+                    'datos_generales' => DatosGenerales::class,
+                    'costos_financieros_prestamos' => CostosFinancierosPrestamos::class,
+                    'complementos' => Complementos::class,
+                    'utilidad_area' => UtilidadArea::class,
+                    'personal' => Personal::class,
+                    'inventarios' => Inventarios::class,
+                    default => null
+                };
+
+                if ($modelClass) {
+                    $model = $modelClass::where('sucursales_id', $agenciaId)->where('fecha', $valores['fecha'])->first();
+
+                    if ($model) {
+                        $model->update($valores);
+                    } else {
+                        $modelClass::create(array_merge(['sucursales_id' => $agenciaId], $valores));
+                    }
                 }
             }
         }
@@ -298,6 +332,8 @@ class AgenciasRenaultController extends Controller
                     'costos_financieros_prestamos' => CostosFinancierosPrestamos::class,
                     'complementos' => Complementos::class,
                     'utilidad_area' => UtilidadArea::class,
+                    'personal' => Personal::class,
+                    'inventarios' => Inventarios::class,
                     default => null
                 };
 
@@ -394,24 +430,24 @@ class AgenciasRenaultController extends Controller
             ['value' => "gasto", 'colspan' => 1],
         ],
         "COSTO FINANCIERO CONSOLIDADO" => [
-            ['value' => "cnuevos", 'colspan' => 1], //Cambiar el valor que regresa de la bd
-            ['value' => "cflotillas", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "cnuevos", 'colspan' => 1],
+            ['value' => "cflotillas", 'colspan' => 1],
             ['value' => "refacciones", 'colspan' => 1],
             ['value' => "bajio", 'colspan' => 1],
             ['value' => "intercias", 'colspan' => 1],
         ],
         "PRESTAMOS" => [
-            ['value' => "plan_piso", 'colspan' => 1], //Cambiar el valor que regresa de la bd
-            ['value' => "plan_piso_intereses", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "plan_piso", 'colspan' => 1],
+            ['value' => "plan_piso_interes", 'colspan' => 1],
             ['value' => "nrf", 'colspan' => 1],
-            ['value' => "nrf_intereses", 'colspan' => 1],
+            ['value' => "nrf_interes", 'colspan' => 1],
         ],
         "BONOS MARCAS" => [
-            ['value' => "bono_marca", 'colspan' => 1],
+            ['value' => "bonos", 'colspan' => 1],
         ],
         "OBJETIVOS" => [
-            ['value' => "objetivos", 'colspan' => 1], //Cambiar el valor que regresa de la bd
-            ['value' => "cumplimiento", 'colspan' => 1], //Cambiar el valor que regresa de la bd
+            ['value' => "objetivo", 'colspan' => 1],
+            ['value' => "cumplimiento", 'colspan' => 1],
             ['value' => "porcentaje", 'colspan' => 1],
         ],
         "UNO" => [
@@ -424,6 +460,7 @@ class AgenciasRenaultController extends Controller
             ['value' => "personal_ventas", 'colspan' => 1],
             ['value' => "personal_usados", 'colspan' => 1],
             ['value' => "personal_refacciones", 'colspan' => 1],
+            ['value' => "personal_servicios", 'colspan' => 1],
             ['value' => "personal_admin", 'colspan' => 1],
             ['value' => "personal_apvs", 'colspan' => 1],
 
@@ -445,8 +482,8 @@ class AgenciasRenaultController extends Controller
 
         "INVENTARIOS" => [
             ['value' => "inventario_nuevos", 'colspan' => 1],
-            ['value' => "inventarios_seminuevos", 'colspan' => 1],
-            ['value' => "inventarios_refacciones", 'colspan' => 1],
+            ['value' => "inventario_seminuevos", 'colspan' => 1],
+            ['value' => "inventario_refacciones", 'colspan' => 1],
         ],
 
         "ANTIGÜEDAD INVENTARIOS NUEVOS" => [
@@ -488,16 +525,16 @@ class AgenciasRenaultController extends Controller
         "refacciones" => "Refacciones",
         "bajio" => "Bajio",
         "intercias" => "Intercias",
-        "bono_marca" => "Bonos Marca",
+        "bonos" => "Bonos Marca",
         "uno" => "UNO",
         "personal" => "Personal",
         "area_comercial" => "Area Comercial",
         "area_postventa" => "Area Postventa",
         "plan_piso" => "Plan Piso",
-        "plan_piso_intereses" => "Plan Piso Intereses",
+        "plan_piso_interes" => "Plan Piso Intereses",
         "nrf" => "Nrf",
-        "nrf_intereses" => "Nrf Intereses",
-        "objetivos" => "Objetivo",
+        "nrf_interes" => "Nrf Intereses",
+        "objetivo" => "Objetivo",
         "cumplimiento" => "Cumplimiento",
         "porcentaje" => "Porcentaje",
         "personal_ventas" => "Ventas",
@@ -511,11 +548,13 @@ class AgenciasRenaultController extends Controller
         "area_flotillas" => "Flotillas",
         "area_servicio" => "Servicio",
         "area_refacciones" => "Refacciones",
-        "area_refacciones" => "Refacciones",
+        // "area_refacciones" => "Refacciones",
         "area_hyp" => "Hyp",
+
         "inventario_nuevos" => "Nuevos",
-        "inventarios_seminuevos" => "Seminuevos",
-        "inventarios_refacciones" => "Refacciones",
+        "inventario_seminuevos" => "Refacciones",
+        "inventario_refacciones" => "Seminuevos",
+        
         "inv_nuevo_101" => "Inv Nuevo 101",
         "inv_nuevo_201" => "Inv Nuevo 201",
         "inv_nuevo_301" => "Inv Nuevo 301",
