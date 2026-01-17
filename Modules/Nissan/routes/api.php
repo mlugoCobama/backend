@@ -4,7 +4,9 @@ use Illuminate\Support\Facades\Route;
 use Modules\Nissan\Http\Controllers\ComisionesController;
 use Modules\Nissan\Http\Controllers\CompraSeminuevosController;
 use Modules\Nissan\Http\Controllers\CompraSeminuevosPDFController;
+use Modules\Nissan\Http\Controllers\DatosVentaController;
 use Modules\Nissan\Http\Controllers\NissanController;
+use Modules\Nissan\Http\Controllers\VendedorController;
 
 /*
  *--------------------------------------------------------------------------
@@ -19,11 +21,18 @@ use Modules\Nissan\Http\Controllers\NissanController;
 //Route::apiResource('nissan', NissanController::class)->names('nissan');
 
 //Route::middleware([''])->prefix('nissan')->group(function () {
-Route::prefix('nissan')->group(function () {
+Route::middleware(['auth:sanctum'])->prefix('nissan')->group(function () {
     Route::apiResource('comisiones', ComisionesController::class)->names('comisiones');
+    Route::apiResource('datos-venta', DatosVentaController::class)->names('datos-venta');
+    Route::apiResource('vendedor', VendedorController::class)->names('vendedor');
     Route::apiResource('compra-seminuevos', CompraSeminuevosController::class)->names('compra-seminuevos');
     Route::apiResource('compra-seminuevos-pdf', CompraSeminuevosPDFController::class)->names('compra-seminuevos-pdf');
+
+    Route::post('datos-venta/validados', [DatosVentaController::class, 'storeValidados'])->name('datos-venta-validados');
+    Route::get('datos-venta/pagado/{id}', [DatosVentaController::class, 'updatePartidaPagado'])->name('datos-venta-validados');
 });
 
 Route::get('nissan/comisiones/{f_inicial}/{f_final}', [ComisionesController::class, 'index'])->name('nissan-comisiones.index');
 Route::get('nissan/porcentajes', [ComisionesController::class, 'getPorcentajes'])->name('nissan-comisiones.getPorcentajes');
+
+Route::get('autos/libro-ventas/{estatus}/{agencia}/{tipoVenta}/{fechaInicio}/{fechaFin}/{vendedor}', [ComisionesController::class, 'getDatosVentas'])->name('autos-comisiones.getLibroVentas');

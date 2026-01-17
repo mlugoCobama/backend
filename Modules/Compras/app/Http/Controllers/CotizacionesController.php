@@ -90,22 +90,13 @@ class CotizacionesController extends Controller
 
         // Recupera los detalles de las cotizaciones-proveedores asociadas a la cotización
         if ($cotizacion) {
-            $proveedores = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
+            $data = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->with([
+                'proveedores_id:id,nombre,correo',
+                'proveedores_id.datosPago', 
+                'detalles:id,importe_unitario,detalle_solicitud_id,cotizaciones_proveedores_proveedores_id',
+                'detalles.detalle_solicitud'
+                ])
                 ->get(['id', 'proveedores_id', 'cotizaciones_id', 'ruta', 'seleccionado', 'autorizado']);
-                
-            $data = [];
-            foreach ($proveedores as $proveedor) {
-                $proveedorId = $proveedor->id;
-
-                $detalles = DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $proveedorId)->with('detalle_solicitud')
-                    ->get(['id', 'importe_unitario', 'detalle_solicitud_id', 'cotizaciones_proveedores_proveedores_id']);
-
-                $nombreProveedor = Proveedores::where('id', $proveedor->proveedores_id)->with('datosPago')->get(['id', 'nombre', 'correo']);
-                $proveedor->proveedores_id = $nombreProveedor;
-                $proveedor['detalles'] = $detalles;
-
-                $data[] = $proveedor;
-            }
 
             // Regreso el objeto data con los detalles y 
             //data cotización con la información de la cotización.

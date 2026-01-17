@@ -1,0 +1,262 @@
+<?php
+
+namespace Modules\Nissan\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+use Modules\Nissan\Models\DatosVenta;
+use Modules\Nissan\Models\TipoVenta;
+use Modules\Nissan\Models\Vendedor;
+
+class DatosVentaController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        $libroVentas = DB::connection('nissan_universidad')
+                    ->select(" WITH RegistrosOrdenados AS (
+                                    SELECT *,
+                                        ROW_NUMBER() OVER (
+                                            PARTITION BY saau_vehi_vehiculoid
+                                            ORDER BY fechaalta DESC
+                                        ) AS rn
+                                    FROM [SISTEMAS].[dbo].[Vt_SalidaAutos]
+                                    WHERE CAST(saau_fecha AS DATE) BETWEEN ? AND ?
+                                )
+                                SELECT 
+                                    CAST(fa.faau_fecha AS DATE) AS fecha_factura,
+                                    CAST(fa.faau_fechacancelacion AS DATE) AS fecha_cancelacion,
+                                    fa.faau_vend_clave,
+                                    fa.faau_nofactura, 
+                                    fa.faau_razonfactura,
+                                    vi.vehi_clas_clave,
+                                    vi.vehi_anio,
+                                    vi.vehi_numeroinventario,
+                                    vi.vehi_serie,
+                                    mo.mode_clave,
+                                    mo.mode_descripcion,
+                                    sa.saau_folio,
+                                    CAST(sa.saau_fecha AS DATE) AS fecha_salida,
+                                    fa.faau_form_TipoVenta,
+                                    sa.saau_vehi_vehiculoid,
+                                    fa.faau_iva,
+                                    fa.faau_total,
+                                    (fa.faau_total - (fa.faau_iva + fa.faau_isan)) as Venta,
+                                    (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos) AS Costo,
+                                    (bo.prim_importe / 1.16) AS bonificacion,
+                                    (((fa.faau_total - (fa.faau_iva + fa.faau_isan)) ) - (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos )) + (bo.prim_importe / 1.16) as Utilidad
+                                FROM [SISTEMAS].[dbo].[Vt_FacturaAutos] fa
+                                JOIN RegistrosOrdenados sa
+                                    ON fa.faau_vehi_vehiculoid = sa.saau_vehi_vehiculoid
+                                JOIN [SISTEMAS].[dbo].[Vt_InventarioAutos] vi
+                                    ON fa.faau_vehi_vehiculoid = vi.vehi_vehiculoid
+                                JOIN [SISTEMAS].[dbo].[Vt_Modelos] mo
+                                    ON mo.mode_modeloid = vi.vehi_mode_modeloid
+                                JOIN [SISTEMAS].[dbo].[vt_PrimBonif] bo
+                                    ON bo.prim_documento = fa.faau_nofactura
+                                WHERE sa.rn = 1
+                                AND fa.faau_fechacancelacion IS NULL
+                                ORDER BY fa.faau_fecha, fa.faau_vend_clave
+                                ", ['01-12-2025', '30-01-2026']);
+
+             foreach ($libroVentas as $dato) {
+                 // Verificar si ya existe en la base local
+                 $existe = DatosVenta::where('no_factura', $dato->faau_nofactura)->exists();
+                $vendedorId = null;
+                 $vendedorExiste = Vendedor::where('nro_vendedor_as', $dato->faau_vend_clave)->first();
+                 if (!$vendedorExiste){
+                     $vendedor = Vendedor::create([
+                             'tipo' => '1',
+                             'porcentaje' => '1',
+                             'nro_vendedor_as' => $dato->faau_vend_clave,
+                             'agencia' => '170',
+                         ]);
+
+                         $vendedorId = $vendedor->id;    
+                 }else{
+                     $vendedorId =  $vendedorExiste->id; 
+                 }      
+                
+                 $tipoVenta = TipoVenta::where('nombre', $dato->faau_form_TipoVenta)->first();
+
+
+                 if (!$existe && !empty($vendedorId)) {
+                     DatosVenta::create([
+                         'fecha_as_salida'       => $dato->fecha_salida,
+                         'fecha_factura' => $dato->fecha_factura,
+                         'no_factura'       => $dato->faau_nofactura,
+                         'razon_social'    => $dato->faau_razonfactura,
+                         'descripcion'    => $dato->mode_descripcion,
+                         'no_inventario'    => $dato->vehi_numeroinventario,
+                         'id_vendedor'         => $vendedorId,
+                         'serie'            => $dato->vehi_serie,
+                         'total_venta'      => $dato->Venta,
+                         'costos'           => $dato->Costo,
+                         'bonificaciones'   => $dato->bonificacion,
+                         'utilidad_inicial' => $dato->Utilidad,
+                         'tipo_venta_id'    => $tipoVenta->id ?? 2,
+                         'tipo_venta'    => $dato->faau_form_TipoVenta,   
+                         'clave_producto' => $dato->vehi_clas_clave,
+                         'modelo_producto' => $dato->mode_clave,
+                         'anio_vehiculo' => $dato->vehi_anio ?? null,
+                        //  'estatus'          => null,
+                        //  'entregado'         => $dato->entrgado,
+                        //  'bdc'              => $dato->bdc,
+                         'agencia'          => 710,
+
+                         
+                         
+                         
+                         
+                     ]);
+                 }
+             }
+
+                    
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'datos Sincorinzados correctamente',
+                'data' => $libroVentas
+            ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return view('nissan::create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $data =  $request->all();
+
+        foreach ($data as $item ) {
+            $this->updateVenta($item['id']);
+        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Datos entregados correctamente',
+            'data' => []
+        ]);
+    }
+
+    /**
+     * Show the specified resource.
+     */
+    public function show($id)
+    {
+        return view('nissan::show');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
+    {
+        return view('nissan::edit');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        $data = $request->all();
+        $datosVenta = DatosVenta::find($id);
+        if($datosVenta){
+            $estatusActual = (int) $datosVenta->estatus;
+            $datosVenta->estatus = $estatusActual - 1;
+            switch ($estatusActual) {
+                case 2:
+                    $datosVenta->entregado = 0;
+                    break;
+                case 4:
+                    $datosVenta->validado = 0;
+                    break;
+                case 5:
+                    $datosVenta->pagado = 0;
+                    break;    
+                
+                default:
+                    break;
+            }
+            $datosVenta->observacion = $data['observacion'];
+            $datosVenta->save();
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [],
+            'message' => 'La partida ha regresado al estado anterior exitosamente'
+        ]);
+
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
+        //
+    }
+
+    public function storeValidados(Request $request)
+    {
+        $data =  $request->all();
+
+        foreach ($data as $item ) {
+            $this->updateVentaValidados($item['id']);
+        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Datos validados correctamente',
+            'data' => []
+        ]);
+    }
+
+    public function updateVenta($idDatoVenta){
+        $partida =  DatosVenta::find($idDatoVenta);
+            if($partida && !empty($partida)){
+                $partida->entregado =  1;
+                $partida->estatus = 2;
+                $partida->save();
+            }
+    }
+
+    public function updateVentaValidados($idDatoVenta){
+        $partida =  DatosVenta::find($idDatoVenta);
+            if($partida && !empty($partida)){
+                $partida->validado =  1;
+                $partida->estatus = 4;
+                $partida->save();
+            }
+    }
+
+    public function updatePartidaPagado($idDatoVenta){
+        $partida =  DatosVenta::find($idDatoVenta);
+            if($partida && !empty($partida)){
+                $partida->pagado =  1;
+                $partida->estatus = 5;
+                $partida->save();
+            }
+
+        return response()->json([
+            'status' => 'success',       
+            'message' => "Parida modificada correctamente",
+            'data' => [],
+
+        ]);
+    }
+    
+}

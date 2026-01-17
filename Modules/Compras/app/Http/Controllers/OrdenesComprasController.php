@@ -601,6 +601,7 @@ class OrdenesComprasController extends Controller
             $observaciones = $data['observaciones'];
             $lugarEntrega = $data['entrega'];
             $modoPago = $data['modoPago'];
+            $fechaEntrega = $data['fechaEntrega'];
 
             $cotizacion = Cotizaciones::where('solicitudes_compra_id', $idSolicitudCompra)->first();
             if ($cotizacion) {
@@ -622,6 +623,7 @@ class OrdenesComprasController extends Controller
                     $ordenCompra->observaciones = $observaciones;
                     $ordenCompra->entrega = $lugarEntrega;
                     $ordenCompra->modo_pago = $modoPago;
+                    $ordenCompra->fecha_entrega = $fechaEntrega;
                     $ordenCompra->save();
                 }
             }

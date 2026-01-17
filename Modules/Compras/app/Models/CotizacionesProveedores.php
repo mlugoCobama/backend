@@ -37,6 +37,17 @@ class CotizacionesProveedores extends Model
     public function datos_proveedor(){
         return $this->belongsTo(Proveedores::class,'proveedores_id' ,'id');
     }
+
+    //relaciones test
+    public function proveedores_id(){
+        return $this->belongsTo(Proveedores::class,'proveedores_id' ,'id');
+    }
+
+    public function detalles(){
+        return $this->hasMany(DetallesCotizacion::class,'cotizaciones_proveedores_proveedores_id' ,'id');
+    }
+
+
     /**
      * Un registro pertenece a una cotización.
      */

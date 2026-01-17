@@ -9,8 +9,11 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Modules\Nissan\Models\Porcentaje;
 use Illuminate\Support\Facades\Cache;
+use Modules\Nissan\Models\DatosVenta;
 use Modules\Nissan\Models\Gasto;
+use Modules\Nissan\Models\GastosVenta;
 use Modules\Nissan\Transformers\ComisionResource;
+use Modules\Nissan\Transformers\DatosVentaResource;
 
 class ComisionesController extends Controller
 {
@@ -19,7 +22,172 @@ class ComisionesController extends Controller
      */
     public function index($f_inicio, $f_fin, )
     {
-       $registros = DB::connection('nissan_universidad')
+       $registros = $this->queryDataVentasFromAs( $f_inicio, $f_fin, 'nissan_universidad');
+       $data2 = $this->queryDatosVentas(null, null, null, null, null, null);
+        return response()->json([
+            'status' => 'success',
+            'message' => '',
+            'data' => ComisionResource::collection($registros),
+            'data2' => $data2
+        ]);
+    }
+
+    public function create()
+    {
+        return view('nissan::create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $data = $request->all();
+
+        foreach ($data as $item) {
+            if(isset($item['id_gastos']) && !empty($item['id_gastos'])){
+                 $this->updateGastos($item);
+            }else{
+                $this->saveGastos($item);
+            }
+
+            if(isset($item['id_venta']) && !empty($item['id_venta'])){
+                $partida =  DatosVenta::find($item['id_venta']);
+                $partida->estatus = 3;  
+                $partida->save();
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Datos Actualizados correctamente',
+            'data' => $data
+        ]);   
+
+    }
+
+    private function updateGastos($gastos){
+        $gasto =  GastosVenta::find($gastos['id_gastos']);
+        $gasto->otros  = $gastos['otros'] ?? 0;
+        $gasto->gasolina = $gastos['gasolina'] ?? 0;
+        $gasto->previa = $gastos['previa'] ?? 0;
+        $gasto->descuentos = $gastos['descuentos'] ?? 0;
+        $gasto->traslados = $gastos['traslados'] ?? 0;
+        $gasto->descuento_impulso = $gastos['descuento_impulso'] ?? 0;
+        $gasto->total_subsidios = $gastos['total_subsidios'] ?? 0;
+        $gasto->descuento_gastos = $gastos['descuento_da'] ?? 0;
+        $gasto->cortesia = $gastos['cortesia'] ?? 0;
+        $gasto->accesorios = $gastos['accesorios'] ?? 0;
+        $gasto->comision_apv_pesos = $gastos['comision_apv'] ?? 0;
+        // $gasto->comision_bdc_pesos = $gastos->placas'] ?? 0;
+        $gasto->save();
+    }
+
+    private function saveGastos($gastos){
+        $gasto = new GastosVenta();
+        $gasto->otros  = $gastos['otros'] ?? 0;
+        $gasto->gasolina = $gastos['gasolina'] ?? 0;
+        $gasto->previa = $gastos['previa'] ?? 0;
+        $gasto->descuentos = $gastos['descuentos'] ?? 0;
+        $gasto->traslados = $gastos['traslados'] ?? 0;
+        $gasto->descuento_impulso = $gastos['descuento_impulso'] ?? 0;
+        $gasto->total_subsidios = $gastos['total_subsidios'] ?? 0;
+        $gasto->descuento_gastos = $gastos['descuento_da'] ?? 0;
+        $gasto->cortesia = $gastos['cortesia'] ?? 0;
+        $gasto->accesorios = $gastos['accesorios'] ?? 0;
+        $gasto->comision_apv_pesos = $gastos['comision_apv'] ?? 0;
+        // $gasto->comision_bdc_pesos = $gastos['placas'] ?? 0;
+        $gasto->id_datos_venta = $gastos['id_venta'] ;
+        $gasto->save();
+    }
+
+    /**
+     * Show the specified resource.
+     */
+    public function show($id)
+    {
+        return view('nissan::show');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
+    {
+        return view('nissan::edit');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
+        //
+    }
+
+
+        // ", ['2025-06-01','2025-06-10']);
+    /**
+     * Recupera los porcentajes desde la base de datos
+     */
+    public function getPorcentajes(){
+    //     $data = Cache::remember('porcentajes_all', now()->addMinutes(10), function () {
+    //     return Porcentaje::all();
+    // });
+        $data = Porcentaje::all();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => '',
+            'data' => $data
+        ]);
+    }
+
+    public function getDatosVentas($estatus = null, $agencia =null, $tipoVenta = null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
+
+    $data = $this->queryDatosVentas(
+                                        $estatus        == '12345' ? null : $estatus,
+                                        $agencia        == 'todos' ? null : $agencia,
+                                        $vendedor       == 'todos' ? null : $vendedor,
+                                        $tipoVenta      == 'todos' ? null : $tipoVenta,
+                                        $fechaInicio    == 'todos' ? null : $fechaInicio,
+                                        $fechaFin       == 'todos' ? null : $fechaFin
+                                    );
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Datos recuperados correctamente',
+            'data' => $data,
+            'estado' => $estatus
+        ]);
+
+    }
+
+
+    public function queryDatosVentas($estatus, $agencia, $vendedor, $tipoVenta, $fechaInicio, $fechaFin ){
+
+         $ventas = DatosVenta::
+            with(['vendedor', 'tipoVenta', 'gatosVenta'])
+            ->when($agencia, fn($q) => $q->where('agencia', $agencia))
+            ->when($vendedor, fn($q) => $q->where('id_vendedor', $vendedor))
+            ->when($estatus, fn($q) => $q->where('estatus', $estatus))
+            ->when($tipoVenta, fn($q) => $q->where('clave_producto', $tipoVenta))
+            ->when($fechaInicio && $fechaFin , fn($q) => $q->whereBetween('fecha_factura', [$fechaInicio, $fechaFin]))
+            ->get();
+
+        return DatosVentaResource::collection($ventas);
+    }
+
+    private function queryDataVentasFromAs($fechaInicial, $fechaFinal, $conexion){
+
+        return DB::connection($conexion)
                     ->select("
                                 WITH RegistrosOrdenados AS (
                                     SELECT *,
@@ -64,112 +232,7 @@ class ComisionesController extends Controller
                                 WHERE sa.rn = 1
                                 AND fa.faau_fechacancelacion IS NULL
                                 ORDER BY fa.faau_fecha, fa.faau_vend_clave
-                                ", [$f_inicio, $f_fin]);
-
-
-        return response()->json([
-            'status' => 'success',
-            'message' => '',
-            'data' => ComisionResource::collection($registros),
-            // 'data' => $registros
-        ]);
-    }
-
-    public function create()
-    {
-        return view('nissan::create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $data = $request->all();
-
-        if($data['isNew']){
-            $registro = Gasto::create($request->all());
-            
-            return response()->json([
-            'status' => 'success',
-            'message' => 'Datos Guardados correctamente',
-            'data' => $registro
-        ]);
-        }else{
-            $registro = Gasto::where('folio_factura', $data['folio_factura'])
-            ->update([
-            'otros'=>$data['otros'] ?? 0,
-            'gasolina'=>$data['gasolina'] ?? 0,
-            'previa'=>$data['previa'] ?? 0,
-            'descuentos'=>$data['descuentos'] ?? 0,
-            'traslados'=>$data['traslados'] ?? 0,
-            'descuento_impulso'=>$data['descuento_impulso'] ?? 0,
-            'total_subsidios'=>$data['total_subsidios'] ?? 0,
-            'descuento_gastos'=>$data['descuento_gastos'] ?? 0,
-            'cortesia'=>$data['cortesia'] ?? 0,
-            'accesorios'=>$data['accesorios'] ?? 0,
-            'placas'=>$data['placas'] ?? 0,
-            ]);
-
-            return response()->json([
-            'status' => 'success',
-            'message' => 'Datos Actualizados correctamente',
-            'data' => $data
-            ]);
-
-        }
-        
-        
-    }
-
-    /**
-     * Show the specified resource.
-     */
-    public function show($id)
-    {
-        return view('nissan::show');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($id)
-    {
-        return view('nissan::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id): RedirectResponse
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        //
-    }
-
-
-        // ", ['2025-06-01','2025-06-10']);
-    /**
-     * Recupera los porcentajes desde la base de datos
-     */
-    public function getPorcentajes(){
-    //     $data = Cache::remember('porcentajes_all', now()->addMinutes(10), function () {
-    //     return Porcentaje::all();
-    // });
-        $data = Porcentaje::all();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => '',
-            'data' => $data
-        ]);
+                                ", [$fechaInicial, $fechaFinal]);
     }
     
 }

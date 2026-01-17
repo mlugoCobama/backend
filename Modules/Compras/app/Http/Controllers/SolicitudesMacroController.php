@@ -136,7 +136,7 @@ class SolicitudesMacroController extends Controller
             DB::rollback();
             return response()->json([
                 'status' => 'error',
-                'message' => 'Ocurrió un error al guardar la solicitud',
+                'message' => 'Ocurrió un error al guardar la solicitud'.($e->getMessage() ?? '') ,
                 'error' => $e->getMessage(),
                 'data' => $data
             ]);
@@ -379,8 +379,13 @@ class SolicitudesMacroController extends Controller
             // Maneja el archivo de imagen
             $fileKey = "img_referencia_" . $index;
             if (isset($files[$fileKey]) && $files[$fileKey]->isValid()) {
+                if (in_array($files[$fileKey]->extension(), ['jpg','jpeg','png'])) {
                 $path = $files[$fileKey]->store('referencias', 'public');
                 $detalleSolicitud->img_referencia = $path;
+                }else {
+                    throw new \Exception("El archivo debe ser una imagen JPG o PNG");
+                }
+
             }
 
             $detalleSolicitud->solicitudes_compra_id = $idSolicitud;
