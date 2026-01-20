@@ -12,11 +12,17 @@ use Modules\Nissan\Transformers\VendedorResource;
 class VendedorController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Recupera los vendedores activos
      */
     public function index()
     {
-        return view('nissan::index');
+        $data = Vendedor::active()->get();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'datos recuperados correctamente',
+            'data' => VendedorResource::collection($data),
+        ]);
     }
 
     /**
@@ -28,15 +34,28 @@ class VendedorController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Almacena el registro de un nuevo vendedor
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        //
+        $data =  $request->all();
+        $vendedor = new Vendedor();
+        $vendedor->tipo = $data['tipo'];
+        $vendedor->nro_vendedor_as = $data['nroAutoSystem'];
+        $vendedor->clave = $data['clave'];
+        $vendedor->nombre = $data['nombre'];
+        $vendedor->agencia = $data['agencia'];
+        $vendedor->save();
+
+        return response()->json([
+            'status' => 'success', 
+            'message' => 'Vendedor agregado correctamente',
+            'data' => []
+        ]);
     }
 
     /**
-     * Show the specified resource.
+     * Muestra registros de vendedores por agencia
      */
     public function show($id)
     {
@@ -44,7 +63,7 @@ class VendedorController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'datos recuperados correctamente',
+            'message' => 'Datos recuperados correctamente',
             'data' => VendedorResource::collection($data),
         ]);
     }
@@ -58,18 +77,43 @@ class VendedorController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Actualiza el registro del vendedor
      */
-    public function update(Request $request, $id): RedirectResponse
+    public function update(Request $request, $id)
     {
-        //
+        $data =  $request->all();
+        $vendedor = Vendedor::find($id);
+        if($vendedor){
+            $vendedor->tipo = $data['tipo'];
+            $vendedor->nro_vendedor_as = $data['nroAutoSystem'];
+            $vendedor->clave = $data['clave'];
+            $vendedor->nombre = $data['nombre'];
+            $vendedor->agencia = $data['agencia'];
+            $vendedor->save();
+        }
+
+        return response()->json([
+            'status' => 'success', 
+            'message' => 'Vendedor actualizado correctamente',
+            'data' => []
+        ]);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Marca como inactivo el registro del vendedor
      */
     public function destroy($id)
     {
-        //
+        $vendedor = Vendedor::find($id);
+        if($vendedor){
+            $vendedor->activo = 0;
+            $vendedor->save();
+        }
+
+        return response()->json([
+            'status' => 'success', 
+            'message' => 'Vendedor borrado correctamente',
+            'data' => []
+        ]);
     }
 }

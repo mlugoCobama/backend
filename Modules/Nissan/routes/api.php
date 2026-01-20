@@ -6,6 +6,7 @@ use Modules\Nissan\Http\Controllers\CompraSeminuevosController;
 use Modules\Nissan\Http\Controllers\CompraSeminuevosPDFController;
 use Modules\Nissan\Http\Controllers\DatosVentaController;
 use Modules\Nissan\Http\Controllers\NissanController;
+use Modules\Nissan\Http\Controllers\TipoVentaController;
 use Modules\Nissan\Http\Controllers\VendedorController;
 
 /*
@@ -20,11 +21,12 @@ use Modules\Nissan\Http\Controllers\VendedorController;
 */
 //Route::apiResource('nissan', NissanController::class)->names('nissan');
 
-//Route::middleware([''])->prefix('nissan')->group(function () {
+// Route::prefix('nissan')->group(function () {
 Route::middleware(['auth:sanctum'])->prefix('nissan')->group(function () {
     Route::apiResource('comisiones', ComisionesController::class)->names('comisiones');
     Route::apiResource('datos-venta', DatosVentaController::class)->names('datos-venta');
     Route::apiResource('vendedor', VendedorController::class)->names('vendedor');
+    Route::apiResource('tipo-venta', TipoVentaController::class)->names('tipo-venta');
     Route::apiResource('compra-seminuevos', CompraSeminuevosController::class)->names('compra-seminuevos');
     Route::apiResource('compra-seminuevos-pdf', CompraSeminuevosPDFController::class)->names('compra-seminuevos-pdf');
 

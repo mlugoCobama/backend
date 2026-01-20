@@ -16,6 +16,7 @@ class TipoVenta extends Model
     protected $fillable = [
         'nombre',
         'porcentaje',
+        'activo'
     ];
 
     protected $table = 'com_tipos_venta';
@@ -32,5 +33,9 @@ class TipoVenta extends Model
     protected static function newFactory(): TipoVentaFactory
     {
         //return TipoVentaFactory::new();
+    }
+
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
     }
 }

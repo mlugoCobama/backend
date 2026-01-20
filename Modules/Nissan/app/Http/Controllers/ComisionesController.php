@@ -23,12 +23,10 @@ class ComisionesController extends Controller
     public function index($f_inicio, $f_fin, )
     {
        $registros = $this->queryDataVentasFromAs( $f_inicio, $f_fin, 'nissan_universidad');
-       $data2 = $this->queryDatosVentas(null, null, null, null, null, null);
         return response()->json([
             'status' => 'success',
             'message' => '',
             'data' => ComisionResource::collection($registros),
-            'data2' => $data2
         ]);
     }
 
@@ -38,7 +36,7 @@ class ComisionesController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Almacena los gastos de venta
      */
     public function store(Request $request)
     {
@@ -64,41 +62,6 @@ class ComisionesController extends Controller
             'data' => $data
         ]);   
 
-    }
-
-    private function updateGastos($gastos){
-        $gasto =  GastosVenta::find($gastos['id_gastos']);
-        $gasto->otros  = $gastos['otros'] ?? 0;
-        $gasto->gasolina = $gastos['gasolina'] ?? 0;
-        $gasto->previa = $gastos['previa'] ?? 0;
-        $gasto->descuentos = $gastos['descuentos'] ?? 0;
-        $gasto->traslados = $gastos['traslados'] ?? 0;
-        $gasto->descuento_impulso = $gastos['descuento_impulso'] ?? 0;
-        $gasto->total_subsidios = $gastos['total_subsidios'] ?? 0;
-        $gasto->descuento_gastos = $gastos['descuento_da'] ?? 0;
-        $gasto->cortesia = $gastos['cortesia'] ?? 0;
-        $gasto->accesorios = $gastos['accesorios'] ?? 0;
-        $gasto->comision_apv_pesos = $gastos['comision_apv'] ?? 0;
-        // $gasto->comision_bdc_pesos = $gastos->placas'] ?? 0;
-        $gasto->save();
-    }
-
-    private function saveGastos($gastos){
-        $gasto = new GastosVenta();
-        $gasto->otros  = $gastos['otros'] ?? 0;
-        $gasto->gasolina = $gastos['gasolina'] ?? 0;
-        $gasto->previa = $gastos['previa'] ?? 0;
-        $gasto->descuentos = $gastos['descuentos'] ?? 0;
-        $gasto->traslados = $gastos['traslados'] ?? 0;
-        $gasto->descuento_impulso = $gastos['descuento_impulso'] ?? 0;
-        $gasto->total_subsidios = $gastos['total_subsidios'] ?? 0;
-        $gasto->descuento_gastos = $gastos['descuento_da'] ?? 0;
-        $gasto->cortesia = $gastos['cortesia'] ?? 0;
-        $gasto->accesorios = $gastos['accesorios'] ?? 0;
-        $gasto->comision_apv_pesos = $gastos['comision_apv'] ?? 0;
-        // $gasto->comision_bdc_pesos = $gastos['placas'] ?? 0;
-        $gasto->id_datos_venta = $gastos['id_venta'] ;
-        $gasto->save();
     }
 
     /**
@@ -133,8 +96,6 @@ class ComisionesController extends Controller
         //
     }
 
-
-        // ", ['2025-06-01','2025-06-10']);
     /**
      * Recupera los porcentajes desde la base de datos
      */
@@ -151,6 +112,15 @@ class ComisionesController extends Controller
         ]);
     }
 
+    /**
+     * Petición de consulta de datos mediante filtro
+     * @param mixed $estatus estatus de busqueda (1-5)
+     * @param mixed $agencia intercompania de agencia buscada
+     * @param mixed $tipoVenta tipo de venta (nu-semi)
+     * @param mixed $fechaInicio fehcha incial de busqueda
+     * @param mixed $fechaFin fecha final de búsqueda
+     * @param mixed $vendedor id de vendedor
+     */
     public function getDatosVentas($estatus = null, $agencia =null, $tipoVenta = null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
 
     $data = $this->queryDatosVentas(
@@ -171,6 +141,15 @@ class ComisionesController extends Controller
     }
 
 
+    /**
+     * Petición de consulta de datos mediante filtro
+     * @param mixed $estatus estatus de busqueda (1-5)
+     * @param mixed $agencia intercompania de agencia buscada
+     * @param mixed $tipoVenta tipo de venta (nu-semi)
+     * @param mixed $fechaInicio fehcha incial de busqueda
+     * @param mixed $fechaFin fecha final de búsqueda
+     * @param mixed $vendedor id de vendedor
+     */
     public function queryDatosVentas($estatus, $agencia, $vendedor, $tipoVenta, $fechaInicio, $fechaFin ){
 
          $ventas = DatosVenta::
@@ -184,6 +163,50 @@ class ComisionesController extends Controller
 
         return DatosVentaResource::collection($ventas);
     }
+
+    /**
+     * Actualiza los datos de gastos de una partida
+     * @param mixed $gastos datos de gastos de partida
+     */
+    private function updateGastos($gastos){
+        $gasto =  GastosVenta::find($gastos['id_gastos']);
+        $gasto->otros  = $gastos['otros'] ?? 0;
+        $gasto->gasolina = $gastos['gasolina'] ?? 0;
+        $gasto->previa = $gastos['previa'] ?? 0;
+        $gasto->descuentos = $gastos['descuentos'] ?? 0;
+        $gasto->traslados = $gastos['traslados'] ?? 0;
+        $gasto->descuento_impulso = $gastos['descuento_impulso'] ?? 0;
+        $gasto->total_subsidios = $gastos['total_subsidios'] ?? 0;
+        $gasto->descuento_gastos = $gastos['descuento_da'] ?? 0;
+        $gasto->cortesia = $gastos['cortesia'] ?? 0;
+        $gasto->accesorios = $gastos['accesorios'] ?? 0;
+        $gasto->comision_apv_pesos = $gastos['comision_apv'] ?? 0;
+        // $gasto->comision_bdc_pesos = $gastos->placas'] ?? 0;
+        $gasto->save();
+    }
+
+    /**
+     * Guarda los datos de gastos de una partida
+     * @param mixed $gastos datos de gastos de partida
+     */
+    private function saveGastos($gastos){
+        $gasto = new GastosVenta();
+        $gasto->otros  = $gastos['otros'] ?? 0;
+        $gasto->gasolina = $gastos['gasolina'] ?? 0;
+        $gasto->previa = $gastos['previa'] ?? 0;
+        $gasto->descuentos = $gastos['descuentos'] ?? 0;
+        $gasto->traslados = $gastos['traslados'] ?? 0;
+        $gasto->descuento_impulso = $gastos['descuento_impulso'] ?? 0;
+        $gasto->total_subsidios = $gastos['total_subsidios'] ?? 0;
+        $gasto->descuento_gastos = $gastos['descuento_da'] ?? 0;
+        $gasto->cortesia = $gastos['cortesia'] ?? 0;
+        $gasto->accesorios = $gastos['accesorios'] ?? 0;
+        $gasto->comision_apv_pesos = $gastos['comision_apv'] ?? 0;
+        // $gasto->comision_bdc_pesos = $gastos['placas'] ?? 0;
+        $gasto->id_datos_venta = $gastos['id_venta'] ;
+        $gasto->save();
+    }
+
 
     private function queryDataVentasFromAs($fechaInicial, $fechaFinal, $conexion){
 

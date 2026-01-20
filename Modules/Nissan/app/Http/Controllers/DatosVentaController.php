@@ -14,7 +14,7 @@ use Modules\Nissan\Models\Vendedor;
 class DatosVentaController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     *  Volcado masivo de datos de ventas (ejecutado en pruebas)
      */
     public function index()
     {
@@ -135,7 +135,7 @@ class DatosVentaController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Actualizado masivo de datos de venta a entregado
      */
     public function store(Request $request)
     {
@@ -167,8 +167,10 @@ class DatosVentaController extends Controller
         return view('nissan::edit');
     }
 
-    /**
-     * Update the specified resource in storage.
+     /**
+     * Devuelve la partida a un estado anterior (dato de venta)
+     * @param mixed $request observacion
+     * @param mixed $id ide del registro afectado
      */
     public function update(Request $request, $id)
     {
@@ -211,6 +213,9 @@ class DatosVentaController extends Controller
         //
     }
 
+    /**
+     * Actualizado masivo de datos de venta a validado
+     */
     public function storeValidados(Request $request)
     {
         $data =  $request->all();
@@ -225,6 +230,9 @@ class DatosVentaController extends Controller
         ]);
     }
 
+    /**
+     * Actualización de partida a entregado
+     */
     public function updateVenta($idDatoVenta){
         $partida =  DatosVenta::find($idDatoVenta);
             if($partida && !empty($partida)){
@@ -234,6 +242,9 @@ class DatosVentaController extends Controller
             }
     }
 
+    /**
+     * Actualización de partida a validado
+     */
     public function updateVentaValidados($idDatoVenta){
         $partida =  DatosVenta::find($idDatoVenta);
             if($partida && !empty($partida)){
@@ -243,6 +254,9 @@ class DatosVentaController extends Controller
             }
     }
 
+    /**
+     * Actualización de partida a pagado
+     */
     public function updatePartidaPagado($idDatoVenta){
         $partida =  DatosVenta::find($idDatoVenta);
             if($partida && !empty($partida)){

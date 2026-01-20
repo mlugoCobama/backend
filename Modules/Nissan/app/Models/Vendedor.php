@@ -18,6 +18,9 @@ class Vendedor extends Model
         'porcentaje_apv',
         'nro_vendedor_as',
         'agencia',
+        'clave',
+        'nombre',
+        'activo'
     ];
 
     protected $table = 'com_vendedores';
@@ -29,6 +32,10 @@ class Vendedor extends Model
     public function datosVentas()
     {
         return $this->hasMany(DatosVenta::class, 'vendedor');
+    }
+
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
     }
 
 

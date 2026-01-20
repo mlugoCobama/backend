@@ -52,7 +52,7 @@ class DatosVentaResource extends JsonResource
 
                 "fecha_factura"=> date('d/m/Y', strtotime($this->fecha_factura)),
                 "pagado"=> $this->pagado,
-                "observacion"=> $this->pagado,
+                "observacion"=> $this->observacion,
 
                 'gastos' => [
                     'id' => $this->gatosVenta->id ?? null,
