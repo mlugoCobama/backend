@@ -40,8 +40,7 @@ use App\Notifications\CambioEstatusSolicitudCompra;
 //Request validation
 use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
 use Modules\Compras\Http\Requests\SendSolicitudCotizacionRequest;
-
-
+use Modules\Compras\Models\ProveedorContacto;
 
 class SolicitudesCompraController extends Controller
 {
@@ -380,44 +379,37 @@ class SolicitudesCompraController extends Controller
             DB::beginTransaction();
 
             // Obtener los proveedores completos desde la base de datos
-            $proveedoresIds = $data['proveedores'];
+            $items = collect($data['proveedores']);
             $idSolicitudC = $data['solicitudes_compra_id'];
+            $proveedoresIds = $items->pluck('proveedor_id')->unique();
 
-            $proveedores = Proveedores::whereIn('id', $proveedoresIds)->get();
+            $proveedores = Proveedores::whereIn('id', $proveedoresIds)
+            ->with('contactos')
+            ->get()
+            ->keyBy('id');
             // Verificar que todos los proveedores tengan correo asignado
-            $proveedoresSinCorreo = $proveedores->filter(function ($proveedor) {
-                return empty($proveedor->correo);
-            });
-
-            if ($proveedoresSinCorreo->isNotEmpty()) {
-                DB::rollback();
-                $nombres = $proveedoresSinCorreo->pluck('nombre')->implode(', ');
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Algunos proveedores no tienen correo asignado',
-                    'errors' => [
-                        'proveedores_sin_correo' => $nombres
-                    ]
-                ], 422);
+            if ($error = $this->validateProveedoresConCorreo($proveedores)) {
+                return $this->errorResponse($error);
             }
-            //Buscar si existe la cotización 
+
+            if ($error = $this->validateContactosConCorreo($items, $proveedores)) {
+                return $this->errorResponse($error);
+            }
+
             $cotizacion = Cotizaciones::where('solicitudes_compra_id', $data['solicitudes_compra_id'])->first();
-            // Almacenar la cotización / Validar que exista la cotización para cargar nuevas cot-porv 
             if($cotizacion){
                 $idCotizacion = $cotizacion->id;
-                $this->storeCotizacionProveedores($proveedores, $idCotizacion);
-                //Queue para despachar el correo EnviarCorreoSolicitudCotizacion::dispatch($data)
-                $this->enviaCorreoProveedores($proveedores, $data);
+                
             }else{
                 $idCotizacion = $this->storeCotizacion($data);
-                $this->storeCotizacionProveedores($proveedores, $idCotizacion);
-                //Queue para despachar el correo EnviarCorreoSolicitudCotizacion::dispatch($data)
-                $this->enviaCorreoProveedores($proveedores, $data);
                 $solicitud = SolicitudesCompra::find($idSolicitudC);
                 $solicitud->estatus = EstatusSolicitud::EN_COTIZACION;
                 $solicitud->save();
             }
-            // Almacenar la relación entre cotización y proveedores
+
+            $this->storeCotizacionProveedores($items, $idCotizacion);
+            //Queue para despachar el correo EnviarCorreoSolicitudCotizacion::dispatch($data)
+            $this->enviaCorreoProveedores($items, $data);
             
             DB::commit();
 
@@ -435,12 +427,7 @@ class SolicitudesCompraController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
 
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Ocurrió un error al procesar la solicitud',
-                'error' => $e->getMessage(),
-                'data' => $data
-            ]);
+            return $this->errorResponse('Ocurrió un error al procesar la solicitud', $e->getMessage(), $data);
         }
     }
 
@@ -552,8 +539,9 @@ class SolicitudesCompraController extends Controller
         
         foreach ($proveedores as $proveedor) {
             $datacotProv = new CotizacionesProveedores();
-            $datacotProv->proveedores_id = $proveedor->id;
+            $datacotProv->proveedores_id = $proveedor['proveedor_id'];
             $datacotProv->cotizaciones_id = $idCotizacion;
+            $datacotProv->contacto_id = $proveedor['contacto_id'];
             $datacotProv->save();
             
             $idsCotProv[] = $datacotProv->id;
@@ -572,11 +560,19 @@ class SolicitudesCompraController extends Controller
         $data['solicitudCompra'] = SolicitudesCompra::find($data['solicitudes_compra_id']);
         
         foreach ($proveedores as $proveedor) {
-            if (!empty($proveedor->correo)) {
+            $correo = '';
+
+            if(!empty($proveedor['contacto_id'])){
+                $correo = ProveedorContacto::find($proveedor['contacto_id']);
+            }else{
+                $correo = Proveedores::find($proveedor['proveedor_id']);
+            }
+
+            if (!empty($correo->correo)) {
                     try {
                         // Notification::route('mail', $proveedor->correo)
                         //     ->notify(new SolicitudCotizacionNotification($data));
-                        Mail::to($proveedor->correo)->send(new SolicitudCotizacion($data));
+                        Mail::to($correo->correo)->send(new SolicitudCotizacion($data));
 
                     } catch (\Exception $e) {
                         // \Log::error("Error al enviar correo a proveedor {$proveedor->id}: " . $e->getMessage());
@@ -587,7 +583,15 @@ class SolicitudesCompraController extends Controller
 
     public function reenviarCorreo(Request $request){
         $data = $request->all();
-        $proveedores = Proveedores::whereIn('id', $data['proveedores'])->get();
+        $cotizacionProveedor = CotizacionesProveedores::
+        // with(['proveedor', 'contacto'])
+        find($data['id']);
+
+        $proveedores = collect([[
+            'proveedor_id' => $cotizacionProveedor->proveedor_id,
+            'contacto_id'  => $cotizacionProveedor->contacto_id
+        ]]);
+
         $this->enviaCorreoProveedores( $proveedores, $data);
         return response()->json([
             'data' => [],
@@ -688,4 +692,38 @@ class SolicitudesCompraController extends Controller
             'message' => 'datos recuperados correctamente'
         ]);
     }
+
+    private function validateProveedoresConCorreo($proveedores)
+    {
+        $sinCorreo = $proveedores->filter(fn($p) => empty($p->correo));
+        return $sinCorreo->isNotEmpty()
+            ? 'Algunos proveedores no tienen correo: ' . $sinCorreo->pluck('nombre')->implode(', ')
+            : null;
+    }
+
+    private function validateContactosConCorreo($items, $proveedores)
+    {
+        $sinCorreo = $items->filter(function ($item) use ($proveedores) {
+            if (!$item['contacto_id']) return false;
+            $contacto = $proveedores[$item['proveedor_id']]->contactos
+                ->firstWhere('id', $item['contacto_id']);
+            return empty($contacto?->correo);
+        });
+        return $sinCorreo->isNotEmpty()
+            ? 'Algunos contactos no tienen correo asignado'
+            : null;
+    }
+
+    private function errorResponse($message, $error = null, $data = [])
+    {
+        DB::rollBack();
+        return response()->json([
+            'status' => 'error',
+            'message' => $message,
+            'error'   => $error,
+            'data'    => $data
+        ], 422);
+    }
+
+
 }

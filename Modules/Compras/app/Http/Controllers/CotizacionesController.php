@@ -96,7 +96,7 @@ class CotizacionesController extends Controller
                 'detalles:id,importe_unitario,detalle_solicitud_id,cotizaciones_proveedores_proveedores_id',
                 'detalles.detalle_solicitud'
                 ])
-                ->get(['id', 'proveedores_id', 'cotizaciones_id', 'ruta', 'seleccionado', 'autorizado']);
+                ->get(['id', 'proveedores_id', 'cotizaciones_id', 'ruta', 'seleccionado', 'autorizado', 'contacto_id']);
 
             // Regreso el objeto data con los detalles y 
             //data cotización con la información de la cotización.

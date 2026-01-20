@@ -3,6 +3,7 @@
 namespace Modules\Compras\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Modules\Compras\Models\ProveedorContacto;
 
 class SendSolicitudCotizacionRequest extends FormRequest
 {
@@ -14,7 +15,8 @@ class SendSolicitudCotizacionRequest extends FormRequest
         return [
             'consideraciones' => 'nullable|string',
             'proveedores' => 'required|array|min:1',
-            'proveedores.*' => 'required|integer|exists:com_proveedores,id',
+            'proveedores.*.proveedor_id' => 'required|integer|exists:com_proveedores,id',
+            'proveedores.*.contacto_id' => 'nullable|integer|exists:com_proveedor_contactos,id',
             'solicitudes_compra_id' => 'required|integer|exists:com_solicitudes_compra,id',
         ];
     }
@@ -23,18 +25,39 @@ class SendSolicitudCotizacionRequest extends FormRequest
      * Validación para evitar que coticen con el mismo proveedor dos veces
      */
     public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            // Validar que no haya proveedores duplicados
-            $proveedores = $this->input('proveedores', []);
-            if (count($proveedores) !== count(array_unique($proveedores))) {
-                $validator->errors()->add(
-                    'proveedores',
-                    'No puedes seleccionar el mismo proveedor más de una vez.'
-                );
+{
+    $validator->after(function ($validator) {
+
+        $items = $this->input('proveedores', []);
+
+        $proveedorIds = collect($items)
+            ->pluck('proveedor_id')
+            ->filter()
+            ->toArray();
+
+        if (count($proveedorIds) !== count(array_unique($proveedorIds))) {
+            $validator->errors()->add(
+                'proveedores',
+                'No puedes seleccionar el mismo proveedor más de una vez.'
+            );
+        }
+
+        foreach ($items as $index => $item) {
+            if (!empty($item['contacto_id'])) {
+                $existe =  ProveedorContacto::where('id', $item['contacto_id'])
+                    ->where('proveedor_id', $item['proveedor_id'])
+                    ->exists();
+
+                if (!$existe) {
+                    $validator->errors()->add(
+                        "proveedores.$index.contacto_id",
+                        'El contacto no pertenece al proveedor seleccionado.'
+                    );
+                }
             }
-        });
-    }
+        }
+    });
+}
 
     public function messages()
     {
