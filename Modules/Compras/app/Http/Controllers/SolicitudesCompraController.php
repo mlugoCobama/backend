@@ -138,7 +138,7 @@ class SolicitudesCompraController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha guardado correctamente',
-                'data' => []
+                'data' => $solicitud
             ]);
         } catch (\Exception $e) {
             DB::rollback();
@@ -309,6 +309,9 @@ class SolicitudesCompraController extends Controller
         $usuariosRT = explode(',', env('USERS_COMPRAS_RT'));
         $isInfra = in_array($data["usuario_solicita"], $usuariosRT );
 
+        $usuariosSopGas = explode(',', env('USERS_SOP_GAS'));
+        $isSopGas = in_array($data["usuario_solicita"], $usuariosSopGas );
+
         $dataSolicitud = new SolicitudesCompra();
         $dataSolicitud->folio = $this->generarFolioSc();
         $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
@@ -321,10 +324,10 @@ class SolicitudesCompraController extends Controller
                 
         if($isInfra){
            $dataSolicitud->tipo = 3;
-           $dataSolicitud->auto_admin = 1;
-           $dataSolicitud->auto_gg = 1;
-            $dataSolicitud->auto_macro = 1;
-           $dataSolicitud->estatus = 2;
+           $dataSolicitud->auto_admin =  $isSopGas  ? 0 : 1;
+           $dataSolicitud->auto_gg = $isSopGas  ? 0 : 1;
+           $dataSolicitud->auto_macro = 1;
+           $dataSolicitud->estatus = $isSopGas ? 1 : 2;
            $dataSolicitud->com_cat_sistemas_auto_id = $data["sistema"];
            $dataSolicitud->com_cat_tipos_mantenimiento_id = $data["tipoMantenimiento"];
         }

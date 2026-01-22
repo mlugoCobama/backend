@@ -178,5 +178,10 @@
         "id": "35",
         "clave": "VTAS",
         "descripcion": "SERVICIO UNiDAD"
+    },
+    "333": {
+        "id": "333",
+        "clave": "GRAL",
+        "descripcion": "GENERAL"
     }
 }

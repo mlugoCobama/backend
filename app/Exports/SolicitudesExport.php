@@ -43,6 +43,7 @@ class SolicitudesExport implements FromCollection, WithHeadings, WithTitle, Shou
         return [
             'G' => 70,
             'H' => 70,
+            'I' => 70,
         ];
     }
 
@@ -58,7 +59,7 @@ class SolicitudesExport implements FromCollection, WithHeadings, WithTitle, Shou
             'Descripción',      //G-6
             'Observaciones',    //H-7
             
-            // 'Proveedor',
+            'Proveedor',        //I-8
             // 'Precio',
             // 'Subtotal',
             // 'IVA',

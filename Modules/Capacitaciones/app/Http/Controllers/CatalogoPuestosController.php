@@ -155,6 +155,10 @@ class CatalogoPuestosController extends Controller
             $idPuesto = $id;
             $permisosPuesto = $data['permisos'];
 
+            $puesto = CatalogoPuestos::find($idPuesto);
+            $puesto->nombre = $data['puesto'];
+            $puesto->save();
+
             $clean = $this->deletePermisos($id);
 
             if ($clean) {

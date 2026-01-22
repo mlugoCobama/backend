@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Transformers\GastosMensualesConcentradoResource;
 use Modules\Compras\Transformers\GastosMensualesDetalleResource;
@@ -239,6 +240,9 @@ class ReportesComprasController extends Controller
     ->where('tipo', $tipo)
     ->where('empresa', $empresa)
     ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+    ->whereHas('Cotizaciones.orden_compra', function ($q) {
+        $q->where('pagado', 1);
+    })
     ->get()
     ->flatMap(function ($solicitud) use ($empresas) {
 
@@ -356,7 +360,7 @@ class ReportesComprasController extends Controller
             191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA',
         ];
 
-        $solicitudes = SolicitudesCompra::with('DetallesSolicitud.unidadMedida')
+        $solicitudes = SolicitudesCompra::with(['DetallesSolicitud.unidadMedida','Cotizaciones.CotizacionesProveedor.datos_proveedor'])
             ->where('estatus', $estatus)
             ->where('activo', 1)
             ->where('tipo', $tipo)
@@ -375,6 +379,9 @@ class ReportesComprasController extends Controller
                 return $detalles->map(function ($detalle, $index) use ($solicitud, $empresas) {
                     $labels = EstatusSolicitud::labels();
                     $label = $labels[$solicitud->estatus] ?? 'DESCONOCIDO';
+                    $proveedorSeleccionado = $solicitud->Cotizaciones->flatMap->CotizacionesProveedor->firstWhere('seleccionado', 1);
+
+                    $proveedor = $proveedorSeleccionado->datos_proveedor->nombre ?? 'Por definir';
                     return [
                         'Folio'        => $index === 0 ? $solicitud->folio : '',
                         'Fecha'        => $index === 0 ? date('d/m/Y H:i', strtotime($solicitud->fecha)) : '',
@@ -384,6 +391,7 @@ class ReportesComprasController extends Controller
                         'Unidad'       => $detalle->unidadMedida->nombre ?? '',
                         'Descripción'  => $detalle->descripcion ?? '',
                         'Observaciones'=> $detalle->observaciones ?? '',
+                        'Proveedor'=> $index === 0 ? $proveedor : '',
                     ];
                 });
             });
