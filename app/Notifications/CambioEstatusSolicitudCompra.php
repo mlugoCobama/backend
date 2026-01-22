@@ -43,10 +43,29 @@ class CambioEstatusSolicitudCompra extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
+
+        $table = '<table border="1" style="width:100%; border-collapse:collapse;">'; 
+        $table .= '<tr><th>Cantidad</th><th>U. Medida</th><th>Descripción</th><th>Observaciones</th></tr>';
+        foreach ($this->solicitud->DetallesSolicitud as $detalle) 
+        { 
+            $table .= '<tr>';
+            $table .= '<td>' . $detalle->cantidad . '</td>'; 
+            $table .= '<td>' . $detalle->unidadMedida->nombre . '</td>';
+            $table .= '<td>' . $detalle->descripcion . '</td>'; 
+            $table .= '<td>' . $detalle->observaciones . '</td>'; 
+            $table .= '</tr>'; 
+        } 
+        $table .= '</table>';
+
+
         return (new MailMessage)
                     ->subject('Cambio de estatus de solicitud de compra con folio '. $this->solicitud->folio)
                     ->line('El estatus de tu solicitud con folio **' . $this->solicitud->folio . '** ha cambiado.')
                     ->line('Nuevo estatus: **' . $this->nuevoEstatus.'**')
+                    ->line('Descripcion de la solicitud:')   
+                    ->line('**motivo**: '.$this->solicitud->motivo )
+                    ->line('**Detalles**:') 
+                    ->line(new \Illuminate\Support\HtmlString($table))
 
                     // ->action('Ver detalle', url('/modelos/'.$this->modelo->id))
                     ->line('Para cualquier aclaración, comunicate con el area de compras.')

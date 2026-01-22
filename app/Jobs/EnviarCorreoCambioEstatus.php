@@ -32,7 +32,7 @@ class EnviarCorreoCambioEstatus implements ShouldQueue
     {
         
 
-        $solicitudCompra = SolicitudesCompra::findOrFail($this->idSolicitudCompra);
+        $solicitudCompra = SolicitudesCompra::with('DetallesSolicitud.unidadMedida')->findOrFail($this->idSolicitudCompra);
         if($solicitudCompra->empresa != '333'){
             $correos = DB::connection('intranet')
             ->select('call SOPORTEZM.SP_GetGereneciaEmpresas(?)', [$solicitudCompra->empresa]);
