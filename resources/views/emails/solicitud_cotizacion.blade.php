@@ -21,6 +21,9 @@ Por medio del presente, el área de compras de **COBAMA** solicita atentamente l
             <th style="border:1px solid #ccc; padding:8px;">Descripción</th>
             <th style="border:1px solid #ccc; padding:8px;">Observaciones</th>
             <th style="border:1px solid #ccc; padding:8px;">Img. Ref.</th>
+            @if( ($data['solicitudCompra']->tipo == 2) && ($data['solicitudCompra']->usuario_destino == 602))
+                <th style="border:1px solid #ccc; padding:8px;">Para el vehículo</th>
+            @endif
         </tr>
     </thead>
     <tbody>
@@ -39,10 +42,22 @@ Por medio del presente, el área de compras de **COBAMA** solicita atentamente l
                         —
                     @endif
                 </td>
+                @if(($data['solicitudCompra']->tipo == 2) && ($data['solicitudCompra']->usuario_destino == 602))
+                    <td style="border:1px solid #ccc; padding:8px;">{{ $detalle['DetalleAutotanque']->DatosVehiculo->marca.' '.$detalle['DetalleAutotanque']->DatosVehiculo->submarca.' '.$detalle['DetalleAutotanque']->DatosVehiculo->modelo}}
+                    {{'No. serie: '.$detalle['DetalleAutotanque']->DatosVehiculo->no_serie}} </td>
+                @endif
             </tr>
         @endforeach
     </tbody>
 </table>
+
+@if(!empty($data['unidadDestino']))
+**IMPORTANTE**
+Las insumos solicitados son en referencia al vehículo:
+{{ $data['unidadDestino']->marca.' '.$data['unidadDestino']->submarca.' '.$data['unidadDestino']->modelo}}
+{{'No. serie: '.$data['unidadDestino']->no_serie}}
+
+@endif
 
 @if (!empty($data['consideraciones']))
 

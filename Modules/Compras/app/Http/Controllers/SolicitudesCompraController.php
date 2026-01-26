@@ -40,6 +40,7 @@ use App\Notifications\CambioEstatusSolicitudCompra;
 //Request validation
 use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
 use Modules\Compras\Http\Requests\SendSolicitudCotizacionRequest;
+use Modules\Compras\Models\DatosVehiculo;
 use Modules\Compras\Models\ProveedorContacto;
 
 class SolicitudesCompraController extends Controller
@@ -558,29 +559,42 @@ class SolicitudesCompraController extends Controller
      ****************************************************************************/
     public function enviaCorreoProveedores($proveedores, $data)
     {
-        $data['proveedores'] = $proveedores->toArray();
-        $data['detalles'] = DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])->confirmadas()->get();
-        $data['solicitudCompra'] = SolicitudesCompra::find($data['solicitudes_compra_id']);
+        $solicitudCompra =  SolicitudesCompra::find($data['solicitudes_compra_id']);      
+        if($solicitudCompra){
+            $unidadDestino = $solicitudCompra->tipo == 2 ? DatosVehiculo::find($solicitudCompra->usuario_destino) : null;
+            $detalles = DetalleSolicitud::where("solicitudes_compra_id", $data['solicitudes_compra_id'])
+            ->confirmadas()
+            ->when(($solicitudCompra->tipo == 2) && ($solicitudCompra->usuario_destino == 602), function ($query) {
+                        $query->with('DetalleAutotanque.DatosVehiculo');
+            })
+            ->get();
         
-        foreach ($proveedores as $proveedor) {
-            $correo = '';
+            $data['proveedores'] = $proveedores->toArray();
+            $data['solicitudCompra'] = $solicitudCompra;
+            $data['unidadDestino'] = $unidadDestino;
+            $data['detalles'] = $detalles;
+            
+            
+            foreach ($proveedores as $proveedor) {
+                $correo = '';
 
-            if(!empty($proveedor['contacto_id'])){
-                $correo = ProveedorContacto::find($proveedor['contacto_id']);
-            }else{
-                $correo = Proveedores::find($proveedor['proveedor_id']);
-            }
-
-            if (!empty($correo->correo)) {
-                    try {
-                        // Notification::route('mail', $proveedor->correo)
-                        //     ->notify(new SolicitudCotizacionNotification($data));
-                        Mail::to($correo->correo)->send(new SolicitudCotizacion($data));
-
-                    } catch (\Exception $e) {
-                        // \Log::error("Error al enviar correo a proveedor {$proveedor->id}: " . $e->getMessage());
-                    }
+                if(!empty($proveedor['contacto_id'])){
+                    $correo = ProveedorContacto::find($proveedor['contacto_id']);
+                }else{
+                    $correo = Proveedores::find($proveedor['proveedor_id']);
                 }
+
+                if (!empty($correo->correo)) {
+                        try {
+                            // Notification::route('mail', $proveedor->correo)
+                            //     ->notify(new SolicitudCotizacionNotification($data));
+                            Mail::to($correo->correo)->send(new SolicitudCotizacion($data));
+
+                        } catch (\Exception $e) {
+                            // \Log::error("Error al enviar correo a proveedor {$proveedor->id}: " . $e->getMessage());
+                        }
+                    }
+            }
         }
     }
 

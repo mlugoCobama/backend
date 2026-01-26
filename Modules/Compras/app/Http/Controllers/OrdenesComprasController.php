@@ -31,6 +31,7 @@ use App\Mail\SolicitudSurtido;
 use App\Models\User;
 use App\Notifications\StatusChangedNotification;
 use Illuminate\Support\Facades\Mail;
+use Modules\Compras\Models\DatosVehiculo;
 use Modules\Compras\Transformers\AutotanqueResource;
 use Modules\Compras\Transformers\OrdenCompraResource;
 use Modules\Compras\Transformers\UsersResource;
@@ -323,9 +324,10 @@ class OrdenesComprasController extends Controller
         }
 
                 // Recupero los detalles de la cotizacion para el cuerpo del correo
-        $detallesSC = DetalleSolicitudCompraResource::collection((DetalleSolicitud::where('solicitudes_compra_id', $cotizacion->solicitudes_compra_id)->get()));
+        $detallesSC = DetalleSolicitudCompraResource::collection((DetalleSolicitud::with('DetalleAutotanque.DatosVehiculo')->confirmadas()->where('solicitudes_compra_id', $cotizacion->solicitudes_compra_id)->get()));
         $solicitudCompra = SolicitudesCompra::where('id',$cotizacion->solicitudes_compra_id )->first();
-
+        $unidadDestino = $solicitudCompra->tipo == 2 ? DatosVehiculo::find($solicitudCompra->usuario_destino) : null;
+        
         if($detallesSC->isEmpty()){
             throw new \Exception('No se encontraron detalles');
         }
@@ -337,6 +339,7 @@ class OrdenesComprasController extends Controller
                 'cotizacion' => $cotizacion,
                 'proveedor' => $proveedorSeleccionado,
                 'detalles' => $detallesSC,
+                'unidadDestino' => $unidadDestino
             ];
 
         // Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
