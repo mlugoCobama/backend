@@ -605,7 +605,7 @@ class SolicitudesCompraController extends Controller
         find($data['id']);
 
         $proveedores = collect([[
-            'proveedor_id' => $cotizacionProveedor->proveedor_id,
+            'proveedor_id' => $cotizacionProveedor->proveedores_id,
             'contacto_id'  => $cotizacionProveedor->contacto_id
         ]]);
 
