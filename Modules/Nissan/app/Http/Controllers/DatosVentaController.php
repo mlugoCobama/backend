@@ -62,7 +62,7 @@ class DatosVentaController extends Controller
                                 WHERE sa.rn = 1
                                 AND fa.faau_fechacancelacion IS NULL
                                 ORDER BY fa.faau_fecha, fa.faau_vend_clave
-                                ", ['01-12-2025', '30-01-2026']);
+                                ", ['01-12-2025', '31-01-2026']);
 
              foreach ($libroVentas as $dato) {
                  // Verificar si ya existe en la base local

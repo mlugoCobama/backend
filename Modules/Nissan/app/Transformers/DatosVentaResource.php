@@ -21,15 +21,14 @@ class DatosVentaResource extends JsonResource
                 "descripcion"=> $this->descripcion,
 
                 "no_inventario"=> $this->no_inventario,
-                "clave_inventario" => $this->clave_producto.'-'.$this->anio_vehiculo.''. $this->no_inventario,
+                "clave_inventario" => $this->clave_producto.'-'.$this->anio_vehiculo.'-'. $this->no_inventario,
                 'id_vendedor' => $this->id_vendedor,
 
                 'nro_vendedor_as' => $this->vendedor->nro_vendedor_as,
                 'vendedor_agencia' => $this->vendedor->agencia,
                 'porcentaje_vendedor' => $this->vendedor->porcentaje_apv,
-                'clave_vendedor' => $this->vendedor->nro_vendedor_as.'-'.$this->vendedor->agencia ,
-
-
+                'clave_vendedor' => $this->vendedor->nro_vendedor_as,
+                
                 "serie"=> $this->serie,
                 "total_venta"=> $this->total_venta,
                 "costos"=>$this->costos,
