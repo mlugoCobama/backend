@@ -181,7 +181,8 @@ class ComisionesController extends Controller
         $gasto->cortesia = $gastos['cortesia'] ?? 0;
         $gasto->accesorios = $gastos['accesorios'] ?? 0;
         $gasto->comision_apv_pesos = $gastos['comision_apv'] ?? 0;
-        // $gasto->comision_bdc_pesos = $gastos->placas'] ?? 0;
+        $gasto->porcentaje_bdc = $gastos['porcentaje_bdc'] ?? 0;
+        $gasto->comision_bdc_pesos = $gastos['comision_bdc'] ?? 0;
         $gasto->save();
     }
 
@@ -202,7 +203,8 @@ class ComisionesController extends Controller
         $gasto->cortesia = $gastos['cortesia'] ?? 0;
         $gasto->accesorios = $gastos['accesorios'] ?? 0;
         $gasto->comision_apv_pesos = $gastos['comision_apv'] ?? 0;
-        // $gasto->comision_bdc_pesos = $gastos['placas'] ?? 0;
+        $gasto->porcentaje_bdc = $gastos['porcentaje_bdc'] ?? 0;
+        $gasto->comision_bdc_pesos = $gastos['comision_bdc'] ?? 0;
         $gasto->id_datos_venta = $gastos['id_venta'] ;
         $gasto->save();
     }
