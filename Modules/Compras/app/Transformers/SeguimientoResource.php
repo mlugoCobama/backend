@@ -63,14 +63,23 @@ class SeguimientoResource extends JsonResource
 
                 foreach ($autorizaciones as $key => $mensaje) {
                     if (!empty($values[$key])) {
-                        return $mensaje . "\n" . ' por ' . $nombreUsuarios;
+                        return $mensaje . "\n" . ' - por ' . $nombreUsuarios;
                     }
                 }
 
                 if (isset($values['estatus'])) {
                     $labels = EstatusSolicitud::labels();
                     $label = $labels[$values['estatus']] ?? 'DESCONOCIDO';
-                    return 'El estatus de tu solicitud cambió a: ' . $label . "\n" . ' por ' . $nombreUsuarios;
+                    $motivo = isset($values['motivo_revision']) ? ' - Devuelta por la siguiente razón: '.$values['motivo_revision'] : ''; 
+                    return 'El estatus de tu solicitud cambió a: ' . $label . "\n" . $motivo."\n" . ' - por: ' . $nombreUsuarios;
+                }
+
+                if (isset($values['motivo_revision'])) {
+                    return 'La solicitud fue devuelta para su revision por la siguiente razón: '.$values['motivo_revision']. ' - por: ' . $nombreUsuarios ;
+                }
+
+                if (isset($values['motivo_revision']) && empty($values['motivo_revision'])) {
+                    return 'La solicitud fue modificada'. ' - por: ' . $nombreUsuarios ;
                 }
 
                 break;

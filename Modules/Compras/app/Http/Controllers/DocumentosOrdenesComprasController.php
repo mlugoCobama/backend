@@ -648,9 +648,13 @@ class DocumentosOrdenesComprasController extends Controller
                 $orden = OrdenCompra::find($data["orden_compra_id"]);
         if($orden->modo_pago == 1 ){
             $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
-                }else{
+            $controlerOC = new OrdenesComprasController;    
+            $controlerOC->enviarCorreoSurtido($orden->id);      
+            $this->enviarCorreoPago($orden, $docsFactura->comprobante_pago);
+            }else{
                 $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
                 $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
+                 $this->enviarCorreoPago($orden, $docsFactura->comprobante_pago);
             }
         }
 
@@ -717,8 +721,10 @@ class DocumentosOrdenesComprasController extends Controller
             'cotizacion' => $cotizacion,
             'proveedor' => $proveedorSeleccionado,
         ];
-
-        Mail::to($proveedorSeleccionado->datos_proveedor->correo)->send(new PagoOrdenCompra($datos, $rutaPago));
+        
+        $ordenCompraPDF = new OrdenesComprasController();
+        $pdfContenido = $ordenCompraPDF->consultaDatosPDF($cotizacion->solicitudes_compra_id);
+        Mail::to($proveedorSeleccionado->datos_proveedor->correo)->send(new PagoOrdenCompra($datos, $rutaPago, $pdfContenido['archivoPDF']));
     }
 
 

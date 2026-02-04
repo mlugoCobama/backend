@@ -116,4 +116,47 @@ class VendedorController extends Controller
             'data' => []
         ]);
     }
+
+    public function importCsv(Request $request)
+    {
+        $file = $request->file('file');
+
+        if (($handle = fopen($file->getRealPath(), 'r')) !== false) {
+            $header = fgetcsv($handle, 1000, ',');
+
+            while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                // Asumiendo que el CSV tiene columnas: numero_vendedor, agencia, nombre, email
+                $data = array_combine($header, $row);
+
+                // Buscar registro por numero_vendedor y agencia
+                $vendedor = Vendedor::where('nro_vendedor_as', (int) $data['NUMERO DE VENDEDOR'])
+                                    ->where('agencia', $data['Agencia'])
+                                    ->first();
+
+                if ($vendedor) {
+                    // Actualizar si existe
+                    $vendedor->update([
+                        'tipo' => $data['TIPO VEND'] == 'EXTERNO' ? 2 : 1,
+                        'clave' => $data['INICIALES EN SISTEMA'],
+                        'nombre' => $data['Vendedor'],
+                    ]);
+                } else {
+                    // Crear si no existe
+                    Vendedor::create([
+                        'tipo' => $data['TIPO VEND'] == 'EXTERNO' ? 2 : 1,
+                        'nro_vendedor_as' => (int) $data['NUMERO DE VENDEDOR'],
+                        'clave' => $data['INICIALES EN SISTEMA'],
+                        'nombre' => $data['Vendedor'],
+                        'agencia' => $data['Agencia'],
+                    ]);
+                }
+            }
+
+            fclose($handle);
+        }
+
+        return response()->json(['message' => 'Datos cargados correctamente']);
+    }
+
+
 }

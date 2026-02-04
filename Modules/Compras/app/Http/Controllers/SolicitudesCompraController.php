@@ -37,6 +37,7 @@ use Modules\Compras\Transformers\EmailAutorizarSolicitud;
 // Jobs
 use App\Jobs\EnviarCorreoSolicitudCotizacion;
 use App\Notifications\CambioEstatusSolicitudCompra;
+use Illuminate\Support\Facades\Storage;
 //Request validation
 use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
 use Modules\Compras\Http\Requests\SendSolicitudCotizacionRequest;
@@ -728,5 +729,184 @@ class SolicitudesCompraController extends Controller
         ], 422);
     }
 
+    public function devolverSolicitudEstatusAnterior(Request $request){
+       $solicitud = SolicitudesCompra::find($request->id);
+
+        if (!$solicitud) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Solicitud no encontrada',
+                'data'    => null
+            ]);
+        }
+        $estatusActual = $solicitud->estatus;
+        if ($solicitud->tipo == 2 || $solicitud->tipo == 1) {
+            $solicitud->auto_gg = 0;
+            $solicitud->auto_admin = 0;
+        }
+
+        if ($solicitud->tipo == 2) {
+            $solicitud->auto_macro = 0;
+        }
+
+        $solicitud->motivo_revision = $request->motivo;
+        $solicitud->estatus = $solicitud->estatus > 1 ? $estatusActual - 1 : $estatusActual;
+
+        $solicitud->save();
+
+        NotificationHelper::sendNotificationEstatusChange($solicitud->id, "En espera de autorización - \nRevisar y modificar la solicitud - \nOBSERVACIONES: ".$solicitud->motivo_revision);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Solicitud actualizada correctamente',
+            'data'    => $solicitud
+        ]);
+    }
+
+public function actualizarSolicitudCompra(Request $request){
+    // $data = $request->all();
+    $data = json_decode($request->input('data'), true);
+    $files = $request->allFiles();
+    try {
+            DB::beginTransaction();
+
+            $this->updateSolicitudCompra($data, $data['idSolicitud'] );
+            $this->updateDetalleSolicitudCompra($data['detalles'],$data['idSolicitud'], $files, (int)$data['usuario_destino'] );
+            DB::commit();
+            NotificationHelper::sendNotificationEstatusChange($data['idSolicitud'], 'Solicitud modificada-revisa si es necesario realizar alguna acción (Autorizar nuevamente la solicitud)');
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Se ha guardado correctamente',
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error al guardar la solicitud' . ($e->getMessage() ?? ''),
+                'error' => $e->getMessage()
+            ]);
+        }
+
+}
+
+
+    /**
+ * Actualiza una solicitud de compra existente
+ */
+private function updateSolicitudCompra($data, $idSolicitud) 
+{
+    $usuariosRT = explode(',', env('USERS_COMPRAS_RT'));
+    $isInfra = in_array($data["usuario_solicita"], $usuariosRT);
+    $usuariosSopGas = explode(',', env('USERS_SOP_GAS'));
+    $isSopGas = in_array($data["usuario_solicita"], $usuariosSopGas);
+
+    
+
+    $dataSolicitud = SolicitudesCompra::findOrFail($idSolicitud);
+    
+    // Actualizar campos
+    $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
+    $dataSolicitud->empresa = $data["empresa"];
+    $dataSolicitud->usuario_destino = $data["usuario_destino"];
+    $dataSolicitud->motivo = $data["motivo"];
+    $dataSolicitud->c_c = $data["c_c"];
+    $dataSolicitud->requiere_anticipo = ($data["requiere_anticipo"] === "true") ? 1 : 0;
+    
+    if($isInfra){
+        $dataSolicitud->tipo = 3;
+        $dataSolicitud->auto_admin = $isSopGas ? 0 : 1;
+        $dataSolicitud->auto_gg = $isSopGas ? 0 : 1;
+        $dataSolicitud->auto_macro = 1;
+        $dataSolicitud->estatus = $isSopGas ? 1 : 2;
+        $dataSolicitud->com_cat_sistemas_auto_id = $data["sistema"];
+        $dataSolicitud->com_cat_tipos_mantenimiento_id = $data["tipoMantenimiento"];
+    }
+    $dataSolicitud->motivo_revision = null;
+    $dataSolicitud->save();
+    
+    return [
+        'id' => $dataSolicitud->id,
+        'destino' => $data["usuario_destino"]
+    ];
+}
+
+/**
+ * Actualiza los detalles de la solicitud de compra
+ * Elimina los que no vienen en el request y actualiza/crea los demás
+ */
+private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $destino) 
+{
+    $detallesIds = collect($detalles)
+        ->filter(function($detalle) {
+            return isset($detalle['id']) && !empty($detalle['id']);
+        })
+        ->pluck('id')
+        ->toArray();
+    
+    if (!empty($detallesIds)) {
+        DetalleSolicitud::where('solicitudes_compra_id', $idSolicitud)
+            ->whereNotIn('id', $detallesIds)
+            ->get()
+            ->each(function($detalle) {
+                if ($detalle->img_referencia && Storage::disk('public')->exists($detalle->img_referencia)) {
+                    Storage::disk('public')->delete($detalle->img_referencia);
+                }
+                $detalle->delete();
+            });
+    } else {
+        DetalleSolicitud::where('solicitudes_compra_id', $idSolicitud)
+            ->get()
+            ->each(function($detalle) {
+                if ($detalle->img_referencia && Storage::disk('public')->exists($detalle->img_referencia)) {
+                    Storage::disk('public')->delete($detalle->img_referencia);
+                }
+                $detalle->delete();
+            });
+    }
+    
+    foreach ($detalles as $index => $detalle) {
+        if (isset($detalle['id']) && !empty($detalle['id'])) {
+            $detalleSolicitud = DetalleSolicitud::find($detalle['id']);
+            
+            if (!$detalleSolicitud) {
+                throw new \Exception("Detalle con ID {$detalle['id']} no encontrado");
+            }
+            
+            if ($detalleSolicitud->solicitudes_compra_id != $idSolicitud) {
+                throw new \Exception("El detalle {$detalle['id']} no pertenece a esta solicitud");
+            }
+        } else {
+            $detalleSolicitud = new DetalleSolicitud();
+            $detalleSolicitud->solicitudes_compra_id = $idSolicitud;
+        }
+        
+        $detalleSolicitud->cantidad = $detalle["cantidad"];
+        $detalleSolicitud->descripcion = $detalle["descripcion"];
+        $detalleSolicitud->observaciones = $detalle["observaciones"];
+        $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
+        $detalleSolicitud->recuperable = $detalle["recuperar_costo"] ?? $detalle["recuperable"] ?? 0;
+        
+        if (isset($detalle["confirmado"])) {
+            $detalleSolicitud->confirmado = $detalle["confirmado"];
+        }
+        
+        $fileKey = "img_referencia_" . $index;
+        if (isset($files[$fileKey]) && $files[$fileKey]->isValid()) {
+            if (in_array($files[$fileKey]->extension(), ['jpg','jpeg','png'])) {
+                if ($detalleSolicitud->img_referencia && Storage::disk('public')->exists($detalleSolicitud->img_referencia)) {
+                    Storage::disk('public')->delete($detalleSolicitud->img_referencia);
+                }
+                
+                $path = $files[$fileKey]->store('referencias', 'public');
+                $detalleSolicitud->img_referencia = $path;
+            } else {
+                throw new \Exception("El archivo debe ser una imagen JPG o PNG");
+            }
+        }
+        $detalleSolicitud->save();
+    }
+}
 
 }

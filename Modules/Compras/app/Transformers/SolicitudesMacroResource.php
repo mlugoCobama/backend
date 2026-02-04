@@ -39,9 +39,11 @@ class SolicitudesMacroResource extends JsonResource
             'serie' => "No. SERIE: $this->no_serie" ?? "No. SERIE: N/D",
             'centro_costo' => $datosCC['descripcion'],
             'usuario_destino' => "ECO: $this->eco MOD: $this->marca_vehiculo $this->submarca $this->modelo PLACAS: $this->placas No. SERIE: $this->no_serie",
+            'usuario_destino_id' => $this->id,
             'intercompania' => $this->intercompania ?? null,
             'empresa' => $this->setEmpresaName($this->intercompania),
             'usuario_solicita' =>  $usuarioSolicita['nombre_completo'],
+            'usuario_solicita_id' => $this->usuario_solicita,
             'estatus' => $this->estatus,
             'estado' => $estadoInfo['estado'],
             'claseEstado' => $estadoInfo['claseEstado'],
@@ -64,6 +66,7 @@ class SolicitudesMacroResource extends JsonResource
             'folio_oc' => $this->folio_oc ?? '-',
             'modo_pago' =>  $this->labelModoPago($this->modo_pago ?? null),
             'pagado' => $this->labelFlagPagado($this->pagado ?? null),
+            'motivo_revision' => $this->motivo_revision ?? null,
             // 'detalle' => DetalleSolicitudCompraResource::collection($this->DetallesSolicitud)
         ];
     }

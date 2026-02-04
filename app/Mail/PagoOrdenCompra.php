@@ -18,12 +18,14 @@ class PagoOrdenCompra extends Mailable
     protected $mensajeExtra;
     protected $asunto;
     protected $fileName;
+    public $pdfContenido;
 
-    public function __construct($datos, $comprobantePath)
+    public function __construct($datos, $comprobantePath, $pdfContenido)
     {
         $this->datos = $datos;
         $this->comprobantePath = storage_path('app/'.$comprobantePath);
-
+        $this->pdfContenido = $pdfContenido;
+        
         switch ($datos['ordenCompra']->modo_pago) {
             case "1" :
                 case 1 :
@@ -60,7 +62,8 @@ class PagoOrdenCompra extends Mailable
         ];
         $mime = $mimeTypes[strtolower($extension)] ?? 'application/octet-stream';
 
-        return $this->subject($this->asunto)
+
+        $mail = $this->subject($this->asunto)
                     ->cc($tipoCorreo[$this->datos['solicitudCompra']['tipo'] ])
                     ->markdown('emails.pago_orden_compra')
                     ->with([
@@ -71,6 +74,15 @@ class PagoOrdenCompra extends Mailable
                         'as' => $this->fileName . $extension,
                         'mime' => $mime,
                     ]);
+                    if (!empty($this->pdfContenido)) {
+                        $mail->attachData($this->pdfContenido, 'orden_compra_'.$this->datos['ordenCompra']->folio_oc.'.pdf', [
+                            'mime' => 'application/pdf',
+                        ]);
+                    }
+
+        return $mail;
+         
+        }
     }
 
 
@@ -106,4 +118,4 @@ class PagoOrdenCompra extends Mailable
     // {
     //     return [];
     // }
-}
+// }

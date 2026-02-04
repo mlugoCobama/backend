@@ -38,3 +38,5 @@ Route::get('nissan/comisiones/{f_inicial}/{f_final}', [ComisionesController::cla
 Route::get('nissan/porcentajes', [ComisionesController::class, 'getPorcentajes'])->name('nissan-comisiones.getPorcentajes');
 
 Route::get('autos/libro-ventas/{estatus}/{agencia}/{tipoVenta}/{fechaInicio}/{fechaFin}/{vendedor}', [ComisionesController::class, 'getDatosVentas'])->name('autos-comisiones.getLibroVentas');
+Route::post('/cargar-csv', [VendedorController::class, 'importCsv']);
+

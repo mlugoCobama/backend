@@ -17,17 +17,25 @@ class SolicitudesCompra extends Model
      */
     protected $fillable = [
         'folio',
-        'c_c',
-        'usuario_solicita',
         'usuario_destino',
         'motivo',
         'fecha',
-        'estatus',
-        'razon_cancelacion',
+        'c_c',
         'activo',
+        'usuario_solicita',
         'empresa',
+        'estatus',
+        'observaciones',
+        'com_cat_sistemas_auto_id',
+        'com_cat_tipos_mantenimiento_id',
+        'folio_requisicion',
+        'razon_cancelacion',
         'tipo',
         'requiere_anticipo',
+        'motivo_revision',
+        'auto_admin',
+        'auto_gg',
+        'auto_macro'
     ];
 
     /**

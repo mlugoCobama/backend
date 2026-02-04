@@ -40,9 +40,11 @@ class SolicitudesComprasResource extends JsonResource
             'c_c' => $this->c_c,
             'centro_costo' => $datosCC['descripcion'],
             'usuario_destino' => $usuarioDestino['nombre_completo'],
+            'usuario_destino_id' => $this->usuario_destino,
             'intercompania' => $this->intercompania ?? $this->empresa,
             'empresa' => $this->c_c > 0 ?  $this->setAgenciaName($this->intercompania?? $this->empresa)  :  $this->setEmpresaName($this->intercompania ?? $this->empresa),
             'usuario_solicita' => $usuarioSolicita['nombre_completo'],
+            'usuario_solicita_id' => $this->usuario_solicita,
             'estatus' => $this->estatus,
             'estado' => $estadoInfo['estado'],
             'claseEstado' => $estadoInfo['claseEstado'],
@@ -64,6 +66,7 @@ class SolicitudesComprasResource extends JsonResource
             'folio_oc' => $this->folio_oc ?? '-',
             'modo_pago' =>  $this->labelModoPago($this->modo_pago ?? null),
             'pagado' => $this->labelFlagPagado($this->pagado ?? null),
+            'motivo_revision' => $this->motivo_revision ?? null,
         ];
     }
 

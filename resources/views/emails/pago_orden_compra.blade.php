@@ -16,11 +16,12 @@ Por lo que se adjunta el comprobante de pago correspondiente.
 
 @if ($datos['ordenCompra']->modo_pago == 1 || $datos['ordenCompra']->modo_pago == '1' )
 > **Importante:** En breve recibirá un segundo correo solicitando el **surtido de los insumos** correspondientes a esta orden de compra.
+> Ademas se adjunta la orden de compra correspondiente con los insumos a surtir.
 @elseif ($datos['ordenCompra']->modo_pago == 2 || $datos['ordenCompra']->modo_pago == '2')
 > **Importante:** Le agradeceremos que nos envíe el **complemento de pago** correspondiente a esta transacción para fines de conciliación fiscal.
 @endif
 
-**NOTA**: Este pago corresponde a la orden de compra generada con base en la solicitud de compra con folio **{{ $datos['solicitudCompra']->folio }}**.
+{{-- **NOTA**: Este pago corresponde a la orden de compra generada con base en la solicitud de compra con folio **{{ $datos['solicitudCompra']->folio }}**. --}}
 
 Para cualquier aclaración o seguimiento, favor de contactar al área de compras exclusivamente en los siguientes correos:
 

@@ -58,7 +58,9 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
     Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores'])->name('Proveedores.getProveedores');
     Route::get('/SolicitudCompra/{id}',[SolicitudesCompraController::class, 'getSolicitud'])->name('SolicitudesCompras.getSolicitud');
-
+    Route::post('/devolver-solicitud-revision', [SolicitudesCompraController::class, 'devolverSolicitudEstatusAnterior'])->name('SolicitudesCompras.devolverSolicitudRevision');
+    Route::post('/SolicitudesCompras/actualiza-solicitud', [SolicitudesCompraController::class, 'actualizarSolicitudCompra'])->name('SolicitudesCompras.actualizarSolicitudCompra');
+    Route::post('/SolicitudesCompras/Macro/actualiza-solicitud', [SolicitudesMacroController::class, 'actualizarSolicitudCompra'])->name('SolicitudesCompras.actualizarSolicitudCompraMacro');
     Route::post('/Proveedores/{id}', [ProveedoresController::class, 'update'])->name('Proveedores.actualizar');
 
     //*Ruta para enviar un email de prueba, no funciona pero va funcionar
@@ -110,6 +112,7 @@ Route::prefix('compras')->group(function(){
 
     Route::post('/importar-autotanques', [CatUnidadesController::class, 'actualizarDatosPV']);
     Route::get('/get-seguimiento-solicitud/{idSolicitud}', [SolicitudesCompraController::class, 'getSeguimientoSolicitud'])->name('SolicitudesCompras.getSeguimientoSolicitud');
+    
     //*Ruta para mostra archivos 
     Route::get('expedientes/{id}/{file}', [ExpedientesProveedoresController::class, 'getFile'])->name('ExpedientesProveedores.getFile');
     Route::get('cotizaciones/{id}/{file}', [CotizacionesController::class, 'getFile'])->name('Cotizaciones.getFile');
