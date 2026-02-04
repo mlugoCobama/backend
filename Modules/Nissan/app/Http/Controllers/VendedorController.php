@@ -59,7 +59,12 @@ class VendedorController extends Controller
      */
     public function show($id)
     {
-        $data = Vendedor::where('agencia',$id)->get();
+        if($id == 333 || $id == 'todos'){
+            $data = Vendedor::active()->get();
+        }else{
+            $data = Vendedor::where('agencia',$id)->active()->get();   
+        }
+        
 
         return response()->json([
             'status' => 'success',
