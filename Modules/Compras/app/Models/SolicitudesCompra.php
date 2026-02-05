@@ -107,4 +107,12 @@ class SolicitudesCompra extends Model
     public function DestinoVehiculo(){
         return $this->belongsTo(DatosVehiculo::class, 'usuario_destino', 'id' );
     }
+
+    public function TipoMantenimiento(){
+        return $this->hasOne(CatTiposMantenimiento::class, 'id', 'com_cat_tipos_mantenimiento_id' );
+    }
+
+    public function SistemaMantenimiento(){
+        return $this->hasOne(CatSistemasAuto::class, 'id', 'com_cat_sistemas_auto_id', );
+    }
 }

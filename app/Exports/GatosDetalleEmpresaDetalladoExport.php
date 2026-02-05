@@ -40,7 +40,9 @@ class GatosDetalleEmpresaDetalladoExport implements FromArray, WithHeadings, Wit
             'Subtotal',         // J-9
             'IVA',              // K-10
             'Total',             // L-11
-            'AT'
+            'AT',
+            'Tipo Mantenimiento',
+            'Sistema'
         ];
     }
 
@@ -71,6 +73,8 @@ class GatosDetalleEmpresaDetalladoExport implements FromArray, WithHeadings, Wit
             $row['IVA'],
             $row['Total'],
             $row['Destino'],
+            $row['tipoMantenimiento'],
+            $row['sistemaMantenieminto'],
         ];
 
     }, $this->detalle->toArray());

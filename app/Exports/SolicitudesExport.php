@@ -60,6 +60,8 @@ class SolicitudesExport implements FromCollection, WithHeadings, WithTitle, Shou
             'Observaciones',    //H-7
             
             'Proveedor',        //I-8
+            'Tipo de mantenimiento',        //I-8
+            'Sistema',        //I-8
             // 'Precio',
             // 'Subtotal',
             // 'IVA',

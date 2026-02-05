@@ -229,7 +229,7 @@ class ReportesComprasController extends Controller
 
 
     $solicitudes = SolicitudesCompra::with([
-        'DestinoVehiculo',
+        'DestinoVehiculo', 'SistemaMantenimiento', 'TipoMantenimiento',
         'Cotizaciones.orden_compra',
         'DetallesSolicitud.DetalleAutotanque.DatosVehiculo',
         'DetallesSolicitud.unidadMedida',
@@ -281,6 +281,8 @@ class ReportesComprasController extends Controller
         $destinoFormat = ($solicitud->tipo == 2 && $destinoSolicitud)
             ? "ECO: $destinoSolicitud"
             : 'N/A';
+        $tipoMantenimiento =  $solicitud->TipoMantenimiento->nombre;
+        $sistemaMantenimiento =  $solicitud->SistemaMantenimiento->sistema;
 
         //   FILA PRINCIPAL: TOTALES DE LA SOLICITUD
         $rows[] = [
@@ -299,6 +301,8 @@ class ReportesComprasController extends Controller
             'Subtotal'      => $subtotal,
             'IVA'           => $iva,
             'Total'         => $total,
+            'tipoMantenimiento'         => $tipoMantenimiento,
+            'sistemaMantenieminto'         => $sistemaMantenimiento,
         ];
 
         //   FILAS DETALLE DE LA SOLICITUD
@@ -334,6 +338,8 @@ class ReportesComprasController extends Controller
                 'Subtotal'      => '',
                 'IVA'           => '',
                 'Total'         => '',
+                'tipoMantenimiento'  => '',
+                'sistemaMantenieminto' => '',
             ];
         }
 
@@ -360,7 +366,7 @@ class ReportesComprasController extends Controller
             191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA',
         ];
 
-        $solicitudes = SolicitudesCompra::with(['DetallesSolicitud.unidadMedida','Cotizaciones.CotizacionesProveedor.datos_proveedor'])
+        $solicitudes = SolicitudesCompra::with(['DetallesSolicitud.unidadMedida','Cotizaciones.CotizacionesProveedor.datos_proveedor', 'SistemaMantenimiento', 'TipoMantenimiento',])
             ->where('estatus', $estatus)
             ->where('activo', 1)
             ->where('tipo', $tipo)
@@ -380,7 +386,8 @@ class ReportesComprasController extends Controller
                     $labels = EstatusSolicitud::labels();
                     $label = $labels[$solicitud->estatus] ?? 'DESCONOCIDO';
                     $proveedorSeleccionado = $solicitud->Cotizaciones->flatMap->CotizacionesProveedor->firstWhere('seleccionado', 1);
-
+                    $tipoMantenimiento =  $solicitud->TipoMantenimiento->nombre;
+                    $sistemaMantenimiento =  $solicitud->SistemaMantenimiento->sistema;
                     $proveedor = $proveedorSeleccionado->datos_proveedor->nombre ?? 'Por definir';
                     return [
                         'Folio'        => $index === 0 ? $solicitud->folio : '',
@@ -392,6 +399,8 @@ class ReportesComprasController extends Controller
                         'Descripción'  => $detalle->descripcion ?? '',
                         'Observaciones'=> $detalle->observaciones ?? '',
                         'Proveedor'=> $index === 0 ? $proveedor : '',
+                        'tipoMantenimiento'  => $index === 0 ? $tipoMantenimiento : '',
+                        'sistemaMantenieminto' => $index === 0 ? $sistemaMantenimiento : '',
                     ];
                 });
             });
