@@ -6,6 +6,7 @@ use App\Enums\EstatusSolicitud;
 use App\Exports\GastosDetalleEmpresaExport;
 use App\Exports\GastosMultiHojaExport;
 use App\Exports\GatosDetalleMultiHojaExport;
+use App\Exports\ReporteUnidadeMultihojaMacroExport;
 use App\Exports\SolicitudesExport;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
@@ -14,6 +15,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Modules\Compras\Models\Cotizaciones;
+use Modules\Compras\Models\DatosVehiculo;
 use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Transformers\GastosMensualesConcentradoResource;
 use Modules\Compras\Transformers\GastosMensualesDetalleResource;
@@ -240,6 +242,9 @@ class ReportesComprasController extends Controller
     ->where('tipo', $tipo)
     ->where('empresa', $empresa)
     ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+    ->whereHas('DetallesSolicitud', function($q) {
+        $q->where('confirmado', 1);
+    })
     ->whereHas('Cotizaciones.orden_compra', function ($q) {
         $q->where('pagado', 1);
     })
@@ -281,8 +286,8 @@ class ReportesComprasController extends Controller
         $destinoFormat = ($solicitud->tipo == 2 && $destinoSolicitud)
             ? "ECO: $destinoSolicitud"
             : 'N/A';
-        $tipoMantenimiento =  $solicitud->TipoMantenimiento->nombre;
-        $sistemaMantenimiento =  $solicitud->SistemaMantenimiento->sistema;
+        $tipoMantenimiento =  $solicitud->TipoMantenimiento->nombre ?? '';
+        $sistemaMantenimiento =  $solicitud->SistemaMantenimiento->sistema ?? '';
 
         //   FILA PRINCIPAL: TOTALES DE LA SOLICITUD
         $rows[] = [
@@ -371,6 +376,9 @@ class ReportesComprasController extends Controller
             ->where('activo', 1)
             ->where('tipo', $tipo)
             ->whereBetween('fecha', [$fechaInicial, $fechaFinal])
+            ->whereHas('DetallesSolicitud', function($q) {
+                $q->where('confirmado', 1);
+            })
             ->when($tipo == 2 && $estatus > 1, function ($query) {
                     $query->where('auto_admin', 1)
                             ->where('auto_gg', 1)
@@ -405,6 +413,171 @@ class ReportesComprasController extends Controller
                 });
             });
         
+        return $solicitudes;
+    }
+
+    public function descargarConcentradoMacroGlobal()
+    {
+        //  $fechaInicial = $request->fechaInicial;
+        //  $fechaFinal = $request->fechaFinal;
+        //  $tipo = $request->tipo;
+
+        $concentrado = [
+            131, 130, 251, 210, 155, 135, 110 , 111 ,
+            250, 132, 119, 190, 133, 353, 191, 354 ,
+    ];
+
+        $detalleData = [];
+        foreach ($concentrado as $empresa) {
+            $detalleData[$empresa] = $this->queryComprasMacro($empresa);
+        }
+
+        $fechaDescarga = now()->format('Y-m-d_His');
+        $nombreArchivo = "GastoMacroConcentrado_{$fechaDescarga}.xlsx";
+
+        return Excel::download(
+            new ReporteUnidadeMultihojaMacroExport($detalleData),
+            $nombreArchivo
+        );
+    }
+
+
+    private function queryComprasMacro( $empresa, $fechaInicio = null, $fechaFin = null , $tipo = null ){
+
+    $empresas = [
+            333 => 'CORPORACION ADMINISTRATIVA DEL SUR', 201 => 'AGRUPAMIENTO',
+            131 => 'AZTECA GAS', 130 => 'SATELITE GAS', 251 => 'FLAMAMEX',
+            210 => 'REYES GAS', 155 => 'GASAMEX', 135 => 'SEGAS', 110 => 'GARZA GAS',
+            111 => 'GARZA SUR', 250 => 'GAS FLAMAZUL', 132 => 'GAS PREMIO',
+            200 => 'TANQUES SONI', 119 => 'TANQUES GARZA GAS', 190 => 'ZUGAS',
+            133 => 'GASERA MULTIREGIONAL', 353 => 'GAS URBANO', 710 => 'NISSAN UNIVERSIDAD',
+            7051 => 'NISSAN AZCAPOTZALCO', 712 => 'NISSAN CAMPESTRE', 700 => 'CORPORATIVO AUTOS SONI',
+            240 => 'SERVIGAS DEL VALLE', 2000 => 'SERVICIO EL ONCE', 7064 => 'RENAULT AZCAPOTZALCO',
+            7062 => 'RENAULT ECATEPEC', 7063 => 'RENAULT VALLEJO', 7061 => 'RENAULT PACHUCA',
+            191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA',
+    ];
+
+
+    $solicitudes = SolicitudesCompra::with([
+        'DestinoVehiculo', 'SistemaMantenimiento', 'TipoMantenimiento',
+        'Cotizaciones.orden_compra',
+        'DetallesSolicitud.DetalleAutotanque.DatosVehiculo',
+        'DetallesSolicitud.unidadMedida',
+        'DetallesSolicitud.DetallesCotizacion.CotizacionesProveedores.datos_proveedor'
+    ])
+    ->where('estatus','>', 1)
+    ->where('estatus','<>', 4)
+    ->where('activo', 1)
+    ->where('tipo', 2)
+    ->where('empresa', $empresa)
+    // ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+    // ->whereHas('Cotizaciones.orden_compra', function ($q) {
+    //     $q->where('pagado', 1);
+    // })
+    ->whereHas('DetallesSolicitud', function($q) {
+        $q->where('confirmado', 1);
+    })
+
+
+    ->get()
+    ->flatMap(function ($solicitud) use ($empresas) {
+
+
+        //   OBTENER LA COTIZACIÓN QUE TIENE UNA ORDEN DE COMPRA
+        $cotizacionOC = $solicitud->cotizaciones->firstWhere('orden_compra', '!=', null);
+        $folioOC = $cotizacionOC->orden_compra->folio_oc ?? '';
+
+        $labels = EstatusSolicitud::labels();
+        $label = $labels[$solicitud->estatus] ?? 'DESCONOCIDO';
+
+        $rows = [];
+        $subtotal = 0;
+
+
+        //   CALCULAR SUBTOTAL
+        foreach ($solicitud->DetallesSolicitud as $detalle) {
+
+            $cotSel = $detalle->DetallesCotizacion
+                ->firstWhere(fn($cot) =>
+                    $cot->CotizacionesProveedores &&
+                    $cot->CotizacionesProveedores->seleccionado == 1
+                );
+
+            $precio = (float) ($cotSel->importe_unitario ?? 0);
+            $cantidad = $detalle->cantidad ?? 1;
+
+            $subtotal += $precio * $cantidad;
+        }
+
+        $iva = $subtotal * 0.16;
+        $total = $subtotal + $iva;
+        $proveedor = $cotSel->CotizacionesProveedores->datos_proveedor->nombre ?? 'N/A';
+
+        $destinoSolicitud = $solicitud->DestinoVehiculo->nro_economico ?? null;
+        $destinoFormat = ($solicitud->tipo == 2 && $destinoSolicitud)
+            ? "ECO: $destinoSolicitud"
+            : 'N/A';
+        $tipoMantenimiento =  $solicitud->TipoMantenimiento->nombre;
+        $sistemaMantenimiento =  $solicitud->SistemaMantenimiento->sistema;
+
+        //   FILA PRINCIPAL: TOTALES DE LA SOLICITUD
+        $rows[] = [
+            'Folio'         => $solicitud->folio,
+            'Folio_OC'      => $folioOC,
+            'Fecha'         => date('d/m/Y H:i', strtotime($solicitud->fecha)),
+            'Empresa'       => $empresas[$solicitud->empresa] ?? 'N/A',
+            'Destino'       => $destinoFormat,
+            'Marca'         => $solicitud->DestinoVehiculo->marca,
+            'SubMarca'     => $solicitud->DestinoVehiculo->submarca,
+            'Modelo'        => $solicitud->DestinoVehiculo->modelo,
+            'Serie'         => $solicitud->DestinoVehiculo->no_serie,
+            'Estado'        => $label,
+            'Cantidad'      => '',
+            'Descripcion'   => '',
+            'Observaciones' => '',
+            'Unidad'        => '',
+            'Precio'        => '',
+        ];
+
+        //   FILAS DETALLE DE LA SOLICITUD
+        foreach ($solicitud->DetallesSolicitud as $detalle) {
+            $cotSel = $detalle->DetallesCotizacion
+                ->firstWhere(fn($cot) =>
+                    $cot->CotizacionesProveedores &&
+                    $cot->CotizacionesProveedores->seleccionado == 1
+                );
+  
+            $precio = (float) ($cotSel->importe_unitario ?? 0);
+
+            $ecoDetalle = $detalle->DetalleAutotanque->DatosVehiculo->nro_economico ?? null;
+            $ecoDetalleFormat = ($solicitud->tipo == 2 && $ecoDetalle)
+                ? "ECO: $ecoDetalle"
+                : 'N/A';
+            
+            $rows[] = [
+                'Folio'         => '',
+                'Folio_OC'      => $folioOC,
+                'Fecha'         => '',
+                'Empresa'       => '',
+                'Destino'       => $ecoDetalleFormat,
+
+                'Marca'         => $detalle->DetalleAutotanque->DatosVehiculo->marca ?? '',
+                'SubMarca'     => $detalle->DetalleAutotanque->DatosVehiculo->submarca?? '',
+                'Modelo'        => $detalle->DetalleAutotanque->DatosVehiculo->modelo ?? '',
+                'Serie'         => $detalle->DetalleAutotanque->DatosVehiculo->no_serie ?? '',
+
+                'Estado'        => '',
+                'Cantidad'      => $detalle->cantidad ?? 0,
+                'Descripcion'   => $detalle->descripcion ?? '',
+                'Observaciones' => $detalle->observaciones ?? '',
+                'Unidad'        => $detalle->unidadMedida->nombre ?? '',
+                'Precio'        => $precio,
+            ];
+        }
+
+        return $rows;
+    });
+
         return $solicitudes;
     }
 }
