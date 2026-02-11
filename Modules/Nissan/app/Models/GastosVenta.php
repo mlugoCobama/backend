@@ -30,6 +30,7 @@ class GastosVenta extends Model
         'id_datos_venta',
         'comision_apv_pesos',
         'comision_bdc_pesos',
+        'porcentaje_bdc',
     ];
 
     protected $table = 'com_gastos_venta';

@@ -17,9 +17,9 @@ class VendedorResource extends JsonResource
             'tipo' => $this->tipo,
             'tipo_texto' => $this->setTipoTexto($this->tipo),
             'procentaje_apv' => $this->porcentaje_apv,
-            'procentaje_apv' => $this->porcentaje_apv,
-            'nombre' => 'NO DISPONIBLE',
-            'clave' => $this->nro_vendedor_as.'-'.$this->agencia,
+            // 'procentaje_apv' => $this->porcentaje_apv,
+            'nombre' => $this->nombre ?? 'No disponible',
+            'clave' => $this->clave ?? 'No disponible',
             'nro_vendedor_as' => $this->nro_vendedor_as,
             'agencia' => $this->agencia,
             'agencia_nombre' => $this->setAgenciaNombre($this->agencia)

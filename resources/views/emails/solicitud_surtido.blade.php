@@ -23,6 +23,9 @@ de los siguientes insumos:
             <th style="border:1px solid #ccc; padding:8px;">Descripción</th>
             <th style="border:1px solid #ccc; padding:8px;">Observaciones</th>
             <th style="border:1px solid #ccc; padding:8px;">Img Ref.</th>
+            @if( ($datos['solicitudCompra']->tipo == 2) && ($datos['solicitudCompra']->usuario_destino == 602))
+                <th style="border:1px solid #ccc; padding:8px;">Para el vehículo</th>
+            @endif
         </tr>
     </thead>
     <tbody>
@@ -41,10 +44,22 @@ de los siguientes insumos:
                         —
                     @endif
                 </td>
+                @if( ($datos['solicitudCompra']->tipo == 2) && ($datos['solicitudCompra']->usuario_destino == 602))
+                    <td style="border:1px solid #ccc; padding:8px;">{{ $detalle['DetalleAutotanque']->DatosVehiculo->marca.' '.$detalle['DetalleAutotanque']->DatosVehiculo->submarca.' '.$detalle['DetalleAutotanque']->DatosVehiculo->modelo}}
+                    {{'No. serie: '.$detalle['DetalleAutotanque']->DatosVehiculo->no_serie}} </td>
+                @endif
             </tr>
         @endforeach
     </tbody>
 </table>
+
+@if(!empty($datos['unidadDestino']))
+**IMPORTANTE**
+Las insumos solicitados son en referencia al vehículo:
+{{ $datos['unidadDestino']->marca.' '.$datos['unidadDestino']->submarca.' '.$datos['unidadDestino']->modelo}}
+{{'No. serie: '.$datos['unidadDestino']->no_serie}}
+
+@endif
 
 @if ($datos['ordenCompra']->modo_pago == 1 || $datos['ordenCompra']->modo_pago == '1' )
 > **Importante:** Le solicitamos atentamente que nos envíe las **facturas correspondientes** 
