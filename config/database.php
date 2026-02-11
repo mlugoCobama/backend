@@ -101,6 +101,42 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
         ],
 
+        'nissan_azcapotzalco' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DATABASE_URL'),
+            'host' => env('AZCAPOTZALCO_DB_HOST', '192.168.114.240'),
+            'port' => env('AZCAPOTZALCO_DB_PORT', '1433'),
+            'database' => env('AZCAPOTZALCO_DB_DATABASE', 'SISTEMAS'),
+            'username' => env('AZCAPOTZALCO_DB_USERNAME', 'SystemAutoCO'),
+            'password' => env('AZCAPOTZALCO_DB_PASSWORD', 'C0b4M4A5#23'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            //ENTORNO DE DESARROLLO
+            'encrypt' => 'false',  // Desactivar SSL
+            'trust_server_certificate' => 'true',  // Confiar en el certificado
+            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
+            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
+        ],
+
+        'nissan_campestre' => [
+            'driver' => 'sqlsrv',
+            'url' => env('DATABASE_URL'),
+            'host' => env('CAMPESTRE_DB_HOST', '192.168.117.240'),
+            'port' => env('CAMPESTRE_DB_PORT', '1433'),
+            'database' => env('CAMPESTRE_DB_DATABASE', 'SISTEMAS'),
+            'username' => env('CAMPESTRE_DB_USERNAME', 'SystemAutoCO'),
+            'password' => env('CAMPESTRE_DB_PASSWORD', 'C0b4M4A5#23'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            //ENTORNO DE DESARROLLO
+            'encrypt' => 'false',  // Desactivar SSL
+            'trust_server_certificate' => 'true',  // Confiar en el certificado
+            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
+            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
+        ],
+
         'intranet' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
@@ -202,9 +238,17 @@ return [
             'password' => env('RENAULT_DB_PASSWORD', 'C0b4M4A5#23'),
             'charset' => 'utf8',
             'prefix' => '',
-            'prefix_indexes' => true,
-            // 'encrypt' => env('DB_ENCRYPT', 'yes'),
-            // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
+            // 'prefix_indexes' => true,
+            // 'options' => [
+            //     'Encrypt' => env('RENAULT_DB_ENCRYPT', 'no'),
+            //     'TrustServerCertificate' => env('RENAULT_DB_TRUST_SERVER_CERTIFICATE', true),
+            // ],
+
+
+
+
+             'encrypt' => env('DB_ENCRYPT', 'yes'),
+             'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'true'),
         ],
 
     ],

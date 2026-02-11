@@ -18,7 +18,7 @@ class DatosVentaController extends Controller
      */
     public function index()
     {
-        $libroVentas = DB::connection('nissan_universidad')
+        $libroVentas = DB::connection('renault')
                     ->select(" WITH RegistrosOrdenados AS (
                                     SELECT *,
                                         ROW_NUMBER() OVER (
@@ -34,6 +34,7 @@ class DatosVentaController extends Controller
                                     fa.faau_vend_clave,
                                     fa.faau_nofactura, 
                                     fa.faau_razonfactura,
+                                    fa.faau_idagencia AS id_agencia,
                                     vi.vehi_clas_clave,
                                     vi.vehi_anio,
                                     vi.vehi_numeroinventario,
@@ -62,19 +63,22 @@ class DatosVentaController extends Controller
                                 WHERE sa.rn = 1
                                 AND fa.faau_fechacancelacion IS NULL
                                 ORDER BY fa.faau_fecha, fa.faau_vend_clave
-                                ", ['01-12-2025', '30-01-2026']);
+                                ", 
+                                // ['01-12-2025', '28-02-2026']
+                                ['2025-12-01', '2026-02-28']
+                                );
 
              foreach ($libroVentas as $dato) {
                  // Verificar si ya existe en la base local
                  $existe = DatosVenta::where('no_factura', $dato->faau_nofactura)->exists();
                 $vendedorId = null;
-                 $vendedorExiste = Vendedor::where('nro_vendedor_as', $dato->faau_vend_clave)->first();
+                 $vendedorExiste = Vendedor::where('nro_vendedor_as', $dato->faau_vend_clave)->where('agencia', $dato->id_agencia)->first();
                  if (!$vendedorExiste){
                      $vendedor = Vendedor::create([
                              'tipo' => '1',
                              'porcentaje' => '1',
                              'nro_vendedor_as' => $dato->faau_vend_clave,
-                             'agencia' => '170',
+                             'agencia' => $dato->id_agencia,
                          ]);
 
                          $vendedorId = $vendedor->id;    
@@ -107,7 +111,7 @@ class DatosVentaController extends Controller
                         //  'estatus'          => null,
                         //  'entregado'         => $dato->entrgado,
                         //  'bdc'              => $dato->bdc,
-                         'agencia'          => 710,
+                         'agencia'          => $dato->id_agencia,
 
                          
                          

@@ -29,7 +29,8 @@ class StoreSolicitudCompraRequest extends FormRequest
             'data.detalles.*.cat_unidades_medida_id' => 'required|integer',
             'img_referencia_*' => 'required|file|mimes:jpg,jpeg,png|max:51200',
             'data.detalles.*.recuperar_costo' => 'required',
-            'data.requiere_anticipo' => 'required'
+            'data.requiere_anticipo' => 'required',
+            'data.isAgencia' => 'nullable',
         ];
     }
 

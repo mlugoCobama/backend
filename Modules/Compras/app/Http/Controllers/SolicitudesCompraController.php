@@ -252,6 +252,9 @@ class SolicitudesCompraController extends Controller
      *************************************************************/
     public function generarFolioSc()
     {
+        $tipo = strval(1);
+        $sufijos = ['1' => "SC-",'3' => "SC-TI-", '4' => "SC-A-"];
+
         $ultimaOrden = SolicitudesCompra::administrador()->orderBy('id', 'desc')
         // ->active()
         ->first('folio');
@@ -261,7 +264,7 @@ class SolicitudesCompraController extends Controller
         } else {
             $numero = 1;
         }
-        $nuevoFolio = 'SC-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
+        $nuevoFolio = $sufijos[$tipo] . str_pad($numero, 5, '0', STR_PAD_LEFT);
         return  $nuevoFolio;
     }
     /** *******************************************************************

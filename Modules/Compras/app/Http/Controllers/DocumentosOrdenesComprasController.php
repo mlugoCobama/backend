@@ -641,22 +641,22 @@ class DocumentosOrdenesComprasController extends Controller
         $docsFactura->save();
 
         if($data['tipo_documento'] ==  'complemento_pago'){
-                $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
-            }
-
-        if($data['tipo_documento'] ==  'comprobante_pago'){
-                $orden = OrdenCompra::find($data["orden_compra_id"]);
-        if($orden->modo_pago == 1 ){
-            $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
-            $controlerOC = new OrdenesComprasController;    
-            $controlerOC->enviarCorreoSurtido($orden->id);      
-            $this->enviarCorreoPago($orden, $docsFactura->comprobante_pago);
-            }else{
-                $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
-                $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
-                 $this->enviarCorreoPago($orden, $docsFactura->comprobante_pago);
-            }
+             $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
         }
+
+         if($data['tipo_documento'] ==  'comprobante_pago'){
+             $orden = OrdenCompra::find($data["orden_compra_id"]);
+         if($orden->modo_pago == 1 ){
+             $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+             $controlerOC = new OrdenesComprasController;    
+             $controlerOC->enviarCorreoSurtido($orden->id);      
+            $this->enviarCorreoPago($orden, $docsFactura->representacion_impresa);
+         }else{
+                 $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+                 $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
+                 $this->enviarCorreoPago($orden, $docsFactura->representacion_impresa);
+            }
+         }
 
         return response()->json([
             'status' => 'success',

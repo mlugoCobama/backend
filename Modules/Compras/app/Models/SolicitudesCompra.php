@@ -74,7 +74,7 @@ class SolicitudesCompra extends Model
     }
 
     public function scopeAdministrador($query) {
-        return $query->whereIn('tipo', [1, 3]);
+        return $query->whereIn('tipo', [1, 3, 4]);
     }
 
     /*
