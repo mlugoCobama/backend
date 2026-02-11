@@ -35,10 +35,11 @@ class VendedorResource extends JsonResource
                             0 => 'Nissan Insurgentes',
                           730 => 'Nissan Azcapotzalco',
                           714 => 'Nissan Campestre',
-                          740 => 'Renault Azcapotzalco',
-                          746 => 'Renault Ecatepec',
-                          743 => 'Renault Vallejo',
-                          760 => 'Renault Pachuca',];
+                          1 => 'Renault Azcapotzalco',
+                          2 => 'Renault Ecatepec',
+                          3 => 'Renault Vallejo',
+                          4 => 'Renault Pachuca',];
+                          
         return $nombreAgencia[$idAgencia];
 
     }
