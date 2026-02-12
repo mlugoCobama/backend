@@ -419,143 +419,144 @@ class DocumentosOrdenesComprasController extends Controller
             // Valida que la tenga un archivo xml que pueda leer
             if ($ruta[$key] != null && !empty($ruta[$key])) {
                 $rutaXML = storage_path('app/' . $ruta[$key]);
-                if (!file_exists($rutaXML)) {
-                    return response()->json([
-                        'message' => 'Archivo no encontrado: ' . $ruta[$key]
-                    ], 404);
-                }
+                // if (!file_exists($rutaXML)) {
+                //     return response()->json([
+                //         'message' => 'Archivo no encontrado: ' . $ruta[$key]
+                //     ], 404);
+                // }
+                if (file_exists($rutaXML)){
+                    $contenidoXML = file_get_contents($rutaXML);
+                    $xml = new \SimpleXMLElement($contenidoXML);
 
-                $contenidoXML = file_get_contents($rutaXML);
-                $xml = new \SimpleXMLElement($contenidoXML);
+                    //  Registrar namespaces antes de cualquier xpath()
+                    $xml->registerXPathNamespace('cfdi', $nsCfdi);
+                    $xml->registerXPathNamespace('tfd', $nsTfd);
+                    $xml->registerXPathNamespace('pago20', $nsPago);
 
-                //  Registrar namespaces antes de cualquier xpath()
-                $xml->registerXPathNamespace('cfdi', $nsCfdi);
-                $xml->registerXPathNamespace('tfd', $nsTfd);
-                $xml->registerXPathNamespace('pago20', $nsPago);
+                    // Timbre fiscal
+                    $timbres = $xml->xpath('//cfdi:Complemento/tfd:TimbreFiscalDigital');
+                    $uuid = null;
 
-                // Timbre fiscal
-                $timbres = $xml->xpath('//cfdi:Complemento/tfd:TimbreFiscalDigital');
-                $uuid = null;
-
-                if (!empty($timbres)) {
-                    $uuid = (string) $timbres[0]['UUID'];
-                    $factura['UUIDs'][] = (string) $timbres[0]['UUID'];
-                }
-
-                // Datos comprobante principal
-                $comprobante = $xml->xpath('//cfdi:Comprobante')[0] ?? null;
-                if ($comprobante) {
-                    $fecha    = (string) $comprobante['Fecha'];
-                    $folio = (string) $comprobante['Folio'];
-                    $subtotal = (float) $comprobante['SubTotal'];
-                    $total    = (float) $comprobante['Total'];
-                    $tipoComprobante = (string) $comprobante['TipoDeComprobante'];
-                    $formaPago = (string) $comprobante['FormaPago'];
-                    $serie = (string) $comprobante['Serie'];
-
-
-                    $factura['comprobantes'][] = [
-                        'idRuta'           => $ruta['id'] ?? null,
-                        'fecha'            => $fecha,
-                        'folio'            => $folio,
-                        'serie'            => $serie,
-                        'formaPago'        => $formaPago,
-                        'subTotal'         => $tipoComprobante === 'E' ? $subtotal * -1 : $subtotal,
-                        'tComprobante'     => (string) $comprobante['TipoDeComprobante'],
-                        'tComprobanteDesc' => strtoupper($jsonTC[(string) $comprobante['TipoDeComprobante']]['descripcion']) ?? null,
-                        'moneda'           => (string) $comprobante['Moneda'],
-                        'total'            => $tipoComprobante === 'E' ? $total * -1 : $total,
-                        'UUID'             => (string) $uuid ??  null,
-                        'xml'                   => $ruta['xml'] ?? null,
-                        'representacion_impresa' => $ruta['representacion_impresa'] ?? null,
-                    ];
-
-                    // $factura['sumaSubTotal'] += (float) $subtotal;
-                    // $factura['sumaTotal']    += (float) $total;
-
-                    $factura['sumaSubTotal'] += $tipoComprobante === 'E' ? $subtotal * -1 : $subtotal;
-                    $factura['sumaTotal']    += $tipoComprobante === 'E' ? $total * -1 : $total;
-
-                    if($index === 0){
-                        $factura['metodoPago'] = [
-                        'metodoPago'     => (string) $comprobante['MetodoPago'] ?? null,
-                        'metodoPagoDesc' => $jsonMP[(string) $comprobante['MetodoPago']]['descripcion'] ?? null,
-                        ];
+                    if (!empty($timbres)) {
+                        $uuid = (string) $timbres[0]['UUID'];
+                        $factura['UUIDs'][] = (string) $timbres[0]['UUID'];
                     }
-                    
-                    
-                }
 
-                // Datos de complementos de pagos
-                $complementos = $xml->xpath('//cfdi:Complemento/pago20:Pagos/pago20:Pago');
-                if (!empty($complementos)) {
-                    foreach ($complementos as $complemento) {
-                        // Registrar en el contexto de este nodo antes de xpath si se requiere
-                        $complemento->registerXPathNamespace('pago20', $nsPago);
+                    // Datos comprobante principal
+                    $comprobante = $xml->xpath('//cfdi:Comprobante')[0] ?? null;
+                    if ($comprobante) {
+                        $fecha    = (string) $comprobante['Fecha'];
+                        $folio = (string) $comprobante['Folio'];
+                        $subtotal = (float) $comprobante['SubTotal'];
+                        $total    = (float) $comprobante['Total'];
+                        $tipoComprobante = (string) $comprobante['TipoDeComprobante'];
+                        $formaPago = (string) $comprobante['FormaPago'];
+                        $serie = (string) $comprobante['Serie'];
 
-                        $fechaPago   = (string) $complemento['FechaPago'];
-                        $monedaPago  = (string) $complemento['MonedaP'];
-                        $formaPagoP  = (string) $complemento['FormaDePagoP'];
 
-                        foreach ($complemento->xpath('pago20:DoctoRelacionado') as $doc) {
-                            $serie           = (string) $doc['Serie'];
-                            $folio           = (string) $doc['Folio'];
-                            $numParcialidad  = (string) $doc['NumParcialidad'];
-                            $impSaldoAnt     = (float) $doc['ImpSaldoAnt'];
-                            $impPagado       = (float) $doc['ImpPagado'];
-                            $uuid            = (string) $doc['IdDocumento'] ?: (string) $doc['UUID'] ?? null;
+                        $factura['comprobantes'][] = [
+                            'idRuta'           => $ruta['id'] ?? null,
+                            'fecha'            => $fecha,
+                            'folio'            => $folio,
+                            'serie'            => $serie,
+                            'formaPago'        => $formaPago,
+                            'subTotal'         => $tipoComprobante === 'E' ? $subtotal * -1 : $subtotal,
+                            'tComprobante'     => (string) $comprobante['TipoDeComprobante'],
+                            'tComprobanteDesc' => strtoupper($jsonTC[(string) $comprobante['TipoDeComprobante']]['descripcion']) ?? null,
+                            'moneda'           => (string) $comprobante['Moneda'],
+                            'total'            => $tipoComprobante === 'E' ? $total * -1 : $total,
+                            'UUID'             => (string) $uuid ??  null,
+                            'xml'                   => $ruta['xml'] ?? null,
+                            'representacion_impresa' => $ruta['representacion_impresa'] ?? null,
+                        ];
 
-                            // if ($uuid === $id) {
-                            if (is_array($id) && in_array($uuid, $id)) {
-                                $factura['comprobantes'][] = [
-                                    'idRuta'                => $ruta['id'] ?? null,
-                                    'fecha'                 => $fechaPago,
-                                    'folio'                 => $folio ?? "-",
-                                    'serie'                 => $serie ?? "-",
-                                    'subTotal'              => $impPagado ?? "-",
-                                    'formaPago'             => $formaPagoP ?? "-",
-                                    'tComprobante'          => (string) $comprobante['TipoDeComprobante'],
-                                    'tComprobanteDesc'      => strtoupper($jsonTC[(string) $comprobante['TipoDeComprobante']]['descripcion'] . '-parc ' . $numParcialidad) ?? null,
-                                    'moneda'                => $monedaPago ?? "-",
-                                    'total'                 => $impSaldoAnt ?? "-",
-                                    'UUID'                  => $uuid,
-                                    'xml'                   => $ruta['xml'] ?? null,
-                                    'representacion_impresa' => $ruta['representacion_impresa'] ?? null,
-                                ];
+                        // $factura['sumaSubTotal'] += (float) $subtotal;
+                        // $factura['sumaTotal']    += (float) $total;
+
+                        $factura['sumaSubTotal'] += $tipoComprobante === 'E' ? $subtotal * -1 : $subtotal;
+                        $factura['sumaTotal']    += $tipoComprobante === 'E' ? $total * -1 : $total;
+
+                        if($index === 0){
+                            $factura['metodoPago'] = [
+                            'metodoPago'     => (string) $comprobante['MetodoPago'] ?? null,
+                            'metodoPagoDesc' => $jsonMP[(string) $comprobante['MetodoPago']]['descripcion'] ?? null,
+                            ];
+                        }
+                        
+                        
+                    }
+
+                    // Datos de complementos de pagos
+                    $complementos = $xml->xpath('//cfdi:Complemento/pago20:Pagos/pago20:Pago');
+                    if (!empty($complementos)) {
+                        foreach ($complementos as $complemento) {
+                            // Registrar en el contexto de este nodo antes de xpath si se requiere
+                            $complemento->registerXPathNamespace('pago20', $nsPago);
+
+                            $fechaPago   = (string) $complemento['FechaPago'];
+                            $monedaPago  = (string) $complemento['MonedaP'];
+                            $formaPagoP  = (string) $complemento['FormaDePagoP'];
+
+                            foreach ($complemento->xpath('pago20:DoctoRelacionado') as $doc) {
+                                $serie           = (string) $doc['Serie'];
+                                $folio           = (string) $doc['Folio'];
+                                $numParcialidad  = (string) $doc['NumParcialidad'];
+                                $impSaldoAnt     = (float) $doc['ImpSaldoAnt'];
+                                $impPagado       = (float) $doc['ImpPagado'];
+                                $uuid            = (string) $doc['IdDocumento'] ?: (string) $doc['UUID'] ?? null;
+
+                                // if ($uuid === $id) {
+                                if (is_array($id) && in_array($uuid, $id)) {
+                                    $factura['comprobantes'][] = [
+                                        'idRuta'                => $ruta['id'] ?? null,
+                                        'fecha'                 => $fechaPago,
+                                        'folio'                 => $folio ?? "-",
+                                        'serie'                 => $serie ?? "-",
+                                        'subTotal'              => $impPagado ?? "-",
+                                        'formaPago'             => $formaPagoP ?? "-",
+                                        'tComprobante'          => (string) $comprobante['TipoDeComprobante'],
+                                        'tComprobanteDesc'      => strtoupper($jsonTC[(string) $comprobante['TipoDeComprobante']]['descripcion'] . '-parc ' . $numParcialidad) ?? null,
+                                        'moneda'                => $monedaPago ?? "-",
+                                        'total'                 => $impSaldoAnt ?? "-",
+                                        'UUID'                  => $uuid,
+                                        'xml'                   => $ruta['xml'] ?? null,
+                                        'representacion_impresa' => $ruta['representacion_impresa'] ?? null,
+                                    ];
+                                }
                             }
                         }
                     }
-                }
 
-                // Impuestos
-                $impuestos = $xml->xpath('//cfdi:Impuestos') ?? [];
-                foreach ($impuestos as $impuesto) {
-                    if (isset($impuesto['TotalImpuestosTrasladados'])) {
-                        $factura['impuestos'][] = (float) $impuesto['TotalImpuestosTrasladados'];
+                    // Impuestos
+                    $impuestos = $xml->xpath('//cfdi:Impuestos') ?? [];
+                    foreach ($impuestos as $impuesto) {
+                        if (isset($impuesto['TotalImpuestosTrasladados'])) {
+                            $factura['impuestos'][] = (float) $impuesto['TotalImpuestosTrasladados'];
+                        }
                     }
-                }
 
-                // Datos emisor
-                $emisor = $xml->xpath('//cfdi:Emisor')[0] ?? null;
-                if ($emisor) {
-                    $factura['emisor'] = [
-                        'rfc'              => (string) $emisor['Rfc'],
-                        'nombre'           => (string) $emisor['Nombre'],
-                        'regimenFiscal'    => (string) $emisor['RegimenFiscal'],
-                        'regimenFiscalDesc' => $jsonRF[(string) $emisor['RegimenFiscal']]['descripcion'] ?? null,
-                    ];
-                }
+                    // Datos emisor
+                    $emisor = $xml->xpath('//cfdi:Emisor')[0] ?? null;
+                    if ($emisor) {
+                        $factura['emisor'] = [
+                            'rfc'              => (string) $emisor['Rfc'],
+                            'nombre'           => (string) $emisor['Nombre'],
+                            'regimenFiscal'    => (string) $emisor['RegimenFiscal'],
+                            'regimenFiscalDesc' => $jsonRF[(string) $emisor['RegimenFiscal']]['descripcion'] ?? null,
+                        ];
+                    }
 
-                // Datos receptor
-                $receptor = $xml->xpath('//cfdi:Receptor')[0] ?? null;
-                if ($receptor) {
-                    $factura['receptor'] = [
-                        'rfc'                    => (string) $receptor['Rfc'],
-                        'nombre'                 => (string) $receptor['Nombre'],
-                        'usoCFDI'                => (string) $receptor['UsoCFDI'],
-                        'usoCFDIDesc'            => $jsonUCfdi[(string) $receptor['UsoCFDI']]['descripcion'] ?? null,
-                        'domicilioFiscalReceptor' => (string) $receptor['DomicilioFiscalReceptor'] ?? null,
-                    ];
+                    // Datos receptor
+                    $receptor = $xml->xpath('//cfdi:Receptor')[0] ?? null;
+                    if ($receptor) {
+                        $factura['receptor'] = [
+                            'rfc'                    => (string) $receptor['Rfc'],
+                            'nombre'                 => (string) $receptor['Nombre'],
+                            'usoCFDI'                => (string) $receptor['UsoCFDI'],
+                            'usoCFDIDesc'            => $jsonUCfdi[(string) $receptor['UsoCFDI']]['descripcion'] ?? null,
+                            'domicilioFiscalReceptor' => (string) $receptor['DomicilioFiscalReceptor'] ?? null,
+                        ];
+                    }
                 }
             } else {
                 //Respuesta en el caso que no tenga un XML
