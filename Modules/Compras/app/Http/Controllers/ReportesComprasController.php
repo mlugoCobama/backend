@@ -424,8 +424,8 @@ class ReportesComprasController extends Controller
 
         $concentrado = [
             131, 130, 251, 210, 155, 135, 110 , 111 ,
-            250, 132, 119, 190, 133, 353, 191, 354 ,
-    ];
+            250, 132, 119, 190, 133, 353, 191, 354 , 251250, 353111
+        ];
 
         $detalleData = [];
         foreach ($concentrado as $empresa) {

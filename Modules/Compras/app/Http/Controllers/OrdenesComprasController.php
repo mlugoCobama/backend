@@ -97,6 +97,9 @@ class OrdenesComprasController extends Controller
                     // Actualiza estado de la solicitud
                     $solicitud = SolicitudesCompra::find($data['id_solicitud_compra']);
                     if ($solicitud) {
+                        if(isset($data["categoria"]) && !empty($data["categoria"]) && ($solicitud->tipo != 2 && $solicitud->tipo != 3)){
+                         $solicitud->com_cat_sistemas_auto_id = $data["categoria"];
+                        }
                         $solicitud->estatus = EstatusSolicitud::EN_ORDEN_COMPRA;
                         $solicitud->save();
                     }
@@ -125,7 +128,7 @@ class OrdenesComprasController extends Controller
     public function show($id)
     {
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
-        $ordenCompra = new OrdenCompraResource(OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first());
+        $ordenCompra = new OrdenCompraResource(OrdenCompra::with('cotizacion.SolicitudCompra.SistemaMantenimiento')->where('cotizaciones_id', $cotizacion->id)->first());
 
         return response()->json([
             'data' => $ordenCompra

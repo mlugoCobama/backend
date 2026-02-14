@@ -251,17 +251,20 @@ class SolicitudesCompraController extends Controller
     /** *********************************************************** 
      * Genera un nuevo folio consecutivo en base al ultimo folio
      *************************************************************/
-    public function generarFolioSc()
+    public function generarFolioSc($tipo)
     {
-        $tipo = strval(1);
+        // $tipo = strval(1);
         $sufijos = ['1' => "SC-",'3' => "SC-TI-", '4' => "SC-A-"];
 
-        $ultimaOrden = SolicitudesCompra::administrador()->orderBy('id', 'desc')
+        $ultimaOrden = SolicitudesCompra::active()
+        ->where('tipo', $tipo)
+        ->where('folio', 'LIKE', '%' . $sufijos[$tipo] . '%')
+        ->orderBy('id', 'desc')
         // ->active()
         ->first('folio');
         if ($ultimaOrden) {
             $ultimoFolio = $ultimaOrden->folio;
-            $numero = intval(substr($ultimoFolio, 3)) + 1;
+            $numero = intval(substr($ultimoFolio, strlen($sufijos[$tipo]))) + 1;
         } else {
             $numero = 1;
         }
@@ -317,8 +320,11 @@ class SolicitudesCompraController extends Controller
         $usuariosSopGas = explode(',', env('USERS_SOP_GAS'));
         $isSopGas = in_array($data["usuario_solicita"], $usuariosSopGas );
 
+        $isAutos = $data["isAgencia"];
+        $tipoSolicitud = match (true) { $isInfra => 3, $isAutos => 4, default => 1};
+
         $dataSolicitud = new SolicitudesCompra();
-        $dataSolicitud->folio = $this->generarFolioSc();
+        $dataSolicitud->folio = $this->generarFolioSc($tipoSolicitud);
         $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
         $dataSolicitud->empresa = $data["empresa"];
         $dataSolicitud->usuario_destino = $data["usuario_destino"];
@@ -328,7 +334,7 @@ class SolicitudesCompraController extends Controller
         $dataSolicitud->requiere_anticipo =  ($data["requiere_anticipo"] === "true") ? 1 : 0 ;
                 
         if($isInfra){
-           $dataSolicitud->tipo = 3;
+           $dataSolicitud->tipo = $tipoSolicitud;
            $dataSolicitud->auto_admin =  $isSopGas  ? 0 : 1;
            $dataSolicitud->auto_gg = $isSopGas  ? 0 : 1;
            $dataSolicitud->auto_macro = 1;

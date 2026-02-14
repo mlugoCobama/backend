@@ -5,6 +5,8 @@ namespace Modules\Compras\Transformers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\File;
+use Modules\Compras\Transformers\AcuseEntregaResource;
+use Modules\Compras\Transformers\DocsOrdenCompraResource;
 
 class OrdenCompraResource extends JsonResource
 {
@@ -25,6 +27,8 @@ class OrdenCompraResource extends JsonResource
             'cotizaciones_id' => $this->cotizaciones_id,
             'entrega' => $lugarEntrega,
             'modo_pago' => $this->modo_pago,
+            'id_categoria' => $this->cotizacion->SolicitudCompra->SistemaMantenimiento->id,
+            'categoria' => $this->cotizacion->SolicitudCompra->SistemaMantenimiento->sistema,
             'fecha_entrega' => $this->fecha_entrega,
             'surtido_solicitado' => $this->surtido_solcitado,
             'tipo_pago' => $this->modoPagoToString($this->modo_pago),
