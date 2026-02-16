@@ -37,6 +37,7 @@ use Modules\Compras\Transformers\EmailAutorizarSolicitud;
 // Jobs
 use App\Jobs\EnviarCorreoSolicitudCotizacion;
 use App\Notifications\CambioEstatusSolicitudCompra;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 //Request validation
 use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
@@ -64,11 +65,14 @@ class SolicitudesCompraController extends Controller
         $usuariosRT = explode(',', env('USERS_COMPRAS_RT'));
         $isRT = in_array($id, $usuariosRT );
 
+        $usuariosComprasAutos = explode(',', env('USERS_COMPRAS_AUTOS'));
+        $isComprasAutos = in_array($id, $usuariosComprasAutos );
+
         $usuariosTG = explode(',', env('USERS_COMPRAS_TG'));
         $isTG = in_array($id, $usuariosTG );
         
         if($isRT){
-            if(!in_array($id, [2395, 2404])){
+            if(!in_array($id, [2395])){
                 $query = $this->getSolicitudesCompras(null,0,0,3,$id,'rt');
             }else{
                 $query = $this->getSolicitudesCompras(null,0,0,3,null,'rt');
@@ -79,6 +83,12 @@ class SolicitudesCompraController extends Controller
 
         if($isCompras){
             $query = $this->getSolicitudesCompras(null , 1, 1, 1, null, 'compras');
+            $data = SolicitudesComprasResource::collection( $query );
+            $tipo = 'compras';
+        }
+
+        if($isComprasAutos){
+            $query = $this->getSolicitudesCompras(null , 1, 1, 4, null, 'comprasAutos');
             $data = SolicitudesComprasResource::collection( $query );
             $tipo = 'compras';
         }
@@ -101,7 +111,7 @@ class SolicitudesCompraController extends Controller
             $tipo = 'empresa';
         }
         
-        if(!$isRT && !$isCompras && !$isAdmin  && !$isTG && !$isAdminz){
+        if(!$isRT && !$isCompras && !$isAdmin  && !$isTG && !$isAdminz && !$isComprasAutos){
             $query = $this->getSolicitudesCompras($intercompania , 0, 0, null, null, 'empresa');
             $data = SolicitudesComprasResource::collection(
                 $query
@@ -320,8 +330,11 @@ class SolicitudesCompraController extends Controller
         $usuariosSopGas = explode(',', env('USERS_SOP_GAS'));
         $isSopGas = in_array($data["usuario_solicita"], $usuariosSopGas );
 
+        $usuariosComprasAutos = explode(',', env('USERS_COMPRAS_AUTOS'));
+        $isComprasAutos = in_array( $data["usuario_solicita"], $usuariosComprasAutos );
+
         $isAutos = $data["isAgencia"];
-        $tipoSolicitud = match (true) { $isInfra => 3, $isAutos => 4, default => 1};
+        $tipoSolicitud = match (true) { $isInfra => 3, $isAutos => 4, $isComprasAutos => 4,  default => 1};
 
         $dataSolicitud = new SolicitudesCompra();
         $dataSolicitud->folio = $this->generarFolioSc($tipoSolicitud);
@@ -332,9 +345,9 @@ class SolicitudesCompraController extends Controller
         $dataSolicitud->fecha = date('Y-m-d H:i:s') ?? now();
         $dataSolicitud->c_c = $data["c_c"];
         $dataSolicitud->requiere_anticipo =  ($data["requiere_anticipo"] === "true") ? 1 : 0 ;
-                
+        $dataSolicitud->tipo = $tipoSolicitud;
+
         if($isInfra){
-           $dataSolicitud->tipo = $tipoSolicitud;
            $dataSolicitud->auto_admin =  $isSopGas  ? 0 : 1;
            $dataSolicitud->auto_gg = $isSopGas  ? 0 : 1;
            $dataSolicitud->auto_macro = 1;
@@ -711,7 +724,7 @@ class SolicitudesCompraController extends Controller
      * @param mixed $idSolicitud id de solicitud de orden de compra
      */
     public function getSeguimientoSolicitud($idSolicitud){
-        $eventos = LogEventos::where('table_name', 'com_solicitudes_compra')->where('record_id', $idSolicitud)->get();
+        $eventos = LogEventos::where('table_name', 'com_solicitudes_compra')->where('record_id', (int)$idSolicitud)->get();
 
         return response()->json([
             'status' => 'success',
