@@ -226,7 +226,7 @@ class ReportesComprasController extends Controller
             7051 => 'NISSAN AZCAPOTZALCO', 712 => 'NISSAN CAMPESTRE', 700 => 'CORPORATIVO AUTOS SONI',
             240 => 'SERVIGAS DEL VALLE', 2000 => 'SERVICIO EL ONCE', 7064 => 'RENAULT AZCAPOTZALCO',
             7062 => 'RENAULT ECATEPEC', 7063 => 'RENAULT VALLEJO', 7061 => 'RENAULT PACHUCA',
-            191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA',
+            191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA', 353111 => 'GAS URBANO - GARZA SUR', 251250 => 'FLAMAMEX - FLAMAZUL'
         ];
 
 
@@ -368,7 +368,7 @@ class ReportesComprasController extends Controller
             7051 => 'NISSAN AZCAPOTZALCO', 712 => 'NISSAN CAMPESTRE', 700 => 'CORPORATIVO AUTOS SONI',
             240 => 'SERVIGAS DEL VALLE', 2000 => 'SERVICIO EL ONCE', 7064 => 'RENAULT AZCAPOTZALCO',
             7062 => 'RENAULT ECATEPEC', 7063 => 'RENAULT VALLEJO', 7061 => 'RENAULT PACHUCA',
-            191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA',
+            191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA', 353111 => 'GAS URBANO - GARZA SUR', 251250 => 'FLAMAMEX - FLAMAZUL'
         ];
 
         $solicitudes = SolicitudesCompra::with(['DetallesSolicitud.unidadMedida','Cotizaciones.CotizacionesProveedor.datos_proveedor', 'SistemaMantenimiento', 'TipoMantenimiento',])
@@ -394,8 +394,8 @@ class ReportesComprasController extends Controller
                     $labels = EstatusSolicitud::labels();
                     $label = $labels[$solicitud->estatus] ?? 'DESCONOCIDO';
                     $proveedorSeleccionado = $solicitud->Cotizaciones->flatMap->CotizacionesProveedor->firstWhere('seleccionado', 1);
-                    $tipoMantenimiento =  $solicitud->TipoMantenimiento->nombre;
-                    $sistemaMantenimiento =  $solicitud->SistemaMantenimiento->sistema;
+                    $tipoMantenimiento =  $solicitud->TipoMantenimiento->nombre ?? '';
+                    $sistemaMantenimiento =  $solicitud->SistemaMantenimiento->sistema ?? '';
                     $proveedor = $proveedorSeleccionado->datos_proveedor->nombre ?? 'Por definir';
                     return [
                         'Folio'        => $index === 0 ? $solicitud->folio : '',
@@ -454,7 +454,7 @@ class ReportesComprasController extends Controller
             7051 => 'NISSAN AZCAPOTZALCO', 712 => 'NISSAN CAMPESTRE', 700 => 'CORPORATIVO AUTOS SONI',
             240 => 'SERVIGAS DEL VALLE', 2000 => 'SERVICIO EL ONCE', 7064 => 'RENAULT AZCAPOTZALCO',
             7062 => 'RENAULT ECATEPEC', 7063 => 'RENAULT VALLEJO', 7061 => 'RENAULT PACHUCA',
-            191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA',
+            191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA', 353111 => 'GAS URBANO - GARZA SUR', 251250 => 'FLAMAMEX - FLAMAZUL'
     ];
 
 
@@ -517,8 +517,8 @@ class ReportesComprasController extends Controller
         $destinoFormat = ($solicitud->tipo == 2 && $destinoSolicitud)
             ? "ECO: $destinoSolicitud"
             : 'N/A';
-        $tipoMantenimiento =  $solicitud->TipoMantenimiento->nombre;
-        $sistemaMantenimiento =  $solicitud->SistemaMantenimiento->sistema;
+        $tipoMantenimiento =  $solicitud->TipoMantenimiento->nombre ?? '';
+        $sistemaMantenimiento =  $solicitud->SistemaMantenimiento->sistema ?? '';
 
         //   FILA PRINCIPAL: TOTALES DE LA SOLICITUD
         $rows[] = [
