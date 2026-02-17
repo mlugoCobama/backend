@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Console\Commands;
-
-use App\Exports\GastosUnidadesDetallesExport;
+use App\Notifications\ReporteSemanalNotification;
 use Illuminate\Console\Command;
-use Modules\Compras\Http\Controllers\ReportesComprasController;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class SendReporteSemanalComprasEmpresa extends Command
 {
@@ -26,22 +26,33 @@ class SendReporteSemanalComprasEmpresa extends Command
      * Execute the console command.
      */
     public function handle()
-        {
-            // $intercompanias  = [
-            //     131, 130, 251, 210, 155, 135, 110 , 111 ,
-            //     250, 132, 119, 190, 133, 353, 191, 354 ,
-            // ];
+        {   
+            $exepciones = explode(',', env('EXCEPCIONES_REPORTE_COMPRAS'));
             
-            // $reportes =  new ReportesComprasController();
-            // $detalles = $reportes->
-            // // Generar el archivo exportado
-            // $export = new GastosUnidadesDetallesExport(); 
-            // $filePath = storage_path('app/reports/reporte_semanal.xlsx');
-            // \Maatwebsite\Excel\Facades\Excel::store($export, 'reports/reporte_semanal.xlsx');
+            $empresas = [
+                        333 => 'CORPORACION ADMINISTRATIVA DEL SUR', 201 => 'AGRUPAMIENTO',
+                        131 => 'AZTECA GAS', 130 => 'SATELITE GAS', 251 => 'FLAMAMEX',
+                        210 => 'REYES GAS', 155 => 'GASAMEX', 135 => 'SEGAS', 110 => 'GARZA GAS',
+                        111 => 'GARZA SUR', 250 => 'GAS FLAMAZUL', 132 => 'GAS PREMIO',
+                        200 => 'TANQUES SONI', 119 => 'TANQUES GARZA GAS', 190 => 'ZUGAS',
+                        133 => 'GASERA MULTIREGIONAL', 353 => 'GAS URBANO', 710 => 'NISSAN UNIVERSIDAD',
+                        7051 => 'NISSAN AZCAPOTZALCO', 712 => 'NISSAN CAMPESTRE', 700 => 'CORPORATIVO AUTOS SONI',
+                        240 => 'SERVIGAS DEL VALLE', 2000 => 'SERVICIO EL ONCE', 7064 => 'RENAULT AZCAPOTZALCO',
+                        7062 => 'RENAULT ECATEPEC', 7063 => 'RENAULT VALLEJO', 7061 => 'RENAULT PACHUCA',
+                        191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA', 353111 => 'GAS URBANO - GARZA SUR', 251250 => 'FLAMAMEX - FLAMAZUL'
+                ];
 
-            // // Enviar correo con el archivo adjunto
-            // \Mail::to('destinatario@ejemplo.com')->send(new \App\Mail\WeeklyReportMail($filePath));
-
-            // $this->info('Reporte semanal enviado correctamente.');
+                foreach ($empresas as $intercompania => $nombre) {
+                    $isDisabled = in_array($intercompania, $exepciones );
+                    if(!$isDisabled){
+                        $correos = DB::connection('intranet')->select('call SOPORTEZM.SP_GetGereneciaEmpresas(?)', [$intercompania]);
+                        if(!empty($correos)){
+                            foreach ($correos as $correo) {
+                                Notification::route('mail', $correo->name)->notify( new ReporteSemanalNotification($intercompania, $nombre, 1));
+                            }
+                        } 
+                    }
+                }
         }
+
 }
