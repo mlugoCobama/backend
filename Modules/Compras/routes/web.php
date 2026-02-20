@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Compras\Http\Controllers\ComprasController;
+use Modules\Compras\Http\Controllers\OrdenesComprasController;
 use Modules\Compras\Http\Controllers\SyncController;
 
 /*
@@ -22,3 +23,5 @@ Route::group([], function () {
 
 Route::get('/archivosXML/{archivoId}',[SyncController::class, 'streamArchivoXML'])->name('archivosXML.stream');
 Route::get('/archivosPDF/{archivoId}',[SyncController::class, 'streamArchivoPDF'])->name('archivosPDF.stream');
+Route::get('/orden-compra/{idSolicitudCompra}/pdf', [SyncController::class, 'streamOrdenCompra'])->name('ordenCompra.stream');
+

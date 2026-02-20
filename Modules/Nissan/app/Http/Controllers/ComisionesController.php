@@ -2,6 +2,7 @@
 
 namespace Modules\Nissan\Http\Controllers;
 
+use App\Exports\ComisionesVentasAutosExport;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -9,6 +10,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Modules\Nissan\Models\Porcentaje;
 use Illuminate\Support\Facades\Cache;
+use Maatwebsite\Excel\Facades\Excel;
 use Modules\Nissan\Models\DatosVenta;
 use Modules\Nissan\Models\Gasto;
 use Modules\Nissan\Models\GastosVenta;
@@ -134,7 +136,7 @@ class ComisionesController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Datos recuperados correctamente',
-            'data' => $data,
+            'data' => DatosVentaResource::collection($data),
             'estado' => $estatus
         ]);
 
@@ -161,7 +163,90 @@ class ComisionesController extends Controller
             ->when($fechaInicio && $fechaFin , fn($q) => $q->whereBetween('fecha_factura', [$fechaInicio, $fechaFin]))
             ->get();
 
-        return DatosVentaResource::collection($ventas);
+        return $ventas;
+    }
+
+    public function formatData($data){
+        return $data->map(function ($item) {
+
+        $otros = (float) ($item->gatosVenta->otros ?? 0);
+        $gasolina = (float) ($item->gatosVenta->gasolina ?? 0);
+        $previa = (float) ($item->gatosVenta->previa ?? 0);
+        $descuentos = (float) ($item->gatosVenta->descuentos ?? 0);
+        $traslados = (float) ($item->gatosVenta->traslados ?? 0);
+        $descuento_impulso = (float) ($item->gatosVenta->descuento_impulso ?? 0);
+        $descuento_gastos = (float) ($item->gatosVenta->descuento_da ?? 0);
+        $cortesia = (float) ($item->gatosVenta->cortesia ?? 0);
+        $accesorios = (float) ($item->gatosVenta->accesorios ?? 0);
+        $placas = (float) ($item->gatosVenta->placas ?? 0);
+        $porcentaje_bdc = (float) ($item->gatosVenta->porcentaje_bdc ?? 0);
+
+        // Calcular total de gastos
+        $total_gastos = $otros + $gasolina + $previa + $descuentos + $traslados
+            + $descuento_impulso + $descuento_gastos + $cortesia + $accesorios
+            + $placas;
+
+        return [
+            "id" => $item->id,
+            "fecha_as_salida" => date('d/m/Y', strtotime($item->fecha_as_salida)),
+            "no_factura" => $item->no_factura,
+            "razon_social" => $item->razon_social,
+            "descripcion" => $item->descripcion,
+            "serie" => $item->serie,
+            "clave_inventario" => $item->clave_producto.'-'.$item->anio_vehiculo.'-'.$item->no_inventario,
+            "vendedor_agencia" => $item->vendedor->nro_vendedor_as ?? null,
+            "tipo_venta_nombre" => $item->tipoVenta->nombre ?? null,
+            "fecha_factura" => date('d/m/Y', strtotime($item->fecha_factura)),
+            "venta" => $item->total_venta,
+            "costos" => $item->costos ,
+            "bonificacion_extra"  => $item->bonificaciones,
+            "utlidad" => $item->utilidad_inicial,
+            "porcentaje_tipo_venta" => $item->tipoVenta->porcentaje,
+
+            'otros' => $otros,
+            'gasolina' => $gasolina,
+            'previa' => $previa,
+            'descuentos' => $descuentos,
+            'traslados' => $traslados,
+            'descuento_impulso' => $descuento_impulso,
+            'descuento_gastos' => $descuento_gastos,
+            'cortesia' => $cortesia,
+            'accesorios' => $accesorios,
+            'total_gastos' => $total_gastos ?? 0,
+            'porcentaje_bdc' => ($porcentaje_bdc ?? 0) / 100,
+            'comision_apv_pesos' => (float) ($item->gatosVenta->comision_apv_pesos ?? 0),
+            'comision_bdc_pesos' => (float) ($item->gatosVenta->comision_bdc_pesos ?? 0),
+        ];
+    });
+
+
+
+    }
+
+    public function downloadReporte( $estatus = null, $agencia =null, $tipoVenta = null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null )
+    {
+        $data = $this->queryDatosVentas(
+                                        $estatus        == '12345' ? null : $estatus,
+                                        $agencia        == 'todos' ? null : $agencia,
+                                        $vendedor       == 'todos' ? null : $vendedor,
+                                        $tipoVenta      == 'todos' ? null : $tipoVenta,
+                                        $fechaInicio    == 'todos' ? null : $fechaInicio,
+                                        $fechaFin       == 'todos' ? null : $fechaFin
+                                    );
+
+        $hoy = date('d_m_Y');
+        $semanaActual = now()->weekOfYear;
+
+
+        $datosFormateados = $this->formatData($data);
+
+        $filename = 'Comisiones_'.$hoy.'_'.$semanaActual.'_periodo_'.$fechaInicio.'_'.$fechaFin.'.xlsx';
+        return Excel::download(
+            new ComisionesVentasAutosExport($datosFormateados, $estatus),
+            $filename,
+            null,
+            ['Content-Disposition' => 'attachment; filename="'.$filename.'"']
+        );
     }
 
     /**

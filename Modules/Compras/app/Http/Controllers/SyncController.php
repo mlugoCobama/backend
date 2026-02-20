@@ -3,6 +3,7 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Modules\Compras\Models\DocumentosOrdenesCompra;
+use Modules\Compras\Models\OrdenCompra;
 
 class SyncController extends Controller
 {
@@ -44,7 +46,7 @@ class SyncController extends Controller
     
     {
         $archivos = DB::select(
-            'CALL SP_GetFacturasEmpresas(?)',
+            'CALL SP_GetFacturasEmpresasTesting(?)',
             [$id]
         );
 
@@ -53,10 +55,14 @@ class SyncController extends Controller
             'total' => count($archivos),
             'archivos' => collect($archivos)->map(function ($archivo) {
                 return [
-                    'id'     => $archivo->id_doc,
-                    'nombre' => $archivo->orden_compra,
-                    // 'tipo'   => 'xml',
-                    // URL firmada (recomendado)
+                    'folio' => $archivo->clave,
+                    'proveedor' => $archivo->proveedor,
+                    'importeTotal' => $archivo->importe_total,
+                    'ordenDeCompra' => URL::temporarySignedRoute(
+                        'ordenCompra.stream',
+                        now()->addMinutes(60),
+                        ['idSolicitudCompra' => $archivo->id_solicitud_compra]
+                    ),
                     'urlXML' => URL::temporarySignedRoute(
                         'archivosXML.stream',
                         now()->addMinutes(60),
@@ -130,9 +136,9 @@ class SyncController extends Controller
         }
 
 
-        $archivo->sync = 1;
-        $archivo->syncned_at = now();
-        $archivo->save();
+        // $archivo->sync = 1;
+        // $archivo->syncned_at = now();
+        // $archivo->save();
         
         return Storage::download(
             $archivo->ruta_xml_factura,
@@ -174,4 +180,71 @@ class SyncController extends Controller
             // $archivo->nombre_archivo
         );
     }
+
+    public function streamOrdenCompra(Request $request, $idSolicitudCompra)
+    {
+        if (!$request->hasValidSignature()) {
+            return response()->json([
+                'ordenCompra' => $idSolicitudCompra,
+                'archivos' => [],
+                'mensaje' => 'Firma invalida'
+            ]);
+
+            // abort(401, 'URL no válida o expirada');
+        }
+
+        $ordenCompra = new OrdenesComprasController();
+        $datosOrdenCompra = $ordenCompra->consultaDatosPDF($idSolicitudCompra);
+
+        $pdf = $datosOrdenCompra['archivoPDF'];
+
+        // return response()->streamDownload(function () use ($pdf) {
+        //     echo $pdf;
+        //     // $pdf->output();
+        // }, "orden_compra_{$idSolicitudCompra}.pdf");
+
+        $fileName = ''.$datosOrdenCompra['folioOrdenCompra'].'_'. $datosOrdenCompra['folioSolicitudCompra'].'.pdf';
+        return response($pdf, 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+            ->header('X-Filename', $fileName)
+            ->header('Access-Control-Expose-Headers', 'X-Filename');
+    }
+
+
+    public function confirmar(Request $request)
+    {
+        $archivos = $request->input('archivos');
+
+        if (!is_array($archivos)) {
+            return response()->json([
+                'mensaje' => 'Formato inválido, se esperaba un listado de archivos'
+            ], 400);
+        }
+
+        foreach ($archivos as $archivo) {
+            $folio = $archivo['folio'] ?? null;
+            $estado = $archivo['estado'] ?? null;
+
+            if ($folio && $estado !== null) {
+
+                preg_match('/OC-\d+/', $folio, $matches);
+                $ordenCompra = $matches[0] ?? null;
+
+                $registro = OrdenCompra::where('folio_oc', $ordenCompra)->first();
+                $registro->sync_a3 = $estado;
+                $registro->syncned_a3_at = Carbon::now()->toDateTimeString();
+                $registro->save();
+            }
+        }
+
+        return response()->json([
+            'mensaje' => 'Confirmaciones procesadas correctamente',
+            'total' => count($archivos)
+        ], 200);
+    }
+
+
+
+
 }

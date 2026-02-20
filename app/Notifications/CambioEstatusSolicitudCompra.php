@@ -82,7 +82,7 @@ class CambioEstatusSolicitudCompra extends Notification
     {
         return [
             'modelo_id' => $this->solicitud->id,
-            'nombre' => $this->solicitud->nombre,
+            'nombre' => $this->solicitud->folio,
             'nuevo_estatus' => $this->nuevoEstatus,
             'cambiado_por' => auth()->user()->name,
         ];

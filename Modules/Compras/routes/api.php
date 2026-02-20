@@ -107,6 +107,8 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
 
 Route::prefix('compras')->group(function(){
     Route::resource('SyncFacturas', SyncController::class);
+
+    Route::post('/confirmacion-sincronizacion', [SyncController::class, 'confirmar']);
     
     Route::get('/documentos/{id}/archivos',[SyncController::class, 'obtenerArchivos']);
 
