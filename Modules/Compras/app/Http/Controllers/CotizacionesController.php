@@ -65,7 +65,7 @@ class CotizacionesController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Se ha guardado correctamente',
+                'message' => 'Tu cotización, se ha guardado correctamente',
                 'data' => []
             ]);
         } catch (\Exception $e) {

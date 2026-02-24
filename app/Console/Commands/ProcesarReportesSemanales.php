@@ -1,33 +1,32 @@
 <?php
 
 namespace App\Console\Commands;
-use App\Notifications\ReporteSemanalNotification;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 
-class SendReporteSemanalComprasEmpresa extends Command
+use App\Jobs\ProcesarReporteSemanalJob;
+use Illuminate\Console\Command;
+
+class ProcesarReportesSemanales extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:send-reporte-semanal-compras-empresa';
+    protected $signature = 'app:procesar-reportes-semanales';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Genera y envía el reporte semanal para las empresa que no estén dentro de las excepciones';
+    protected $description = 'Genera y envía el reporte semanal para las empresa que no estén dentro de las excepciones usando jobs y almacena temporalmente los archivos en el server';
 
     /**
      * Execute the console command.
      */
     public function handle()
-        {   
-            $exepciones = explode(',', env('EXCEPCIONES_REPORTE_COMPRAS'));
+    {
+        $exepciones = explode(',', env('EXCEPCIONES_REPORTE_COMPRAS'));
             
             $empresas = [
                         333 => 'CORPORACION ADMINISTRATIVA DEL SUR', 201 => 'AGRUPAMIENTO',
@@ -43,16 +42,12 @@ class SendReporteSemanalComprasEmpresa extends Command
                 ];
 
                 foreach ($empresas as $intercompania => $nombre) {
-                    $isDisabled = in_array($intercompania, $exepciones );
-                    if(!$isDisabled){
-                        $correos = DB::connection('intranet')->select('call SOPORTEZM.SP_GetGereneciaEmpresas(?)', [$intercompania]);
-                        if(!empty($correos)){
-                            foreach ($correos as $correo) {
-                                Notification::route('mail', $correo->name)->notify( new ReporteSemanalNotification($intercompania, $nombre, 1));
-                            }
-                        } 
+                    if(in_array($intercompania, $exepciones )){
+                        continue;
                     }
+                    ProcesarReporteSemanalJob::dispatch($intercompania, $nombre)->onQueue('reportes');
                 }
-        }
 
+                $this->info('Jobs Generados correctamente');
+    }
 }

@@ -677,6 +677,13 @@ class OrdenCompraPdfController extends Controller
 
         private function agregarTotalesFinales($pdf, $totalImporte)
         {
+            $pdf->SetFont('Arial', 'B', 6);
+            $pdf->SetXY(16.5, 252);
+            $pdf->Write(0, 'CP. MA. ZITLALI BELTRAN ALMAZAN');
+            $pdf->SetFont('Arial', '', 5);
+            $pdf->SetXY(23, 255);
+            $pdf->Write(0, 'DIRECTORA ADMINISTRATIVA');
+
             $pdf->SetFont('Arial', 'B', 5.5);
             $tipoCambio = 1.00;
 
