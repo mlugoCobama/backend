@@ -60,10 +60,10 @@ class CambioEstatusSolicitudCompra extends Notification
 
         return (new MailMessage)
                     ->subject('Cambio de estatus de solicitud de compra con folio '. $this->solicitud->folio)
-                    ->line('El estatus de tu solicitud con folio **' . $this->solicitud->folio . '** ha cambiado.')
+                    ->line('El estatus de su solicitud con folio **' . $this->solicitud->folio . '** ha cambiado.')
                     ->line('Nuevo estatus: **' . $this->nuevoEstatus.'**')
                     ->line('Descripcion de la solicitud:')   
-                    ->line('**motivo**: '.$this->solicitud->motivo )
+                    ->line('**Motivo**: '.$this->solicitud->motivo )
                     ->line('**Detalles**:') 
                     ->line(new \Illuminate\Support\HtmlString($table))
 

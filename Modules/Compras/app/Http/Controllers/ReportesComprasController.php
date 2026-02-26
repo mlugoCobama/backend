@@ -56,15 +56,19 @@ class ReportesComprasController extends Controller
 
     private $rawEmpresas = [
             333 => 'CORPORACION ADMINISTRATIVA DEL SUR', 201 => 'AGRUPAMIENTO',
+
             131 => 'AZTECA GAS', 130 => 'SATELITE GAS', 251 => 'FLAMAMEX',
             210 => 'REYES GAS', 155 => 'GASAMEX', 135 => 'SEGAS', 110 => 'GARZA GAS',
-            111 => 'GARZA SUR', 250 => 'GAS FLAMAZUL', 132 => 'GAS PREMIO',
+            111 => 'GARZA SUR', 250 => 'GAS FLAMAZUL', 240 => 'SERVIGAS DEL VALLE', 132 => 'GAS PREMIO',
             200 => 'TANQUES SONI', 119 => 'TANQUES GARZA GAS', 190 => 'ZUGAS',
-            133 => 'GASERA MULTIREGIONAL', 353 => 'GAS URBANO', 710 => 'NISSAN UNIVERSIDAD',
+            133 => 'GASERA MULTIREGIONAL', 353 => 'GAS URBANO', 
+            191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA', 353111 => 'GAS URBANO - GARZA SUR', 251250 => 'FLAMAMEX - FLAMAZUL',
+
+            710 => 'NISSAN UNIVERSIDAD',
             7051 => 'NISSAN AZCAPOTZALCO', 712 => 'NISSAN CAMPESTRE', 700 => 'CORPORATIVO AUTOS SONI',
-            240 => 'SERVIGAS DEL VALLE', 2000 => 'SERVICIO EL ONCE', 7064 => 'RENAULT AZCAPOTZALCO',
+             2000 => 'SERVICIO EL ONCE', 7064 => 'RENAULT AZCAPOTZALCO',
             7062 => 'RENAULT ECATEPEC', 7063 => 'RENAULT VALLEJO', 7061 => 'RENAULT PACHUCA',
-            191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA', 353111 => 'GAS URBANO - GARZA SUR', 251250 => 'FLAMAMEX - FLAMAZUL'
+            
     ];
 
     /**
@@ -407,13 +411,12 @@ class ReportesComprasController extends Controller
 
     public function descargarConcentradoMacroGlobal()
     {
-        //  $fechaInicial = $request->fechaInicial;
-        //  $fechaFinal = $request->fechaFinal;
-        //  $tipo = $request->tipo;
-
         $concentrado = [
-            131, 130, 251, 210, 155, 135, 110 , 111 ,
-            250, 132, 119, 190, 133, 353, 191, 354 , 251250, 353111
+            131, 130, 251,
+            210, 155, 135, 110,
+            111, 240, 250, 132,
+            119, 190, 133, 353, 
+            191, 354 , 251250, 353111
         ];
 
         $detalleData = [];
