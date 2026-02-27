@@ -32,6 +32,7 @@ use App\Models\User;
 use App\Notifications\StatusChangedNotification;
 use Illuminate\Support\Facades\Mail;
 use Modules\Compras\Models\DatosVehiculo;
+use Modules\Compras\Models\ProveedorContacto;
 use Modules\Compras\Transformers\AutotanqueResource;
 use Modules\Compras\Transformers\OrdenCompraResource;
 use Modules\Compras\Transformers\UsersResource;
@@ -320,7 +321,7 @@ class OrdenesComprasController extends Controller
         $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
                      ->Seleccionado()->with(['datos_proveedor' => function ($query) {
                         $query->select('id', 'nombre', 'correo');
-                }])->first(['id', 'proveedores_id', 'seleccionado']);
+                }])->first(['id', 'proveedores_id', 'seleccionado', 'contacto_id']);
 
         if(!$proveedorSeleccionado){
                     throw new \Exception('No hay un proveedor seleccionado para esta cotizacion');
@@ -344,12 +345,21 @@ class OrdenesComprasController extends Controller
                 'detalles' => $detallesSC,
                 'unidadDestino' => $unidadDestino
             ];
+        
+        $correoProveedor = $datos['proveedor']['datos_proveedor']['correo'];
+        if(!empty($proveedorSeleccionado->contacto_id)){
+            $contacto = ProveedorContacto::find($proveedorSeleccionado->contacto_id);
+            if($contacto){
+                $correoProveedor = $contacto->correo;
+            }
+        }
+        
 
         // Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
         //                     ->notify(new SolicitudSurtido($datos));
         $pdfContenido = $this->consultaDatosPDF($cotizacion->solicitudes_compra_id);
 
-        Mail::to($datos['proveedor']['datos_proveedor']['correo'])->send(new SolicitudSurtido($datos, $pdfContenido['archivoPDF']));
+        Mail::to($correoProveedor)->send(new SolicitudSurtido($datos, $pdfContenido['archivoPDF']));
     }
 
     /** ********************************************************************************

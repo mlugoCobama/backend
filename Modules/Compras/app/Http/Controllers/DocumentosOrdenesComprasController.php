@@ -23,6 +23,7 @@ use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\DocumentosFactura;
 use Modules\Compras\Models\OrdenCompra;
+use Modules\Compras\Models\ProveedorContacto;
 use Modules\Compras\Models\SolicitudesCompra;
 use ZipArchive;
 
@@ -705,7 +706,7 @@ class DocumentosOrdenesComprasController extends Controller
             ->Seleccionado()
             ->with(['datos_proveedor' => function ($query) {
                 $query->select('id', 'nombre', 'correo');
-            }])->first(['id', 'proveedores_id', 'seleccionado']);
+            }])->first(['id', 'proveedores_id', 'seleccionado', 'contacto_id']);
 
         if (!$proveedorSeleccionado) {
             throw new \Exception('No hay un proveedor seleccionado para esta cotización');
@@ -722,10 +723,18 @@ class DocumentosOrdenesComprasController extends Controller
             'cotizacion' => $cotizacion,
             'proveedor' => $proveedorSeleccionado,
         ];
+
+        $correoProveedor = $proveedorSeleccionado->datos_proveedor->correo;
+        if(!empty($proveedorSeleccionado->contacto_id)){
+            $contacto = ProveedorContacto::find($proveedorSeleccionado->contacto_id);
+            if($contacto){
+                $correoProveedor = $contacto->correo;
+            }
+        }
         
         $ordenCompraPDF = new OrdenesComprasController();
         $pdfContenido = $ordenCompraPDF->consultaDatosPDF($cotizacion->solicitudes_compra_id);
-        Mail::to($proveedorSeleccionado->datos_proveedor->correo)->send(new PagoOrdenCompra($datos, $rutaPago, $pdfContenido['archivoPDF']));
+        Mail::to($correoProveedor)->send(new PagoOrdenCompra($datos, $rutaPago, $pdfContenido['archivoPDF']));
     }
 
 
