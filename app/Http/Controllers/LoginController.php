@@ -93,4 +93,40 @@ class LoginController extends Controller
         return  UsersResource::collection($data);
     }
 
+    public function loginMobile(Request $request)
+{
+    $fields = $request->validate([
+        'email' => 'required',
+        'password' => 'required',
+    ]);
+
+    $user = User::where('name', $fields['email'])->first();
+
+     $validPassword =
+         $user &&
+         (
+             md5($fields['password']) === $user->password ||
+             sha1($fields['password']) === $user->password ||
+             Hash::check($fields['password'], $user->password)
+         );
+
+     if (!$validPassword) {
+         return response()->json([
+             'success' => false,
+             'error' => 'Credenciales incorrectas'
+         ], 401);
+     }
+
+    $token = $user->createToken($fields['email'], ['mobile'])->plainTextToken;
+    $usuarioActivo = DB::connection('intranet')->select("call SOPORTEZM.SP_GetUsuarioEmail(?)", [$fields['email']]);
+    
+    return response()->json([
+        'success' => true,
+        'token' => $token,
+        'role' => new AuthResource($user),
+        'ip' => $request->ip(),
+        'usuarioActivo' => $usuarioActivo,
+    ]);
+}
+
 }

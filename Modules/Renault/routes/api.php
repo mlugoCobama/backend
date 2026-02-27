@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LoginController;
 use Illuminate\Support\Facades\Route;
 use Modules\Renault\Http\Controllers\RenaultController;
 use Modules\Renault\Http\Controllers\VisorCitasController;
@@ -18,4 +19,9 @@ use Modules\Renault\Http\Controllers\VisorCitasController;
 //Route::middleware(['auth:sanctum'])->prefix('renault')->group(function () {
 Route::prefix('renault')->group(function () {
     Route::apiResource('visor-citas', VisorCitasController::class)->names('visor-citas');
+    Route::get('visor-citas/datos-ingreso/{id}', [ VisorCitasController::class, 'getDatosIngreso'])->name('visor-citas.getDatosEntrada');
+    Route::post('auth/login', [LoginController::class, 'loginMobile']);
+
 });
+
+Route::get('storage/renault/citas_servicio/{fileName}', [VisorCitasController::class, 'getFile'])->name('visor-citas.getFile');

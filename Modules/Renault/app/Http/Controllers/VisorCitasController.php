@@ -15,6 +15,7 @@ use Modules\Renault\Models\RenCitasServicio;
 use Modules\Renault\Models\RenEntradaVehiculo;
 use Modules\Renault\Models\RenInventarioVehiculo;
 use Modules\Renault\Models\RenTestigosFotograficos;
+use Modules\Renault\Transformers\DatosEntradaResource;
 
 class VisorCitasController extends Controller
 {
@@ -24,8 +25,8 @@ class VisorCitasController extends Controller
     public function index()
     {
         $date = date('Ymd');
-
-        $citas = DB::connection('renault')
+        for ($j=1; $j < 5; $j++) { 
+            $citas = DB::connection('renault')
                     ->table('Se_Citas')
                     ->select(
                         'Se_Citas.citas_folio',
@@ -51,43 +52,45 @@ class VisorCitasController extends Controller
                         'Se_Citas.citas_RFC',
                         )
                     ->join('empleados', 'Se_Citas.citas_empl_clave', '=', 'empleados.empl_clave')
-                    ->where('Se_Citas.citas_idagencia', '=',3)
+                    ->where('Se_Citas.citas_idagencia', '=',$j)
                     ->where('Se_Citas.citas_status', '<>', 'BO')
                     ->whereBetween('Se_Citas.citas_fechacita', [$date.' 00:00:00.000',$date.' 23:59:59.997'])
                     ->orderBy('Se_Citas.citas_fechacita', 'asc')
                     ->orderBy('Se_Citas.citas_empl_clave', 'asc')
                     ->get();
 
-        for ($i = 0; $i < count($citas); $i++) {
+            for ($i = 0; $i < count($citas); $i++) {
 
-            $existe = RenCitasServicio::where('folio', $citas[$i]->citas_folio)->get();
+                $existe = RenCitasServicio::where('folio', $citas[$i]->citas_folio)->get();
 
-            if ($existe->count() == 0) {
-                $citaCita = new RenCitasServicio();
-                $citaCita->folio = $citas[$i]->citas_folio;
-                $citaCita->empleado_id = $citas[$i]->citas_empl_clave;
-                $citaCita->fecha = $citas[$i]->citas_fechacita;
-                $citaCita->nombre = $citas[$i]->citas_nombre;
-                $citaCita->apellido_paterno = $citas[$i]->citas_apaterno;
-                $citaCita->apellido_materno = $citas[$i]->citas_amaterno;
-                $citaCita->rfc = $citas[$i]->citas_RFC;
-                $citaCita->telefono = $citas[$i]->citas_TelefonoContacto;
-                $citaCita->domicilio = $citas[$i]->citas_Domicilio;
-                $citaCita->email = $citas[$i]->citas_email;
-                $citaCita->vin = $citas[$i]->citas_NoSerie;
-                $citaCita->modelo = $citas[$i]->citas_modelo;
-                $citaCita->placas = $citas[$i]->citas_placas;
-                $citaCita->color = $citas[$i]->citas_Color1;
-                $citaCita->tipo = $citas[$i]->citas_tipo;
-                $citaCita->anio = $citas[$i]->citas_AnioModelo;
-                $citaCita->kilometraje = $citas[$i]->citas_Kilometraje;
-                $citaCita->observaciones = $citas[$i]->citas_observaciones;
-                $citaCita->tipo_cita = $citas[$i]->citas_TipoCita;
-                $citaCita->estatus = $citas[$i]->citas_status;
-                $citaCita->agencia_id = 3;
-                $citaCita->save();
+                if ($existe->count() == 0) {
+                    $citaCita = new RenCitasServicio();
+                    $citaCita->folio = $citas[$i]->citas_folio;
+                    $citaCita->empleado_id = $citas[$i]->citas_empl_clave;
+                    $citaCita->fecha = $citas[$i]->citas_fechacita;
+                    $citaCita->nombre = $citas[$i]->citas_nombre;
+                    $citaCita->apellido_paterno = $citas[$i]->citas_apaterno;
+                    $citaCita->apellido_materno = $citas[$i]->citas_amaterno;
+                    $citaCita->rfc = $citas[$i]->citas_RFC;
+                    $citaCita->telefono = $citas[$i]->citas_TelefonoContacto;
+                    $citaCita->domicilio = $citas[$i]->citas_Domicilio;
+                    $citaCita->email = $citas[$i]->citas_email;
+                    $citaCita->vin = $citas[$i]->citas_NoSerie;
+                    $citaCita->modelo = $citas[$i]->citas_modelo;
+                    $citaCita->placas = $citas[$i]->citas_placas;
+                    $citaCita->color = $citas[$i]->citas_Color1;
+                    $citaCita->tipo = $citas[$i]->citas_tipo;
+                    $citaCita->anio = $citas[$i]->citas_AnioModelo;
+                    $citaCita->kilometraje = $citas[$i]->citas_Kilometraje;
+                    $citaCita->observaciones = $citas[$i]->citas_observaciones;
+                    $citaCita->tipo_cita = $citas[$i]->citas_TipoCita;
+                    $citaCita->estatus = $citas[$i]->citas_status;
+                    $citaCita->agencia_id = $j;
+                    $citaCita->save();
+                }
             }
         }
+        
     }
 
     /**
@@ -192,7 +195,14 @@ class VisorCitasController extends Controller
 
         $date = date('Y-m-d');
 
-        $citas = RenCitasServicio::where('agencia_id', $id)->where('fecha', 'like', $date."%" )->get();
+        $agencia = match($id){
+            '7064' => 1, '7062' => 2, '7063' => 3, '7061' => 4, default => $id,
+        };
+
+        $citas = RenCitasServicio::
+        when($agencia != 333, fn($q) => $q->where('agencia_id', $agencia))
+        ->where('fecha', 'like', $date."%" )->
+        get();
 
         return response()->json([
             'status' => true,
@@ -209,6 +219,25 @@ class VisorCitasController extends Controller
         return view('renault::edit');
     }
 
+    public function getDatosIngreso($id){
+        $cita = RenCitasServicio::with('Datos.Inventario','Datos.TestigosFotograficos')->where('id', $id)->first();
+        if($cita && $cita->Datos){
+            return response()->json([
+                'status' => 'success',
+                'message' => '',
+                'data' =>  new DatosEntradaResource($cita)
+            ]);
+        }else{
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos de entrada no encontrados',
+                'data' =>  []
+            ]);
+        }
+        
+    }
+
+
     /**
      * Update the specified resource in storage.
      */
@@ -224,4 +253,17 @@ class VisorCitasController extends Controller
     {
         //
     }
+
+    public function getFile($fileName)
+    {
+        $path = storage_path("app/renault/citas_servicio/$fileName");
+
+        if (!file_exists($path)) {
+            abort(404);
+        }
+
+        return response()->file($path);
+    }
+
+
 }
