@@ -153,7 +153,7 @@ class VisorCitasController extends Controller
                 RenTestigosFotograficos::create([
                     "folio" => $request->form['folio'],
                     "ruta" => "renault/citas_servicio/",
-                    "nombre" => $foto['filepath'],
+                    "nombre" => basename($foto['filepath']),
                     'ren_entrada_vehiculo_id' => $entrada->id
                 ]);
 
@@ -165,7 +165,11 @@ class VisorCitasController extends Controller
             $image = str_replace(' ', '+', $image);
             Storage::disk('local')->put("renault/citas_servicio/".$request->form['folio']."_firma.png", base64_decode($image));
 
-            RenCitasServicio::where('id', $request->form['citas_servicio_id'])->update(['estatus' => 'AT']);
+            RenCitasServicio::where('id', $request->form['citas_servicio_id'])->update([
+                'estatus' => 'AT',
+                'email' => $request->form['correo'],
+                'telefono' => $request->form['telefono'],
+                ]);
 
 
             return response()->json([

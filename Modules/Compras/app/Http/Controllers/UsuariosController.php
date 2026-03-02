@@ -85,11 +85,11 @@ class UsuariosController extends Controller
         $interExcepciones = explode(',', env('INTER_EXECPCIONES')); 
         $isExcepcion = in_array($id, $interExcepciones );
 
-        if($isExcepcion){
-            $idUser = auth()->id(); 
-            $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $idUser . ')');
-            $id = $data[0]->intercompania;
-        }
+        // if($isExcepcion){
+        //     $idUser = auth()->id(); 
+        //     $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $idUser . ')');
+        //     $id = $data[0]->intercompania;
+        // }
 
         $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetDataUsuarios(' . $id . ')');
         
