@@ -3,6 +3,7 @@
 namespace Modules\Renault\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -12,6 +13,8 @@ use Throwable;
 use Modules\Renault\Transformers\CitasServicioResource;
 
 use Modules\Renault\Models\RenCitasServicio;
+use Modules\Renault\Models\RenDetalleGarantia;
+use Modules\Renault\Models\RenDetalleTrabajoSolicitado;
 use Modules\Renault\Models\RenEntradaVehiculo;
 use Modules\Renault\Models\RenInventarioVehiculo;
 use Modules\Renault\Models\RenTestigosFotograficos;
@@ -24,7 +27,9 @@ class VisorCitasController extends Controller
      */
     public function index()
     {
+        $data = [];
         $date = date('Ymd');
+        $empleadosCache = [];
         for ($j=1; $j < 5; $j++) { 
             $citas = DB::connection('renault')
                     ->table('Se_Citas')
@@ -59,38 +64,61 @@ class VisorCitasController extends Controller
                     ->orderBy('Se_Citas.citas_empl_clave', 'asc')
                     ->get();
 
-            for ($i = 0; $i < count($citas); $i++) {
+                    foreach ($citas as $cita) {
+                        $empleadoClave = $cita->citas_empl_clave;
+                        $empleadoNombre = $cita->empl_nombre;
 
-                $existe = RenCitasServicio::where('folio', $citas[$i]->citas_folio)->get();
+                        // Si no está en cache, lo consultamos y lo guardamos
+                        if (!isset($empleadosCache[$empleadoClave])) {
+                            $empleadoId = $this->getAps($empleadoNombre, $j);
+                            $empleadosCache[$empleadoClave] = $empleadoId ??  null;
+                        }
 
-                if ($existe->count() == 0) {
-                    $citaCita = new RenCitasServicio();
-                    $citaCita->folio = $citas[$i]->citas_folio;
-                    $citaCita->empleado_id = $citas[$i]->citas_empl_clave;
-                    $citaCita->fecha = $citas[$i]->citas_fechacita;
-                    $citaCita->nombre = $citas[$i]->citas_nombre;
-                    $citaCita->apellido_paterno = $citas[$i]->citas_apaterno;
-                    $citaCita->apellido_materno = $citas[$i]->citas_amaterno;
-                    $citaCita->rfc = $citas[$i]->citas_RFC;
-                    $citaCita->telefono = $citas[$i]->citas_TelefonoContacto;
-                    $citaCita->domicilio = $citas[$i]->citas_Domicilio;
-                    $citaCita->email = $citas[$i]->citas_email;
-                    $citaCita->vin = $citas[$i]->citas_NoSerie;
-                    $citaCita->modelo = $citas[$i]->citas_modelo;
-                    $citaCita->placas = $citas[$i]->citas_placas;
-                    $citaCita->color = $citas[$i]->citas_Color1;
-                    $citaCita->tipo = $citas[$i]->citas_tipo;
-                    $citaCita->anio = $citas[$i]->citas_AnioModelo;
-                    $citaCita->kilometraje = $citas[$i]->citas_Kilometraje;
-                    $citaCita->observaciones = $citas[$i]->citas_observaciones;
-                    $citaCita->tipo_cita = $citas[$i]->citas_TipoCita;
-                    $citaCita->estatus = $citas[$i]->citas_status;
-                    $citaCita->agencia_id = $j;
-                    $citaCita->save();
-                }
-            }
+                        // Ahora ya puedes usar $empleadosCache[$empleadoClave] sin repetir consulta
+                        $cita->empleado_id_intranet = $empleadosCache[$empleadoClave];
+                    }
+
+
+
+         for ($i = 0; $i < count($citas); $i++) {
+
+             $existe = RenCitasServicio::where('folio', $citas[$i]->citas_folio)->get();
+
+             if ($existe->count() == 0) {
+                 $citaCita = new RenCitasServicio();
+                 $citaCita->folio = $citas[$i]->citas_folio;
+                 $citaCita->empleado_id = $citas[$i]->citas_empl_clave;
+                 $citaCita->fecha = $citas[$i]->citas_fechacita;
+                 $citaCita->nombre = $citas[$i]->citas_nombre;
+                 $citaCita->apellido_paterno = $citas[$i]->citas_apaterno;
+                 $citaCita->apellido_materno = $citas[$i]->citas_amaterno;
+                 $citaCita->rfc = $citas[$i]->citas_RFC;
+                 $citaCita->telefono = $citas[$i]->citas_TelefonoContacto;
+                 $citaCita->domicilio = $citas[$i]->citas_Domicilio;
+                 $citaCita->email = $citas[$i]->citas_email;
+                 $citaCita->vin = $citas[$i]->citas_NoSerie;
+                 $citaCita->modelo = $citas[$i]->citas_modelo;
+                 $citaCita->placas = $citas[$i]->citas_placas;
+                 $citaCita->color = $citas[$i]->citas_Color1;
+                 $citaCita->tipo = $citas[$i]->citas_tipo;
+                 $citaCita->anio = $citas[$i]->citas_AnioModelo;
+                 $citaCita->kilometraje = $citas[$i]->citas_Kilometraje;
+                 $citaCita->observaciones = $citas[$i]->citas_observaciones;
+                 $citaCita->tipo_cita = $citas[$i]->citas_TipoCita;
+                 $citaCita->estatus = $citas[$i]->citas_status;
+                 $citaCita->agencia_id = $j;
+                 $citaCita->id_intranet = $citas[$i]->empleado_id_intranet;
+                 $citaCita->save();
+             }
+         }
+
+            // $data[$j] = $citas;
         }
-        
+        // return response()->json([
+        //         'status' => true,
+        //         'message' => 'Se ha guardado correctamente la información',
+        //         'data' => $data
+        //     ]);
     }
 
     /**
@@ -138,8 +166,25 @@ class VisorCitasController extends Controller
                 'otros' => $request->form['otros'],
                 'vestiduras' => $request->form['vestiduras'],
                 'cristales' => $request->form['cristales'],
-                'ren_entrada_vehiculo_id' => $entrada->id
+                'ren_entrada_vehiculo_id' => $entrada->id,
+                'nivel_gasolina' => $request->form['nivel_gasolina'],
             ]);
+
+            foreach ($request->trabajos as $trabajo) {
+                RenDetalleTrabajoSolicitado::create([
+                'descripcion' => $trabajo['descripcion'],
+                'partes' => $trabajo['partes'],
+                'ren_entrada_vehiculo_id' => $entrada->id,
+                ]);
+            }
+
+            foreach ($request->garantias as $garantia) {
+                RenDetalleGarantia::create([
+                'descripcion' => $garantia['descripcion'] ,
+                'tiempo' => $garantia['tiempo'],
+                'ren_entrada_vehiculo_id' => $entrada->id,
+                ]);
+            }
 
             foreach( $request->fotos as $foto) {
 
@@ -203,10 +248,7 @@ class VisorCitasController extends Controller
             '7064' => 1, '7062' => 2, '7063' => 3, '7061' => 4, default => $id,
         };
 
-        $citas = RenCitasServicio::
-        when($agencia != 333, fn($q) => $q->where('agencia_id', $agencia))
-        ->where('fecha', 'like', $date."%" )->
-        get();
+        $citas = $this->getCitas($agencia, null, $date);
 
         return response()->json([
             'status' => true,
@@ -224,7 +266,7 @@ class VisorCitasController extends Controller
     }
 
     public function getDatosIngreso($id){
-        $cita = RenCitasServicio::with('Datos.Inventario','Datos.TestigosFotograficos')->where('id', $id)->first();
+        $cita = $this->getDatosOrdenServicio($id);
         if($cita && $cita->Datos){
             return response()->json([
                 'status' => 'success',
@@ -239,6 +281,41 @@ class VisorCitasController extends Controller
             ]);
         }
         
+    }
+
+    public function descargarPdfOrdenServicio($id){
+        $cita = $this->getDatosOrdenServicio($id);
+        if($cita){
+            $pdf = new OrdenServicioPdfController();
+        $file = $pdf->OrdenServicioFormatoInterno($cita);
+        $fileName = 'orden_de_reparacion_mecanica_'.($cita->Datos->num_entrada ?? 0).'.pdf';
+        
+        return response($file, 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="' . $fileName . '"')
+            ->header('Cache-Control', 'no-cache, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('X-Filename', $fileName)
+            ->header('Access-Control-Expose-Headers', 'X-Filename');
+        }
+        
+    }
+
+    public function datosFiltrados($intercomapania, $aps, $fechaInicial, $fechaFinal ){
+        $agencia = match($intercomapania){
+            '7064' => 1, '7062' => 2, '7063' => 3, '7061' => 4, 'todas' => null, default => $intercomapania,
+        };
+
+        $apsDef = $aps == 'todos' ? null : $aps;
+
+        $citas = $this->getCitas($agencia, $apsDef, $fechaInicial, $fechaFinal);
+
+        return response()->json([
+            'status' => true,
+            'message' => '',
+            'data' =>  CitasServicioResource::collection($citas)
+        ]);
+
     }
 
 
@@ -268,6 +345,60 @@ class VisorCitasController extends Controller
 
         return response()->file($path);
     }
+
+
+    private function getCitas($agencia = null, $empleadoId = null, $fechaInicio = null, $fechaFin = null)
+    {
+        $fechaInicio = $fechaInicio ? Carbon::parse($fechaInicio)->startOfDay() : null;
+        $fechaFin    = $fechaFin ? Carbon::parse($fechaFin)->endOfDay() : null;
+
+
+        return RenCitasServicio::query()
+            ->when($agencia && $agencia != 333, fn($q) => $q->where('agencia_id', $agencia))
+            ->when($empleadoId, fn($q) => $q->where('id_intranet', $empleadoId))
+            ->when($fechaInicio && $fechaFin, fn($q) => $q->whereBetween('fecha', [$fechaInicio, $fechaFin]))
+            ->when($fechaInicio && !$fechaFin, fn($q) => $q->where('fecha', 'like', $fechaInicio->format('Y-m-d')."%"))
+            // ->when($fechaInicio && !$fechaFin, function ($q) use ($fechaInicio) {
+            //         $q->where('fecha', 'like', $fechaInicio . "%");
+            // })
+            ->get();
+    }
+
+    private function getDatosOrdenServicio($idCita){
+        return RenCitasServicio::with('Datos.Inventario','Datos.TestigosFotograficos', 'Datos.trabajosSolicitados', 'Datos.garantias')->where('id', $idCita)->first();
+    }
+
+    private function getAps($empleadoNombre, $idAgencia){
+        $intercompania = match($idAgencia){
+                                1 => '7064', 2 => '7062', 3 => '7063',  4 => '7061', default => $idAgencia,
+                        };
+       return DB::connection('intranet')
+                                ->table('glpi_users')
+                                ->where('firstname', $empleadoNombre)
+                                ->where('name','like', '%aps%')
+                                ->where('intercompania', $intercompania)
+                                ->value('id');
+    }
+
+   public function getApsByAgencia($idAgencia){
+
+        $intercompania = match($idAgencia)
+                    { 1 => '7064', 2 => '7062', 3 => '7063',  4 => '7061', default => $idAgencia };
+
+       $data = DB::connection('intranet')
+                                ->table('glpi_users')
+                                ->where('name','like', '%aps%')
+                                ->where('intercompania', $intercompania)
+                                ->where('is_active', 1)
+                                ->get(['id','name', 'firstname', 'realname', 'intercompania' ]);
+        
+        return response()->json([
+            'status' => 'success',
+            'data' => $data,
+            'message' => 'Aps Recuperados correctamente'
+        ]);
+
+    } 
 
 
 }

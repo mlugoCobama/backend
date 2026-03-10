@@ -46,4 +46,21 @@ class RenEntradaVehiculo extends Model
         return $this->hasMany(RenTestigosFotograficos::class);
     }
 
+    /**
+     * Una entrada de vehiculo tiene varios trabajos solicitados
+     */
+    public function trabajosSolicitados()
+    {
+        return $this->hasMany(RenDetalleTrabajoSolicitado::class, 'ren_entrada_vehiculo_id');
+    }
+
+    /**
+     * Una entrada de vehiculo tiene varios garantías
+     */
+    public function garantias()
+    {
+        return $this->hasMany(RenDetalleGarantia::class, 'ren_entrada_vehiculo_id');
+    }
+
+
 }

@@ -31,6 +31,9 @@ use ZipArchive;
 class DocumentosOrdenesComprasController extends Controller
 {
 
+    private $documentos = ['factura_xml', 'factura_pdf', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
+    private $keys = ['ruta_xml_factura', 'ruta_pdf_factura', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
+
     /** ****************************************************
      * Almacena los archivos de orden compra
      ******************************************************/
@@ -40,51 +43,31 @@ class DocumentosOrdenesComprasController extends Controller
             $data = $request;
             $hoy = date("jnY");
             $time = time();
+
             $docsOrdenCompra = new DocumentosOrdenesCompra();
 
             $carpetaOrdenCompra = 'docsOrdenCompra/' . $data['orden_compra_id'];
             Storage::makeDirectory($carpetaOrdenCompra);
+            for ($i = 0; $i < count($this->documentos); $i++) {
 
-            $documentos = ['factura_xml', 'factura_pdf', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
-            $keys = ['ruta_xml_factura', 'ruta_pdf_factura', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
-
-            for ($i = 0; $i < count($documentos); $i++) {
-
-                if ($data->hasFile($documentos[$i])) {
-                    $nombreArchivo = $documentos[$i] . $hoy . $time . "." . $data->file($documentos[$i])->getClientOriginalExtension();
-                    $docsOrdenCompra->{$keys[$i]} = $data->file($documentos[$i])->storeAs($carpetaOrdenCompra, $nombreArchivo);
+                if ($data->hasFile($this->documentos[$i])) {
+                    $nombreArchivo = $this->documentos[$i] . $hoy . $time . "." . $data->file($this->documentos[$i])->getClientOriginalExtension();
+                    $docsOrdenCompra->{$this->keys[$i]} = $data->file($this->documentos[$i])->storeAs($carpetaOrdenCompra, $nombreArchivo);
                 }
             }
 
             $docsOrdenCompra->orden_compra_id = $data["orden_compra_id"];
             $docsOrdenCompra->fecha = date('Y-m-d H:i:s');
-
             $docsOrdenCompra->save();
 
-            if($data->hasFile('comprobante_pago')){
-                $orden = OrdenCompra::find($data["orden_compra_id"]);
-                if($orden->modo_pago == 1 ){
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
-                    $this->enviarCorreoPago($orden, $docsOrdenCompra->comprobante_pago); 
-                    $controlerOC = new OrdenesComprasController;
-                    $controlerOC->enviarCorreoSurtido($orden->id);      
-                         
-                }else{
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
-                    $this->enviarCorreoPago($orden, $docsOrdenCompra->comprobante_pago);
+            $orden = OrdenCompra::find($data["orden_compra_id"]);
+            if($orden){
+                $mPago = $orden->modo_pago;
+                if($data->hasFile('comprobante_pago')){
+                    $this->eventosComprobantePago($orden->id, $orden, $mPago, $docsOrdenCompra);
                 }
-                
-            }
-
-            if($data->hasFile('factura_xml') && $data->hasFile('factura_pdf')){
-                $orden = OrdenCompra::find($data["orden_compra_id"]);
-                if($orden->modo_pago == 1 ){
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
-                }else{
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::SOLICITADO_PAGO, EstatusSolicitud::SOLICITADO_PAGO);
+                if($data->hasFile('factura_xml')){
+                    $this->eventosFacturaXml($orden->id, $orden);
                 }
             }
 
@@ -105,7 +88,6 @@ class DocumentosOrdenesComprasController extends Controller
 
         // return $carpetaOrdenCompra;
     }
-
     /** *****************************************************
      * Recupera los documentos de orden de compra
      * en base al id de orden de compra
@@ -113,40 +95,11 @@ class DocumentosOrdenesComprasController extends Controller
     public function show($id)
     {
         // $registro = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get();
-
         // $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['id', 'fecha', 'ruta_xml_factura as xml', 'ruta_pdf_factura as representacion_impresa']);
-        $rutasQuery = DB::table('com_documentos_ordenes_compra')
-            ->select([
-                'id',
-                'fecha',
-                DB::raw("'factura' as tipo_documento"),
-                'ruta_pdf_factura as representacion_impresa',
-                'ruta_xml_factura as xml'
-            ])
-            ->where('orden_compra_id', $id)
-            ->whereNotNull('ruta_pdf_factura')
-            ->where('ruta_pdf_factura', '!=', '');
-
-        // Segundo conjunto: comprobante
-        $comprobanteQuery = DB::table('com_documentos_ordenes_compra')
-            ->select([
-                'id',
-                'fecha',
-                DB::raw("'comprobante_pago' as tipo_documento"),
-                'comprobante_pago as representacion_impresa',
-                DB::raw("'' as xml")
-            ])
-            ->where('orden_compra_id', $id)
-            ->whereNotNull('comprobante_pago')
-            ->where('comprobante_pago', '!=', '');
-        $rutas = $rutasQuery->union($comprobanteQuery)->get();
-
+        $rutas = $this->queryComprobantes($id);
         $rutaIds = $rutas->pluck('id')->toArray();
-
         $docsFactura = DocumentosFactura::whereIn('com_documentos_ordenes_compra_id', $rutaIds)->get(['id', 'fecha', 'tipo_documento', 'xml', 'representacion_impresa']);
-
         $registros = $rutas->concat($docsFactura);
-
         return $registros;
     }
 
@@ -157,70 +110,50 @@ class DocumentosOrdenesComprasController extends Controller
      ****************************************************/
     public function update(UploadDocsOCRequest $request, $id)
     {
-        $registro = DocumentosOrdenesCompra::where('id', $id)->first();
-        if (!$registro) {
+        $docsOrdenCompra = DocumentosOrdenesCompra::where('id', $id)->first();
+        if (!$docsOrdenCompra) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error de validación',
                 'error' => 'El registro al que se intenta acceder no existe'
             ]);
         }
+
         try {
             $data = $request;
             $hoy = date("jnY"); //Recuperar la fecha del dia de hoy para diferenciar el registro nuevo
             $time = time(); //Marca temporal del momento en el que se subió
 
-
             $carpetaOrdenCompra = 'docsOrdenCompra/' . $data['orden_compra_id'];
             Storage::makeDirectory($carpetaOrdenCompra);
+            for ($i = 0; $i < count($this->documentos); $i++) {
+                if ($data->hasFile($this->documentos[$i])) {
 
-            $documentos = ['factura_xml', 'factura_pdf', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
-            $keys = ['ruta_xml_factura', 'ruta_pdf_factura', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
-
-            for ($i = 0; $i < count($documentos); $i++) {
-                if ($data->hasFile($documentos[$i])) {
-
-                    $archivoEliminar = $registro->{$keys[$i]}; //Recupera el anterior ruta del archivo al a eliminar
+                    $archivoEliminar = $docsOrdenCompra->{$this->keys[$i]}; //Recupera el anterior ruta del archivo al a eliminar
                     if ($archivoEliminar) {
                         Storage::delete($archivoEliminar);
                     }
-                    $nombreArchivo = $documentos[$i] . $hoy . $time . "." . $data->file($documentos[$i])->getClientOriginalExtension(); //Asigna un nuevo nombre al archivo
-                    $registro->{$keys[$i]} = $data->file($documentos[$i])->storeAs($carpetaOrdenCompra, $nombreArchivo); //Actualiza la ruta y el archivo
+                    $nombreArchivo = $this->documentos[$i] . $hoy . $time . "." . $data->file($this->documentos[$i])->getClientOriginalExtension(); //Asigna un nuevo nombre al archivo
+                    $docsOrdenCompra->{$this->keys[$i]} = $data->file($this->documentos[$i])->storeAs($carpetaOrdenCompra, $nombreArchivo); //Actualiza la ruta y el archivo
                 }
             }
+            $docsOrdenCompra->save();
 
-            $registro->save();
-
-            if($data->hasFile('comprobante_pago')){
-                $orden = OrdenCompra::find($data["orden_compra_id"]);
-                if($orden->modo_pago == 1 ){
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
-                    $controlerOC = new OrdenesComprasController;    
-                    $controlerOC->enviarCorreoSurtido($orden->id);      
-                    $this->enviarCorreoPago($orden, $registro->comprobante_pago);   
-                }else{
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO ,EstatusSolicitud::CARGA_COMPLEMENTO);
-                    $this->enviarCorreoPago($orden, $registro->comprobante_pago);  
+            $orden = OrdenCompra::find($data["orden_compra_id"]);
+            if($orden){
+                $mPago = $orden->modo_pago;
+                if($data->hasFile('comprobante_pago')){
+                    $this->eventosComprobantePago($orden->id, $orden, $mPago, $docsOrdenCompra);
                 }
-                
-            }
-
-            if($data->hasFile('factura_xml') && $data->hasFile('factura_pdf')){
-                $orden = OrdenCompra::find($data["orden_compra_id"]);
-                if($orden->modo_pago == 1 ){
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'],EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
-                }else{
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
-                    $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::SOLICITADO_PAGO, EstatusSolicitud::SOLICITADO_PAGO);
+                if($data->hasFile('factura_xml')){
+                    $this->eventosFacturaXml($orden->id, $orden);
                 }
             }
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha actualizado correctamente',
-                'data' => $registro
+                'data' => $docsOrdenCompra
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -238,50 +171,9 @@ class DocumentosOrdenesComprasController extends Controller
 
     public function leerYProcesarXML($id)
     {
-        // $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['id', 'fecha', 'ruta_xml_factura as xml', 'ruta_pdf_factura as representacion_impresa']);
+        $documentos = $this->queryComprobantes($id);
 
-        // $comprobante = DocumentosOrdenesCompra::where('orden_compra_id', $id)
-        // ->first([
-        //     'id',
-        //     'fecha',
-        //     DB::raw("'comprobante_pago' as tipo_documento"),
-        //     'comprobante_pago as representacion_impresa',
-        //     'ruta_xml_factura as xml'
-        // ]);
-
-        // Primer conjunto: rutas
-        $rutasQuery = DB::table('com_documentos_ordenes_compra')
-            ->select([
-                'id',
-                'fecha',
-                DB::raw("'factura' as tipo_documento"),
-                'ruta_pdf_factura as representacion_impresa',
-                'ruta_xml_factura as xml'
-            ])
-            ->where('orden_compra_id', $id)
-            ->whereNotNull('ruta_pdf_factura')
-            ->where('ruta_pdf_factura', '!=', '');
-
-        // Segundo conjunto: comprobante
-        $comprobanteQuery = DB::table('com_documentos_ordenes_compra')
-            ->select([
-                'id',
-                'fecha',
-                DB::raw("'comprobante_pago' as tipo_documento"),
-                'comprobante_pago as representacion_impresa',
-                DB::raw("'' as xml")
-            ])
-            ->where('orden_compra_id', $id)
-            ->whereNotNull('comprobante_pago')
-            ->where('comprobante_pago', '!=', '');
-
-
-
-
-        // Unión de ambas consultas
-        $documentos = $rutasQuery->union($comprobanteQuery)->get();
         $rutas = json_decode(json_encode($documentos), true);
-
 
         $rutaIds = $documentos->pluck('id')->toArray();
 
@@ -351,10 +243,7 @@ class DocumentosOrdenesComprasController extends Controller
             foreach ($docs as $ruta) {
                 $archivos = [
                     $ruta['xml'],
-                    // $ruta['ruta_xml_factura'],
                     $ruta['representacion_impresa'],
-                    // $ruta['complemento_pago_xml'],
-                    // $ruta['comprobante_pago'],
                 ];
 
                 foreach ($archivos as $archivo) {
@@ -622,20 +511,20 @@ class DocumentosOrdenesComprasController extends Controller
         $data = $request->validated();
         $hoy = date("jnY"); //Recuperar la fecha del dia de hoy para diferenciar el registro nuevo
         $time = time(); //Marca temporal del momento en el que se subió
-
+        $sufijo = $hoy . $time;
         $carpetaOrdenCompra = 'docsOrdenCompra/' . $data['orden_compra_id'];
         Storage::makeDirectory($carpetaOrdenCompra);
 
         $docsFactura = new DocumentosFactura();
         $docsFactura->tipo_documento = $data['tipo_documento'];
 
-        if ($request->hasFile('archivo_xml')) {
-            $nombreArchivo = $data['tipo_documento'] . $hoy . $time . "." . $request->file('archivo_xml')->getClientOriginalExtension();
-            $docsFactura->xml = $request->file('archivo_xml')->storeAs($carpetaOrdenCompra, $nombreArchivo);
-        }
-        if ($request->hasFile('archivo')) {
-            $nombreArchivo = $data['tipo_documento'] . $hoy . $time . "." . $request->file('archivo')->getClientOriginalExtension();
-            $docsFactura->representacion_impresa = $request->file('archivo')->storeAs($carpetaOrdenCompra, $nombreArchivo);
+        
+        foreach (['archivo_xml' => 'xml', 'archivo' => 'representacion_impresa'] as $campo => $columna) {
+            if ($request->hasFile($campo)) {
+                $ext            = $request->file($campo)->getClientOriginalExtension();
+                $nombre         = "{$data['tipo_documento']}{$sufijo}.{$ext}";
+                $docsFactura->$columna  = $request->file($campo)->storeAs($carpetaOrdenCompra, $nombre);
+            }
         }
 
         $docsFactura->com_documentos_ordenes_compra_id = $data['idFactura'];
@@ -735,6 +624,59 @@ class DocumentosOrdenesComprasController extends Controller
         $ordenCompraPDF = new OrdenesComprasController();
         $pdfContenido = $ordenCompraPDF->consultaDatosPDF($cotizacion->solicitudes_compra_id);
         Mail::to($correoProveedor)->send(new PagoOrdenCompra($datos, $rutaPago, $pdfContenido['archivoPDF']));
+    }
+
+    private function eventosComprobantePago($idOrdenCompra, $orden, $rutaCompPago){
+        if($orden->modo_pago == 1){
+            $this->actStatusOrdenSolicitud($idOrdenCompra , EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+            $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
+            $controlerOC = new OrdenesComprasController;    
+            $controlerOC->enviarCorreoSurtido($idOrdenCompra);      
+            $this->enviarCorreoPago($orden, $rutaCompPago); 
+        }else{
+            $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+            $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::CARGA_COMPLEMENTO ,EstatusSolicitud::CARGA_COMPLEMENTO);
+            $this->enviarCorreoPago($orden, $rutaCompPago);  
+        }
+          
+    }
+
+    private function eventosFacturaXml($idOrdenCompra, $orden){
+        if($orden->modo_pago == 1 ){
+            $this->actStatusOrdenSolicitud($idOrdenCompra,EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
+        }else{
+            $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
+            $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::SOLICITADO_PAGO, EstatusSolicitud::SOLICITADO_PAGO);
+        }
+    }
+
+    public function queryComprobantes($idOrdenCompra){
+        $rutasQuery = DB::table('com_documentos_ordenes_compra')
+            ->select([
+                'id',
+                'fecha',
+                DB::raw("'factura' as tipo_documento"),
+                'ruta_pdf_factura as representacion_impresa',
+                'ruta_xml_factura as xml'
+            ])
+            ->where('orden_compra_id', $idOrdenCompra)
+            ->whereNotNull('ruta_pdf_factura')
+            ->where('ruta_pdf_factura', '!=', '');
+
+        // Segundo conjunto: comprobante
+        $comprobanteQuery = DB::table('com_documentos_ordenes_compra')
+            ->select([
+                'id',
+                'fecha',
+                DB::raw("'comprobante_pago' as tipo_documento"),
+                'comprobante_pago as representacion_impresa',
+                DB::raw("'' as xml")
+            ])
+            ->where('orden_compra_id', $idOrdenCompra)
+            ->whereNotNull('comprobante_pago')
+            ->where('comprobante_pago', '!=', '');
+        // Unión de ambas consultas
+        return $rutasQuery->union($comprobanteQuery)->get();
     }
 
 

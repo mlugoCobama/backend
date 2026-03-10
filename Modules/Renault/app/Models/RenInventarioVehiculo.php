@@ -32,6 +32,7 @@ class RenInventarioVehiculo extends Model
         'otros',
         'vestiduras',
         'cristales',
+        'nivel_gasolina',
         'ren_entrada_vehiculo_id'
     ];
      /**
