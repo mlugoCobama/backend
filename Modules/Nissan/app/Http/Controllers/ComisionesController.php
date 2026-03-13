@@ -124,6 +124,7 @@ class ComisionesController extends Controller
      * @param mixed $vendedor id de vendedor
      */
     public function getDatosVentas($estatus = null, $agencia =null, $tipoVenta = null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
+    
 
     $data = $this->queryDatosVentas(
                                         $estatus        == '12345' ? null : $estatus,
@@ -153,6 +154,8 @@ class ComisionesController extends Controller
      * @param mixed $vendedor id de vendedor
      */
     public function queryDatosVentas($estatus, $agencia, $vendedor, $tipoVenta, $fechaInicio, $fechaFin ){
+                // intercompanias => Azcapo   Campestre  Universidad    Agencia ingresada
+             $agencia = match($agencia){ '7051' => '730', '712' => '714', '710' => '710', '333' => null, default => $agencia}; 
 
          $ventas = DatosVenta::
             with(['vendedor', 'tipoVenta', 'gatosVenta'])
