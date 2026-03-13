@@ -13,9 +13,9 @@ use Modules\Compras\Models\OrdenTrabajo;
 class SolicitudesMacroResource extends JsonResource
 {
     private static $usuariosCache = [];
-
-    
     private static $empresasCache = [];
+    private static ?array $cacheCentrosCosto = null;
+
     /**
      * Transform the resource into an array.
      */
@@ -160,12 +160,17 @@ class SolicitudesMacroResource extends JsonResource
     /**
      * Asigna la descripción del centro de costo
      */
-    private function asignarDescripcionCC($cc){
-        $rawCentrosCosto = File::get(base_path('Modules/Compras/resources/assets/json/centrosCostos/catCentrosCostos.json'));
-        $jsonCC = json_decode(json: $rawCentrosCosto, associative: true);
-        $dataCC = $jsonCC[$cc];
-        return $dataCC;
+    private function asignarDescripcionCC(string $cc): ?array
+    {
+        if (self::$cacheCentrosCosto === null) {
+            $rawCentrosCosto = File::get(
+                base_path('Modules/Compras/resources/assets/json/centrosCostos/catCentrosCostos.json')
+            );
+                self::$cacheCentrosCosto = json_decode($rawCentrosCosto, true);
+        }
+        return self::$cacheCentrosCosto[$cc] ?? null;
     }
+
 
     private function isMultiple($tipo ,$usuario_destino){
         if($tipo == 2 && $usuario_destino == 602) {
@@ -175,11 +180,12 @@ class SolicitudesMacroResource extends JsonResource
     }
 
     private function labelFlagPagado($value) {
-    $labels = [
-        0 => 'PENDIENTE DE PAGO',
-        1 => 'PAGADO'
-    ];
-    return $labels[$value] ?? null;
+        $labels = [
+            0 => 'PENDIENTE DE PAGO',
+            1 => 'PAGADO',
+            2 => 'PAGADO PARCIALMENTE',
+        ];
+        return $labels[$value] ?? null;
     }
 
     private function labelModoPago($value) {

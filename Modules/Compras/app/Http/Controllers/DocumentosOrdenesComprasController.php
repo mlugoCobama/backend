@@ -3,7 +3,7 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Complementos;
+// use App\Models\Complementos;
 use Modules\Compras\Http\Requests\UploadDocsOCRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +14,7 @@ use App\Enums\EstatusOrdenCompra;
 use App\Enums\EstatusSolicitud;
 use App\Helpers\NotificationHelper;
 use App\Mail\PagoOrdenCompra;
+use Modules\Compras\Services\CfdiService;
 //Utilities
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
@@ -33,6 +34,8 @@ class DocumentosOrdenesComprasController extends Controller
 
     private $documentos = ['factura_xml', 'factura_pdf', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
     private $keys = ['ruta_xml_factura', 'ruta_pdf_factura', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
+
+    public function __construct(protected CfdiService $cfdiService) {}
 
     /** ****************************************************
      * Almacena los archivos de orden compra
@@ -68,13 +71,20 @@ class DocumentosOrdenesComprasController extends Controller
                 }
                 if($data->hasFile('factura_xml')){
                     $this->eventosFacturaXml($orden->id, $orden);
+                    $factura = $this->cfdiService->parsear($request->file('factura_xml'));
+                    $facturadoTotal = $this->validarFacturadoTotalCompra($data['total_compra'], $factura['total'], $data['suma_facturas']);
+                    if(!$facturadoTotal){
+                         $orden->pagado = 2;
+                         $orden->save();
+                    }
                 }
             }
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha guardado correctamente',
-                'data' => []
+                'data' => [],
+                'facturadoTotalmente' => $facturadoTotal
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -147,13 +157,21 @@ class DocumentosOrdenesComprasController extends Controller
                 }
                 if($data->hasFile('factura_xml')){
                     $this->eventosFacturaXml($orden->id, $orden);
+                    $factura = $this->cfdiService->parsear($request->file('factura_xml'));
+                    $facturadoTotal = $this->validarFacturadoTotalCompra($data['total_compra'], $factura['total'], $data['suma_facturas']);
+                    if(!$facturadoTotal){
+                         $orden->pagado = 2;
+                         $orden->save();
+                    }
+                    
                 }
             }
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Se ha actualizado correctamente',
-                'data' => $docsOrdenCompra
+                'data' => $docsOrdenCompra,
+                'facturadoTotalmente' => $facturadoTotal,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -677,6 +695,11 @@ class DocumentosOrdenesComprasController extends Controller
             ->where('comprobante_pago', '!=', '');
         // Unión de ambas consultas
         return $rutasQuery->union($comprobanteQuery)->get();
+    }
+
+    private function validarFacturadoTotalCompra( $totalCompra, $totalFacturaEntrante, $totalAcumuladoFacturas = 0){
+        $totalFacturado = $totalAcumuladoFacturas + $totalFacturaEntrante;
+        return round($totalCompra) == round($totalFacturado);
     }
 
 

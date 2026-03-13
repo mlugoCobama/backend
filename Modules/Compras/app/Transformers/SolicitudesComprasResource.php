@@ -16,6 +16,7 @@ class SolicitudesComprasResource extends JsonResource
     private static $usuariosCache = [];
 
     private static $empresasCache = [];
+    private static ?array $cacheCentrosCosto = null;
 
     /**
      * Transform the resource into an array.
@@ -140,11 +141,15 @@ class SolicitudesComprasResource extends JsonResource
     /**
      * Asigna la descripción del centro de costo
      */
-    private function asignarDescripcionCC($cc){
-        $rawCentrosCosto = File::get(base_path('Modules/Compras/resources/assets/json/centrosCostos/catCentrosCostos.json'));
-        $jsonCC = json_decode(json: $rawCentrosCosto, associative: true);
-        $dataCC = $jsonCC[$cc];
-        return $dataCC;
+    private function asignarDescripcionCC(string $cc): ?array
+    {
+        if (self::$cacheCentrosCosto === null) {
+            $rawCentrosCosto = File::get(
+                base_path('Modules/Compras/resources/assets/json/centrosCostos/catCentrosCostos.json')
+            );
+                self::$cacheCentrosCosto = json_decode($rawCentrosCosto, true);
+        }
+        return self::$cacheCentrosCosto[$cc] ?? null;
     }
 
     private function getOrdenTrabajo($idSolictud, $tipoSolicitud){
@@ -168,7 +173,8 @@ class SolicitudesComprasResource extends JsonResource
     {
         $labels = [
             0 => 'PENDIENTE DE PAGO',
-            1 => 'PAGADO'
+            1 => 'PAGADO',
+            2 => 'PAGADO PARCIALMENTE'
         ];
         return $labels[$value] ?? null;
     }
@@ -193,18 +199,18 @@ class SolicitudesComprasResource extends JsonResource
     }
 
     private function setEmpresaName($intercompania)
-{
-    if (isset(self::$empresasCache[$intercompania])) {
-        return self::$empresasCache[$intercompania];
-    }
-    $empresas = DB::connection('intranet')->select('CALL SP_GetEmpresas()');
+    {
+        if (isset(self::$empresasCache[$intercompania])) {
+            return self::$empresasCache[$intercompania];
+        }
+        $empresas = DB::connection('intranet')->select('CALL SP_GetEmpresas()');
 
-    foreach ($empresas as $empresa) {
-        self::$empresasCache[$empresa->intercompania] = $empresa->name;
-    }
+        foreach ($empresas as $empresa) {
+            self::$empresasCache[$empresa->intercompania] = $empresa->name;
+        }
 
-    return self::$empresasCache[$intercompania] ?? null;
-}
+        return self::$empresasCache[$intercompania] ?? null;
+    }
 
 
 

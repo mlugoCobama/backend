@@ -1,0 +1,92 @@
+<?php
+
+namespace Modules\Compras\Services;
+
+use Illuminate\Http\UploadedFile;
+use Exception;
+
+class CfdiService
+{
+    /**
+     * Extrae los datos relevantes del XML CFDI.
+     */
+    public function parsear(UploadedFile $archivo): array
+    {
+        $contenido = file_get_contents($archivo->getRealPath());
+
+        // Suprimir warnings y cargar el XML
+        libxml_use_internal_errors(true);
+        $xml = simplexml_load_string($contenido);
+
+        if ($xml === false) {
+            throw new Exception('El archivo XML no es válido o está malformado.');
+        }
+
+        // Namespaces del CFDI 4.0 (también funciona con 3.3)
+        $ns = $xml->getNamespaces(true);
+        $cfdi = $xml->attributes();
+
+        // Atributos principales del comprobante
+        $total      = (float) $cfdi['Total'];
+        $subtotal   = (float) $cfdi['SubTotal'];
+        $version    = (string) $cfdi['Version'];
+        $folio      = (string) ($cfdi['Folio'] ?? '');
+        $serie      = (string) ($cfdi['Serie'] ?? '');
+        $fecha      = (string) $cfdi['Fecha'];
+        $moneda     = (string) $cfdi['Moneda'];
+        $tipoCambio = (float)  ($cfdi['TipoCambio'] ?? 1);
+        $tipoComp   = (string) $cfdi['TipoDeComprobante'];
+
+        // Emisor y Receptor
+        $emisorNode   = $xml->children($ns['cfdi'] ?? 'http://www.sat.gob.mx/cfd/4')->Emisor;
+        $receptorNode = $xml->children($ns['cfdi'] ?? 'http://www.sat.gob.mx/cfd/4')->Receptor;
+
+        $emisorRfc  = (string) ($emisorNode->attributes()['Rfc']  ?? '');
+        $emisorNombre = (string) ($emisorNode->attributes()['Nombre'] ?? '');
+        $receptorRfc  = (string) ($receptorNode->attributes()['Rfc']  ?? '');
+        $receptorNombre = (string) ($receptorNode->attributes()['Nombre'] ?? '');
+
+        // Impuestos (nodo opcional)
+        $totalImpuestosTrasladados = 0.0;
+        $totalImpuestosRetenidos   = 0.0;
+
+        if (isset($xml->children($ns['cfdi'] ?? '')->Impuestos)) {
+            $impuestos = $xml->children($ns['cfdi'] ?? '')->Impuestos->attributes();
+            $totalImpuestosTrasladados = (float) ($impuestos['TotalImpuestosTrasladados'] ?? 0);
+            $totalImpuestosRetenidos   = (float) ($impuestos['TotalImpuestosRetenidos']   ?? 0);
+        }
+
+        return [
+            'version'                      => $version,
+            'serie'                        => $serie,
+            'folio'                        => $folio,
+            'fecha'                        => $fecha,
+            'moneda'                       => $moneda,
+            'tipo_cambio'                  => $tipoCambio,
+            'tipo_comprobante'             => $tipoComp,
+            'subtotal'                     => $subtotal,
+            'total'                        => $total,
+            'total_impuestos_trasladados'  => $totalImpuestosTrasladados,
+            'total_impuestos_retenidos'    => $totalImpuestosRetenidos,
+            'emisor_rfc'                   => $emisorRfc,
+            'emisor_nombre'                => $emisorNombre,
+            'receptor_rfc'                 => $receptorRfc,
+            'receptor_nombre'              => $receptorNombre,
+        ];
+    }
+
+    /**
+     * Valida que el total declarado coincida con subtotal + impuestos - retenciones.
+     */
+    public function validarTotal(array $datos): bool
+    {
+        $calculado = round(
+            $datos['subtotal']
+            + $datos['total_impuestos_trasladados']
+            - $datos['total_impuestos_retenidos'],
+            2
+        );
+
+        return $calculado === round($datos['total'], 2);
+    }
+}

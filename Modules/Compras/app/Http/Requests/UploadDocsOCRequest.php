@@ -18,6 +18,8 @@ class UploadDocsOCRequest extends FormRequest
           'complemento_pago_xml' => 'nullable|file',
           'complemento_pago_pdf' => 'nullable|file|mimes:pdf',
           'comprobante_pago' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
+          'total_compra' => 'nullable',
+          'suma_facturas' => 'nullable',
         ];
     }
 
