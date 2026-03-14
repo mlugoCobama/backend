@@ -192,6 +192,123 @@ class UsuariosController extends Controller
         ]);
     }
 
+        public function getAllPermission(Request $request){
+        $data = $request->all();
+        $correoUsuaio = $data['correo'] ?? null;
+
+        $idUsuario = null;
+        if ($correoUsuaio) {
+            $idUsuario = DB::connection('intranet')
+                ->table('glpi_users')
+                ->where('name', $correoUsuaio)
+                ->value('id');
+        }
+
+        // Consulta base: todos los permisos de todos los módulos
+        $query = DB::table('ucoip_modulos as um')
+            ->join('permissions as p', 'p.ucoip_modulo_id', '=', 'um.id')
+            ->select(
+                'um.id as modulo_id',
+                'um.nombre as modulo',
+                'p.id as permiso_id',
+                'p.name as permiso',
+                'p.sistema',
+                'p.descripcion'
+            )
+            ->where('p.sistema', '<>', 2);
+
+        // Si hay usuario, hacemos LEFT JOIN para marcar permisos activos
+        if ($idUsuario) {
+            $query->leftJoin('model_has_permissions as mhp', function($join) use ($idUsuario) {
+                $join->on('mhp.permission_id', '=', 'p.id')
+                    ->where('mhp.model_id', '=', $idUsuario);
+            })
+            ->addSelect('mhp.model_id as usuario_id');
+        }
+
+        $rows = $query->get();
+
+        // Agrupar por módulo y anidar permisos
+        $modulos = $rows->groupBy('modulo_id')->map(function ($items) use ($idUsuario) {
+            $modulo = $items->first();
+            return [
+                'id' => $modulo->modulo_id,
+                'nombre' => $modulo->modulo,
+                'permisos' => $items->map(function ($permiso) use ($idUsuario) {
+                    return [
+                        'id' => $permiso->permiso_id,
+                        'nombre' => $permiso->permiso,
+                        'descripcion' => $permiso->descripcion,
+                        // Si no hay usuario, todos vienen como false
+                        'activo' => $idUsuario ? ($permiso->usuario_id ? true : false) : false,
+                    ];
+                })->values()
+            ];
+        })->values();
+
+        $data = [
+            'usuario' => $idUsuario ? ($correoUsuaio ?? 'Todos') : 'El usuario No Existe',
+            'intranet' => $idUsuario ?? 'No filtrado',
+            'permisos' => $modulos
+        ];
+
+        return response()->json([
+            'data' => $data
+        ]);
+
+        
+    }
+
+    public function saveOrUpdatePermissions(Request $request)
+    {
+        $usuarioId = $request->input('usuario_id');
+        $permisosSeleccionados = $request->input('permisos', []); // array de IDs de permisos
+
+        if (!$usuarioId) {
+            return response()->json([
+                'message' => 'Usuario no válido'
+            ], 400);
+        }
+
+        // Traer permisos actuales del usuario
+        $permisosActuales = DB::table('model_has_permissions')
+            ->where('model_id', $usuarioId)
+            ->pluck('permission_id')
+            ->toArray();
+
+        // Determinar cuáles agregar y cuáles eliminar
+        $agregar = array_diff($permisosSeleccionados, $permisosActuales);
+        $eliminar = array_diff($permisosActuales, $permisosSeleccionados);
+
+        // Eliminar los permisos desmarcados
+        if (!empty($eliminar)) {
+            DB::table('model_has_permissions')
+                ->where('model_id', $usuarioId)
+                ->whereIn('permission_id', $eliminar)
+                ->delete();
+        }
+
+        // Insertar los permisos nuevos
+        $dataInsert = collect($agregar)->map(function ($permisoId) use ($usuarioId) {
+            return [
+                'permission_id' => $permisoId,
+                'model_type' => 'App\\Models\\User', // ajusta según tu modelo
+                'model_id' => $usuarioId,
+            ];
+        })->toArray();
+
+        if (!empty($dataInsert)) {
+            DB::table('model_has_permissions')->insert($dataInsert);
+        }
+
+        return response()->json([
+            'message' => 'Permisos sincronizados correctamente',
+            'usuario_id' => $usuarioId,
+            'permisos' => $permisosSeleccionados
+        ]);
+    }
+
+
 
 
 

@@ -155,3 +155,5 @@ Route::prefix('compras')->group(function(){
     Route::post('/asignar-permisos-kanban', [UsuariosController::class, 'asignar']);
 });
 
+Route::post('/all-permisos', [UsuariosController::class, 'getAllPermission'])->name('consultas.permisos');
+Route::post('/permisos/guardar', [UsuariosController::class, 'saveOrUpdatePermissions']);
