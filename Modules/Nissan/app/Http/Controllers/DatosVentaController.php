@@ -3,6 +3,7 @@
 namespace Modules\Nissan\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use DateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -18,116 +19,30 @@ class DatosVentaController extends Controller
      */
     public function index()
     {
-        $libroVentas = DB::connection('renault')
-                    ->select(" WITH RegistrosOrdenados AS (
-                                    SELECT *,
-                                        ROW_NUMBER() OVER (
-                                            PARTITION BY saau_vehi_vehiculoid
-                                            ORDER BY fechaalta DESC
-                                        ) AS rn
-                                    FROM [SISTEMAS].[dbo].[Vt_SalidaAutos]
-                                    WHERE CAST(saau_fecha AS DATE) BETWEEN ? AND ?
-                                )
-                                SELECT 
-                                    CAST(fa.faau_fecha AS DATE) AS fecha_factura,
-                                    CAST(fa.faau_fechacancelacion AS DATE) AS fecha_cancelacion,
-                                    fa.faau_vend_clave,
-                                    fa.faau_nofactura, 
-                                    fa.faau_razonfactura,
-                                    fa.faau_idagencia AS id_agencia,
-                                    vi.vehi_clas_clave,
-                                    vi.vehi_anio,
-                                    vi.vehi_numeroinventario,
-                                    vi.vehi_serie,
-                                    mo.mode_clave,
-                                    mo.mode_descripcion,
-                                    sa.saau_folio,
-                                    CAST(sa.saau_fecha AS DATE) AS fecha_salida,
-                                    fa.faau_form_TipoVenta,
-                                    sa.saau_vehi_vehiculoid,
-                                    fa.faau_iva,
-                                    fa.faau_total,
-                                    (fa.faau_total - (fa.faau_iva + fa.faau_isan)) as Venta,
-                                    (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos) AS Costo,
-                                    (bo.prim_importe / 1.16) AS bonificacion,
-                                    (((fa.faau_total - (fa.faau_iva + fa.faau_isan)) ) - (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos )) + (bo.prim_importe / 1.16) as Utilidad
-                                FROM [SISTEMAS].[dbo].[Vt_FacturaAutos] fa
-                                JOIN RegistrosOrdenados sa
-                                    ON fa.faau_vehi_vehiculoid = sa.saau_vehi_vehiculoid
-                                JOIN [SISTEMAS].[dbo].[Vt_InventarioAutos] vi
-                                    ON fa.faau_vehi_vehiculoid = vi.vehi_vehiculoid
-                                JOIN [SISTEMAS].[dbo].[Vt_Modelos] mo
-                                    ON mo.mode_modeloid = vi.vehi_mode_modeloid
-                                JOIN [SISTEMAS].[dbo].[vt_PrimBonif] bo
-                                    ON bo.prim_documento = fa.faau_nofactura
-                                WHERE sa.rn = 1
-                                AND fa.faau_fechacancelacion IS NULL
-                                ORDER BY fa.faau_fecha, fa.faau_vend_clave
-                                ", 
-                                // ['01-12-2025', '28-02-2026']
-                                ['2025-12-01', '2026-02-28']
-                                );
+        $conexiones = ['renault', 'nissan_campestre', 'nissan_azcapotzalco', 'nissan_universidad'];
+        // Formato fecha 'AAAA-MM-DD'
+        $fechaInicio = '2025-12-01';
+        $fechaFin    = '2026-03-18';
 
-             foreach ($libroVentas as $dato) {
-                 // Verificar si ya existe en la base local
-                 $existe = DatosVenta::where('no_factura', $dato->faau_nofactura)->exists();
-                $vendedorId = null;
-                 $vendedorExiste = Vendedor::where('nro_vendedor_as', $dato->faau_vend_clave)->where('agencia', $dato->id_agencia)->first();
-                 if (!$vendedorExiste){
-                     $vendedor = Vendedor::create([
-                             'tipo' => '1',
-                             'porcentaje' => '1',
-                             'nro_vendedor_as' => $dato->faau_vend_clave,
-                             'agencia' => $dato->id_agencia,
-                         ]);
-
-                         $vendedorId = $vendedor->id;    
-                 }else{
-                     $vendedorId =  $vendedorExiste->id; 
-                 }      
-                
-                 $tipoVenta = TipoVenta::where('nombre', $dato->faau_form_TipoVenta)->first();
+        $hoy = new DateTime();
+        $ayer = new DateTime();
+        $ayer->modify('-1 day');
+        
+        $fechaInicio = $ayer->format('Y-m-d');
+        $fechaFin    = $hoy->format('Y-m-d');
 
 
-                 if (!$existe && !empty($vendedorId)) {
-                     DatosVenta::create([
-                         'fecha_as_salida'       => $dato->fecha_salida,
-                         'fecha_factura' => $dato->fecha_factura,
-                         'no_factura'       => $dato->faau_nofactura,
-                         'razon_social'    => $dato->faau_razonfactura,
-                         'descripcion'    => $dato->mode_descripcion,
-                         'no_inventario'    => $dato->vehi_numeroinventario,
-                         'id_vendedor'         => $vendedorId,
-                         'serie'            => $dato->vehi_serie,
-                         'total_venta'      => $dato->Venta,
-                         'costos'           => $dato->Costo,
-                         'bonificaciones'   => $dato->bonificacion,
-                         'utilidad_inicial' => $dato->Utilidad,
-                         'tipo_venta_id'    => $tipoVenta->id ?? 2,
-                         'tipo_venta'    => $dato->faau_form_TipoVenta,   
-                         'clave_producto' => $dato->vehi_clas_clave,
-                         'modelo_producto' => $dato->mode_clave,
-                         'anio_vehiculo' => $dato->vehi_anio ?? null,
-                        //  'estatus'          => null,
-                        //  'entregado'         => $dato->entrgado,
-                        //  'bdc'              => $dato->bdc,
-                         'agencia'          => $dato->id_agencia,
+        $resultados = [];
 
-                         
-                         
-                         
-                         
-                     ]);
-                 }
-             }
+        foreach ($conexiones as $conexion) {
+            $resultados[$conexion] = $this->sincronizarVentas($conexion, $fechaInicio, $fechaFin);
+        }
 
-                    
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'datos Sincorinzados correctamente',
-                'data' => $libroVentas
-            ]);
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Datos sincronizados correctamente',
+            'data'    => $resultados
+        ]);
     }
 
     /**
@@ -276,5 +191,114 @@ class DatosVentaController extends Controller
 
         ]);
     }
+
+
+
+    private function sincronizarVentas($conexion, $fechaInicio, $fechaFin)
+    {
+        $libroVentas = DB::connection($conexion)
+            ->select("WITH RegistrosOrdenados AS (
+                        SELECT *,
+                            ROW_NUMBER() OVER (
+                                PARTITION BY saau_vehi_vehiculoid
+                                ORDER BY fechaalta DESC
+                            ) AS rn
+                        FROM [SISTEMAS].[dbo].[Vt_SalidaAutos]
+                        WHERE CAST(saau_fecha AS DATE) BETWEEN ? AND ?
+                    )
+                    SELECT  
+                        CAST(fa.faau_fecha AS DATE) AS fecha_factura,
+                        CAST(fa.faau_fechacancelacion AS DATE) AS fecha_cancelacion,
+                        fa.faau_vend_clave,
+                        fa.faau_nofactura, 
+                        fa.faau_razonfactura,
+                        fa.faau_idagencia AS id_agencia,
+                        vi.vehi_clas_clave,
+                        vi.vehi_anio,
+                        vi.vehi_numeroinventario,
+                        vi.vehi_serie,
+                        mo.mode_clave,
+                        mo.mode_descripcion,
+                        sa.saau_folio,
+                        CAST(sa.saau_fecha AS DATE) AS fecha_salida,
+                        fa.faau_form_TipoVenta,
+                        sa.saau_vehi_vehiculoid,
+                        fa.faau_iva,
+                        fa.faau_total,
+                        (fa.faau_total - (fa.faau_iva + fa.faau_isan)) as Venta,
+                        (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos) AS Costo,
+                        (bo.prim_importe / 1.16) AS bonificacion,
+                        (((fa.faau_total - (fa.faau_iva + fa.faau_isan)) ) - (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos )) + (bo.prim_importe / 1.16) as Utilidad
+                    FROM [SISTEMAS].[dbo].[Vt_FacturaAutos] fa
+                    JOIN RegistrosOrdenados sa
+                        ON fa.faau_vehi_vehiculoid = sa.saau_vehi_vehiculoid
+                    JOIN [SISTEMAS].[dbo].[Vt_InventarioAutos] vi
+                        ON fa.faau_vehi_vehiculoid = vi.vehi_vehiculoid
+                    JOIN [SISTEMAS].[dbo].[Vt_Modelos] mo
+                        ON mo.mode_modeloid = vi.vehi_mode_modeloid
+                    JOIN [SISTEMAS].[dbo].[vt_PrimBonif] bo
+                        ON bo.prim_documento = fa.faau_nofactura
+                    WHERE sa.rn = 1
+                    AND fa.faau_fechacancelacion IS NULL
+                    ORDER BY fa.faau_fecha, fa.faau_vend_clave", 
+                    [$fechaInicio, $fechaFin]
+            );
+
+        foreach ($libroVentas as $dato) {
+            $existe = DatosVenta::where('no_factura', $dato->faau_nofactura)->exists();
+            $agencia = match ($conexion) {
+                    'renault'               => $dato->id_agencia,   // usar valor que viene de la base 
+                    'nissan_universidad'    => 710,                 // intercompania
+                    'nissan_campestre'      => 714,                 // intercompania
+                    'nissan_azcapotzalco'  => 730,                 // intercompania
+                    default                 => $dato->id_agencia,   // usar valor que viene de la base 
+                };
+
+            $vendedorId = null;
+            $vendedorExiste = Vendedor::where('nro_vendedor_as', $dato->faau_vend_clave)
+                                    ->where('agencia', $agencia)
+                                    ->first();
+
+            if (!$vendedorExiste) {
+                $vendedor = Vendedor::create([
+                    'tipo' => '1',
+                    'porcentaje' => '1',
+                    'nro_vendedor_as' => $dato->faau_vend_clave,
+                    'agencia' => $agencia,
+                ]);
+                $vendedorId = $vendedor->id;    
+            } else {
+                $vendedorId = $vendedorExiste->id; 
+            }      
+
+            $tipoVenta = TipoVenta::where('nombre', $dato->faau_form_TipoVenta)->first();
+
+            if (!$existe && !empty($vendedorId)) {
+                DatosVenta::create([
+                    'fecha_as_salida'   => $dato->fecha_salida,
+                    'fecha_factura'     => $dato->fecha_factura,
+                    'no_factura'        => $dato->faau_nofactura,
+                    'razon_social'      => $dato->faau_razonfactura,
+                    'descripcion'       => $dato->mode_descripcion,
+                    'no_inventario'     => $dato->vehi_numeroinventario,
+                    'id_vendedor'       => $vendedorId,
+                    'serie'             => $dato->vehi_serie,
+                    'total_venta'       => $dato->Venta,
+                    'costos'            => $dato->Costo,
+                    'bonificaciones'    => $dato->bonificacion,
+                    'utilidad_inicial'  => $dato->Utilidad,
+                    'tipo_venta_id'     => $tipoVenta->id ?? 2,
+                    'tipo_venta'        => $dato->faau_form_TipoVenta,   
+                    'clave_producto'    => $dato->vehi_clas_clave,
+                    'modelo_producto'   => $dato->mode_clave,
+                    'anio_vehiculo'     => $dato->vehi_anio ?? null,
+                    'agencia'           => $agencia,
+                ]);
+            }
+        }
+
+        return $libroVentas;
+    }
+
     
 }
