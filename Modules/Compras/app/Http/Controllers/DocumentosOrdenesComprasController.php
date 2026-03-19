@@ -67,7 +67,7 @@ class DocumentosOrdenesComprasController extends Controller
             if($orden){
                 $mPago = $orden->modo_pago;
                 if($data->hasFile('comprobante_pago')){
-                    $this->eventosComprobantePago($orden->id, $orden, $mPago, $docsOrdenCompra);
+                    $this->eventosComprobantePago($orden->id, $orden, $docsOrdenCompra->comprobante_pago);
                 }
                 if($data->hasFile('factura_xml')){
                     $this->eventosFacturaXml($orden->id, $orden);
@@ -153,7 +153,7 @@ class DocumentosOrdenesComprasController extends Controller
             if($orden){
                 $mPago = $orden->modo_pago;
                 if($data->hasFile('comprobante_pago')){
-                    $this->eventosComprobantePago($orden->id, $orden, $mPago, $docsOrdenCompra);
+                    $this->eventosComprobantePago($orden->id, $orden, $docsOrdenCompra->comprobante_pago);
                 }
                 if($data->hasFile('factura_xml')){
                     $this->eventosFacturaXml($orden->id, $orden);
