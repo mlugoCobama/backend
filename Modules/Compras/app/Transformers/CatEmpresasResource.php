@@ -16,6 +16,7 @@ class CatEmpresasResource extends JsonResource
         return [
             "name" => $this->name,
             "intercompania" => (int)$this->intercompania,
+            "permiso" => $this->permiso ?? '',
             "isAgencia" => $isAgencia
         ];
     }
