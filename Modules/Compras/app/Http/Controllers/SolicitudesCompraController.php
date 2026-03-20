@@ -70,6 +70,9 @@ class SolicitudesCompraController extends Controller
 
         $usuariosTG = explode(',', env('USERS_COMPRAS_TG'));
         $isTG = in_array($id, $usuariosTG );
+
+        $usuariosAutosExcepcion = explode(',', env('EXCEPCIONES_AUTOS')); 
+        $isExepcion = in_array($id, $usuariosAutosExcepcion);
         
         if($isRT){
             if(!in_array($id, [2395])){
@@ -112,7 +115,12 @@ class SolicitudesCompraController extends Controller
         }
         
         if(!$isRT && !$isCompras && !$isAdmin  && !$isTG && !$isAdminz && !$isComprasAutos){
-            $query = $this->getSolicitudesCompras($intercompania , 0, 0, null, null, 'empresa');
+            if(!$isExepcion){
+                $query = $this->getSolicitudesCompras($intercompania , 0, 0, null, null, 'empresa');
+            }else{
+               $query = $this->getSolicitudesCompras($intercompania , 0, 0, null, $id, 'empresa'); 
+            }
+
             $data = SolicitudesComprasResource::collection(
                 $query
             );

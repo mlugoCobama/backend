@@ -292,7 +292,7 @@ class UsuariosController extends Controller
         $dataInsert = collect($agregar)->map(function ($permisoId) use ($usuarioId) {
             return [
                 'permission_id' => $permisoId,
-                'model_type' => 'App\\Models\\User', // ajusta según tu modelo
+                'model_type' => 'App\\Models\\User', 
                 'model_id' => $usuarioId,
             ];
         })->toArray();
