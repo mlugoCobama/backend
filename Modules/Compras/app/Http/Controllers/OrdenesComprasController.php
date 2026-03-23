@@ -375,7 +375,7 @@ class OrdenesComprasController extends Controller
             DB::beginTransaction();
 
             $orden = OrdenCompra::find($idOc);
-            $this->actStatusOrdenSolicitud( $orden->id , EstatusSolicitud::AUTORIZADA , EstatusOrdenCompra::AUTORIZADA);
+            $this->actStatusOrdenSolicitud( $orden->id, EstatusOrdenCompra::AUTORIZADA, EstatusSolicitud::AUTORIZADA);
 
             if($orden->modo_pago == 1){
                 $this->actStatusOrdenSolicitud( $orden->id, EstatusOrdenCompra::SOLICITADO_PAGO , EstatusSolicitud::SOLICITADO_PAGO);
