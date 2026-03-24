@@ -308,7 +308,7 @@ class OrdenesComprasController extends Controller
     }
 
 
-    public function enviarCorreoSurtido($idOrdenCompra){
+    public function enviarCorreoSurtido($idOrdenCompra, $rutaComPago = null){
 
         $ordenCompra =  OrdenCompra::where('id',  $idOrdenCompra )->first();
 
@@ -359,7 +359,7 @@ class OrdenesComprasController extends Controller
         //                     ->notify(new SolicitudSurtido($datos));
         $pdfContenido = $this->consultaDatosPDF($cotizacion->solicitudes_compra_id);
 
-        Mail::to($correoProveedor)->send(new SolicitudSurtido($datos, $pdfContenido['archivoPDF']));
+        Mail::to($correoProveedor)->send(new SolicitudSurtido($datos, $pdfContenido['archivoPDF'], $rutaComPago));
     }
 
     /** ********************************************************************************
@@ -378,7 +378,7 @@ class OrdenesComprasController extends Controller
             $this->actStatusOrdenSolicitud( $orden->id, EstatusOrdenCompra::AUTORIZADA, EstatusSolicitud::AUTORIZADA);
 
             if($orden->modo_pago == 1){
-                $this->actStatusOrdenSolicitud( $orden->id, EstatusOrdenCompra::SOLICITADO_PAGO , EstatusSolicitud::SOLICITADO_PAGO);
+                $this->actStatusOrdenSolicitud( $orden->id, EstatusOrdenCompra::FACTURADO , EstatusSolicitud::FACTURADO);
             }else{
                 $this->actStatusOrdenSolicitud($orden->id, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
                 $this->enviarCorreoSurtido($orden->id);

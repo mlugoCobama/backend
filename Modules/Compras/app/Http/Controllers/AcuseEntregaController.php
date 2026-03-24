@@ -18,6 +18,7 @@ use App\Enums\EstatusOrdenCompra;
 use App\Enums\EstatusSolicitud;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Modules\Compras\Models\DetalleSolicitud;
 
 class AcuseEntregaController extends Controller
@@ -74,7 +75,6 @@ class AcuseEntregaController extends Controller
         $ordenCompraId = $validated['orden_compra_id'];
         $file = $request->file('archivo');
 
-        // Tus procesos
         $this->storeAcuse($ordenCompraId, $file, $validated);
         $this->ingresarAlmacen($validated['detalles_entrada'], $userId);
         $this->actStatusOrdenSolicitud(
@@ -82,6 +82,8 @@ class AcuseEntregaController extends Controller
             EstatusOrdenCompra::ENTREGADA,
             EstatusSolicitud::ENTREGADA
         );
+
+
 
         DB::commit();
 
@@ -155,18 +157,27 @@ class AcuseEntregaController extends Controller
 
         $orden = OrdenCompra::where('id', $idOrdenCompra)->first();
         if ($orden) {
-            $orden->estatus = $statusOrdenCompra;
+            if( $orden->modo_pago == 2 && $orden->pagado != 1) {
+                $facturas = count($orden->documentos);
+                $requiereFactura = ($facturas == 0);
+                $orden->estatus = $requiereFactura ? EstatusOrdenCompra::FACTURADO: EstatusOrdenCompra::SOLICITADO_PAGO;
+            }else{
+                $orden->estatus = $statusOrdenCompra;
+            }      
             $orden->save(); 
+
+            $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
+
+            $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
+            if ($solicitud) {
+                if( $orden->modo_pago == 2 && $orden->pagado != 1) {
+                    $solicitud->estatus = $requiereFactura ? EstatusSolicitud::FACTURADO : EstatusSolicitud::SOLICITADO_PAGO;
+                }else{
+                    $solicitud->estatus = $estatusSolicitud;
+                }  
+                $solicitud->save(); 
+            }
         }
-
-        $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
-
-        $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
-        if ($solicitud) {
-            $solicitud->estatus = $estatusSolicitud;
-            $solicitud->save(); 
-        }
-
     }
 
     /**

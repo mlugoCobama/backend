@@ -556,9 +556,11 @@ class DocumentosOrdenesComprasController extends Controller
          if($data['tipo_documento'] ==  'comprobante_pago'){
              $orden = OrdenCompra::find($data["orden_compra_id"]);
          if($orden->modo_pago == 1 ){
+             $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
              $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+
              $controlerOC = new OrdenesComprasController;    
-             $controlerOC->enviarCorreoSurtido($orden->id);      
+             $controlerOC->enviarCorreoSurtido($orden->id, $docsFactura->representacion_impresa);      
             $this->enviarCorreoPago($orden, $docsFactura->representacion_impresa);
          }else{
                  $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
@@ -587,7 +589,6 @@ class DocumentosOrdenesComprasController extends Controller
             }
             $orden->save(); 
         }
-
         $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
 
         $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
@@ -646,10 +647,10 @@ class DocumentosOrdenesComprasController extends Controller
 
     private function eventosComprobantePago($idOrdenCompra, $orden, $rutaCompPago){
         if($orden->modo_pago == 1){
-            $this->actStatusOrdenSolicitud($idOrdenCompra , EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
             $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
+            $this->actStatusOrdenSolicitud($idOrdenCompra , EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
             $controlerOC = new OrdenesComprasController;    
-            $controlerOC->enviarCorreoSurtido($idOrdenCompra);      
+            $controlerOC->enviarCorreoSurtido($idOrdenCompra, $rutaCompPago );      
             $this->enviarCorreoPago($orden, $rutaCompPago); 
         }else{
             $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
@@ -661,7 +662,7 @@ class DocumentosOrdenesComprasController extends Controller
 
     private function eventosFacturaXml($idOrdenCompra, $orden){
         if($orden->modo_pago == 1 ){
-            $this->actStatusOrdenSolicitud($idOrdenCompra,EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
+            $this->actStatusOrdenSolicitud($idOrdenCompra,EstatusOrdenCompra::SOLICITADO_PAGO, EstatusSolicitud::SOLICITADO_PAGO);
         }else{
             $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
             $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::SOLICITADO_PAGO, EstatusSolicitud::SOLICITADO_PAGO);

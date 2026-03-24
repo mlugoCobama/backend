@@ -8,6 +8,9 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+
+use function Laravel\Prompts\info;
 
 class SolicitudSurtido extends Mailable
 {
@@ -15,15 +18,17 @@ class SolicitudSurtido extends Mailable
 
     public $datos;
     public $pdfContenido;
+    public $rutaComPago;
 
 
     /**
      * Create a new message instance.
      */
-    public function __construct($datos, $pdfContenido)
+    public function __construct($datos, $pdfContenido, $rutaComPago)
     {
         $this->datos = $datos;
         $this->pdfContenido = $pdfContenido;
+        $this->rutaComPago = $rutaComPago;
     }
 
     /**
@@ -72,6 +77,26 @@ class SolicitudSurtido extends Mailable
                 'mime' => 'application/pdf',
             ]);
         }
+
+        if(!empty($this->rutaComPago)){
+            $this->rutaComPago = storage_path('app/'.$this->rutaComPago);
+            if(file_exists($this->rutaComPago)){
+                $extension = pathinfo($this->rutaComPago, PATHINFO_EXTENSION);
+                $mimeTypes = [
+                    'pdf' => 'application/pdf',
+                    'jpg' => 'image/jpeg',
+                    'jpeg' => 'image/jpeg',
+                    'png' => 'image/png',
+                ];
+                $fileName = 'comprobante_pago - '.$this->datos['ordenCompra']->folio_oc;
+                $mime = $mimeTypes[strtolower($extension)] ?? 'application/octet-stream';
+                $mail->attach($this->rutaComPago, [
+                            'as' => $fileName . $extension,
+                            'mime' => $mime,
+                        ]);
+            }
+        }
+        
 
 
 
