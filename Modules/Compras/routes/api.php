@@ -138,6 +138,7 @@ Route::prefix('compras')->group(function(){
     Route::get('/ReportesCompras/GatoMensualConcentrado/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'getGastoEmpresasConcentrado'])->name('ReportesCompras.getGastoEmpresasConcentrado');
     Route::get('/ReportesCompras/GatoMensualDetalle/{intercompania}/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'getGastoEmpresaDetalle'])->name('ReportesCompras.getGastoEmpresaDetalle');
     Route::get('/ReportesCompras/ComprasMacro/Concentrado', [ReportesComprasController::class, 'descargarConcentradoMacroGlobal'])->name('descargarConcentradoMacroGlobal');   
+    Route::get('/ReportesCompras/ComprasGenerales/Concentrado', [ReportesComprasController::class, 'descargarConcentradoGeneralesGlobal'])->name('descargarConcentradoGeneralGlobal');   
 // Exportar solo una empresa
     Route::get('/gasto-empresa/{empresa}/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'exportEmpresa']);
     // Exportar concentrado

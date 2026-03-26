@@ -6,6 +6,7 @@ use App\Enums\EstatusSolicitud;
 use App\Exports\GastosDetalleEmpresaExport;
 use App\Exports\GastosMultiHojaExport;
 use App\Exports\GatosDetalleMultiHojaExport;
+use App\Exports\ReporteConcentradoComprasMultihojaExport;
 use App\Exports\ReporteUnidadeMultihojaMacroExport;
 use App\Exports\SolicitudesExport;
 use App\Http\Controllers\Controller;
@@ -409,6 +410,31 @@ class ReportesComprasController extends Controller
         return $solicitudes;
     }
 
+    public function descargarConcentradoGeneralesGlobal()
+    {
+        $concentrado = [
+            131, 130, 251, 200, 
+            210, 155, 135, 110,
+            111, 240, 250, 132,
+            119, 190, 133, 353, 
+            191, 354 , 251250, 353111
+        ];
+
+        $detalleData = [];
+        foreach ($concentrado as $empresa) {
+            $detalleData[$empresa] = $this->queryComprasGnerales($empresa);
+        }
+
+        $fechaDescarga = now()->format('Y-m-d_His');
+        $nombreArchivo = "GastoGeneralConcentrado_{$fechaDescarga}.xlsx";
+
+        return Excel::download(
+            new ReporteConcentradoComprasMultihojaExport($detalleData),
+            $nombreArchivo
+        );
+    }
+
+
     public function descargarConcentradoMacroGlobal()
     {
         $concentrado = [
@@ -508,10 +534,10 @@ class ReportesComprasController extends Controller
             'Fecha'         => date('d/m/Y H:i', strtotime($solicitud->fecha)),
             'Empresa'       => $empresas[$solicitud->empresa] ?? 'N/A',
             'Destino'       => $destinoFormat,
-            'Marca'         => $solicitud->DestinoVehiculo->marca,
-            'SubMarca'     => $solicitud->DestinoVehiculo->submarca,
-            'Modelo'        => $solicitud->DestinoVehiculo->modelo,
-            'Serie'         => $solicitud->DestinoVehiculo->no_serie,
+            'Marca'         => $solicitud->DestinoVehiculo->marca ?? '',
+            'SubMarca'     => $solicitud->DestinoVehiculo->submarca ?? '',
+            'Modelo'        => $solicitud->DestinoVehiculo->modelo ?? '',
+            'Serie'         => $solicitud->DestinoVehiculo->no_serie ?? '',
             'Estado'        => $label,
             'Cantidad'      => '',
             'Descripcion'   => '',
@@ -680,6 +706,130 @@ class ReportesComprasController extends Controller
         }
 
 
+
+
+    private function queryComprasGnerales( $empresa, $fechaInicio = null, $fechaFin = null , $tipo = null ){
+
+    $empresas = $this->rawEmpresas;
+
+
+    $solicitudes = SolicitudesCompra::with([
+        'DestinoVehiculo',
+         'SistemaMantenimiento',
+        //  'TipoMantenimiento',
+        'Cotizaciones.orden_compra',
+        // 'DetallesSolicitud.DetalleAutotanque.DatosVehiculo',
+        'DetallesSolicitud.unidadMedida',
+        'DetallesSolicitud.DetallesCotizacion.CotizacionesProveedores.datos_proveedor'
+    ])
+    ->where('estatus','>', 1)
+    ->where('estatus','<>', 4)
+    ->where('activo', 1)
+    ->where('tipo', 1)
+    ->where('empresa', $empresa)
+    // ->whereBetween('fecha', [$fechaInicio, $fechaFin])
+    // ->whereHas('Cotizaciones.orden_compra', function ($q) {
+    //     $q->where('pagado', 1);
+    // })
+    ->whereHas('DetallesSolicitud', function($q) {
+        $q->where('confirmado', 1);
+    })
+
+
+    ->get()
+    ->flatMap(function ($solicitud) use ($empresas) {
+
+
+        //   OBTENER LA COTIZACIÓN QUE TIENE UNA ORDEN DE COMPRA
+        $cotizacionOC = $solicitud->cotizaciones->firstWhere('orden_compra', '!=', null);
+        $folioOC = $cotizacionOC->orden_compra->folio_oc ?? '';
+
+        $labels = EstatusSolicitud::labels();
+        $label = $labels[$solicitud->estatus] ?? 'DESCONOCIDO';
+
+        $rows = [];
+        $subtotal = 0;
+
+
+        //   CALCULAR SUBTOTAL
+        foreach ($solicitud->DetallesSolicitud as $detalle) {
+
+            $cotSel = $detalle->DetallesCotizacion
+                ->firstWhere(fn($cot) =>
+                    $cot->CotizacionesProveedores &&
+                    $cot->CotizacionesProveedores->seleccionado == 1
+                );
+
+            $precio = (float) ($cotSel->importe_unitario ?? 0);
+            $cantidad = $detalle->cantidad ?? 1;
+
+            $subtotal += $precio * $cantidad;
+        }
+
+        $iva = $subtotal * 0.16;
+        $total = $subtotal + $iva;
+        $proveedor = $cotSel->CotizacionesProveedores->datos_proveedor->nombre ?? 'N/A';
+
+        $destinoFormat = $this->getUsuario($solicitud->usuario_destino);
+        $sistemaMantenimiento =  $solicitud->SistemaMantenimiento->sistema ?? '';
+
+        //   FILA PRINCIPAL: TOTALES DE LA SOLICITUD
+        $rows[] = [
+            'Folio'         => $solicitud->folio,
+            'Folio_OC'      => $folioOC,
+            'Fecha'         => date('d/m/Y H:i', strtotime($solicitud->fecha)),
+            'Empresa'       => $empresas[$solicitud->empresa] ?? 'N/A',
+            'Destino'       => $destinoFormat['nombre'],
+            'Area'         =>  $destinoFormat['area'],
+            'Estado'        => $label,
+            'Cantidad'      => '',
+            'Descripcion'   => '',
+            'Observaciones' => '',
+            'Unidad'        => '',
+            'Precio'        => '',
+            'tipo'          => $sistemaMantenimiento
+        ];
+
+        //   FILAS DETALLE DE LA SOLICITUD
+        foreach ($solicitud->DetallesSolicitud as $detalle) {
+            $cotSel = $detalle->DetallesCotizacion
+                ->firstWhere(fn($cot) =>
+                    $cot->CotizacionesProveedores &&
+                    $cot->CotizacionesProveedores->seleccionado == 1
+                );
+  
+            $precio = (float) ($cotSel->importe_unitario ?? 0);
+ 
+            $rows[] = [
+                'Folio'         => '',
+                'Folio_OC'      => $folioOC,
+                'Fecha'         => '',
+                'Empresa'       => '',
+                'Destino'       => '',
+                'Area'         =>  '',
+                'Estado'        => '',
+                'Cantidad'      => $detalle->cantidad ?? 0,
+                'Descripcion'   => $detalle->descripcion ?? '',
+                'Observaciones' => $detalle->observaciones ?? '',
+                'Unidad'        => $detalle->unidadMedida->nombre ?? '',
+                'Precio'        => $precio,
+                'tipo'          => ''
+            ];
+        }
+
+        return $rows;
+    });
+
+        return $solicitudes;
+    }
+
+    private function getUsuario($id){
+        $data = DB::connection('intranet')->select("call SOPORTEZM.SP_GetUsuarioId('$id')");
+        if($data){
+            return ['nombre' => $data[0]->firstname.' '.$data[0]->realname, 'area' => $data[0]->area];
+        }
+        return  ['nombre' => 'ND', 'area' => 'ND'];
+    }
 
 
 
