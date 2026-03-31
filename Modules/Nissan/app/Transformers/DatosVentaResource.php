@@ -66,6 +66,7 @@ class DatosVentaResource extends JsonResource
                     'cortesia' => (float) ($this->gatosVenta->cortesia ?? 0),
                     'accesorios' => (float) ($this->gatosVenta->accesorios ?? 0),
                     'placas' => (float) ($this->gatosVenta->placas ?? 0),
+                    'comision_garantizada' => (float) ($this->gatosVenta->comision_garantizada ?? 0),
                     'comision_apv_pesos' => (float) ($this->gatosVenta->comision_apv_pesos ?? 0),
                     'comision_bdc_pesos' => (float) ($this->gatosVenta->comision_bdc_pesos ?? 0),
                     'porcentaje_bdc' => (float) ($this->gatosVenta->porcentaje_bdc ?? 0),

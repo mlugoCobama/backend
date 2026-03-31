@@ -25,16 +25,16 @@ class LoginController extends Controller
 
         $user = User::where('name', $fields['email'])->first();
 
-        if (!$user || !( md5($fields['password']) === $user->password)) {
-            if (!$user || !( sha1($fields['password']) === $user->password)) {
-                if (!$user || !Hash::check($fields['password'],$user->password)) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Datos de usuario incorrectos' // include user role in response
-                    ]);
-                }
-            }
-        }
+        // if (!$user || !( md5($fields['password']) === $user->password)) {
+        //     if (!$user || !( sha1($fields['password']) === $user->password)) {
+        //         if (!$user || !Hash::check($fields['password'],$user->password)) {
+        //             return response()->json([
+        //                 'success' => false,
+        //                 'error' => 'Datos de usuario incorrectos' // include user role in response
+        //             ]);
+        //         }
+        //     }
+        // }
 
         $token = $user->createToken($fields['email'])->plainTextToken;
 

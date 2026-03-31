@@ -413,11 +413,22 @@ class ReportesComprasController extends Controller
     public function descargarConcentradoGeneralesGlobal()
     {
         $concentrado = [
-            131, 130, 251, 200, 
+            // 131, 130, 251, 200, 
+            // 210, 155, 135, 110,
+            // 111, 240, 250, 132,
+            // 119, 190, 133, 353, 
+            // 191, 354 , 251250, 353111
+            333, 201,
+            131, 130, 251,
             210, 155, 135, 110,
-            111, 240, 250, 132,
-            119, 190, 133, 353, 
-            191, 354 , 251250, 353111
+            111, 250, 240, 132,
+            200, 119, 190,
+            133, 353, 
+            191, 354, 353111, 251250,
+            710,
+            7051, 712, 700,
+             2000, 7064,
+            7062, 7063, 7061,
         ];
 
         $detalleData = [];
@@ -426,7 +437,7 @@ class ReportesComprasController extends Controller
         }
 
         $fechaDescarga = now()->format('Y-m-d_His');
-        $nombreArchivo = "GastoGeneralConcentrado_{$fechaDescarga}.xlsx";
+        $nombreArchivo = "GastoGeneralTIConcentrado_{$fechaDescarga}.xlsx";
 
         return Excel::download(
             new ReporteConcentradoComprasMultihojaExport($detalleData),
@@ -725,7 +736,7 @@ class ReportesComprasController extends Controller
     ->where('estatus','>', 1)
     ->where('estatus','<>', 4)
     ->where('activo', 1)
-    ->where('tipo', 1)
+    ->where('tipo', 3)
     ->where('empresa', $empresa)
     // ->whereBetween('fecha', [$fechaInicio, $fechaFin])
     // ->whereHas('Cotizaciones.orden_compra', function ($q) {

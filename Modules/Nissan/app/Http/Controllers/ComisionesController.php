@@ -183,6 +183,7 @@ class ComisionesController extends Controller
         $accesorios = (float) ($item->gatosVenta->accesorios ?? 0);
         $placas = (float) ($item->gatosVenta->placas ?? 0);
         $porcentaje_bdc = (float) ($item->gatosVenta->porcentaje_bdc ?? 0);
+        $comision_garantizada = (float) ($item->gatosVenta->comision_garantizada ?? 0);
 
         // Calcular total de gastos
         $total_gastos = $otros + $gasolina + $previa + $descuentos + $traslados
@@ -217,6 +218,7 @@ class ComisionesController extends Controller
             'accesorios' => $accesorios,
             'total_gastos' => $total_gastos ?? 0,
             'porcentaje_bdc' => ($porcentaje_bdc ?? 0) / 100,
+            'comision_garantizada' => $comision_garantizada ?? 0,
             'comision_apv_pesos' => (float) ($item->gatosVenta->comision_apv_pesos ?? 0),
             'comision_bdc_pesos' => (float) ($item->gatosVenta->comision_bdc_pesos ?? 0),
         ];
@@ -268,9 +270,10 @@ class ComisionesController extends Controller
         $gasto->descuento_gastos = $gastos['descuento_da'] ?? 0;
         $gasto->cortesia = $gastos['cortesia'] ?? 0;
         $gasto->accesorios = $gastos['accesorios'] ?? 0;
-        $gasto->comision_apv_pesos = $gastos['comision_apv'] ?? 0;
+        $gasto->comision_apv_pesos = $gastos['comision_garantizada'] > 0 ?  $gastos['comision_garantizada'] : ($gastos['comision_apv'] ?? 0);
         $gasto->porcentaje_bdc = $gastos['porcentaje_bdc'] ?? 0;
         $gasto->comision_bdc_pesos = $gastos['comision_bdc'] ?? 0;
+        $gasto->comision_garantizada = $gastos['comision_garantizada'] ?? 0;
         $gasto->save();
     }
 
@@ -290,10 +293,11 @@ class ComisionesController extends Controller
         $gasto->descuento_gastos = $gastos['descuento_da'] ?? 0;
         $gasto->cortesia = $gastos['cortesia'] ?? 0;
         $gasto->accesorios = $gastos['accesorios'] ?? 0;
-        $gasto->comision_apv_pesos = $gastos['comision_apv'] ?? 0;
+        $gasto->comision_apv_pesos = $gastos['comision_garantizada'] > 0 ?  $gastos['comision_garantizada'] : ($gastos['comision_apv'] ?? 0);
         $gasto->porcentaje_bdc = $gastos['porcentaje_bdc'] ?? 0;
         $gasto->comision_bdc_pesos = $gastos['comision_bdc'] ?? 0;
         $gasto->id_datos_venta = $gastos['id_venta'] ;
+        $gasto->comision_garantizada = $gastos['comision_garantizada'] ?? 0;
         $gasto->save();
     }
 

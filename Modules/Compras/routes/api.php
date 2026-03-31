@@ -66,7 +66,6 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     //*Ruta para enviar un email de prueba, no funciona pero va funcionar
     Route::post('/enviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'enviarSolicitudCotizacion'])->name('SolicitudesCompra.enviarSolicitudCotizacion');
     Route::post('/reenviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'reenviarCorreo'])->name('SolicitudesCompra.reenviarCorreo');
-    Route::post('/enviar-solicitud-surtido', [OrdenesComprasController::class, 'enviarSolicitudSurtido'])->name('OrdenesCompras.enviarSolicitudSurtido');
     Route::post('/autorizar-orden-compra', [OrdenesComprasController::class, 'autorizarOrden'])->name('OrdenesCompras.autorizarOrden');
     Route::post('/autorizar-apago-orden-compra', [OrdenesComprasController::class, 'autorizarOrdenPago'])->name('OrdenesCompras.autorizarOrdenPago');
 

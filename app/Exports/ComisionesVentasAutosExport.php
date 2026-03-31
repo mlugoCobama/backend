@@ -52,6 +52,7 @@ class ComisionesVentasAutosExport implements FromCollection, WithMapping, WithTi
             'Cortesía',             //numerico-pesos-alineacion_izquierda
             'Accesorios',           //numerico-pesos-alineacion_izquierda
             'Total de gastos',      //numerico-pesos-negritas-alineacion_izquierda
+            'Comision Garantizada', //numerico-pesos-negritas-alineacion_izquierda
             '% BDC',                //numerico-porcentaje
             'Comisión de APV',      //numerico-pesos-negritas-alineacion_izquierda
             'Comisión de BDC',      //numerico-pesos-alineacion_izquierda
@@ -107,6 +108,7 @@ class ComisionesVentasAutosExport implements FromCollection, WithMapping, WithTi
             $item['cortesia'],
             $item['accesorios'],
             $item['total_gastos'],
+            $item['comision_garantizada'],
             $item['porcentaje_bdc'],
             $item['comision_apv_pesos'],
             $item['comision_bdc_pesos'],
@@ -132,9 +134,10 @@ class ComisionesVentasAutosExport implements FromCollection, WithMapping, WithTi
             'U' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Cortesía
             'V' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Accesorios
             'W' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Total de gastos
-            'X' => NumberFormat::FORMAT_PERCENTAGE_00,       // % BDC
-            'Y' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Comisión APV
-            'Z' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Comisión BDC
+            'X' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Total de gastos
+            'Y' => NumberFormat::FORMAT_PERCENTAGE_00,       // % BDC
+            'Z' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Comisión APV
+            'AA' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Comisión BDC
         ];
     }
 
@@ -150,7 +153,7 @@ class ComisionesVentasAutosExport implements FromCollection, WithMapping, WithTi
 
     public static function afterSheet(AfterSheet $event)
     {
-        $event->sheet->getStyle('H:Z')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $event->sheet->getStyle('H:AA')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
     }
 
     public function setHeadersByTipo($estatus){

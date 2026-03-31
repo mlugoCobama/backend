@@ -31,6 +31,7 @@ class GastosVenta extends Model
         'comision_apv_pesos',
         'comision_bdc_pesos',
         'porcentaje_bdc',
+        'comision_garantizada',
     ];
 
     protected $table = 'com_gastos_venta';

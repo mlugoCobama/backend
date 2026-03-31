@@ -20,7 +20,6 @@ use Modules\Compras\Models\Cotizaciones;
 //Transformers
 use Modules\Compras\Transformers\DetallesCotizacionResource;
 use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
-use Modules\Compras\Transformers\SolicitudesMacroResource;
 //Utilities
 use Illuminate\Support\Facades\DB;
 
@@ -28,15 +27,11 @@ use Illuminate\Support\Facades\Notification;
 //Mailables
 // use App\Notifications\SolicitudSurtido;
 use App\Mail\SolicitudSurtido;
-use App\Models\User;
-use App\Notifications\StatusChangedNotification;
 use Illuminate\Support\Facades\Mail;
 use Modules\Compras\Models\DatosVehiculo;
 use Modules\Compras\Models\ProveedorContacto;
-use Modules\Compras\Transformers\AutotanqueResource;
 use Modules\Compras\Transformers\OrdenCompraResource;
 use Modules\Compras\Transformers\UsersResource;
-use PhpParser\Node\Stmt\Return_;
 
 class OrdenesComprasController extends Controller
 {
@@ -263,51 +258,6 @@ class OrdenesComprasController extends Controller
         }
     }
 
-    /** ********************************************************************************
-     * Marca la solicitud como autorizada y envía un correo al proveedor seleccionado
-     **********************************************************************************/
-    public function enviarSolicitudSurtido(Request $request)
-    {
-        $data = $request->all();
-
-        $idOc = $data['idOrdenCompra'];
-        $idSc = $data['idSolicituCompra'];
-
-        DB::beginTransaction();
-
-        try {
-
-            $orden = OrdenCompra::where('id', $idOc)->first();
-                if ($orden) {
-                    $orden->estatus = EstatusOrdenCompra::AUTORIZADO_A_PAGO;
-                    $orden->modo_pago = 2;
-                    $orden->save();
-                }
-                
-                $this->enviarCorreoSurtido($idOc);
-
-                $this->actStatusOrdenSolicitud($idOc, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO); 
-
-            DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Se ha autorizado y enviado el correo al proveedor correctamente',
-                'data' => []
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Ocurrió un error y la operación fue revertida',
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
-
-
     public function enviarCorreoSurtido($idOrdenCompra, $rutaComPago = null){
 
         $ordenCompra =  OrdenCompra::where('id',  $idOrdenCompra )->first();
@@ -369,7 +319,6 @@ class OrdenesComprasController extends Controller
     {
         $data = $request->all();
         $idOc = $data['idOrdenCompra'];
-        $idSc = $data['idSolicituCompra'];
 
         try {
             DB::beginTransaction();
