@@ -18,6 +18,7 @@ class StoreFinanciamientoRequest extends FormRequest
     {
         return [
             'id'                    => 'nullable|integer',
+            'agencia'                    => 'nullable',
             'no_contrato'           => 'required|string|max:255',
             'fecha_desembolso'      => 'required|date',
             'numero_factura'        => 'required|string|max:255',

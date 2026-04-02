@@ -58,6 +58,7 @@ class FinanciamientoController extends Controller
         $comision->tipo_financiamiento   = $request->tipo_financiamiento;
         $comision->com_datos_venta_id    = $datosVenta->id ?? null;
         $comision->observaciones         = $request->observaciones;
+        $comision->agencia         = $request->agencia;
 
         if ($request->hasFile('archivo')) {
         if ($comision->ruta_archivo && Storage::disk('public')->exists($comision->ruta_archivo)) {

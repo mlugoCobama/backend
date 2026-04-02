@@ -52,6 +52,7 @@ class SegurosController extends Controller
         $comision->prima_neta         = $request->prima_neta;
         $comision->comision_apv_pesos = ($request->prima_neta ?? 0) * 0.04;
         $comision->observaciones      = $request->observaciones;
+        $comision->agencia         = $request->agencia;
 
         $comision->save();
         $esNuevo = $comision->wasRecentlyCreated;

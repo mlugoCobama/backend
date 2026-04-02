@@ -14,6 +14,7 @@ class StoreTomaUnidadRequest extends FormRequest
 
     return [
             'id'                    => 'nullable|integer',
+            'agencia'                    => 'nullable',
             'fecha_toma'            => 'required|date',
             'clave_producto'        => 'required|string',
             'no_inventario'         => 'required|string|max:255',

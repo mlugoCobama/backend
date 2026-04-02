@@ -13,6 +13,7 @@ class StoreSeguroRequest extends FormRequest
     {
         return [
             'id'                  => ['nullable', 'integer'],
+            'agencia'              => ['nullable'],
             'com_vendedores_id'   => ['required', 'integer'],
             'folio'               => ['required', 'string', 'max:100'],
             'poliza'              => ['required', 'string', 'max:100'],

@@ -3,28 +3,28 @@
 namespace Modules\Nissan\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Storage;
-use Modules\Nissan\Models\ComTomaUnidad;
-use Modules\Nissan\Transformers\ComTomaUnidadesResource;
-use Modules\Nissan\Http\Requests\StoreTomaUnidadRequest;
+use Modules\Nissan\Models\ComAccesorios;
+use Modules\Nissan\Models\ComDetalleAccesorio;
 use Modules\Nissan\Models\DatosVenta;
+use Modules\Nissan\Transformers\ComAccesoriosResource;
 
-class TomaUnidadController extends Controller
+class AccesorioController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $query = ComTomaUnidad::active()->with('vendedor')->get();
+        $query = ComAccesorios::active()->with(['vendedor', 'detalles'])->get();
 
         return response()->json(
             [
             'status' =>  'success',
-            'data' => ComTomaUnidadesResource::collection($query),
+            'data' => ComAccesoriosResource::collection($query),
             'message' => 'datos recuperados correctamente',
             ], );
     }
@@ -40,30 +40,46 @@ class TomaUnidadController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreTomaUnidadRequest $request)
+    public function store(Request $request)
     {
-        $comision = $request->filled('id') ? ComTomaUnidad::findOrFail($request->id) : new ComTomaUnidad();
-        
-        // $datosVenta =  $this->getVentaByParam('no_factura', $request->numero_factura);
+       $comision = $request->filled('id')  ? ComAccesorios::findOrFail($request->id) : new ComAccesorios();
 
-        $comision->com_vendedores_id  = $request->com_vendedores_id;
-        $comision->no_inventario      = $request->no_inventario;
-        $comision->clave_producto     = $request->clave_producto;
-        $comision->comision_apv_pesos = $request->comision_apv_pesos;
-        $comision->fecha_toma         = $request->fecha_toma;
-        $comision->observaciones      = $request->observaciones;
-        $comision->anio               = $request->anio;
-        $comision->agencia         = $request->agencia;
+       $comision->com_vendedores_id  = $request->com_vendedores_id;
+       $comision->no_factura         = $request->no_factura;
+       $comision->sub_total_factura  = $request->subtotal_factura;
+       $comision->comision_apv_pesos = $request->comision_apv_pesos;
+       $comision->agencia         = $request->agencia;
+       $comision->observaciones      = $request->observaciones;
 
-        $comision->save();
-        $esNuevo = $comision->wasRecentlyCreated;
+       $comision->save();
+       $esNuevo = $comision->wasRecentlyCreated;
 
-        return response()->json([
-            'status' => 'success',
-            'message' => $esNuevo ? 'Comisión creada correctamente' : 'Comisión actualizada correctamente',
-            'data'    => $comision
-        ], $esNuevo ? 201 : 200);
+    if ($request->has('detalles')) {
+        $detalles = json_decode($request->detalles);
+
+        $idsExistentes = $comision->detalles()->pluck('id')->toArray();
+        $idsEnviados   = collect($detalles)->pluck('id')->filter()->toArray();
+
+        $aEliminar = array_diff($idsExistentes, $idsEnviados);
+        ComDetalleAccesorio::destroy($aEliminar);
+
+        foreach ($detalles as $detalle) {
+            if (isset($detalle->id)) {
+                $this->updateDetalle($detalle->id, $detalle, $comision->id);
+                // $comision->detalles()->where('id', $detalle['id'])->update($detalle);
+            } else {
+                // $comision->detalles()->create($detalle);
+                $this->createDetalle($detalle, $comision->id);
+            }
+        }
     }
+
+    return response()->json([
+        'status'  => 'success',
+        'message' => $esNuevo ? 'Comisión creada correctamente' : 'Comisión actualizada correctamente',
+        'data'    => []
+    ], $esNuevo ? 201 : 200);
+}
 
     /**
      * Show the specified resource.
@@ -87,7 +103,7 @@ class TomaUnidadController extends Controller
     public function update(Request $request, $id)
     {
         $data = $request->all();
-        $datosVenta = ComTomaUnidad::find($id);
+        $datosVenta = ComAccesorios::find($id);
         if($datosVenta){
             $estatusActual = (int) $datosVenta->estatus;
             $datosVenta->estatus = $estatusActual > 0 ? $estatusActual - 1 : $estatusActual;
@@ -108,7 +124,7 @@ class TomaUnidadController extends Controller
      */
     public function destroy($id)
     {
-        $registro = ComTomaUnidad::find($id);
+        $registro = ComAccesorios::find($id);
         if($registro){
             $registro->activo = 0;
             $registro->save();
@@ -126,7 +142,28 @@ class TomaUnidadController extends Controller
         ]);
     }
 
-    private function getVentaByParam($param, $value){
+    public function createDetalle($data, $idAccesorio){
+    $detalle = new ComDetalleAccesorio();
+    $detalle->concepto = $data->concepto;
+    $detalle->cantidad = $data->cantidad;
+    $detalle->importe = $data->importe;
+    $detalle->com_accesorios_id = $idAccesorio;
+    $detalle->save();
+
+    }
+
+    public function updateDetalle($id, $data, $idAccesorio){
+        $detalle =  ComDetalleAccesorio::find($id);
+        if($detalle){
+            $detalle->concepto = $data->concepto;
+            $detalle->cantidad = $data->cantidad;
+            $detalle->importe = $data->importe;
+            $detalle->com_accesorios_id = $idAccesorio;
+            $detalle->save();
+        }
+    }
+
+     private function getVentaByParam($param, $value){
        return DatosVenta::where($param, $value)->first();
     }
 
@@ -152,8 +189,16 @@ class TomaUnidadController extends Controller
                 // intercompanias => Azcapo   Campestre  Universidad    Agencia ingresada
         $agencia = match($agencia){ '7051' => '730', '712' => '714', '710' => '710', '333' => null, default => $agencia}; 
 
-        $financiamientos = ComTomaUnidad::
-            with(['vendedor'])
+        if ($fechaInicio) {
+        $fechaInicio = Carbon::parse($fechaInicio)->startOfDay()->format('Y-m-d H:i:s');
+        }
+        if ($fechaFin) {
+            $fechaFin = Carbon::parse($fechaFin)->endOfDay()->format('Y-m-d H:i:s');
+        }
+
+
+        $financiamientos = ComAccesorios::
+            with(['vendedor', 'detalles'])
             ->when($agencia, fn($q) => $q->where('agencia', $agencia))
             ->when($vendedor, fn($q) => $q->where('com_vendedores_id', $vendedor))
             ->when($estatus, fn($q) => $q->where('estatus', $estatus))
@@ -165,7 +210,7 @@ class TomaUnidadController extends Controller
         return $financiamientos;
     }
 
-     /**
+         /**
      * Petición de consulta de datos mediante filtro
      * @param mixed $estatus estatus de busqueda (1-5)
      * @param mixed $agencia intercompania de agencia buscada
@@ -174,7 +219,7 @@ class TomaUnidadController extends Controller
      * @param mixed $fechaFin fecha final de búsqueda
      * @param mixed $vendedor id de vendedor
      */
-    public function getTomaUnidad($estatus = null, $agencia =null, $tipoVenta = null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
+    public function getTomaUnidad($estatus = null, $agencia =null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
     
 
     $data = $this->queryFinanciamientos(
@@ -187,7 +232,7 @@ class TomaUnidadController extends Controller
     return response()->json([
         'status' => 'success',
         'message' => 'Datos recuperados correctamente',
-        'data' => ComTomaUnidadesResource::collection($data),
+        'data' => ComAccesoriosResource::collection($data),
         'estado' => $estatus
     ]);
 
@@ -195,7 +240,7 @@ class TomaUnidadController extends Controller
 
     public function avanzarEstatus($id)
     {
-        $datosVenta = ComTomaUnidad::find($id);
+        $datosVenta = ComAccesorios::find($id);
         if($datosVenta){
             $estatusActual = (int) $datosVenta->estatus;
             $datosVenta->estatus = $estatusActual < 5 ? $estatusActual + 1 : $estatusActual;
@@ -209,5 +254,4 @@ class TomaUnidadController extends Controller
             'message' => 'La partida ha avanzado al estado anterior exitosamente'
         ]);
     }
-
 }
