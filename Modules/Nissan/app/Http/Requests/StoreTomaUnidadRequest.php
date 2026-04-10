@@ -13,35 +13,47 @@ class StoreTomaUnidadRequest extends FormRequest
     {
 
     return [
-            'id'                    => 'nullable|integer',
-            'agencia'                    => 'nullable',
-            'fecha_toma'            => 'required|date',
-            'clave_producto'        => 'required|string',
-            'no_inventario'         => 'required|string|max:255',
-            'comision_apv_pesos'    => 'required|numeric|min:0',
-            'com_vendedores_id'     => 'required|integer',
-            'observaciones'         => 'nullable|string',
+            'toma_unidad'                         => 'required|array|min:1',
+            'toma_unidad.*.agencia'               => 'nullable',
+            'toma_unidad.*.com_vendedores_id'     => 'required|integer',
+            'toma_unidad.*.id'                    => 'nullable|integer',
+            'toma_unidad.*.fecha_toma'            => 'required|date',
+            'toma_unidad.*.vehiculo'              => 'required|string',
+            'toma_unidad.*.numero_serie'          => 'required|string',
+            'toma_unidad.*.tipo_apv'              => 'required|string',
+            'toma_unidad.*.por_inventario'        => 'required|string|max:255',
+            'toma_unidad.*.comision_apv_pesos'    => 'required|numeric|min:0',
+            'toma_unidad.*.observaciones'         => 'nullable|string',
         ];
     }
 
     public function messages(): array
     {
         return [
-
-            'fecha_toma.required'       => 'La fecha de desembolso es obligatoria',
-            'fecha_toma.date'           => 'La fecha no tiene un formato válido',
-            'no_inventario.required'         => 'El número de factura es obligatorio',
-            'clave_producto.required'         => 'El número de factura es obligatorio',
-            'comision_apv_pesos.required'  => 'La comisión es obligatoria',
-            'com_vendedores_id.required'      => 'Debe seleccionar un vendedor',
+            'toma_unidad.required'                => 'Debe agregar al menos una toma de unidad',
+            'toma_unidad.min'                     => 'Debe agregar al menos una toma de unidad',
+            'toma_unidad.*.fecha_toma.required'       => 'La fecha de desembolso es obligatoria',
+            'toma_unidad.*.fecha_toma.date'           => 'La fecha no tiene un formato válido',
+            'toma_unidad.*.por_inventario.required'         => 'El número de factura es obligatorio',
+            'toma_unidad.*.tipo_apv.required'         => 'El número de factura es obligatorio',
+            'toma_unidad.*.comision_apv_pesos.required'  => 'La comisión es obligatoria',
+            'toma_unidad.*.com_vendedores_id.required'      => 'Debe seleccionar un vendedor',
         ];
     }
 
     protected function prepareForValidation(): void
     {
-        $this->merge([
-            'comision_apv_pesos' => $this->limpiarNumero($this->comision_apv_pesos),
-        ]);
+        $tomaUnidad = $this->toma_unidad;
+
+        if (!is_array($tomaUnidad)) return;
+
+        $tomaUnidad = array_map(function ($item) {
+            return array_merge($item, [
+                'comision_apv_pesos' => $this->limpiarNumero($this->comision_apv_pesos ??  null)
+            ]);
+        }, $tomaUnidad);
+
+        $this->merge([['toma_unidad' => $tomaUnidad] ]);
     }
 
     private function limpiarNumero($valor): float|null

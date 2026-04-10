@@ -2,19 +2,22 @@
 
 namespace Modules\Nissan\Http\Controllers;
 
+use App\Enums\EstatusComisionesAutos;
+use App\Enums\EstatusComisionesVentasAutos;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-
-use App\Services\CorteService;
+use Modules\Nissan\Models\ComCorte;
+use Modules\Nissan\Services\ConcentradoService;
+use Modules\Nissan\Transformers\ConcentradoResource;
 
 class ConcentradoComisionesController extends Controller
 {
     protected $corteService;
 
-    public function __construct(CorteService $corteService)
+    public function __construct(ConcentradoService $corteService)
     {
         $this->corteService = $corteService;
     }
@@ -23,12 +26,7 @@ class ConcentradoComisionesController extends Controller
      */
     public function index()
     {
-        $query = DB::connection('autos')->select('CALL SP_GetConcentadoComisionesTest()');
-        return response()->json([
-            'status' =>  'success',
-            'data' => $query,
-            'message' =>  'datos recuperados correctamente'
-        ]);
+        
     }
 
     /**
@@ -49,6 +47,7 @@ class ConcentradoComisionesController extends Controller
             $request->fecha_fin,
             $request->clave_corte,
             $request->agencia,
+            $request->comisiones,
         );
 
         return response()->json([
@@ -64,7 +63,12 @@ class ConcentradoComisionesController extends Controller
      */
     public function show($id)
     {
-        return view('nissan::show');
+        $query = DB::connection('autos')->select('CALL SP_GetConcentadoComisionesTesting(?)',[$id]);
+        return response()->json([
+            'status' =>  'success',
+            'data' => ConcentradoResource::collection($query),
+            'message' =>  'datos recuperados correctamente'
+        ]);
     }
 
     /**
@@ -91,30 +95,52 @@ class ConcentradoComisionesController extends Controller
         //
     }
 
-    public function generarCorte(Request $request)
-    {
-        
+    public function getCorte($id){
+        $data = DB::connection('autos')->select('CALL SP_GetConcentradoCorte(?)', [$id]);
+
+        return response()->json([
+            'data'=> $data,
+            'message'=> 'Corte recuperado correctamente',
+            'status'=>  'success'
+        ]);
     }
 
-    public function preview(Request $request)
-    {
-        $data = $this->corteService->preview(
-            $request->fecha_inicio,
-            $request->fecha_fin
-        );
+    public function getListadoCortes($idAgencia){
+        $data = ComCorte::porAgencia($idAgencia)->get();
 
-        return response()->json($data);
+        return response()->json([
+            'data'=> $data,
+            'message'=> 'Corte recuperado correctamente',
+            'status'=>  'success'
+        ]);
     }
 
     public function viewDetallesVendedorRubro($idVendedor, $rubro){
-        $data = match ($rubro) {
-            'nuevos' => $this->corteService->comisionesAutorizadasNuevos($idVendedor),
-            'seminuevos' => $this->corteService->comisionesAutorizadasSeminuevos($idVendedor),
-            'accesorios' => $this->corteService->comisionesAutorizadasAccesorios($idVendedor),
-            'seguros' => $this->corteService->comisionesAutorizadasSeguros($idVendedor),
-            'financimaientos' => $this->corteService->comisionesAutorizadasFinanciamiento($idVendedor),
-            'toma_de_unidades' => $this->corteService->comisionesAutorizadasTomaUnidad($idVendedor),
+        $dataAutorizadas = match ($rubro) {
+            'nuevos' => $this->corteService->comisionesAutorizadasNuevos($idVendedor, EstatusComisionesVentasAutos::REV_RH),
+            'seminuevos' => $this->corteService->comisionesAutorizadasSeminuevos($idVendedor, EstatusComisionesVentasAutos::REV_RH),
+            'accesorios' => $this->corteService->comisionesAutorizadasAccesorios($idVendedor, EstatusComisionesAutos::AUTORIZADA),
+            'seguros' => $this->corteService->comisionesAutorizadasSeguros($idVendedor, EstatusComisionesAutos::AUTORIZADA),
+            'financiamiento' => $this->corteService->comisionesAutorizadasFinanciamiento($idVendedor, EstatusComisionesAutos::AUTORIZADA),
+            'toma_de_unidades' => $this->corteService->comisionesAutorizadasTomaUnidad($idVendedor, EstatusComisionesAutos::AUTORIZADA),
+            default => []
         };
+
+        $dataPendientes = match ($rubro) {
+            'nuevos' => $this->corteService->comisionesAutorizadasNuevos($idVendedor, EstatusComisionesVentasAutos::EN_ESPERA),
+            'seminuevos' => $this->corteService->comisionesAutorizadasSeminuevos($idVendedor, EstatusComisionesVentasAutos::EN_ESPERA),
+            'accesorios' => $this->corteService->comisionesAutorizadasAccesorios($idVendedor, EstatusComisionesAutos::EN_ESPERA),
+            'seguros' => $this->corteService->comisionesAutorizadasSeguros($idVendedor, EstatusComisionesAutos::EN_ESPERA),
+            'financiamiento' => $this->corteService->comisionesAutorizadasFinanciamiento($idVendedor, EstatusComisionesAutos::EN_ESPERA),
+            'toma_de_unidades' => $this->corteService->comisionesAutorizadasTomaUnidad($idVendedor, EstatusComisionesAutos::EN_ESPERA),
+            default => []
+        };
+
+
+        $data = [
+            'autorizadas' => $dataAutorizadas,
+            'pendientes' => $dataPendientes,
+        ];
 
         return response()->json(
             ['status' => 'success',
@@ -129,6 +155,27 @@ class ConcentradoComisionesController extends Controller
         $nuevoEstatus = $request->estatus - 1;
         $rubro = $request->rubro;
         $comentario = $request->comentario;
+        
+        if($rubro == 'nuevos' || $rubro == 'seminuevos'){
+            $nuevoEstatus = EstatusComisionesVentasAutos::EN_ESPERA;
+        }
+
+        $this->corteService->setPendienteAutorizacion($rubro, $idRegistro,   $nuevoEstatus, $comentario);
+
+        return response()->json([
+            'status' => 'success',
+            'message'=> "$rubro actualizado correctamente"
+        ]);
+    }
+
+    public function autorizadoPendiente($idRegistro, Request $request){
+        $nuevoEstatus = $request->estatus + 1;
+        $rubro = $request->rubro;
+        $comentario = null;
+
+        if($rubro == 'nuevos' || $rubro == 'seminuevos'){
+            $nuevoEstatus = EstatusComisionesVentasAutos::REV_RH;
+        }
 
         $this->corteService->setPendienteAutorizacion($rubro, $idRegistro,   $nuevoEstatus, $comentario);
 

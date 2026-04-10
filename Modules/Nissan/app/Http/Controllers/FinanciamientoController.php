@@ -3,6 +3,7 @@
 namespace Modules\Nissan\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use DateTime;
 use GrahamCampbell\ResultType\Success;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,10 +12,18 @@ use Illuminate\Support\Facades\Storage;
 use Modules\Nissan\Http\Requests\StoreFinanciamientoRequest;
 use Modules\Nissan\Models\ComFinanciamiento;
 use Modules\Nissan\Models\DatosVenta;
+use Modules\Nissan\Services\ComisionesService;
 use Modules\Nissan\Transformers\ComFinanciamientosResource;
 
 class FinanciamientoController extends Controller
 {
+
+    protected $comService;
+    public function __construct(ComisionesService $comService)
+    {
+        $this->comService = $comService;
+    }
+    
     /**
      * Display a listing of the resource.
      */
@@ -43,41 +52,62 @@ class FinanciamientoController extends Controller
      */
     public function store(StoreFinanciamientoRequest $request)
     {
-        $comision = $request->filled('id') ? ComFinanciamiento::findOrFail($request->id) : new ComFinanciamiento();
-        
-        $datosVenta =  $this->getVentaByParam('no_factura', $request->numero_factura);
+        $resultados = [];
 
-        $comision->no_contrato           = $request->no_contrato;
-        $comision->fecha_desembolso      = $request->fecha_desembolso;
-        $comision->numero_factura        = $request->numero_factura;
-        $comision->monto_financiar       = $request->monto_financiar;
-        $comision->incentivo_dealer      = $request->incentivo_dealer;
-        $comision->porcentaje_asesor     = (($request->porcentaje_asesor ?? 0) / 100);
-        $comision->comision_asesor_pesos = $request->comision_asesor_pesos;
-        $comision->com_vendedores_id     = $request->com_vendedores_id;
-        $comision->tipo_financiamiento   = $request->tipo_financiamiento;
-        $comision->com_datos_venta_id    = $datosVenta->id ?? null;
-        $comision->observaciones         = $request->observaciones;
-        $comision->agencia         = $request->agencia;
-
-        if ($request->hasFile('archivo')) {
-        if ($comision->ruta_archivo && Storage::disk('public')->exists($comision->ruta_archivo)) {
-            Storage::disk('public')->delete($comision->ruta_archivo);
+        foreach ($request->financiamientos as $i => $datos) {
+            $resultados[] = $this->guardarFinanciamiento($datos, $request->file("financiamientos.$i.archivo"));
         }
 
-        $ruta = $request->file('archivo')->storeAs('comisiones/financiamientos',$comision->no_contrato.'_'.$comision->numero_factura.'.'.$request->file('archivo')->getClientOriginalExtension() , 'public');
-        $comision->ruta_archivo = $ruta;
+        return response()->json([
+            'status'  => 'success',
+            'message' => count($resultados) . ' financiamiento(s) guardado(s) correctamente',
+            'data'    => $resultados
+        ], 201);
     }
 
+    private function guardarFinanciamiento(array $datos, $archivo = null)
+    {
+        $comision = !empty($datos['id']) ? ComFinanciamiento::findOrFail($datos['id']) : new ComFinanciamiento();
+
+        $isNoSerie   = strlen($datos['numero_factura']) === 17;
+        $datosVenta  = !$isNoSerie
+            ? $this->comService->getVentaByParam('no_factura', $datos['numero_factura'])
+            : $this->comService->getVentaByParam('serie',      $datos['numero_factura']);
+
+        $comision->agencia                = $datos['agencia']                ?? null;
+        $comision->com_vendedores_id      = $datos['com_vendedores_id']      ?? null;
+        $comision->no_contrato            = $datos['no_contrato'];
+        $comision->fecha_desembolso       = $datos['fecha_desembolso'];
+        $comision->numero_factura         = !$isNoSerie ? $datos['numero_factura'] : ($datosVenta->no_factura ?? $datos['numero_factura']);
+        $comision->monto_financiar        = $datos['monto_financiar'];
+        $comision->incentivo_dealer       = $datos['incentivo_dealer'];
+        $comision->porcentaje_asesor      = (($datos['porcentaje_asesor'] ?? 0) / 100);
+        $comision->comision_asesor_pesos  = $datos['comision_asesor_pesos']  ?? null;
+        $comision->tipo_financiamiento    = $datos['tipo_financiamiento']    ?? null;
+        $comision->com_datos_venta_id     = $datosVenta->id                  ?? null;
+        $comision->observaciones          = $datos['observaciones']          ?? null;
+        $comision->kit_seguridad          = $datos['kit_seguridad']          ?? 0;
+        $comision->sat_finder             = $datos['sat_finder']             ?? 0;
+        $comision->garantia_extendida     = $datos['garantia_extendida']     ?? 0;
+        $comision->seguro_vf3             = $datos['seguro_vf3']             ?? 0;
+        $comision->accesorios_adicionales = $datos['accesorios_adicionales'] ?? 0;
+        $comision->comision_mantenimiento = $datos['comision_mantenimiento'] ?? 0;
+        $comision->comision_garantia_ext  = $datos['comision_garantia_extendida'] ?? 0;
+        $comision->comision_udi           = $datos['comision_udi']           ?? 0;
+        $comision->comision_vf3           = $datos['comision_vf3']           ?? 0;
+        $comision->sub_x_des              = $datos['sub_x_des']              ?? 0;
+
+        if ($archivo) {
+            if ($comision->ruta_archivo && Storage::disk('public')->exists($comision->ruta_archivo)) {
+                Storage::disk('public')->delete($comision->ruta_archivo);
+            }
+            $ext   = $archivo->getClientOriginalExtension();
+            $nombre = $comision->no_contrato . '_' . $comision->numero_factura . '.' . $ext;
+            $comision->ruta_archivo = $archivo->storeAs('comisiones/financiamientos', $nombre, 'public');
+        }
 
         $comision->save();
-        $esNuevo = $comision->wasRecentlyCreated;
-
-        return response()->json([
-            'status' => 'success',
-            'message' => $esNuevo ? 'Comisión creada correctamente' : 'Comisión actualizada correctamente',
-            'data'    => $comision
-        ], $esNuevo ? 201 : 200);
+        return $comision;
     }
 
     /**
@@ -105,7 +135,7 @@ class FinanciamientoController extends Controller
         $datosVenta = ComFinanciamiento::find($id);
         if($datosVenta){
             $estatusActual = (int) $datosVenta->estatus;
-            $datosVenta->estatus = $estatusActual > 0 ? $estatusActual - 1 : $estatusActual;
+            $datosVenta->estatus = $this->comService->devolverEst($estatusActual);
 
             $datosVenta->comentario = $data['comentario'];
             $datosVenta->save();
@@ -114,7 +144,7 @@ class FinanciamientoController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [],
-            'message' => 'La partida ha regresado al estado anterior exitosamente'
+            'message' => 'EL estatus ha cambiado a '. $this->comService->getLabelStatus($datosVenta->estatus)
         ]);
     }
 
@@ -143,14 +173,12 @@ class FinanciamientoController extends Controller
         
     }
 
-    
-
-    private function getVentaByParam($param, $value){
-       return DatosVenta::where($param, $value)->first();
-    }
-
     public function getDataVenta($noFactura){
-        $query = $this->getVentaByParam('no_factura', $noFactura);
+        $isNoSerie = strlen($noFactura) === 17 ;
+        $query =  !$isNoSerie ? 
+            $this->comService->getVentaByParam('no_factura', $noFactura) :
+            $this->comService->getVentaByParam('serie', $noFactura);
+        // $query = $this->comService->getVentaByParam('no_factura', $noFactura);
 
         return response()->json([
             'status' =>  'success',
@@ -168,11 +196,12 @@ class FinanciamientoController extends Controller
      * @param mixed $vendedor id de vendedor
      */
     public function queryFinanciamientos($estatus, $agencia, $vendedor, $fechaInicio, $fechaFin ){
-                // intercompanias => Azcapo   Campestre  Universidad    Agencia ingresada
-        $agencia = match($agencia){ '7051' => '730', '712' => '714', '710' => '710', '333' => null, default => $agencia}; 
+        $agencia = $this->comService->parseAgencia($agencia);
+        $fechaInicio =  $fechaInicio ? new DateTime($fechaInicio . " 00:00:00") : null;
+        $fechaFin = $fechaFin ? new DateTime($fechaFin . " 23:59:59"): null;
 
         $financiamientos = ComFinanciamiento::
-            with(['vendedor'])
+            with(['vendedor', 'venta'])
             ->when($agencia, fn($q) => $q->where('agencia', $agencia))
             ->when($vendedor, fn($q) => $q->where('com_vendedores_id', $vendedor))
             ->when($estatus, fn($q) => $q->where('estatus', $estatus))
@@ -193,7 +222,7 @@ class FinanciamientoController extends Controller
      * @param mixed $fechaFin fecha final de búsqueda
      * @param mixed $vendedor id de vendedor
      */
-    public function getFinanciaminetos($estatus = null, $agencia =null, $tipoVenta = null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
+    public function getFinanciaminetos($estatus = null, $agencia =null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
     
 
     $data = $this->queryFinanciamientos(
@@ -217,7 +246,7 @@ class FinanciamientoController extends Controller
         $datosVenta = ComFinanciamiento::find($id);
         if($datosVenta){
             $estatusActual = (int) $datosVenta->estatus;
-            $datosVenta->estatus = $estatusActual < 5 ? $estatusActual + 1 : $estatusActual;
+            $datosVenta->estatus = $this->comService->avanzarEst($estatusActual);
             $datosVenta->comentario = null;
             $datosVenta->save();
         }
@@ -225,7 +254,7 @@ class FinanciamientoController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [],
-            'message' => 'La partida ha avanzado al estado anterior exitosamente'
+            'message' => 'EL estatus ha cambiado a '. $this->comService->getLabelStatus($datosVenta->estatus)
         ]);
     }
 

@@ -51,8 +51,13 @@ Route::prefix('renault')->group(function () {
     Route::get('accesorios/datos-venta/{factura}', [ AccesorioController::class, 'getDataVenta'])->name('accesorios.getDataVentaFin');
     Route::get('accesorios/{estatus}/{agencia}/{fechaInicio}/{fechaFin}/{vendedor}', [AccesorioController::class, 'getTomaUnidad'])->name('accesorios.getTomaUnidad');
     Route::get('accesorios/avanzarEstatus/{id}', [AccesorioController::class, 'avanzarEstatus'])->name('accesorios.avanzarEstatus');
+
     Route::get('concentrado-comisiones/detalle/{idVendedor}/{rubro}', [ConcentradoComisionesController::class, 'viewDetallesVendedorRubro'])->name('concentrado-comisiones.viewDetallesVendedorRubro');
     Route::put('concentrado-comisiones/devolver/{id}', [ConcentradoComisionesController::class, 'devolverPendiente'])->name('concentrado-comisiones.devolverPendiente');
+    Route::put('concentrado-comisiones/autorizado/{id}', [ConcentradoComisionesController::class, 'autorizadoPendiente'])->name('concentrado-comisiones.autorizadoPendiente');
+
+    Route::get('concentrado-comisiones/listado/cortes/{agencia}', [ConcentradoComisionesController::class, 'getListadoCortes'])->name('concentrado-comisiones.getCorte');
+    Route::get('concentrado-comisiones/corte/{id}', [ConcentradoComisionesController::class, 'getCorte'])->name('concentrado-comisiones.getListadoCortes');
     });
 
 Route::get('storage/renault/citas_servicio/{fileName}', [VisorCitasController::class, 'getFile'])->name('visor-citas.getFile');

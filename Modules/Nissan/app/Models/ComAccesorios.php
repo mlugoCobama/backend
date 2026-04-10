@@ -27,7 +27,8 @@ class ComAccesorios extends Model
         'fecha_factura', 
         'agencia',
         'comentario',
-        'observaciones'
+        'observaciones',
+        'com_datos_venta_id'
     ];
 
     protected $table = 'com_accesorios';
@@ -47,6 +48,11 @@ class ComAccesorios extends Model
     public function detalles()
     {
         return $this->hasMany(ComDetalleAccesorio::class, 'com_accesorios_id', 'id');
+    }
+
+    public function venta()
+    {
+        return $this->belongsTo(DatosVenta::class, 'com_datos_venta_id', 'id');
     }
 
     public function scopeActive ($query) {

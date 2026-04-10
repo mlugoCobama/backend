@@ -11,17 +11,38 @@ class StoreSeguroRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'id'                  => ['nullable', 'integer'],
-            'agencia'              => ['nullable'],
-            'com_vendedores_id'   => ['required', 'integer'],
-            'folio'               => ['required', 'string', 'max:100'],
-            'poliza'              => ['required', 'string', 'max:100'],
-            'fecha_emision'       => ['required', 'date'],
-            'prima_neta'          => ['required', 'numeric', 'min:0'],
-            'comision_apv_pesos'  => ['required', 'numeric', 'min:0'],
-            'observaciones'       => ['nullable', 'string'],
-            'comentario'          => ['nullable', 'string'],
+            return [
+            // identificadores
+            'seguros'  => 'required|array|min:1',
+            'seguros.*.id' => ['nullable', 'integer'],
+            'seguros.*.agencia' => ['nullable'],
+            'seguros.*.com_vendedores_id' => ['required', 'integer'],
+
+            // básicos
+            'seguros.*.folio' => ['required', 'string', 'max:100'],
+            'seguros.*.poliza' => ['required', 'string', 'max:100'],
+            'seguros.*.aseguradora' => ['required', 'string', 'max:150'],
+            'seguros.*.nombre' => ['required', 'string', 'max:150'],
+            'seguros.*.unidad' => ['required', 'string', 'max:150'],
+            'seguros.*.serie' => ['required', 'string', 'max:100'],
+
+            // fechas
+            'seguros.*.fecha_emision' => ['required', 'date'],
+
+            // info adicional
+            'seguros.*.forma_pago' => ['required', 'string', 'max:100'],
+
+            // montos
+            'seguros.*.prima_neta' => ['required', 'numeric', 'min:0'],
+            'seguros.*.vs' => ['nullable', 'numeric', 'min:0'],
+            'seguros.*.calcular_encargado_seg' => ['required', 'boolean'],
+            'seguros.*.com_encargado_seg' => ['nullable', 'numeric', 'min:0'],
+
+            // comisión
+            'seguros.*.comision_apv_pesos' => ['nullable', 'numeric', 'min:0'],
+
+            // extras
+            'seguros.*.observaciones' => ['nullable', 'string'],
         ];
     }
 
@@ -36,29 +57,45 @@ class StoreSeguroRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'com_vendedores_id.required' => 'El vendedor es obligatorio',
-            'com_vendedores_id.exists'   => 'El vendedor no existe',
+            'seguros.required' => 'Debe agregar al menos un seguro',
+            'seguros.min'      => 'Debe agregar al menos un seguro',
 
-            'folio.required' => 'El folio es obligatorio',
-            'poliza.required' => 'La póliza es obligatoria',
+            'seguros.*.com_vendedores_id.required' => 'El vendedor es obligatorio',
+            'seguros.*.com_vendedores_id.exists'   => 'El vendedor no existe',
 
-            'fecha_emision.required' => 'La fecha de emisión es obligatoria',
-            'fecha_emision.date'     => 'Formato de fecha inválido',
+            'seguros.*.folio.required' => 'El folio es obligatorio',
+            'seguros.*.poliza.required' => 'La póliza es obligatoria',
 
-            'prima_neta.required' => 'La prima neta es obligatoria',
-            'prima_neta.numeric'  => 'Debe ser un número válido',
+            'seguros.*.fecha_emision.required' => 'La fecha de emisión es obligatoria',
+            'seguros.*.fecha_emision.date'     => 'Formato de fecha inválido',
 
-            'comision_apv_pesos.required' => 'La comisión es obligatoria',
+            'seguros.*.prima_neta.required' => 'La prima neta es obligatoria',
+            'seguros.*.prima_neta.numeric'  => 'Debe ser un número válido',
+
+            'seguros.*.comision_apv_pesos.required' => 'La comisión es obligatoria',
         ];
     }
 
     protected function prepareForValidation()
     {
+        $seguros = $this->seguros;
+
+        if (!is_array($seguros)) return;
+
+        $seguros = array_map(function ($item) {
+            return array_merge($item, [
+                'prima_neta' => $this->limpiarNumero($item['prima_neta'] ?? 0),
+                'comision_apv_pesos' => $this->limpiarNumero($item['comision_apv_pesos'] ?? 0),
+                'calcular_encargado_seg' => filter_var($item['calcular_encargado_seg'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            ]);
+        }, $seguros);
+
         $this->merge([
-            'prima_neta' => $this->limpiarNumero($this->prima_neta),
-            'comision_apv_pesos' => $this->limpiarNumero($this->comision_apv_pesos),
+            'seguros' => $seguros
         ]);
     }
+
+
 
     private function limpiarNumero($valor)
     {

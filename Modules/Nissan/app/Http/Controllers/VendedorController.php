@@ -60,9 +60,9 @@ class VendedorController extends Controller
     public function show($id)
     {
         if($id == 333 || $id == 'todos'){
-            $data = Vendedor::active()->get();
+            $data = Vendedor::active()->orderBy('nombre', 'asc')->get();
         }else{
-            $data = Vendedor::where('agencia',$id)->active()->get();   
+            $data = Vendedor::where('agencia',$id)->active()->orderBy('nombre', 'asc')->get();   
         }
         
 

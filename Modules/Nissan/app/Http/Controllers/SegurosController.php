@@ -9,10 +9,17 @@ use Illuminate\Http\Response;
 use Modules\Nissan\Http\Requests\StoreSeguroRequest;
 use Modules\Nissan\Models\ComSeguro;
 use Modules\Nissan\Models\DatosVenta;
+use Modules\Nissan\Services\ComisionesService;
 use Modules\Nissan\Transformers\SeguroResource;
 
 class SegurosController extends Controller
 {
+
+    protected $comService;
+    public function __construct(ComisionesService $comService)
+    {
+        $this->comService = $comService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -41,27 +48,60 @@ class SegurosController extends Controller
      */
     public function store(StoreSeguroRequest $request)
     {
-        $comision = $request->filled('id') ? ComSeguro::findOrFail($request->id) : new ComSeguro();
-        
-        // $datosVenta =  $this->getVentaByParam('no_factura', $request->numero_factura);
 
-        $comision->com_vendedores_id  = $request->com_vendedores_id;
-        $comision->folio      = $request->folio;
-        $comision->poliza     = $request->poliza;
-        $comision->fecha_emision         = $request->fecha_emision;
-        $comision->prima_neta         = $request->prima_neta;
-        $comision->comision_apv_pesos = ($request->prima_neta ?? 0) * 0.04;
-        $comision->observaciones      = $request->observaciones;
-        $comision->agencia         = $request->agencia;
+    $resultados = [];
 
-        $comision->save();
-        $esNuevo = $comision->wasRecentlyCreated;
+        foreach ($request->seguros as $i => $datos) {
+            $resultados[] = $this->guardarSeguro($datos, $request->file("financiamientos.$i.archivo"));
+        }
 
         return response()->json([
-            'status' => 'success',
-            'message' => $esNuevo ? 'Comisión creada correctamente' : 'Comisión actualizada correctamente',
-            'data'    => $comision
-        ], $esNuevo ? 201 : 200);
+            'status'  => 'success',
+            'message' => count($resultados) . ' financiamiento(s) guardado(s) correctamente',
+            'data'    => $resultados
+        ], 201);
+    }
+
+    private function guardarSeguro($data){
+                $comision = !empty($datos['id'])
+            ? ComSeguro::findOrFail($datos['id'])
+            : new ComSeguro();
+
+        // Relaciones
+        $comision->com_vendedores_id = $data['com_vendedores_id'];
+        $comision->agencia = $data['agencia'];
+
+        // Básicos
+        $comision->folio = $data['folio'];
+        $comision->poliza = $data['poliza'];
+        $comision->aseguradora = $data['aseguradora'];
+        $comision->nombre = $data['nombre'];
+        $comision->unidad = $data['unidad'];
+        $comision->serie = $data['serie'];
+
+        // Fechas
+        $comision->fecha_emision = $data['fecha_emision'];
+
+        // Info adicional
+        $comision->forma_pago = $data['forma_pago'];
+
+        // Montos
+        $comision->prima_neta = $data['prima_neta'];
+
+        $comision->vs = $this->calcularVS($data['prima_neta']);
+
+        $comision->com_encargado_seg = $data['calcular_encargado_seg']
+            ? $this->calcularEncargadoSeg($data['prima_neta'])
+            : 0;
+
+        $comision->comision_apv_pesos = $this->calcularComisionAPV($data['prima_neta']);
+
+        // Extras
+        $comision->observaciones = $data['observaciones'];
+
+        // Guardar
+        $comision->save();
+        return $comision;
     }
 
     /**
@@ -89,7 +129,7 @@ class SegurosController extends Controller
         $datosVenta = ComSeguro::find($id);
         if($datosVenta){
             $estatusActual = (int) $datosVenta->estatus;
-            $datosVenta->estatus = $estatusActual > 0 ? $estatusActual - 1 : $estatusActual;
+            $datosVenta->estatus = $this->comService->devolverEst($estatusActual);
 
             $datosVenta->comentario = $data['comentario'];
             $datosVenta->save();
@@ -98,7 +138,7 @@ class SegurosController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [],
-            'message' => 'La partida ha regresado al estado anterior exitosamente'
+            'message' => 'El estatus ha cambiado a '. $this->comService->getLabelStatus($datosVenta->estatus)
         ]);
     }
 
@@ -125,12 +165,8 @@ class SegurosController extends Controller
         ]);
     }
 
-    private function getVentaByParam($param, $value){
-       return DatosVenta::where($param, $value)->first();
-    }
-
     public function getDataVenta($noFactura){
-        $query = $this->getVentaByParam('no_factura', $noFactura);
+        $query = $this->comService->getVentaByParam('no_factura', $noFactura);
 
         return response()->json([
             'status' =>  'success',
@@ -149,7 +185,7 @@ class SegurosController extends Controller
      */
     public function queryFinanciamientos($estatus, $agencia, $vendedor, $fechaInicio, $fechaFin ){
                 // intercompanias => Azcapo   Campestre  Universidad    Agencia ingresada
-        $agencia = match($agencia){ '7051' => '730', '712' => '714', '710' => '710', '333' => null, default => $agencia}; 
+        $agencia = $this->comService->parseAgencia($agencia);
 
         $financiamientos = ComSeguro::
             with(['vendedor'])
@@ -197,7 +233,7 @@ class SegurosController extends Controller
         $datosVenta = ComSeguro::find($id);
         if($datosVenta){
             $estatusActual = (int) $datosVenta->estatus;
-            $datosVenta->estatus = $estatusActual < 5 ? $estatusActual + 1 : $estatusActual;
+            $datosVenta->estatus = $this->comService->avanzarEst($estatusActual);
             $datosVenta->comentario = null;
             $datosVenta->save();
         }
@@ -205,8 +241,23 @@ class SegurosController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [],
-            'message' => 'La partida ha avanzado al estado anterior exitosamente'
+            'message' => 'El estatus ha cambiado a '. $this->comService->getLabelStatus($datosVenta->estatus)
         ]);
     }
 
+
+    private function calcularComisionAPV($prima)
+        {
+            return ($prima ?? 0) * 0.04;
+        }
+
+        private function calcularVS($prima)
+        {
+            return ($prima ?? 0) * 0.2; 
+        }
+
+        private function calcularEncargadoSeg($prima)
+        {
+            return ($prima ?? 0) * 0.01; 
+        }
 }
