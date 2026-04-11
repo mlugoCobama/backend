@@ -85,7 +85,7 @@ class SolicitudesCompraController extends Controller
         }
 
         if($isCompras){
-            $query = $this->getSolicitudesCompras(null , 1, 1, 1, null, 'compras');
+            $query = $this->getSolicitudesCompras($intercompania , 1, 1, 1, $id, 'compras');
             $data = SolicitudesComprasResource::collection( $query );
             $tipo = 'compras';
         }
@@ -723,7 +723,7 @@ class SolicitudesCompraController extends Controller
      * @param mixed $idUserObjetivo usuario objetivo (null = no aplica el filtro)
      */
     public function getSolicitudesCompras($intercompania, $autoga, $autogg, $tipoSolicitud, $idUserObjetivo, $tipoUsuario){
-        return DB::select('CALL SP_GetSolicitudesComprasTesting(?, ?, ?, ?, ?, ?)', [ $intercompania , $autoga, $autogg, $tipoSolicitud, $idUserObjetivo, $tipoUsuario]);
+        return DB::select('CALL SP_GetSolicitudesComprasDesarollo(?, ?, ?, ?, ?, ?)', [ $intercompania , $autoga, $autogg, $tipoSolicitud, $idUserObjetivo, $tipoUsuario]);
     }
 
 
