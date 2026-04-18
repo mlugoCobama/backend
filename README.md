@@ -1,4 +1,4 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<!-- <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
@@ -63,4 +63,68 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT). -->
+
+
+# ⚙️ Liberaciones — Backend
+
+---
+
+**Fecha de liberación:** 18 de abril de 2025
+**Tipo:** Backend · API / Base de Datos
+
+---
+
+## Nuevo Módulo: Gestión de Comisiones
+
+Se integra la lógica de negocio y endpoints para el módulo de Gestión de Comisiones con los siguientes apartados:
+
+-  **Concentrado**
+-  **Cortes**
+-  **Nuevos**
+-  **Financiamientos**
+-  **Toma de Unidad**
+-  **Seguros**
+-  **Accesorios**
+
+---
+
+## Procedimientos Almacenados
+
+Se agregan nuevos procedimientos almacenados para soporte de consultas del módulo de comisiones:
+
+### Cortes
+- Se agrega procedimiento almacenado para la consulta de **Cortes**.
+
+### Concentrado
+- Se agrega procedimiento almacenado para la consulta de **Concentrado**.
+
+---
+
+## 🛒 Módulo de Compras — División de Empresas
+
+### Modificación de Consultas
+- Se modifican las consultas del módulo de Compras para soportar la división de empresas.
+- Las consultas ahora filtran y segmentan la información según las empresas asignadas a usuarios específicos de compras.
+
+---
+
+## Comisiones — Módulo de Vendedores
+
+Se realizan modificaciones en el apartado de Vendedores dentro del módulo de Comisiones:
+
+### Catálogo de Tipos de Vendedor
+- Se agrega catálogo para la gestión de **tipos de vendedor**.
+
+### Catálogo de Departamentos
+- Se agrega catálogo para la gestión de **departamentos** asociados a vendedores.
+
+---
+
+## Parque Vehicular — Dispersión de Combustibles
+
+### Lógica de Registro
+- Se agrega la lógica de negocio para el registro de dispersión de recursos de combustibles.
+- Incluye validaciones y persistencia de datos para el control de dispersión.
+
+---
