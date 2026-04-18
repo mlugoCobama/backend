@@ -16,14 +16,14 @@ class StoreTomaUnidadRequest extends FormRequest
             'toma_unidad'                         => 'required|array|min:1',
             'toma_unidad.*.agencia'               => 'nullable',
             'toma_unidad.*.com_vendedores_id'     => 'required|integer',
-            'toma_unidad.*.id'                    => 'nullable|integer',
+            'toma_unidad.*.id'                    => 'nullable',
             'toma_unidad.*.fecha_toma'            => 'required|date',
             'toma_unidad.*.vehiculo'              => 'required|string',
             'toma_unidad.*.numero_serie'          => 'required|string',
             'toma_unidad.*.tipo_apv'              => 'required|string',
             'toma_unidad.*.por_inventario'        => 'required|string|max:255',
             'toma_unidad.*.comision_apv_pesos'    => 'required|numeric|min:0',
-            'toma_unidad.*.observaciones'         => 'nullable|string',
+            'toma_unidad.*.observaciones'         => 'nullable',
         ];
     }
 
@@ -49,11 +49,13 @@ class StoreTomaUnidadRequest extends FormRequest
 
         $tomaUnidad = array_map(function ($item) {
             return array_merge($item, [
-                'comision_apv_pesos' => $this->limpiarNumero($this->comision_apv_pesos ??  null)
+                'id'                        => $item['id'] === 'null' ? null : $item['id'],
+                'comision_apv_pesos' => $this->limpiarNumero($item['comision_apv_pesos'] ?? null),
+                'observaciones' => ($item['observaciones'] === 'null' ? '': $item['observaciones']),
             ]);
         }, $tomaUnidad);
 
-        $this->merge([['toma_unidad' => $tomaUnidad] ]);
+        $this->merge(['toma_unidad' => $tomaUnidad]);
     }
 
     private function limpiarNumero($valor): float|null

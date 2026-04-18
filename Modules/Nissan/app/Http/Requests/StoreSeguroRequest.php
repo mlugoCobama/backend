@@ -84,10 +84,12 @@ class StoreSeguroRequest extends FormRequest
 
         $seguros = array_map(function ($item) {
             return array_merge($item, [
+                'id'                        => $item['id'] === 'null' ? null : $item['id'],
                 'prima_neta' => $this->limpiarNumero($item['prima_neta'] ?? 0),
                 'comision_apv_pesos' => $this->limpiarNumero($item['comision_apv_pesos'] ?? 0),
                 'calcular_encargado_seg' => filter_var($item['calcular_encargado_seg'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            ]);
+                 'observaciones' => ($item['observaciones'] === 'null' ? '': $item['observaciones']),
+                ]);
         }, $seguros);
 
         $this->merge([

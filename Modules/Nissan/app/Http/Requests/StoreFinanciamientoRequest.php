@@ -85,6 +85,7 @@ class StoreFinanciamientoRequest extends FormRequest
                 'comision_udi'              => $this->limpiarNumero($item['comision_udi']              ?? null),
                 'comision_vf3'              => $this->limpiarNumero($item['comision_vf3']              ?? null),
                 'sub_x_des'                 => $this->limpiarNumero($item['sub_x_des']                ?? null),
+                'observaciones' => ($item['observaciones'] === 'null' ? '': $item['observaciones']),
             ]);
         }, $financiamientos);
 
