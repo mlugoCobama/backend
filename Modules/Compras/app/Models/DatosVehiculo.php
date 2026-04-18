@@ -33,6 +33,10 @@ class DatosVehiculo extends Model
         'propietario',
         'categoria',
         'gps',
+        'limite', // limite del tag
+        'num_tarjeta_toka',
+        'num_tag'
+
     ];
      /**
      * Nombre de la tabla

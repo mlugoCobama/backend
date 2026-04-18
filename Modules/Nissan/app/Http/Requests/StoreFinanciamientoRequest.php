@@ -13,7 +13,7 @@ class StoreFinanciamientoRequest extends FormRequest
     {
         return [
             'financiamientos'                              => 'required|array|min:1',
-            'financiamientos.*.id'                        => 'nullable|integer',
+            'financiamientos.*.id'                        => 'nullable',
             'financiamientos.*.agencia'                   => 'nullable',
             'financiamientos.*.no_contrato'               => 'required|string|max:255',
             'financiamientos.*.fecha_desembolso'          => 'required|date',
@@ -25,7 +25,7 @@ class StoreFinanciamientoRequest extends FormRequest
             'financiamientos.*.com_vendedores_id'         => 'required|integer',
             'financiamientos.*.com_datos_venta_id'        => 'nullable|integer',
             'financiamientos.*.tipo_financiamiento'       => 'nullable|string|max:255',
-            'financiamientos.*.archivo'                   => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'financiamientos.*.archivo'                   => 'nullable',
             'financiamientos.*.observaciones'             => 'nullable|string',
             'financiamientos.*.kit_seguridad'             => 'nullable|numeric|min:0',
             'financiamientos.*.sat_finder'                => 'nullable|numeric|min:0',
@@ -70,6 +70,7 @@ class StoreFinanciamientoRequest extends FormRequest
         $financiamientos = array_map(function ($item) {
             // solo limpiamos los campos numéricos de texto
             return array_merge($item, [
+                'id'                        => $item['id'] === 'null' ? null : $item['id'],
                 'monto_financiar'           => $this->limpiarNumero($item['monto_financiar']           ?? null),
                 'incentivo_dealer'          => $this->limpiarNumero($item['incentivo_dealer']          ?? null),
                 'porcentaje_asesor'         => $this->limpiarNumero($item['porcentaje_asesor']         ?? null),

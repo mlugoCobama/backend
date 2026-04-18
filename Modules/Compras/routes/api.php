@@ -153,6 +153,10 @@ Route::prefix('compras')->group(function(){
     Route::get('/reportes/gastos/detalle/{intercompania}', [ReportesComprasController::class, 'descargarDetalleEmpresa']);
 
     Route::post('/asignar-permisos-kanban', [UsuariosController::class, 'asignar']);
+
+    Route::post('/CatalogoUnidades/SolicitaToka', [CatUnidadesController::class, 'saveSolicitudRecargaToka']);
+    Route::post('/CatalogoUnidades/DispersaToka', [CatUnidadesController::class, 'saveRecargaToka']);
+    Route::get('/CatalogoUnidades/ParqueVehicularToka/{id}', [CatUnidadesController::class, 'getParqueWithToka']);
 });
 
 Route::post('/all-permisos', [UsuariosController::class, 'getAllPermission'])->name('consultas.permisos');

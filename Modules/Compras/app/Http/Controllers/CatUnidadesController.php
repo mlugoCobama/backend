@@ -9,20 +9,27 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Modules\Compras\Models\ComRecargasVehiculos;
 use Modules\Compras\Models\DatosTanque;
 use Modules\Compras\Models\DatosVehiculo;
-use Modules\Compras\Models\DetallesCotizacion;
 use Modules\Compras\Models\ObservacionVehiculo;
-use Modules\Compras\Transformers\DetallesCotizacionResource;
+use Modules\Compras\Services\ParqueVehicularService;
 use Modules\Compras\Transformers\ObservacionesVehiculoResource;
 use Modules\Compras\Transformers\PolizasSeguroResource;
+use Modules\Compras\Transformers\RecargaTokaResource;
 use Modules\Compras\Transformers\VehiculosTanquesResources;
 use Modules\Macro\Models\SeguroVehiculo;
-use PhpParser\Node\Expr\FuncCall;
-use PhpParser\Node\Stmt\Else_;
 
 class CatUnidadesController extends Controller
 {
+
+    protected $pvService;
+
+    public function __construct(ParqueVehicularService $pvService)
+    {
+        $this->pvService = $pvService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -81,8 +88,6 @@ class CatUnidadesController extends Controller
                     }
                 }
             }
-
-
 
             DB::commit();
 
@@ -243,15 +248,6 @@ class CatUnidadesController extends Controller
      */
     public function getAutotanques($intercompania)
     {
-        // $interExcepciones = explode(',', env('INTER_EXECPCIONES')); 
-        // $isExcepcion = in_array($intercompania, $interExcepciones );
-
-        // if($isExcepcion){
-        //     $idUser = auth()->id(); 
-        //     $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $idUser . ')');
-        //     $intercompania = $data[0]->intercompania;
-        // }
-
         $data = DB::select("call SistemaTickets.SP_GetAutotanquesSucursal($intercompania)");
 
         return response()->json([
@@ -272,35 +268,7 @@ class CatUnidadesController extends Controller
 
         $file = $request->file('archivo_csv');
         $path = $file->getRealPath();
-        $handle = fopen($path, 'r');
-
-        $header = fgetcsv($handle);
-
-        while (($row = fgetcsv($handle, 1000, ',')) !== false) {
-
-            $auto = DatosVehiculo::create([
-                'nro_economico' => $row[0] ?? 'NA',
-                'estatus' => $row[2] ?? 'NA',
-                'marca' => $row[3] ?? 'NA',
-                'submarca' =>  $row[4] ?? 'NA',
-                'modelo' => $row[5] ?? 'NA',
-                'no_serie' =>  $row[6] ?? 'NA',
-                'placas' => $row[7] ?? 'NA',
-                'id_sucursal' =>  $row[13],
-            ]);
-
-            DatosTanque::create([
-                'marca' => $row[8] ?? 'NA',
-                'anio_fabricacion' => $row[9] ?? 'NA',
-                'capacidad' => $row[10] ?? 'NA',
-                'serie' => $row[11] ?? 'NA',
-                'tipo_medidor' => $row[12] ?? 'NA',
-                'id_sucursal' => $row[13],
-                'com_datos_vehiculo_id' => $auto->id,
-            ]);
-        }
-
-        fclose($handle);
+        $this->pvService->importar($path);
 
         return response()->json([
             'mensaje' => 'Importación exitosa'
@@ -330,7 +298,9 @@ class CatUnidadesController extends Controller
         $dataVehiculo->nro_economico = $datosVehiculos['nro_economico'];
         $dataVehiculo->id_cre = $datosVehiculos['id_cre'];
         $dataVehiculo->tipo_combustible = $datosVehiculos['tipo_combustible'];
-        $dataVehiculo->tipo = $datosVehiculos['tipo_vehiculo'];
+        $dataVehiculo->num_tarjeta_toka = $datosVehiculos['num_tarjeta_toka'];
+        $dataVehiculo->num_tag = $datosVehiculos['num_tag'];
+        $dataVehiculo->limite = $datosVehiculos['limite'];
         $dataVehiculo->estatus = $datosVehiculos['estatus'];
         $dataVehiculo->categoria = $datosVehiculos['categoria'];
         $dataVehiculo->gps = $datosVehiculos['gps'];
@@ -411,6 +381,9 @@ class CatUnidadesController extends Controller
             'estatus' => $data['estatus'],
             'categoria' => $data['categoria'],
             'gps' => $data['gps'],
+            'num_tarjeta_toka' => $data['num_tarjeta_toka'],
+            'num_tag' => $data['num_tag'],
+            'limite' => $data['limite']
         ]);
 
         if (isset($data['observacion']) && !empty($data['observacion'])) {
@@ -482,139 +455,25 @@ class CatUnidadesController extends Controller
     public function importarDatosSeguro(Request $request)
     {
         // Validar que se envió el archivo
-        $request->validate([
+       $request->validate([
             'archivo_csv' => 'required|file|mimes:csv,txt',
         ]);
 
         $archivo = $request->file('archivo_csv');
-        $ruta = $archivo->getRealPath();
-
-        $handle = fopen($ruta, 'r');
-        $encabezados = fgetcsv($handle);
-
-        while (($fila = fgetcsv($handle)) !== false) {
-            $datos = array_combine($encabezados, $fila);
-
-            $vehiculo = DatosVehiculo::where('no_serie', $datos['SERIE'])->first();
-
-            if ($vehiculo) {
-                SeguroVehiculo::create([
-                    'id_com_datos_vehiculo' => $vehiculo->id,
-                    'aseguradora' => 'Banorte',
-                    'inciso_vehiculo' => $datos['INCISOV'] ?? null,
-                    'cobertura' => $datos['COBERTURA'] ?? null,
-                    'inicio_vigencia' => $datos['VIGENCIAI'] ?? null,
-                    'fin_vigencia' => $datos['VIGENCIAF'] ?? null,
-                    'inciso_foltilla' => $datos['INCISOF'] ?? null,
-                    'flotilla' => $datos['FLOTILLA'] ?? null,
-                    'fecha_renovacion' => $datos['RENOVACION'] ?? null,
-                    'activo' => 1,
-
-                ]);
-            }
-        }
-
-        fclose($handle);
+        $this->pvService->importarDesdeCsv($archivo);
 
         return response()->json(['mensaje' => 'Importación completada'], 200);
     }
 
     public function actualizarDatosPV(Request $request)
     {
-        // Validar que se envió el archivo
         $request->validate([
             'archivo_csv' => 'required|file|mimes:csv,txt',
         ]);
 
         $archivo = $request->file('archivo_csv');
         $ruta = $archivo->getRealPath();
-
-        $handle = fopen($ruta, 'r');
-        $encabezados = fgetcsv($handle);
-
-        $status = [
-            "ACTIVA" => 1,
-            "EN TALLER" => 2,
-            "VENDIDA" => 3,
-            "NO IDENTIFICADA" => 4,
-            "FUERA DE CIRCULACION" => 0,
-            "DESCOMPUESTA" => 5,
-            "FISCALIA" => 6,
-            "CORRALON" => 7,
-            "CHATARRA" => 8,
-            "VENDIDA  COMO CHATARRA" => 9,
-            "BAJA" => 10
-        ];
-
-        while (($fila = fgetcsv($handle)) !== false) {
-            $datos = array_combine($encabezados, $fila);
-
-
-
-            if (isset($datos['numero_serie_v']) && !empty($datos['numero_serie_v'])) {
-                
-                $vehiculo = DatosVehiculo::where('no_serie', $datos['numero_serie_v'])->first();
-
-                $gps = null;
-
-                if ($datos['GPS'] === "SI") {
-                    $gps = ($datos['STATUS GPS'] === 'OK' || empty($datos['STATUS GPS'])) ? 1 : 2;
-                } elseif (in_array($datos['GPS'], ["NO", "SIN GPS"]) || empty($datos['SIN GPS'])) {
-                    $gps = 3;
-                }
-
-                if ($vehiculo) {
-                    // Actualizar datos del vehiculo
-                    $vehiculo->update([
-                        // "id_cre" => $datos['id_cre'],
-                        // "nro_economico " => $datos['no_economico'],
-                        // "marca" => $datos['marca_v'],
-                        // "submarca" => $datos['submarca_v'],
-                        // "modelo" => $datos['modelo_v'],
-                        // "no_serie" => $datos['numero_serie_v'],
-                        // "placas" => $datos['placas'],
-                        // "id_sucursal" => $datos['id_sucursal'],
-                        // "tipo" => strtolower($datos['uso_vehiculo']),
-                        // "estatus" => $status[$datos['status']] ?? 1,
-                        // "propietario" => $datos['propietario'],
-                        "gps" => $gps,  
-
-                    ]);
-                } 
-                // else {
-                //     if (!empty($datos['numero_serie_v'])) {
-                //         // Crear nuevo vehículo
-                //         $auto = DatosVehiculo::create([
-                //             "id_cre" => $datos['id_cre'] ?? null,
-                //             "nro_economico " => $datos['no_economico'] ?? null,
-                //             "marca" => $datos['marca_v'] ?? null,
-                //             "submarca" => $datos['submarca_v'] ?? null,
-                //             "modelo" => $datos['modelo_v'] ?? null,
-                //             "no_serie" => $datos['numero_serie_v'] ?? null,
-                //             "placas" => $datos['placas'] ?? null,
-                //             "id_sucursal" => $datos['id_sucursal'],
-                //             "tipo" => $datos['uso_vehiculo'] ?? null,
-                //             "estatus" => $status[$datos['status']] ?? 1,
-                //             "propietario" => $datos['propietario'] ?? null
-                //         ]);
-
-                //         if ($datos['uso_vehiculo'] == 'autotanque') {
-                //             DatosTanque::create([
-                //                 'marca' => $datos['marca_t'] ?? 'NA',
-                //                 'anio_fabricacion' => $datos['anio_fab'] ?? 'NA',
-                //                 'capacidad' => $datos['capacidad'] ?? 'NA',
-                //                 'serie' => $datos['numero_serie_t'] ?? 'NA',
-                //                 'tipo_medidor' => $datos['tipo_medidor'] ?? 'NA',
-                //                 'id_sucursal' => $datos['id_sucursal'],
-                //                 'com_datos_vehiculo_id' => $auto->id,
-                //             ]);
-                //         }
-                //     }
-                // }
-            }
-        }
-
-        fclose($handle);
+        $this->pvService->procesarCSV($ruta);
 
         return response()->json(['mensaje' => 'Importación completada'], 200);
     }
@@ -679,5 +538,56 @@ class CatUnidadesController extends Controller
                 'message' => "No se puedo encontrar la unidad que se intenta autorizar"
             ]);
         }
+    }
+
+
+    public function getParqueWithToka($idSucursal){
+        $data =  $this->pvService->queryVehiculosForToka($idSucursal);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => RecargaTokaResource::collection($data),
+            'message' => 'Datos recuperados correctamente'
+        ]);
+    }
+
+    public function saveSolicitudRecargaToka(Request $request){
+        $recargas =  $request->captura;
+        foreach ($recargas as $recarga) {
+            if (((float) $recarga['ventaLitros'] + (float) $recarga['abonoNuevo']) > 0 && empty($recarga['idSolicitud'])) {
+                $newRow                     = new ComRecargasVehiculos();
+                $newRow->vehiculo_id        = $recarga['id'];
+                $newRow->fecha              = now();
+                $newRow->monto_solicitado   = $recarga['abonoNuevo'];
+                $newRow->ventas_litros      = $recarga['ventaLitros'];
+                $newRow->save();
+            }
+        }
+        return response([
+            'message' => 'Datos Guardados Correctamente',
+            'data' => [],
+            'status' => 'success'
+        ]);
+    }
+
+     public function saveRecargaToka(Request $request){
+        $recargas =  $request->captura;
+        foreach ($recargas as $recarga) {
+            if (((float) $recarga['saldoActual'] + (float) $recarga['saldoDispersar']) > 0) {
+                $row                        = ComRecargasVehiculos::find($recarga['idSolicitud']);
+                if($row){
+                    $row->fecha_dispersion   = now();
+                    $row->monto_dispersado   = $recarga['saldoDispersar'];
+                    $row->saldo_actual       = $recarga['saldoActual'];
+                    $row->estatus            = 2;
+                    $row->save();
+                }
+            }
+        }
+        return response([
+            'message' => 'Datos Guardados Correctamente',
+            'data' => [],
+            'status' => 'success'
+        ]);
     }
 }

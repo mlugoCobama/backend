@@ -34,6 +34,18 @@ class Vendedor extends Model
         return $this->hasMany(DatosVenta::class, 'vendedor');
     }
 
+
+    public function tipoVendedor()
+        {
+            return $this->belongsTo(ComTipoVendedor::class, 'com_tipo_vendedor_id', 'id');
+        }
+
+        public function departamento()
+        {
+            return $this->belongsTo(ComDepartamento::class, 'com_departamentos_id', 'id');
+        }
+
+
     public function scopeActive ($query) {
         return $query->where('activo', 1);
     }

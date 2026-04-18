@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use Modules\Nissan\Http\Requests\StoreFinanciamientoRequest;
 use Modules\Nissan\Models\ComFinanciamiento;
 use Modules\Nissan\Models\DatosVenta;
+use Modules\Nissan\Models\Gasto;
+use Modules\Nissan\Models\GastosVenta;
 use Modules\Nissan\Services\ComisionesService;
 use Modules\Nissan\Transformers\ComFinanciamientosResource;
 
@@ -107,6 +109,20 @@ class FinanciamientoController extends Controller
         }
 
         $comision->save();
+
+        if(!empty($comision->com_datos_venta_id)){
+           $gasto = GastosVenta::where('id_datos_venta',$comision->com_datos_venta_id)->first();
+           if($gasto){
+               $gasto->total_subsidios = $comision->sub_x_des;
+               $gasto->save();
+           }else{
+            $gasto = new GastosVenta();
+            $gasto->total_subsidios = $comision->sub_x_des;
+            $gasto->id_datos_venta = $comision->com_datos_venta_id;
+             $gasto->save();
+           }
+        }
+
         return $comision;
     }
 

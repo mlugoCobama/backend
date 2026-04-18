@@ -32,7 +32,9 @@ class ComisionesService
      */
     public function parseAgencia($intercompania){
                     // intercompanias => Azcapo   Campestre  Universidad    Agencia ingresada
-        return match($intercompania){ '7051' => '730', '712' => '714', '710' => '710', '333' => null, default => $intercompania};
+        return match($intercompania){ '7051' => '730', '712' => '714', '710' => '710', '333' => null,
+                                    '7064' => '1','7063' => '3','7062' => '2','7061' => '4',
+                                    default => $intercompania};
     }
 
     /**

@@ -6,22 +6,36 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Modules\Nissan\Models\ComDepartamento;
+use Modules\Nissan\Models\ComTipoVendedor;
 use Modules\Nissan\Models\Vendedor;
+use Modules\Nissan\Services\ComisionesService;
 use Modules\Nissan\Transformers\VendedorResource;
 
 class VendedorController extends Controller
 {
+    protected $comService;
+    public function __construct(ComisionesService $comService)
+    {
+        $this->comService = $comService;
+    }
     /**
      * Recupera los vendedores activos
      */
     public function index()
     {
-        $data = Vendedor::active()->get();
+       $catTiposVendedores = ComTipoVendedor::active()->get();
+       $catDptosVendedores = ComDepartamento::active()->get();
+
+       $data = [
+        'tipos' => $catTiposVendedores,
+        'departamentos' => $catDptosVendedores,
+       ];
 
         return response()->json([
             'status' => 'success',
             'message' => 'datos recuperados correctamente',
-            'data' => VendedorResource::collection($data),
+            'data' => $data,
         ]);
     }
 
@@ -44,7 +58,9 @@ class VendedorController extends Controller
         $vendedor->nro_vendedor_as = $data['nroAutoSystem'];
         $vendedor->clave = $data['clave'];
         $vendedor->nombre = $data['nombre'];
-        $vendedor->agencia = $data['agencia'];
+        $vendedor->agencia = $this->comService->parseAgencia($data['agencia']);
+        $vendedor->com_departamentos_id = $data['departamento'];
+        $vendedor->com_tipo_vendedor_id = $data['tipo'];
         $vendedor->save();
 
         return response()->json([
@@ -60,9 +76,16 @@ class VendedorController extends Controller
     public function show($id)
     {
         if($id == 333 || $id == 'todos'){
-            $data = Vendedor::active()->orderBy('nombre', 'asc')->get();
+            $data = Vendedor::with(['tipoVendedor', 'departamento'])
+            ->active()->orderBy('nombre', 'asc')->get();
         }else{
-            $data = Vendedor::where('agencia',$id)->active()->orderBy('nombre', 'asc')->get();   
+            $idParseado = $this->comService->parseAgencia($id);
+           $data = Vendedor::with(['tipoVendedor', 'departamento'])
+            ->where('agencia', $idParseado)
+            ->active()
+            ->orderBy('nombre', 'asc')
+            ->get();
+
         }
         
 
@@ -93,7 +116,9 @@ class VendedorController extends Controller
             $vendedor->nro_vendedor_as = $data['nroAutoSystem'];
             $vendedor->clave = $data['clave'];
             $vendedor->nombre = $data['nombre'];
-            $vendedor->agencia = $data['agencia'];
+            $vendedor->com_departamentos_id = $data['departamento'];
+            $vendedor->com_tipo_vendedor_id = $data['tipo'];
+            $vendedor->agencia = $this->comService->parseAgencia($data['agencia']);
             $vendedor->save();
         }
 

@@ -14,8 +14,10 @@ class VendedorResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'tipo' => $this->tipo,
-            'tipo_texto' => $this->setTipoTexto($this->tipo),
+            'tipo' => $this->tipoVendedor ? $this->tipoVendedor->id : null ,
+            'tipo_texto' => $this->tipoVendedor ? $this->tipoVendedor->nombre : 'No asignado',
+            'departamento_id' => $this->departamento ? $this->departamento->id : null,
+            'departamento' => $this->departamento ? $this->departamento->nombre : 'No asignado',
             'procentaje_apv' => $this->porcentaje_apv,
             // 'procentaje_apv' => $this->porcentaje_apv,
             'nombre' => $this->nombre ?? 'No disponible',
@@ -40,7 +42,7 @@ class VendedorResource extends JsonResource
                           3 => 'Renault Vallejo',
                           4 => 'Renault Pachuca',];
                           
-        return $nombreAgencia[$idAgencia];
+        return $nombreAgencia[$idAgencia] ?? 'Agencia no disponible';
 
     }
 

@@ -736,7 +736,7 @@ class ReportesComprasController extends Controller
     ->where('estatus','>', 1)
     ->where('estatus','<>', 4)
     ->where('activo', 1)
-    ->where('tipo', 3)
+    ->where('tipo', 1)
     ->where('empresa', $empresa)
     // ->whereBetween('fecha', [$fechaInicio, $fechaFin])
     // ->whereHas('Cotizaciones.orden_compra', function ($q) {
