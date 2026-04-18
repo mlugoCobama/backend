@@ -101,7 +101,7 @@ Se agregan nuevos procedimientos almacenados para soporte de consultas del módu
 
 ---
 
-## 🛒 Módulo de Compras — División de Empresas
+## Módulo de Compras — División de Empresas
 
 ### Modificación de Consultas
 - Se modifican las consultas del módulo de Compras para soportar la división de empresas.
@@ -125,6 +125,5 @@ Se realizan modificaciones en el apartado de Vendedores dentro del módulo de Co
 
 ### Lógica de Registro
 - Se agrega la lógica de negocio para el registro de dispersión de recursos de combustibles.
-- Incluye validaciones y persistencia de datos para el control de dispersión.
 
 ---
