@@ -30,7 +30,7 @@ class LoginController extends Controller
                 if (!$user || !Hash::check($fields['password'],$user->password)) {
                     return response()->json([
                         'success' => false,
-                        'error' => 'Datos de usuario incorrectos' include user role in response
+                        'error' => 'Datos de usuario incorrectos' // include user role in response
                     ]);
                 }
             }
