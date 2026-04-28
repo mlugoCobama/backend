@@ -24,7 +24,11 @@ class ConcentradoResource extends JsonResource
 
         return [
             'id' => $this->id, 
-            'nro_vendedor_as' => $this->nro_vendedor_as, 
+            'tipo_vendedor' => $this->tipo_vendedor ?? 'No definido',
+            'nro_vendedor_as' => $this->nro_vendedor_as,
+            'agencia' => $this->agencia ?? null,
+            'clave' => $this->clave ?? 'D N D',
+            'por_factura' => $this->por_factura ?? 0.12,  
             'vendedor' => $this->vendedor, 
             'nuevos' => $this->nuevos, 
             'pend_nuevos' => ($this->nuevos == 0 && $this->pend_nuevos > 0), 
@@ -37,9 +41,12 @@ class ConcentradoResource extends JsonResource
             'seguros' => $this->seguros, 
             'pend_seguros' => ($this->seguros == 0 && $this->pend_seguros > 0), 
             'toma_unidades' => $this->toma_unidades,
-            'pend_toma' => ($this->toma_unidades == 0 && $this->pend_toma > 0), 
-             
+            'pend_toma' => ($this->toma_unidades == 0 && $this->pend_toma > 0),
+            'garantia_extendida' => $this->garantia_extendida ?? 0, 
+            'seguro_vf3' => $this->seguro_vf3 ?? 0,  
+            'unidades_vendidas' => $this->unidades_vendidas ?? 0,  
             'otros' => $this->otros ?? 0, 
+            'pend_otros' => $this->otros ? ($this->otros == 0 && $this->pend_otros > 0) : false, 
             'total' => $this->total,
             
             'desc_nomina' => $descNomina,

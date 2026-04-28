@@ -17,7 +17,7 @@ class SendSolicitudCotizacionRequest extends FormRequest
             'proveedores' => 'required|array|min:1',
             'proveedores.*.proveedor_id' => 'required|integer|exists:com_proveedores,id',
             'proveedores.*.contacto_id' => 'nullable|integer|exists:com_proveedor_contactos,id',
-            'solicitudes_compra_id' => 'required|integer|exists:com_solicitudes_compra,id',
+            'solicitudes_compra_id' => 'required|integer',
         ];
     }
 

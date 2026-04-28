@@ -274,5 +274,14 @@ class FinanciamientoController extends Controller
         ]);
     }
 
+    public function mostrarArchivo($id)
+    {
+        $comision = ComFinanciamiento::findOrFail($id);
+        if (!$comision->ruta_archivo || !Storage::disk('public')->exists($comision->ruta_archivo)) {
+            return response()->json(['error' => 'Archivo no encontrado'], 404);
+        }
+        return response()->file(storage_path('app/public/' . $comision->ruta_archivo));
+    }
+
 
 }

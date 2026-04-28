@@ -127,3 +127,15 @@ Se realizan modificaciones en el apartado de Vendedores dentro del módulo de Co
 - Se agrega la lógica de negocio para el registro de dispersión de recursos de combustibles.
 
 ---
+**Fecha de liberación:** 18 de abril de 2025
+## Comisiones — Módulo de concentrado
+
+Se añade soporte para agregar otros conceptos tanto de descuento como comisiones en el concentrado
+Se actualiza el sp para obtener comisiones
+
+**Fecha de liberación:** 25 de abril de 2025
+## Compras — Cotizaciones
+- Se integra el flujo para recotizzacion de compras cuando se encuentren en estado de orden de compra y en surtido
+
+## Comisiones — Seguros, Financiamientos
+- Se integra la capacidad de visualizar archivos previamente cargados

@@ -26,6 +26,7 @@ use Modules\Compras\Models\DocumentosFactura;
 use Modules\Compras\Models\OrdenCompra;
 use Modules\Compras\Models\ProveedorContacto;
 use Modules\Compras\Models\SolicitudesCompra;
+use Modules\Compras\Services\OrdenCompraService;
 use ZipArchive;
 
 
@@ -35,7 +36,10 @@ class DocumentosOrdenesComprasController extends Controller
     private $documentos = ['factura_xml', 'factura_pdf', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
     private $keys = ['ruta_xml_factura', 'ruta_pdf_factura', 'comprobante_pago', 'complemento_pago_xml', 'complemento_pago_pdf'];
 
-    public function __construct(protected CfdiService $cfdiService) {}
+    public function __construct(
+        protected CfdiService $cfdiService,
+        protected OrdenCompraService $ordenCompraService
+        ) {}
 
     /** ****************************************************
      * Almacena los archivos de orden compra
@@ -84,7 +88,7 @@ class DocumentosOrdenesComprasController extends Controller
                 'status' => 'success',
                 'message' => 'Se ha guardado correctamente',
                 'data' => [],
-                'facturadoTotalmente' => $facturadoTotal
+                'facturadoTotalmente' => $facturadoTotal ?? false
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -171,7 +175,7 @@ class DocumentosOrdenesComprasController extends Controller
                 'status' => 'success',
                 'message' => 'Se ha actualizado correctamente',
                 'data' => $docsOrdenCompra,
-                'facturadoTotalmente' => $facturadoTotal,
+                'facturadoTotalmente' => $facturadoTotal ?? false,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -558,9 +562,8 @@ class DocumentosOrdenesComprasController extends Controller
          if($orden->modo_pago == 1 ){
              $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
              $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
-
-             $controlerOC = new OrdenesComprasController;    
-             $controlerOC->enviarCorreoSurtido($orden->id, $docsFactura->representacion_impresa);      
+  
+             $this->ordenCompraService->enviarCorreoSurtido($orden->id, $docsFactura->representacion_impresa);      
             $this->enviarCorreoPago($orden, $docsFactura->representacion_impresa);
          }else{
                  $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
@@ -640,8 +643,7 @@ class DocumentosOrdenesComprasController extends Controller
             }
         }
         
-        $ordenCompraPDF = new OrdenesComprasController();
-        $pdfContenido = $ordenCompraPDF->consultaDatosPDF($cotizacion->solicitudes_compra_id);
+        $pdfContenido = $this->ordenCompraService->getDataOrdenCompra($cotizacion->solicitudes_compra_id);
         Mail::to($correoProveedor)->send(new PagoOrdenCompra($datos, $rutaPago, $pdfContenido['archivoPDF']));
     }
 
@@ -649,8 +651,8 @@ class DocumentosOrdenesComprasController extends Controller
         if($orden->modo_pago == 1){
             $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
             $this->actStatusOrdenSolicitud($idOrdenCompra , EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
-            $controlerOC = new OrdenesComprasController;    
-            $controlerOC->enviarCorreoSurtido($idOrdenCompra, $rutaCompPago );      
+
+            $this->ordenCompraService->getDataOrdenCompra($idOrdenCompra, $rutaCompPago );      
             $this->enviarCorreoPago($orden, $rutaCompPago); 
         }else{
             $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);

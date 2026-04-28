@@ -16,6 +16,8 @@ class ComisionResource extends JsonResource
         $gastos = $this->getGastosFactura($this->faau_nofactura);
         return [
             'fecha_factura' => $this->fecha_factura,
+            'bdc' => $this->bdc,
+            "v_bdc"=>$this->v_bdc == 0 ? false : true,
             'fecha_cancelacion' => $this->fecha_cancelacion,
             'faau_vend_clave' => $this->faau_vend_clave,
             'faau_nofactura' => $this->faau_nofactura,

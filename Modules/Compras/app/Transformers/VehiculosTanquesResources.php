@@ -3,8 +3,10 @@
 namespace Modules\Compras\Transformers;
 
 use BcMath\Number;
+use Hamcrest\Core\Set;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\Macro\Models\SeguroVehiculo;
 
 class VehiculosTanquesResources extends JsonResource
 {
@@ -15,6 +17,9 @@ class VehiculosTanquesResources extends JsonResource
     {
          $clase = $this->asignarBadges($this->id_sucursal);
         $estilosEstatus = $this->getColorEstatus($this->estatus);
+
+        $seguro =  $this->getSeguro($this->id);
+
         return [
             "id" => $this->id,
             'id_cre' => $this->id_cre ?? null,
@@ -56,6 +61,21 @@ class VehiculosTanquesResources extends JsonResource
             'color_estatus' => $estilosEstatus['color'],
             'status_dsc' => $estilosEstatus['dsc'],
 
+            'seguro' => $seguro ? true: false,
+            'idSeguro' =>$seguro ? $seguro->id : null,
+            'id_com_datos_vehiculo'=>$seguro ? $seguro->id_com_datos_vehiculo : null,
+            'ramo'=>$seguro ? $seguro->ramo : '',
+            'sub_ramo'=>$seguro ? $seguro->sub_ramo : '',
+            'aseguradora'=>$seguro ? $seguro->aseguradora : null,
+            'cobertura'=>$seguro ? $seguro->cobertura : null,
+            'inicio_vigencia'=>$seguro ? $seguro->inicio_vigencia : null,
+            'fin_vigencia'=>$seguro ? $seguro->fin_vigencia : null,
+            'numero_poliza'=>$seguro ? $seguro->flotilla : null,
+            'inciso'=>$seguro ? $seguro->inciso_foltilla : null,
+            'fecha_emision'=>$seguro ? $seguro->fecha_renovacion : null,
+            'prima_total'=>$seguro ? $seguro->prima_total : null,
+            'periodicidad_pago'=>$seguro ? $seguro->periodicidad_pago : '',
+            'tipo_movimiento'=>$seguro ? $seguro->tipo_movimiento : '',
         ];
         
     }
@@ -111,6 +131,13 @@ class VehiculosTanquesResources extends JsonResource
             default => ['color'=> '#adb5bd', 'dsc' => 'Desconocido'] ,
         };
 
+    }
+
+    public function  getSeguro($idVehiculo){
+        $seguro = SeguroVehiculo::where('id_com_datos_vehiculo', $idVehiculo)
+                ->latest()
+                ->first();
+        return $seguro ?? null;
     }
 
 

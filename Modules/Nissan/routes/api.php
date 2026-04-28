@@ -31,6 +31,8 @@ Route::middleware(['auth:sanctum'])->prefix('nissan')->group(function () {
     Route::apiResource('compra-seminuevos-pdf', CompraSeminuevosPDFController::class)->names('compra-seminuevos-pdf');
 
     Route::post('datos-venta/validados', [DatosVentaController::class, 'storeValidados'])->name('datos-venta-validados');
+    Route::post('datos-venta/bdc', [DatosVentaController::class, 'updatePartidaBDC'])->name('datos-venta-bdc');
+    Route::post('datos-venta/validados_bdc', [DatosVentaController::class, 'updatePartidaValidacionBDC'])->name('datos-venta-validados-bdc');
     Route::get('datos-venta/pagado/{id}', [DatosVentaController::class, 'updatePartidaPagado'])->name('datos-venta-validados');
 });
 

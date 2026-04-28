@@ -2,6 +2,7 @@
 
 namespace Modules\Compras\Http\Controllers;
 
+use App\Enums\EstatusOrdenCompra;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Enums\EstatusSolicitud;
@@ -19,9 +20,23 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
 
 use Modules\Compras\Models\SolicitudesCompra;
+use Modules\Compras\Services\CambioEstatusService;
+use Modules\Compras\Services\CotizacionesService;
 
 class CotizacionesController extends Controller
 {
+
+    protected $statusService;
+    protected $cotizacionesService;
+
+    // Inyección de dependencias en el constructor
+    public function __construct(
+        CambioEstatusService $statusService,
+        CotizacionesService $cotizacionesService
+    ) {
+        $this->statusService = $statusService;
+        $this->cotizacionesService = $cotizacionesService;
+    }
 
     /** ***************************************************
      * Guarda los importes unitarios de la cotización.
@@ -245,6 +260,17 @@ class CotizacionesController extends Controller
             "status" => "success",
             'data' => [],
             'message' => 'No contiene archivo'
+        ]);
+    }
+
+    public function recotizar($idSolictud){
+        $solicitudActualizada = $this->statusService->actStatusSolicitudOrden($idSolictud, EstatusSolicitud::EN_COTIZACION, EstatusOrdenCompra::EN_ORDEN_COMPRA);
+        $this->cotizacionesService->desmarcarCotizacionSeleccionada($solicitudActualizada['idCotizacion']);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [],
+            'message' => 'La solicitud ha sido devuelta para su re cotización'
         ]);
     }
 }

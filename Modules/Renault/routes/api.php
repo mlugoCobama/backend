@@ -7,6 +7,7 @@ use Modules\Nissan\Http\Controllers\ConcentradoComisionesController;
 use Modules\Renault\Http\Controllers\RenaultController;
 use Modules\Renault\Http\Controllers\VisorCitasController;
 use Modules\Nissan\Http\Controllers\FinanciamientoController;
+use Modules\Nissan\Http\Controllers\OtrosController;
 use Modules\Nissan\Http\Controllers\SegurosController;
 use Modules\Nissan\Http\Controllers\TomaUnidadController;
 
@@ -29,6 +30,7 @@ Route::prefix('renault')->group(function () {
     Route::apiResource('seguro', SegurosController::class)->names('seguro');
     Route::apiResource('accesorios', AccesorioController::class)->names('accesorios');
     Route::apiResource('concentrado-comisiones', ConcentradoComisionesController::class)->names('concentrado-comisiones');
+    Route::apiResource('otros', OtrosController::class)->names('otros');
 
     Route::get('visor-citas/datos-ingreso/{id}', [ VisorCitasController::class, 'getDatosIngreso'])->name('visor-citas.getDatosEntrada');
     Route::post('auth/login', [LoginController::class, 'loginMobile']);
@@ -61,3 +63,5 @@ Route::prefix('renault')->group(function () {
     });
 
 Route::get('storage/renault/citas_servicio/{fileName}', [VisorCitasController::class, 'getFile'])->name('visor-citas.getFile');
+Route::get('renault/financiamiento/archivo/{id}', [FinanciamientoController::class, 'mostrarArchivo'])->name('financiamiento.mostrarArchivo');
+Route::get('renault/seguro/archivo/{id}', [FinanciamientoController::class, 'mostrarArchivo'])->name('seguro.mostrarArchivo');

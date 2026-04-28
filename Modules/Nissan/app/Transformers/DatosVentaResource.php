@@ -2,6 +2,7 @@
 
 namespace Modules\Nissan\Transformers;
 
+use App\Enums\EstatusComisionesVentasAutos;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Modules\Nissan\Models\Vendedor;
@@ -27,7 +28,7 @@ class DatosVentaResource extends JsonResource
                 'nro_vendedor_as' => $this->vendedor->nro_vendedor_as,
                 'vendedor_agencia' => $this->vendedor->agencia,
                 'porcentaje_vendedor' => $this->vendedor->porcentaje_apv,
-                'clave_vendedor' => $this->vendedor->nro_vendedor_as,
+                'clave_vendedor' => $this->vendedor->nro_vendedor_as.' - '.$this->vendedor->clave,
                 
                 "serie"=> $this->serie,
                 "total_venta"=> $this->total_venta,
@@ -37,7 +38,8 @@ class DatosVentaResource extends JsonResource
                 
                 "estatus"=>$this->estatus,
                 "entregado"=>$this->entregado == 0 ? false : true,
-                "bdc"=>$this->bdc,
+                "bdc"=>$this->bdc == 0 ? false : true,
+                "v_bdc"=>$this->v_bdc == 0 ? false : true,
                 "agencia"=>$this->agencia,
                 "validado"=>$this->validado,
                 "clave_producto"=>$this->clave_producto,
@@ -52,26 +54,26 @@ class DatosVentaResource extends JsonResource
                 "fecha_factura"=> date('d/m/Y', strtotime($this->fecha_factura)),
                 "pagado"=> $this->pagado,
                 "observacion"=> $this->observacion,
+                "estatusTexto" => EstatusComisionesVentasAutos::label($this->estatus),
 
                 'gastos' => [
-                    'id' => $this->gatosVenta->id ?? null,
-                    'otros' => (float) ($this->gatosVenta->otros ?? 0),
-                    'gasolina' => (float) ($this->gatosVenta->gasolina ?? 0),
-                    'previa' => (float) ($this->gatosVenta->previa ?? 0),
-                    'descuentos' => (float) ($this->gatosVenta->descuentos ?? 0),
-                    'descuento_impulso' => (float) ($this->gatosVenta->descuento_impulso ?? 0),
-                    'traslados' => (float) ($this->gatosVenta->traslados ?? 0),
-                    'subsidios' => (float) ($this->gatosVenta->total_subsidios ?? 0),
-                    'descuento_da' => (float) ($this->gatosVenta->descuento_gastos ?? 0),
-                    'cortesia' => (float) ($this->gatosVenta->cortesia ?? 0),
-                    'accesorios' => (float) ($this->gatosVenta->accesorios ?? 0),
-                    'placas' => (float) ($this->gatosVenta->placas ?? 0),
-                    'comision_garantizada' => (float) ($this->gatosVenta->comision_garantizada ?? 0),
-                    'comision_apv_pesos' => (float) ($this->gatosVenta->comision_apv_pesos ?? 0),
-                    'comision_bdc_pesos' => (float) ($this->gatosVenta->comision_bdc_pesos ?? 0),
-                    'porcentaje_bdc' => (float) ($this->gatosVenta->porcentaje_bdc ?? 0),
-                
-            ],
+                                'id' => $this->gatosVenta->id ?? null,
+                                'otros' => (float) ($this->gatosVenta->otros ?? 0),
+                                'gasolina' => (float) ($this->gatosVenta->gasolina ?? 0),
+                                'previa' => (float) ($this->gatosVenta->previa ?? 0),
+                                'descuentos' => (float) ($this->gatosVenta->descuentos ?? 0),
+                                'descuento_impulso' => (float) ($this->gatosVenta->descuento_impulso ?? 0),
+                                'traslados' => (float) ($this->gatosVenta->traslados ?? 0),
+                                'subsidios' => (float) ($this->gatosVenta->total_subsidios ?? 0),
+                                'descuento_da' => (float) ($this->gatosVenta->descuento_gastos ?? 0),
+                                'cortesia' => (float) ($this->gatosVenta->cortesia ?? 0),
+                                'accesorios' => (float) ($this->gatosVenta->accesorios ?? 0),
+                                'placas' => (float) ($this->gatosVenta->placas ?? 0),
+                                'comision_garantizada' => (float) ($this->gatosVenta->comision_garantizada ?? 0),
+                                'comision_apv_pesos' => (float) ($this->gatosVenta->comision_apv_pesos ?? 0),
+                                'comision_bdc_pesos' => (float) ($this->gatosVenta->comision_bdc_pesos ?? 0),
+                                'porcentaje_bdc' => (float) ($this->gatosVenta->porcentaje_bdc ?? 0),
+                            ],
             ];
     }
 }

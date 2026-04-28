@@ -25,11 +25,11 @@ class SeguroResource extends JsonResource
             "comision_apv_pesos" => $this->comision_apv_pesos,
 
             "com_vendedores_id" => $this->com_vendedores_id,
-            "agencia" => $this->com_vendedores_id,
+            "agencia" => $this->agencia,
 
             "observaciones" => $this->observaciones,
             "comentario" => $this->comentario,
-
+            "ruta_archivo" => $this->ruta_archivo ?? null,
             "estatus" => $this->estatus,
             "estatusTexto" => EstatusComisionesAutos::label($this->estatus),
 

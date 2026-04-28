@@ -89,32 +89,32 @@ class ImportarFacturasAccesorios extends Command
 
                 //  Insertar factura
                 $facturaId = $destino->table('com_accesorios')->insertGetId([
-                    'no_pedido'  => $factura->pedi_numeropedido,
-                    'no_factura' => $factura->pedi_numerofactura,
-                    'fecha_factura'  => $factura->pedi_fechafactura,
-                    'com_vendedores_id'    => $empleadoId,
-                    'agencia'     => $agenciaId,
-                    'sub_total_factura'          => $factura->pedi_importetotal,
-                    'iva'            => $factura->pedi_ivafactura,
-                    'comision_apv_pesos' => $factura->pedi_importetotal * 0.1,
-                    'razon_social'   => $factura->pedi_razonfactura,
-                    'created_at'     => now(),
-                    'updated_at'     => now(),
+                    'no_pedido'             => $factura->pedi_numeropedido,
+                    'no_factura'            => $factura->pedi_numerofactura,
+                    'fecha_factura'         => $factura->pedi_fechafactura,
+                    'com_vendedores_id'     => $empleadoId,
+                    'agencia'               => $agenciaId,
+                    'sub_total_factura'     => $factura->pedi_importetotal,
+                    'iva'                   => $factura->pedi_ivafactura,
+                    'comision_apv_pesos'    => $factura->pedi_importetotal * 0.1,
+                    'razon_social'          => $factura->pedi_razonfactura,
+                    'created_at'            => now(),
+                    'updated_at'            => now(),
                 ]);
 
                 // Detalles
                 $detallesInsert = collect($factura->detalles)->map(function ($detalle) use ($facturaId) {
                     return [
-                        'com_accesorios_id'    => $facturaId,
-                        'producto_clave'=> $detalle->depe_prod_claveproducto,
-                        'concepto'   => $detalle->prod_descripcion1,
-                        'cantidad'      => $detalle->depe_cantidad,
-                        'importe'        => $detalle->depe_precio,
-                        'precio_lista'  => $detalle->depe_preciolista,
-                        'descuento'     => $detalle->depe_descuento,
-                        'fecha_alta'    => $detalle->fechaalta,
-                        'created_at'    => now(),
-                        'updated_at'    => now(),
+                        'com_accesorios_id'     => $facturaId,
+                        'producto_clave'        => $detalle->depe_prod_claveproducto,
+                        'concepto'              => $detalle->prod_descripcion1,
+                        'cantidad'              => $detalle->depe_cantidad,
+                        'importe'               => $detalle->depe_precio,
+                        'precio_lista'          => $detalle->depe_preciolista,
+                        'descuento'             => $detalle->depe_descuento,
+                        'fecha_alta'            => $detalle->fechaalta,
+                        'created_at'            => now(),
+                        'updated_at'            => now(),
                     ];
                 })->toArray();
 

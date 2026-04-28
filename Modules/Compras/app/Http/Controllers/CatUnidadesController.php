@@ -343,21 +343,39 @@ class CatUnidadesController extends Controller
     public function storeDatosPoliza($data, $idVehiculo)
     {
         $datosPoliza =  $data;
-        $dataPoliza = new SeguroVehiculo();
-        $dataPoliza->aseguradora = $datosPoliza['aseguradora'];
-        $dataPoliza->cobertura = $datosPoliza['cobertura'];
-        $dataPoliza->fecha_renovacion = $datosPoliza['fecha_emision'];
-        $dataPoliza->inicio_vigencia = $datosPoliza['inicio_vigencia'];
-        $dataPoliza->fin_vigencia = $datosPoliza['fin_vigencia'];
-        $dataPoliza->flotilla = $datosPoliza['numero_poliza'];
-        $dataPoliza->inciso_foltilla = $datosPoliza['inciso'];
-        // $dataPoliza->inciso_vehiculo = $datosPoliza['inciso'];
+
+        $ultimoSeguro = SeguroVehiculo::where('id_com_datos_vehiculo', $idVehiculo)
+                                  ->latest('id')
+                                  ->first();
+
+            $nuevo = [
+            'aseguradora'       => $datosPoliza['aseguradora'],
+            'cobertura'         => $datosPoliza['cobertura'],
+            'fecha_renovacion'  => $datosPoliza['fecha_emision'],
+            'inicio_vigencia'   => $datosPoliza['inicio_vigencia'],
+            'fin_vigencia'      => $datosPoliza['fin_vigencia'],
+            'flotilla'          => $datosPoliza['numero_poliza'],
+            'inciso_foltilla'   => $datosPoliza['inciso'],
+            'ramo'              => $datosPoliza['ramo'],
+            'sub_ramo'          => $datosPoliza['subramo'],
+            'prima_total'       => $datosPoliza['prima_total'],
+            'tipo_movimiento'   => $datosPoliza['tipo_movimiento'],
+            'periodicidad_pago' => $datosPoliza['periodicidad_pago'],
+        ];
+
+
+        if ($ultimoSeguro) {
+            $existente = $ultimoSeguro->only(array_keys($nuevo));
+
+            $diferencias = array_diff_assoc($nuevo, $existente);
+
+            if (empty($diferencias)) {
+                return;
+            }
+        }
+
+        $dataPoliza = new SeguroVehiculo($nuevo);
         $dataPoliza->id_com_datos_vehiculo = $idVehiculo;
-        $dataPoliza->ramo = $datosPoliza['ramo'];
-        $dataPoliza->sub_ramo = $datosPoliza['subramo'];
-        $dataPoliza->prima_total = $datosPoliza['prima_total'];
-        $dataPoliza->tipo_movimiento = $datosPoliza['tipo_movimiento'];
-        $dataPoliza->periodicidad_pago = $datosPoliza['periodicidad_pago']; 
         $dataPoliza->save();
     }
 

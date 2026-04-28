@@ -30,11 +30,29 @@ use App\Mail\SolicitudSurtido;
 use Illuminate\Support\Facades\Mail;
 use Modules\Compras\Models\DatosVehiculo;
 use Modules\Compras\Models\ProveedorContacto;
+use Modules\Compras\Services\CambioEstatusService;
+use Modules\Compras\Services\CotizacionesService;
+use Modules\Compras\Services\OrdenCompraService;
 use Modules\Compras\Transformers\OrdenCompraResource;
 use Modules\Compras\Transformers\UsersResource;
 
 class OrdenesComprasController extends Controller
 {
+
+    protected $ordenCompraService;
+    protected $cotizacionesService;
+    protected $statusService;
+
+    // Inyección de dependencias en el constructor
+    public function __construct(
+        OrdenCompraService $ordenCompraService,
+        CotizacionesService $cotizacionesService,
+        CambioEstatusService $statusService
+    ) {
+        $this->ordenCompraService = $ordenCompraService;
+        $this->cotizacionesService = $cotizacionesService;
+        $this->statusService = $statusService;
+    }
     /** **********************************************************
      * Genera la orden de compra en la BD
      ************************************************************/
@@ -43,63 +61,26 @@ class OrdenesComprasController extends Controller
         
         try {
             DB::beginTransaction();
-                 
                 $data =  $request->all();
                 // Validar que la orden de compra no exista
-                $ocExistente = OrdenCompra::where('cotizaciones_id', $data["cotizaciones_id"])->first();
+                $ocExistente = $this->ordenCompraService->consultarOrdenCompraByCotizacion($data["cotizaciones_id"]);
                 // Si existe solo se modifica
                 if($ocExistente){
                     $cotizacion = Cotizaciones::where('solicitudes_compra_id', $data["cotizaciones_id"])->first();
                         if ($cotizacion) {
                             // Quitar el proveedor seleccionado
-                            $cotProvSelec = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->where('seleccionado', 1)->first();
-                            if ($cotProvSelec) {
-                                $cotProvSelec->seleccionado = 0;
-                                $cotProvSelec->save();
-                            }
+                            $this->cotizacionesService->desmarcarCotizacionSeleccionada($data["cotizaciones_id"]);
                             //Asignar le nuevo proveedor seleccionado
-                            $newCotProvSelec = CotizacionesProveedores::find($data['id_cotizacion_prov']);
-                            if ($newCotProvSelec) {
-                                $newCotProvSelec->seleccionado = 1;
-                                $newCotProvSelec->save();
-                            }
-                            if ($ocExistente) {
-                                $ocExistente->observaciones = $data["observaciones"];
-                                $ocExistente->entrega = $data["entrega"];
-                                $ocExistente->modo_pago = $data["modoPago"];
-                                $ocExistente->fecha_entrega = $data["fechaEntrega"];
-                                $ocExistente->save();
-                            }
+                            $this->cotizacionesService->cotizacionProveedorSeleccionada($data['id_cotizacion_prov']);
+                            $this->ordenCompraService->actualizarOrdenCompra($ocExistente, $data);
                         }
                 }else{
-                    // Genera el registro de orden de compra
-                    $ordenCompra = new OrdenCompra();
-                    $ordenCompra->folio_oc = $this->generarFolio();
-                    $ordenCompra->fecha = now();
-                    $ordenCompra->entrega = $data["entrega"];
-                    $ordenCompra->modo_pago = $data["modoPago"];
-                    $ordenCompra->observaciones = $data["observaciones"];
-                    $ordenCompra->cotizaciones_id = $data["cotizaciones_id"];
-                    $ordenCompra->fecha_entrega = $data["fechaEntrega"];
-                    $ordenCompra->save();
-
-                    // Actualiza al proveedor seleccionado
-                    $cotizacionProv = CotizacionesProveedores::find($data['id_cotizacion_prov']);
-                    if ($cotizacionProv) {
-                        $cotizacionProv->seleccionado = 1;
-                        $cotizacionProv->save();
-                    }
-
-                    // Actualiza estado de la solicitud
-                    $solicitud = SolicitudesCompra::find($data['id_solicitud_compra']);
-                    if ($solicitud) {
-                        if(isset($data["categoria"]) && !empty($data["categoria"]) && ($solicitud->tipo != 2 && $solicitud->tipo != 3)){
-                         $solicitud->com_cat_sistemas_auto_id = $data["categoria"];
-                        }
-                        $solicitud->estatus = EstatusSolicitud::EN_ORDEN_COMPRA;
-                        $solicitud->save();
-                    }
+                    $this->ordenCompraService->storeOrden($data);
+                    $this->cotizacionesService->cotizacionProveedorSeleccionada($data['id_cotizacion_prov']);
                 }
+            
+                $this->statusService->actStatusSolicitudToOrden($data['id_solicitud_compra'], $data);
+
             DB::commit();
 
             return response()->json([
@@ -260,56 +241,7 @@ class OrdenesComprasController extends Controller
 
     public function enviarCorreoSurtido($idOrdenCompra, $rutaComPago = null){
 
-        $ordenCompra =  OrdenCompra::where('id',  $idOrdenCompra )->first();
-
-        $cotizacion = Cotizaciones::where('id',  $ordenCompra->cotizaciones_id)->first();
-
-        if(!$cotizacion){
-            throw new \Exception('No se encontro la cotizacion asociada');
-        }
-
-        $proveedorSeleccionado = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)
-                     ->Seleccionado()->with(['datos_proveedor' => function ($query) {
-                        $query->select('id', 'nombre', 'correo');
-                }])->first(['id', 'proveedores_id', 'seleccionado', 'contacto_id']);
-
-        if(!$proveedorSeleccionado){
-                    throw new \Exception('No hay un proveedor seleccionado para esta cotizacion');
-        }
-
-                // Recupero los detalles de la cotizacion para el cuerpo del correo
-        $detallesSC = DetalleSolicitudCompraResource::collection((DetalleSolicitud::with('DetalleAutotanque.DatosVehiculo')->confirmadas()->where('solicitudes_compra_id', $cotizacion->solicitudes_compra_id)->get()));
-        $solicitudCompra = SolicitudesCompra::where('id',$cotizacion->solicitudes_compra_id )->first();
-        $unidadDestino = $solicitudCompra->tipo == 2 ? DatosVehiculo::find($solicitudCompra->usuario_destino) : null;
-        
-        if($detallesSC->isEmpty()){
-            throw new \Exception('No se encontraron detalles');
-        }
-
-                // Datos para el correo
-        $datos = [
-                'ordenCompra'=> $ordenCompra,
-                'solicitudCompra' => $solicitudCompra,
-                'cotizacion' => $cotizacion,
-                'proveedor' => $proveedorSeleccionado,
-                'detalles' => $detallesSC,
-                'unidadDestino' => $unidadDestino
-            ];
-        
-        $correoProveedor = $datos['proveedor']['datos_proveedor']['correo'];
-        if(!empty($proveedorSeleccionado->contacto_id)){
-            $contacto = ProveedorContacto::find($proveedorSeleccionado->contacto_id);
-            if($contacto){
-                $correoProveedor = $contacto->correo;
-            }
-        }
-        
-
-        // Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
-        //                     ->notify(new SolicitudSurtido($datos));
-        $pdfContenido = $this->consultaDatosPDF($cotizacion->solicitudes_compra_id);
-
-        Mail::to($correoProveedor)->send(new SolicitudSurtido($datos, $pdfContenido['archivoPDF'], $rutaComPago));
+        $this->ordenCompraService->enviarCorreoSurtido($idOrdenCompra, $rutaComPago);
     }
 
     /** ********************************************************************************
@@ -413,68 +345,14 @@ class OrdenesComprasController extends Controller
 
     }
 
-    /** ************************************************************
-     * Genera un nuevo folio consecutivo en base al ultimo folio
-     **************************************************************/
-    public function generarFolio()
-    {
-        $ultimaOrden = OrdenCompra::orderBy('id', 'desc')->first();
-            if ($ultimaOrden) {
-                $ultimoFolio = $ultimaOrden->folio_oc;
-                $numero = intval(substr($ultimoFolio, 3)) + 1;
-            } else {
-                $numero = 1;
-            }
-        $nuevoFolio = 'OC-' . str_pad($numero, 5, '0', STR_PAD_LEFT);
-
-        return $nuevoFolio;
-    }
 
     /** **************************************************************
      * Consulta para generar el formato interno de orden de compra
      ****************************************************************/
     public function consultaDatosPDF($id)
     {
-        $solicitudCompra = SolicitudesCompra::where('id', $id)->first();
-        if($solicitudCompra->tipo == 2){
-            $user = UsersResource::collection(DB::connection('dashboard')->select("call SP_GetDataAutotanque($solicitudCompra->usuario_destino, $solicitudCompra->empresa )"));
-        }else{
-            $user = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')'));
-        }
+        return $this->ordenCompraService->getDataOrdenCompra($id);
 
-        $userSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_solicita . ')');
-
-        $cotizacion = Cotizaciones::where('solicitudes_compra_id', $id)->first();
-
-        $ordenCompra = OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
-
-        $cotizacionProveedor = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->Seleccionado()->first();
-
-        $proveedor = Proveedores::where('id', $cotizacionProveedor->proveedores_id)->with(['datosPago'])->first();
-
-        $detalleCotizacion = DetallesCotizacionResource::collection((DetallesCotizacion::where('cotizaciones_proveedores_proveedores_id', $cotizacionProveedor->id)->get()));
-
-        $data =  [
-            'ordenCompra' => $ordenCompra,
-            'cotizacion' => $cotizacion,
-            'cotizacionProveedor' => $cotizacionProveedor,
-            'proveedor' => $proveedor,
-            'detallesCotizacion' => $detalleCotizacion,
-            'solicitudCompra' => $solicitudCompra,
-            'destino' => $user,
-            'solicita' => $userSolicita
-        ];
-
-        //Llamada a la funcion quue genera el formato
-            $pdf = new OrdenCompraPdfController();
-            $file = $pdf->OrdenCompraFormatoInterno($data);
-
-            // return $file;
-            return [
-                'folioOrdenCompra' => $ordenCompra->folio_oc,
-                'folioSolicitudCompra' => $solicitudCompra->folio,
-                'archivoPDF' => $file
-            ];
     }
 
     public function descargarOrdenCompra($id)
@@ -524,25 +402,7 @@ class OrdenesComprasController extends Controller
     }
 
     public function actStatusOrdenSolicitud($idOrdenCompra, $statusOrdenCompra, $estatusSolicitud){
-        $orden = OrdenCompra::where('id', $idOrdenCompra)->first();
-        if ($orden) {
-            $orden->estatus = $statusOrdenCompra;
-            if($statusOrdenCompra === EstatusOrdenCompra::EN_SURTIDO){
-                $orden->surtido_solcitado = 1;
-            }
-            $orden->save();
-        }
-
-        $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
-
-        $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
-        $labels = EstatusSolicitud::labels();
-        $label = $labels[$estatusSolicitud] ?? 'DESCONOCIDO';
-        if ($solicitud) {
-            $solicitud->estatus = $estatusSolicitud;
-            $solicitud->save();
-            NotificationHelper::sendNotificationEstatusChange($solicitud->id, $label);
-        }
+        $this->statusService->actStatusOrdenSolicitud($idOrdenCompra, $statusOrdenCompra, $estatusSolicitud);
     }
 
     public function markAsFinalizada($idOrdenCompra){
@@ -571,25 +431,13 @@ class OrdenesComprasController extends Controller
             $cotizacion = Cotizaciones::where('solicitudes_compra_id', $idSolicitudCompra)->first();
             if ($cotizacion) {
                 // Quitar el proveedor seleccionado
-                $cotProvSelec = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->where('seleccionado', 1)->first();
-                if ($cotProvSelec) {
-                    $cotProvSelec->seleccionado = 0;
-                    $cotProvSelec->save();
-                }
-                //Asignar le nuevo proveedor seleccionado
-                $newCotProvSelec = CotizacionesProveedores::find($idCotizacionProveedor);
-                if ($newCotProvSelec) {
-                    $newCotProvSelec->seleccionado = 1;
-                    $newCotProvSelec->save();
-                }
+                $this->cotizacionesService->desmarcarCotizacionSeleccionada($cotizacion->id);
+                $this->cotizacionesService->cotizacionProveedorSeleccionada($idCotizacionProveedor);
                 // Modificar la orden de compra que ya existía
                 $ordenCompra =  OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
+                
                 if ($ordenCompra) {
-                    $ordenCompra->observaciones = $observaciones;
-                    $ordenCompra->entrega = $lugarEntrega;
-                    $ordenCompra->modo_pago = $modoPago;
-                    $ordenCompra->fecha_entrega = $fechaEntrega;
-                    $ordenCompra->save();
+                    $this->ordenCompraService->actualizarOrdenCompra($ordenCompra, $data);
                 }
             }
             DB::commit();

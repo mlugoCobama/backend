@@ -20,11 +20,18 @@ use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\CotizacionesProveedores;
 use Modules\Compras\Models\Proveedores;
 use Modules\Compras\Models\DetalleAutotanque;
+use Modules\Compras\Services\CotizacionesService;
 use Modules\Compras\Transformers\AutotanqueResource;
 use Modules\Compras\Transformers\UsersResource;
 
 class SolicitudesMacroController extends Controller
 {
+    protected $cotizacionesService;
+    public function __construct(
+        CotizacionesService $cotizacionesService
+    ) {
+        $this->cotizacionesService = $cotizacionesService;
+    }
 
     /**
      * Display a listing of the resource.
@@ -320,8 +327,7 @@ class SolicitudesMacroController extends Controller
      * Almacena la cotización adjuntada en la solicitud
      */
     public function storeCotizacion($idSolicitud){
-        $cotizacion = new SolicitudesCompraController;
-        $folio = $cotizacion->generarFolioCo();
+        $folio = $this->cotizacionesService->generarFolioCo();
         $dataCotizacion = new Cotizaciones();
         $dataCotizacion->folio = $folio;
         $dataCotizacion->fecha = date('Y-m-d H:i:s') ?? now();
@@ -362,10 +368,10 @@ class SolicitudesMacroController extends Controller
     /**
      * Almacena los detalles de una solicitud de compra en la base de datos.
      *
-     * @param array $detalles Array de detalles, cada uno debe contener:
+     * @param $detalles Array de detalles, cada uno debe contener:
      *                         'cantidad', 'descripcion', 'observaciones', 'cat_unidades_medida_id'.
-     * @param int $idSolicitud ID de la solicitud de compra a la que se asociarán los detalles.
-     * @param array $files Array de archivos subidos, con claves como 'img_referencia_0', 'img_referencia_1', etc.
+     * @param $idSolicitud ID de la solicitud de compra a la que se asociarán los detalles.
+     * @param $files Array de archivos subidos, con claves como 'img_referencia_0', 'img_referencia_1', etc.
      */
     private function storeDetalleSolicitudCompra($detalles, $idSolicitud, $files, $destino)
     {

@@ -186,10 +186,51 @@ class DatosVentaController extends Controller
 
         return response()->json([
             'status' => 'success',       
-            'message' => "Parida modificada correctamente",
+            'message' => "Partida modificada correctamente",
             'data' => [],
 
         ]);
+    }
+
+    /**
+     * Actualización de partida a pagado
+     */
+    public function updatePartidaBDC(Request $request){
+    $data =  $request->all();
+    foreach ($data as $item ) {
+        
+        $partida =  DatosVenta::find($item['id']);
+            if($partida && !empty($partida)){
+                $partida->bdc =  1;
+                $partida->save();
+            }
+    }
+        
+        return response()->json([
+            'status' => 'success',       
+            'message' => "Partida modificada correctamente",
+            'data' => [],
+
+        ]);
+    }
+
+    public function updatePartidaValidacionBDC(Request $request){
+    $data =  $request->all();
+        foreach ($data as $item ) {
+            
+            $partida =  DatosVenta::find($item['id']);
+                if($partida && !empty($partida)){
+                    $partida->v_bdc =  1;
+                    $partida->save();
+                }
+        }
+            
+            return response()->json([
+                'status' => 'success',       
+                'message' => "Partida modificada correctamente",
+                'data' => [],
+
+            ]);
     }
 
 

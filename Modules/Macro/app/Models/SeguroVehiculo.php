@@ -30,6 +30,7 @@ class SeguroVehiculo extends Model
         'sub_ramo',                 // Tipo de vehículo asegurado
         'tipo_movimiento',          // Flotilla o Vehiculo Individual
         'prima_total',              // Costo total de seguro por vehiculo
+        'periodicidad_pago',              // Costo total de seguro por vehiculo
     ];
 
     /**

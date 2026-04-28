@@ -123,6 +123,8 @@ class ConcentradoComisionesController extends Controller
             'seguros' => $this->corteService->comisionesAutorizadasSeguros($idVendedor, EstatusComisionesAutos::AUTORIZADA),
             'financiamiento' => $this->corteService->comisionesAutorizadasFinanciamiento($idVendedor, EstatusComisionesAutos::AUTORIZADA),
             'toma_de_unidades' => $this->corteService->comisionesAutorizadasTomaUnidad($idVendedor, EstatusComisionesAutos::AUTORIZADA),
+            'otros' => $this->corteService->comisionesAutorizadasOtros($idVendedor, EstatusComisionesAutos::AUTORIZADA),
+            'otros_descuentos' => $this->corteService->comisionesAutorizadasOtros($idVendedor, EstatusComisionesAutos::AUTORIZADA, 2),
             default => []
         };
 
@@ -133,6 +135,8 @@ class ConcentradoComisionesController extends Controller
             'seguros' => $this->corteService->comisionesAutorizadasSeguros($idVendedor, EstatusComisionesAutos::EN_ESPERA),
             'financiamiento' => $this->corteService->comisionesAutorizadasFinanciamiento($idVendedor, EstatusComisionesAutos::EN_ESPERA),
             'toma_de_unidades' => $this->corteService->comisionesAutorizadasTomaUnidad($idVendedor, EstatusComisionesAutos::EN_ESPERA),
+            'otros' => $this->corteService->comisionesAutorizadasOtros($idVendedor, EstatusComisionesAutos::EN_ESPERA),
+            'otros_descuentos' => $this->corteService->comisionesAutorizadasOtros($idVendedor, EstatusComisionesAutos::EN_ESPERA, 2),
             default => []
         };
 

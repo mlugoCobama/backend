@@ -274,6 +274,9 @@ class ComisionesController extends Controller
         $gasto->porcentaje_bdc = $gastos['porcentaje_bdc'] ?? 0;
         $gasto->comision_bdc_pesos = $gastos['comision_bdc'] ?? 0;
         $gasto->comision_garantizada = $gastos['comision_garantizada'] ?? 0;
+        $gasto->comision_garantizada_gerencia = $gastos['comision_garantizada_gerencia'] ?? 0;
+        $gasto->comision_garantizada_bdc = $gastos['comision_garantizada_bdc'] ?? 0;
+        $gasto->comision_garantizada_cor_bdc = $gastos['comision_garantizada_cor_bdc'] ?? 0;
         $gasto->save();
     }
 
@@ -298,6 +301,9 @@ class ComisionesController extends Controller
         $gasto->comision_bdc_pesos = $gastos['comision_bdc'] ?? 0;
         $gasto->id_datos_venta = $gastos['id_venta'] ;
         $gasto->comision_garantizada = $gastos['comision_garantizada'] ?? 0;
+        $gasto->comision_garantizada_gerencia = $gastos['comision_garantizada_gerencia'] ?? 0;
+        $gasto->comision_garantizada_bdc = $gastos['comision_garantizada_bdc'] ?? 0;
+        $gasto->comision_garantizada_cor_bdc = $gastos['comision_garantizada_cor_bdc'] ?? 0;
         $gasto->save();
     }
 

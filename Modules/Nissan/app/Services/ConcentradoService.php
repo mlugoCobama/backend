@@ -11,7 +11,7 @@ class ConcentradoService
 {
 public function generar($fechaInicio, $fechaFin, $claveCorte, $agencia, $comisiones)
 {
-    return DB::transaction(function () use ($fechaInicio, $fechaFin, $claveCorte, $agencia, $comisiones) {
+    return DB::connection('autos')->transaction(function () use ($fechaInicio, $fechaFin, $claveCorte, $agencia, $comisiones) {
 
         // 1. Crear corte
 
@@ -87,6 +87,7 @@ private function marcarPartidas($vendedorId, $corteId, $agencia): void
         ['tabla' => 'com_seguro',         'campo_vendedor' => 'com_vendedores_id'],
         ['tabla' => 'com_accesorios',     'campo_vendedor' => 'com_vendedores_id'],
         ['tabla' => 'com_toma_unidad',    'campo_vendedor' => 'com_vendedores_id'],
+        ['tabla' => 'com_otros',          'campo_vendedor' => 'com_vendedores_id'],
     ];
 
     foreach ($tablas as $origen) {
@@ -167,7 +168,9 @@ private function marcarPartidas($vendedorId, $corteId, $agencia): void
         cdv.estatus,
         cgv.comision_apv_pesos AS comision_apv,
         'Sin observaciones' AS observaciones,
-        CONCAT(cdv.no_factura, '-', cdv.descripcion,'-',cdv.clave_producto,'-',cdv.no_inventario ) AS descripcion,
+        cdv.no_factura AS factura,
+        cdv.descripcion AS descripcion,
+        CONCAT(cdv.clave_producto,'-',cdv.anio_vehiculo,'-',cdv.no_inventario ) AS inventario,
         (cdv.utilidad_inicial - (cgv.otros + cgv.gasolina + cgv.previa + cgv.descuentos + cgv.traslados + cgv.descuento_impulso + cgv.total_subsidios + cgv.descuento_gastos + cgv.cortesia + cgv.accesorios + cgv.placas)) AS importe_venta       
         FROM com_datos_venta cdv 
         INNER JOIN com_gastos_venta cgv ON cgv.id_datos_venta = cdv.id
@@ -183,7 +186,9 @@ private function marcarPartidas($vendedorId, $corteId, $agencia): void
         cdv.estatus,
         cgv.comision_apv_pesos AS comision_apv,
         'Sin observaciones' AS observaciones,
-        CONCAT(cdv.no_factura, '-', cdv.descripcion,'-',cdv.clave_producto,'-',cdv.no_inventario ) AS descripcion,
+        cdv.no_factura AS factura,
+        cdv.descripcion AS descripcion,
+        CONCAT(cdv.clave_producto,'-',cdv.anio_vehiculo,'-',cdv.no_inventario ) AS inventario,
         (cdv.utilidad_inicial - (cgv.otros + cgv.gasolina + cgv.previa + cgv.descuentos + cgv.traslados + cgv.descuento_impulso + cgv.total_subsidios + cgv.descuento_gastos + cgv.cortesia + cgv.accesorios + cgv.placas)) AS importe_venta       
         FROM com_datos_venta cdv 
         INNER JOIN com_gastos_venta cgv ON cgv.id_datos_venta = cdv.id
@@ -197,8 +202,10 @@ private function marcarPartidas($vendedorId, $corteId, $agencia): void
             "SELECT 
             id,
             estatus,
+            fecha_emision AS fecha,
             comision_apv_pesos AS comision_apv,
-            CONCAT('Folio: ',folio,' No Póliza: ', poliza,' Fecha: ',fecha_emision) AS descripcion,        
+            folio,
+            CONCAT(poliza,' - ',aseguradora) AS descripcion,        
             observaciones,
             prima_neta as importe_venta
         FROM com_seguro
@@ -211,10 +218,14 @@ private function marcarPartidas($vendedorId, $corteId, $agencia): void
         return DB::connection('autos')->select(
             "SELECT 
             id,
+            numero_factura,
+            no_contrato as descripcion,
             estatus,
             comision_asesor_pesos AS comision_apv,
-            CONCAT('Factura: ',numero_factura,' No Contrato: ', no_contrato, ' Fecha: ',fecha_desembolso) AS descripcion,      
+            fecha_desembolso,      
             observaciones,
+            comision_vf3 as vf3,
+            comision_garantia_ext as garantia_ext,
             monto_financiar as importe_venta
         FROM com_financiamiento
         WHERE estatus = $estatus AND com_vendedores_id = $idVendedor"
@@ -228,7 +239,9 @@ private function marcarPartidas($vendedorId, $corteId, $agencia): void
             id,
             estatus,
             comision_apv_pesos AS comision_apv,
-            CONCAT('Vehiculo: ',vehiculo,'-',no_inventario,'-',no_serie,' Fecha de toma: ',fecha_toma) AS descripcion,       
+            CONCAT(vehiculo,'-',no_serie) AS descripcion,  
+            no_inventario AS inventario,
+            fecha_toma AS fecha,    
             observaciones,
             '0' as importe_venta
         FROM com_toma_unidad
@@ -251,6 +264,36 @@ private function marcarPartidas($vendedorId, $corteId, $agencia): void
         );
     }
 
+    public function comisionesAutorizadasOtros($idVendedor, $estatus, $tipo = 1)
+    {
+        return DB::connection('autos')->select(
+            "SELECT 
+            co.id,
+            co.estatus,
+            co.importe AS comision_apv,
+            ccc.nombre AS descripcion,       
+            co.observaciones,
+            co.importe as importe_venta
+        FROM com_otros co INNER JOIN com_catalogo_conceptos ccc on co.com_catalogo_conceptos_id = ccc.id
+        WHERE co.estatus = $estatus AND co.com_vendedores_id = $idVendedor AND co.tipo = $tipo"
+        );
+    }
+
+    public function comisionesAutorizadasOtrosDescuentos($idVendedor, $estatus)
+    {
+        return DB::connection('autos')->select(
+            "SELECT 
+            co.id,
+            co.estatus,
+            co.importe AS comision_apv,
+            ccc.nombre AS descripcion,       
+            co.observaciones,
+            co.importe as importe_venta
+        FROM com_otros co INNER JOIN com_catalogo_conceptos ccc on co.com_catalogo_conceptos_id = ccc.id
+        WHERE co.estatus = $estatus AND co.com_vendedores_id = $idVendedor AND co.tipo = 2"
+        );
+    }
+
     public function setPendienteAutorizacion($rubro, $idRegistro, $estatus, $comentario)
     {
 
@@ -261,6 +304,7 @@ private function marcarPartidas($vendedorId, $corteId, $agencia): void
             'seguros' => 'com_seguro',
             'financiamiento' => 'com_financiamiento',
             'toma_de_unidades' => 'com_toma_unidad',
+            'otros' => 'com_otros',
             default => null
         };
 
@@ -271,6 +315,7 @@ private function marcarPartidas($vendedorId, $corteId, $agencia): void
             'seguros' => ['estatus' => $estatus, 'comentario' => $comentario],
             'financiamiento' => ['estatus' => $estatus, 'comentario' => $comentario],
             'toma_de_unidades' => ['estatus' => $estatus, 'comentario' => $comentario],
+            'otros' => ['estatus' => $estatus, 'comentario' => $comentario],
             default =>  ['estatus' => $estatus]
         };
 

@@ -62,6 +62,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::post('/SolicitudesCompras/actualiza-solicitud', [SolicitudesCompraController::class, 'actualizarSolicitudCompra'])->name('SolicitudesCompras.actualizarSolicitudCompra');
     Route::post('/SolicitudesCompras/Macro/actualiza-solicitud', [SolicitudesMacroController::class, 'actualizarSolicitudCompra'])->name('SolicitudesCompras.actualizarSolicitudCompraMacro');
     Route::post('/Proveedores/{id}', [ProveedoresController::class, 'update'])->name('Proveedores.actualizar');
+    Route::get('/Cotizaciones/volver-a-cotizar/{id}', [CotizacionesController::class, 'recotizar'])->name('Cotizaciones.recotizar');
 
     //*Ruta para enviar un email de prueba, no funciona pero va funcionar
     Route::post('/enviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'enviarSolicitudCotizacion'])->name('SolicitudesCompra.enviarSolicitudCotizacion');

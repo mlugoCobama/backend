@@ -17,7 +17,6 @@ class StoreSeguroRequest extends FormRequest
             'seguros.*.id' => ['nullable', 'integer'],
             'seguros.*.agencia' => ['nullable'],
             'seguros.*.com_vendedores_id' => ['required', 'integer'],
-
             // básicos
             'seguros.*.folio' => ['required', 'string', 'max:100'],
             'seguros.*.poliza' => ['required', 'string', 'max:100'],
@@ -25,22 +24,18 @@ class StoreSeguroRequest extends FormRequest
             'seguros.*.nombre' => ['required', 'string', 'max:150'],
             'seguros.*.unidad' => ['required', 'string', 'max:150'],
             'seguros.*.serie' => ['required', 'string', 'max:100'],
-
+            'seguros.*.archivo' => 'nullable',    
             // fechas
             'seguros.*.fecha_emision' => ['required', 'date'],
-
             // info adicional
             'seguros.*.forma_pago' => ['required', 'string', 'max:100'],
-
             // montos
             'seguros.*.prima_neta' => ['required', 'numeric', 'min:0'],
             'seguros.*.vs' => ['nullable', 'numeric', 'min:0'],
             'seguros.*.calcular_encargado_seg' => ['required', 'boolean'],
             'seguros.*.com_encargado_seg' => ['nullable', 'numeric', 'min:0'],
-
             // comisión
             'seguros.*.comision_apv_pesos' => ['nullable', 'numeric', 'min:0'],
-
             // extras
             'seguros.*.observaciones' => ['nullable', 'string'],
         ];
@@ -83,13 +78,15 @@ class StoreSeguroRequest extends FormRequest
         if (!is_array($seguros)) return;
 
         $seguros = array_map(function ($item) {
+
             return array_merge($item, [
                 'id'                        => $item['id'] === 'null' ? null : $item['id'],
                 'prima_neta' => $this->limpiarNumero($item['prima_neta'] ?? 0),
                 'comision_apv_pesos' => $this->limpiarNumero($item['comision_apv_pesos'] ?? 0),
                 'calcular_encargado_seg' => filter_var($item['calcular_encargado_seg'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                 'observaciones' => ($item['observaciones'] === 'null' ? '': $item['observaciones']),
-                ]);
+                'observaciones' => ($item['observaciones'] === 'null' ? '': $item['observaciones']),
+            ]);
+
         }, $seguros);
 
         $this->merge([

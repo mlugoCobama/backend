@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 use Modules\Nissan\Http\Requests\StoreSeguroRequest;
 use Modules\Nissan\Models\ComSeguro;
 use Modules\Nissan\Models\DatosVenta;
@@ -52,25 +53,22 @@ class SegurosController extends Controller
     $resultados = [];
 
         foreach ($request->seguros as $i => $datos) {
-            $resultados[] = $this->guardarSeguro($datos, $request->file("financiamientos.$i.archivo"));
+            $resultados[] = $this->guardarSeguro($datos, $request->file("seguros.$i.archivo"));
         }
 
         return response()->json([
             'status'  => 'success',
-            'message' => count($resultados) . ' financiamiento(s) guardado(s) correctamente',
+            'message' => count($resultados) . ' seguro(s) guardado(s) correctamente',
             'data'    => $resultados
         ], 201);
     }
 
-    private function guardarSeguro($data){
-                $comision = !empty($datos['id'])
-            ? ComSeguro::findOrFail($datos['id'])
-            : new ComSeguro();
+    private function guardarSeguro($data, $archivo = null){
+        $comision = !empty($data['id']) ? ComSeguro::findOrFail($data['id']) : new ComSeguro();
 
         // Relaciones
         $comision->com_vendedores_id = $data['com_vendedores_id'];
         $comision->agencia = $data['agencia'];
-
         // Básicos
         $comision->folio = $data['folio'];
         $comision->poliza = $data['poliza'];
@@ -78,26 +76,26 @@ class SegurosController extends Controller
         $comision->nombre = $data['nombre'];
         $comision->unidad = $data['unidad'];
         $comision->serie = $data['serie'];
-
         // Fechas
         $comision->fecha_emision = $data['fecha_emision'];
-
         // Info adicional
         $comision->forma_pago = $data['forma_pago'];
-
         // Montos
         $comision->prima_neta = $data['prima_neta'];
-
         $comision->vs = $this->calcularVS($data['prima_neta']);
-
-        $comision->com_encargado_seg = $data['calcular_encargado_seg']
-            ? $this->calcularEncargadoSeg($data['prima_neta'])
-            : 0;
-
+        $comision->com_encargado_seg = $data['calcular_encargado_seg'] ? $this->calcularEncargadoSeg($data['prima_neta']) : 0;
         $comision->comision_apv_pesos = $this->calcularComisionAPV($data['prima_neta']);
-
         // Extras
         $comision->observaciones = $data['observaciones'];
+
+        if ($archivo) {
+            if ($comision->ruta_archivo && Storage::disk('public')->exists($comision->ruta_archivo)) {
+                Storage::disk('public')->delete($comision->ruta_archivo);
+            }
+            $ext   = $archivo->getClientOriginalExtension();
+            $nombre = $comision->poliza . '_' .$comision->aseguradora . '.' . $ext;
+            $comision->ruta_archivo = $archivo->storeAs('comisiones/seguros', $nombre, 'public');
+        }
 
         // Guardar
         $comision->save();
@@ -153,10 +151,10 @@ class SegurosController extends Controller
             $registro->save();
            
             return response()->json([
-            'status' => 'success',
-            'message' => 'Registro eliminado correctamente',
-            'data' => []
-        ]);
+                'status' => 'success',
+                'message' => 'Registro eliminado correctamente',
+                'data' => []
+            ]);
         }
         return response()->json([
             'status' => 'error',

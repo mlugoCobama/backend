@@ -9,6 +9,20 @@ use Modules\Macro\Models\SeguroVehiculo;
 
 class ParqueVehicularService{
 
+protected $status = [
+        "ACTIVA" => 1,
+        "EN TALLER" => 2,
+        "VENDIDA" => 3,
+        "NO IDENTIFICADA" => 4,
+        "FUERA DE CIRCULACION" => 0,
+        "DESCOMPUESTA" => 5,
+        "FISCALIA" => 6,
+        "CORRALON" => 7,
+        "CHATARRA" => 8,
+        "VENDIDA  COMO CHATARRA" => 9,
+        "BAJA" => 10
+    ];
+
 public function queryVehiculosForToka($idSucursal)
 {
     $id = $this->intercompaniaConverter($idSucursal);
@@ -30,19 +44,7 @@ public function calcularSaldo($saldo, $saliente, $entrante){
 }
 
 
-protected $status = [
-        "ACTIVA" => 1,
-        "EN TALLER" => 2,
-        "VENDIDA" => 3,
-        "NO IDENTIFICADA" => 4,
-        "FUERA DE CIRCULACION" => 0,
-        "DESCOMPUESTA" => 5,
-        "FISCALIA" => 6,
-        "CORRALON" => 7,
-        "CHATARRA" => 8,
-        "VENDIDA  COMO CHATARRA" => 9,
-        "BAJA" => 10
-    ];
+
 
     public function procesarCSV($ruta)
     {
@@ -182,6 +184,9 @@ protected $status = [
     }
 
 
+    /**
+     * convierte el intercompania entrante a uno legible para la base datos 
+     */
     public function intercompaniaConverter($intercompania){
 
         return match ((int) $intercompania) {
@@ -202,7 +207,7 @@ protected $status = [
                 132 => 15, // Gas Premio
                 191 => 16, // Baragas
                 119 => 22, // Tanques Garza Gas
-                333 => 35,  // Cas 
+                333 => 35,  // CAS
                 default => $intercompania, // si no coincide
             };
 
