@@ -66,7 +66,7 @@ class OrdenesComprasController extends Controller
                 $ocExistente = $this->ordenCompraService->consultarOrdenCompraByCotizacion($data["cotizaciones_id"]);
                 // Si existe solo se modifica
                 if($ocExistente){
-                    $cotizacion = Cotizaciones::where('solicitudes_compra_id', $data["cotizaciones_id"])->first();
+                    $cotizacion = Cotizaciones::where('solicitudes_compra_id', $data["id_solicitud_compra"])->first();
                         if ($cotizacion) {
                             // Quitar el proveedor seleccionado
                             $this->cotizacionesService->desmarcarCotizacionSeleccionada($data["cotizaciones_id"]);
