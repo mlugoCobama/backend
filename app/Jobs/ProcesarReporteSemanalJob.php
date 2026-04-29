@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
-use Modules\Compras\Http\Controllers\ReportesComprasController;
+use Modules\Compras\Services\ReportesService;
 
 class ProcesarReporteSemanalJob implements ShouldQueue
 {
@@ -27,13 +27,13 @@ class ProcesarReporteSemanalJob implements ShouldQueue
     protected $intercompania;
     protected $nombre;
 
-
-
+    protected $reportesService;
     /**
      * Create a new job instance.
      */
-    public function __construct($intercompania, $nombre )
+    public function __construct($intercompania, $nombre, ReportesService $reportesService)
     {
+        $this->reportesService = $reportesService;
         $this->intercompania = $intercompania;
         $this->nombre = $nombre;
     }
@@ -44,9 +44,8 @@ class ProcesarReporteSemanalJob implements ShouldQueue
     public function handle(): void
     {
         Log::info('Iniciando proceso de reporte', ['empresa' => $this->intercompania]);
-        $reportes =  new ReportesComprasController();
-        $detallesComprasGrales = $reportes->queryReporteSemanal($this->intercompania, 1);    
-        $detallesComprasMacro = $reportes->queryReporteSemanal($this->intercompania, 2); 
+        $detallesComprasGrales = $this->reportesService->queryReporteSemanal($this->intercompania, 1);    
+        $detallesComprasMacro = $this->reportesService->queryReporteSemanal($this->intercompania, 2); 
 
         $fechaCorte = date('d_m_Y');
         $semanaCorte = date('W');

@@ -12,9 +12,20 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Modules\Compras\Models\DocumentosOrdenesCompra;
 use Modules\Compras\Models\OrdenCompra;
+use Modules\Compras\Services\OrdenCompraService;
 
 class SyncController extends Controller
 {
+
+    protected $ordenCompraService;
+
+    // Inyección de dependencias en el constructor
+    public function __construct(
+        OrdenCompraService $ordenCompraService,
+    ) {
+        $this->ordenCompraService = $ordenCompraService;
+    }
+    
     /**
      * Display a listing of the resource.
      */
@@ -113,15 +124,8 @@ class SyncController extends Controller
                 'mensaje' => 'Firma invalida'
             ]);
 
-            // abort(401, 'URL no válida o expirada');
         }
 
-        // $archivo =  DB::selectOne(
-        //     'SELECT ruta_xml_factura
-        //      FROM com_documentos_ordenes_compra 
-        //      WHERE id = ?',
-        //     [$archivoId]
-        // );
 
         $archivo = DocumentosOrdenesCompra::find($archivoId);
 
@@ -132,13 +136,8 @@ class SyncController extends Controller
                 'mensaje' => 'No hay archivos'
             ]);
 
-            // abort(404);
         }
 
-
-        // $archivo->sync = 1;
-        // $archivo->syncned_at = now();
-        // $archivo->save();
         
         return Storage::download(
             $archivo->ruta_xml_factura,
@@ -154,8 +153,6 @@ class SyncController extends Controller
                 'archivos' => [],
                 'mensaje' => 'Firma invalida'
             ]);
-
-            // abort(401, 'URL no válida o expirada');
         }
 
         $archivo = DB::selectOne(
@@ -172,12 +169,10 @@ class SyncController extends Controller
                 'mensaje' => 'No hay archivos'
             ]);
 
-            // abort(404);
         }
 
         return Storage::download(
             $archivo->ruta_pdf_factura,
-            // $archivo->nombre_archivo
         );
     }
 
@@ -189,19 +184,10 @@ class SyncController extends Controller
                 'archivos' => [],
                 'mensaje' => 'Firma invalida'
             ]);
-
-            // abort(401, 'URL no válida o expirada');
         }
-
-        $ordenCompra = new OrdenesComprasController();
-        $datosOrdenCompra = $ordenCompra->consultaDatosPDF($idSolicitudCompra);
+        $datosOrdenCompra = $this->ordenCompraService->getDataOrdenCompra($idSolicitudCompra);
 
         $pdf = $datosOrdenCompra['archivoPDF'];
-
-        // return response()->streamDownload(function () use ($pdf) {
-        //     echo $pdf;
-        //     // $pdf->output();
-        // }, "orden_compra_{$idSolicitudCompra}.pdf");
 
         $fileName = ''.$datosOrdenCompra['folioOrdenCompra'].'_'. $datosOrdenCompra['folioSolicitudCompra'].'.pdf';
         return response($pdf, 200)
