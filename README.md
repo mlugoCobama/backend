@@ -139,3 +139,9 @@ Se actualiza el sp para obtener comisiones
 
 ## Comisiones — Seguros, Financiamientos
 - Se integra la capacidad de visualizar archivos previamente cargados
+
+**Fecha de liberación:** 30 de abril de 2025
+## Compras — Reportes
+- Api para la descarga de reporte de concentrados de compras
+- Api para la descarga de reporte de flujo de solicitudes de compras
+

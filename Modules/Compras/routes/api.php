@@ -159,6 +159,8 @@ Route::prefix('compras')->group(function(){
     Route::post('/CatalogoUnidades/SolicitaToka', [CatUnidadesController::class, 'saveSolicitudRecargaToka']);
     Route::post('/CatalogoUnidades/DispersaToka', [CatUnidadesController::class, 'saveRecargaToka']);
     Route::get('/CatalogoUnidades/ParqueVehicularToka/{id}', [CatUnidadesController::class, 'getParqueWithToka']);
+
+    Route::get('/reportes/workflow/concentrado/{tipo}', [ReportesComprasController::class, 'getReporteEstatus']);
 });
 
 Route::post('/all-permisos', [UsuariosController::class, 'getAllPermission'])->name('consultas.permisos');

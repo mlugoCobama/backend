@@ -75,9 +75,15 @@ class EstatusSolicitud
             self::CARGA_COMPLEMENTO => 'badge-soft-indigo',
             self::FINALIZADA => 'bg-teal',
 
-
+            
 
 
         ];
+    }
+
+    public static function getLabel(int $estatus): string
+    {
+        $labels = self::labels();
+        return $labels[$estatus] ?? 'DESCONOCIDO';
     }
 }

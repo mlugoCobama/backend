@@ -9,6 +9,7 @@ use App\Exports\GatosDetalleMultiHojaExport;
 use App\Exports\ReporteConcentradoComprasMultihojaExport;
 use App\Exports\ReporteUnidadeMultihojaMacroExport;
 use App\Exports\SolicitudesExport;
+use App\Exports\WorkflowExport;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\DatosVehiculo;
 use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Services\ReportesService;
+use Modules\Compras\Services\WorkFlowReporService;
 use Modules\Compras\Transformers\GastosMensualesConcentradoResource;
 use Modules\Compras\Transformers\GastosMensualesDetalleResource;
 
@@ -26,10 +28,13 @@ class ReportesComprasController extends Controller
 {
 
     protected $reportesService;
+    protected $workFlowService;
     public function __construct(
-        ReportesService $reportesService
+        ReportesService $reportesService,
+        WorkFlowReporService $workFlowService
     ) {
         $this->reportesService = $reportesService;
+        $this->workFlowService = $workFlowService;
     }
 
     /**
@@ -258,6 +263,29 @@ class ReportesComprasController extends Controller
             new ReporteUnidadeMultihojaMacroExport($detalleData),
             $nombreArchivo
         );
+    }
+
+    public function getReporteEstatus($tipo){
+
+        $nombreTipo = match ($tipo) {
+            1 => 'ComprasGenerales',
+            2 => 'ComprasMacrotaller',
+            3 => 'ComprasRecursosTecnologicos',
+            '1' => 'ComprasGenerales',
+            '2' => 'ComprasMacrotaller',
+            '3' => 'ComprasRecursosTecnologicos',
+            default => $tipo,
+        };
+
+         $data = $this->workFlowService->getLogsEventos($tipo);
+
+        return Excel::download(new WorkflowExport($data), 'reporte_tiempos_flujo_'.$nombreTipo.'.xlsx');
+        // $data = $this->workFlowService->getLogsEventos();
+        // return response()->json(
+        //     [
+        //         'data' => $data
+        //     ]
+        // );
     }
 
 }
