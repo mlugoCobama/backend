@@ -89,6 +89,11 @@ class SolicitudesCompra extends Model
         return $this->hasMany(DetalleSolicitud::class, 'solicitudes_compra_id');
     }
 
+    public function detallesConfirmados()
+    {
+        return $this->hasMany(DetalleSolicitud::class,'solicitudes_compra_id')->where('confirmado', 1);
+    }
+
     /**
      * Una solicitud tiene varias cotizaciones
      */

@@ -22,7 +22,7 @@ class CatHardwareModel extends Model
     /**
      * Nombre de la tabla
      */
-    protected $table = 'cat_hardware';
+    protected $table = 'ucoip_cat_hardware';
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

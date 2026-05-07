@@ -39,7 +39,7 @@ class HardwarePcModel extends Model
     /**
      * Nombre de la tabla
      */
-    protected $table = 'hardware';
+    protected $table = 'ucoip_hardware';
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

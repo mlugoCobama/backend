@@ -89,4 +89,66 @@ class CfdiService
 
         return $calculado === round($datos['total'], 2);
     }
+
+/**
+ * Extrae los conceptos (partidas) del XML CFDI.
+ */
+public function extraerConceptosCfdi(string $contenido): array
+{
+    libxml_use_internal_errors(true);
+    $xml = simplexml_load_string($contenido);
+
+    if ($xml === false) {
+        throw new Exception('XML inválido.');
+    }
+
+    $ns = $xml->getNamespaces(true);
+    $cfdiNs = $ns['cfdi'] ?? 'http://www.sat.gob.mx/cfd/4';
+
+    $conceptosArray = [];
+
+    $conceptos = $xml->children($cfdiNs)->Conceptos;
+
+    if (!$conceptos) {
+        return [];
+    }
+
+    foreach ($conceptos->Concepto as $concepto) {
+        $attr = $concepto->attributes();
+
+        $conceptosArray[] = [
+            'descripcion' => (string) ($attr['Descripcion'] ?? ''),
+            'cantidad' => (float) ($attr['Cantidad'] ?? 0),
+            'valor_unitario' => (float) ($attr['ValorUnitario'] ?? 0),
+            'importe' => (float) ($attr['Importe'] ?? 0),
+        ];
+    }
+
+    return $conceptosArray;
+}
+
+/**
+ * Recupera conceptos de un cfdi a partir de un archivo cargado 
+ */
+public function extraerConceptosUploadFile(UploadedFile $archivo): array
+{
+    $contenido = file_get_contents($archivo->getRealPath());
+
+    return $this->extraerConceptosCfdi($contenido);
+}
+
+/**
+ * Recupera conceptos a partir de un archivo almacenado en el servidor
+ */
+
+public function extraerConceptosDesdeRuta(string $ruta): array
+{
+    if (!file_exists($ruta)) {
+        throw new Exception("El archivo no existe en la ruta: {$ruta}");
+    }
+
+    $contenido = file_get_contents($ruta);
+
+    return $this->extraerConceptosCfdi($contenido);
+}
 }

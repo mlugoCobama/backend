@@ -6,48 +6,49 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class AlmacenComprasConrollerController extends Controller
 {
     public function index()
-    {
-        // 25
-        // 169
-        // 169
-        // 169
-        // 192
-        // 202
-        // 213
-        // 224
-        // 225
-        // 230
-        // 234
-        // 239
-        // 245
-        // 249
-        // 250
-        // 251
-        // 252
-        // 253
-        // 254
-        // 255
-        // 256
-        // 257
-        // 259
-        // 259
-        // 268
-        // 342
-        // 359
-        // 359
-        // 359
-        // 360
-        // 366
-        // 381
-        // 382
-        // 384
-        // 393
-        // 415
-        // 578
+    {   
+        $query = DB::table('com_solicitudes_compra as sc')
+            ->select([
+                'sc.id as solicitud_id',
+                'sc.folio',
+                'sc.empresa',
+                'sc.usuario_destino',
+                'sc.fecha',
+                'sc.com_cat_sistemas_auto_id',
+                'cs.sistema as categoria',
+
+                'ds.id as detalle_id',
+
+                'ds.cantidad',
+                'um.nombre as unidad',
+                'ds.descripcion',
+                'ds.observaciones',
+                'ds.estatus_almacen'
+            ])
+            ->join('com_detalle_solicitud as ds', function ($join) {
+                $join->on('ds.solicitudes_compra_id', '=', 'sc.id')
+                    ->where('ds.confirmado', '=', 1);
+            })
+            ->join('com_cat_unidades_medida as um', 'ds.cat_unidades_medida_id', '=', 'um.id')
+            ->join('com_catalogo_sistemas_auto as cs', 'sc.com_cat_sistemas_auto_id', '=', 'cs.id')
+            ->where('sc.activo', 1)
+            ->where('sc.estatus', '>', 8)
+            ->where('sc.tipo', 3)
+            // ->whereIn('sc.com_cat_sistemas_auto_id', [27, 28, 34])
+            ->orderBy('sc.usuario_destino')
+            ->orderBy('sc.id')
+            ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Compras de recursos tecnologico recuperadas correctamete',
+                'data' => $query,
+            ]);
     }
 
 

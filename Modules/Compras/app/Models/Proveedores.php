@@ -6,6 +6,7 @@ use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Compras\Database\Factories\ProveedoresFactory;
+use Modules\Ucoip\Models\Servicio;
 
 class Proveedores extends Model
 {
@@ -16,7 +17,6 @@ class Proveedores extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        //este id no va porque se me paso poer el AI en la bd
         'id',
         'nombre',
         'rfc',
@@ -29,6 +29,7 @@ class Proveedores extends Model
         'dias_credito',
         'horario_atencion',
         'tiempo_entrega',
+        'ti',
         'activo',
 
     ];
@@ -39,6 +40,10 @@ class Proveedores extends Model
     
     public function scopeActive ($query) {
         return $query->where('activo', 1);
+    }
+
+    public function scopeIsTI ($query) {
+        return $query->where('ti', 1);
     }
     
     /*Función para obtener los datos activos
@@ -78,6 +83,15 @@ class Proveedores extends Model
     public function datosPago()
     {
         return $this->hasMany(DatosPagoProveedor::class, 'proveedor_id', 'id');
+    }
+
+    /**
+     * Servicios que le vende a empresas (servicio de TI)
+     * Un proveedor tiene varios servicios
+     */
+    public function servicios()
+    {
+        return $this->hasMany(Servicio::class, 'proveedor_id'. 'id');
     }
 
 
