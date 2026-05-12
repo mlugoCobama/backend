@@ -178,14 +178,14 @@ class EnergeticosController extends Controller
                             insert([
                                 'sucursales_id' => $dato['sucursales_id'],
                                 'fecha' => $dato['fecha'],
-                                'personal' => str_replace(",", "", $dato['Acumulado Personal'] ?? 0),
-                                'eficiencia' => str_replace(",", "", $dato['Eficiencia'] ?? 0),
-                                'ubo' => str_replace(",", "", $dato['UBO'] ?? 0),
-                                'utilidad_bruta' => str_replace(",", "", $dato['UB'] ?? 0),
-                                'venta_litros' => str_replace(",", "", $dato['Venta Litros'] ?? 0),
-                                'ventas' => str_replace(",", "", $dato['Ventas'] ??  0),
-                                'gasto' => str_replace(",", "", $dato['Gasto'] ?? 0),
-                                'uno' => str_replace(",", "", $dato['UNO'] ?? 0),
+                                'personal' => (float) str_replace(",", "", $dato['Acumulado Personal'] ?? 0),
+                                'eficiencia' => (float) str_replace(",", "", $dato['Eficiencia'] ?? 0),
+                                'ubo' => (float) str_replace(",", "", $dato['UBO'] ?? 0),
+                                'utilidad_bruta' => (float) str_replace(",", "", $dato['UB'] ?? 0),
+                                'venta_litros' => (float) str_replace(",", "", $dato['Venta Litros'] ?? 0),
+                                'ventas' => (float) str_replace(",", "", $dato['Ventas'] ??  0),
+                                'gasto' => (float) str_replace(",", "", $dato['Gasto'] ?? 0),
+                                'uno' => (float) str_replace(",", "", $dato['UNO'] ?? 0),
                             ]);
                         /**
                          * Si no contiene "isNew" actualiza el registro 
@@ -197,14 +197,14 @@ class EnergeticosController extends Controller
                             where('sucursales_id', $dato['sucursales_id'])->where('fecha', $dato['fecha'])->update([
                                 'sucursales_id' => $dato['sucursales_id'],
                                 'fecha' => $dato['fecha'],
-                                'personal' => str_replace(",", "", $dato['Acumulado Personal'] ?? 0) ,
-                                'eficiencia' => str_replace(",", "", $dato['Eficiencia'] ?? 0),
-                                'ubo' => str_replace(",", "", $dato['UBO'] ?? 0),
-                                'utilidad_bruta' => str_replace(",", "", $dato['UB'] ?? 0),
-                                'venta_litros' => str_replace(",", "", $dato['Venta Litros'] ?? 0),
-                                'ventas' => str_replace(",", "", $dato['Ventas'] ??  0),
-                                'gasto' => str_replace(",", "", $dato['Gasto']  ?? 0),
-                                'uno' => str_replace(",", "", $dato['UNO']  ?? 0),
+                                'personal' => (float) str_replace(",", "", $dato['Acumulado Personal'] ?? 0) ,
+                                'eficiencia' => (float) str_replace(",", "", $dato['Eficiencia'] ?? 0),
+                                'ubo' => (float) str_replace(",", "", $dato['UBO'] ?? 0),
+                                'utilidad_bruta' => (float) str_replace(",", "", $dato['UB'] ?? 0),
+                                'venta_litros' => (float) str_replace(",", "", $dato['Venta Litros'] ?? 0),
+                                'ventas' => (float) str_replace(",", "", $dato['Ventas'] ??  0),
+                                'gasto' => (float) str_replace(",", "", $dato['Gasto']  ?? 0),
+                                'uno' => (float) str_replace(",", "", $dato['UNO']  ?? 0),
 
                             ]);
                     }

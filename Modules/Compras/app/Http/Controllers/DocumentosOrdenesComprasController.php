@@ -76,6 +76,14 @@ class DocumentosOrdenesComprasController extends Controller
                 if($data->hasFile('factura_xml')){
                     $this->eventosFacturaXml($orden->id, $orden);
                     $factura = $this->cfdiService->parsear($request->file('factura_xml'));
+
+                    $docsOrdenCompra->serie = $factura['serie'] ?? null;
+                    $docsOrdenCompra->folio = $factura['folio'] ?? null;
+                    $docsOrdenCompra->subtotal = $factura['subtotal'] ?? null;
+                    $docsOrdenCompra->total = $factura['total'] ?? null;
+                    $docsOrdenCompra->emisor_rfc = $factura['emisor_rfc'] ?? null;
+                    $docsOrdenCompra->save();
+
                     $facturadoTotal = $this->validarFacturadoTotalCompra($data['total_compra'], $factura['total'], $data['suma_facturas']);
                     if(!$facturadoTotal){
                          $orden->pagado = 2;
@@ -162,6 +170,14 @@ class DocumentosOrdenesComprasController extends Controller
                 if($data->hasFile('factura_xml')){
                     $this->eventosFacturaXml($orden->id, $orden);
                     $factura = $this->cfdiService->parsear($request->file('factura_xml'));
+                    
+                    $docsOrdenCompra->serie = $factura['serie'] ?? null;
+                    $docsOrdenCompra->folio = $factura['folio'] ?? null;
+                    $docsOrdenCompra->subtotal = $factura['subtotal'] ?? null;
+                    $docsOrdenCompra->total = $factura['total'] ?? null;
+                    $docsOrdenCompra->emisor_rfc = $factura['emisor_rfc'] ?? null;
+                    $docsOrdenCompra->save();
+                    
                     $facturadoTotal = $this->validarFacturadoTotalCompra($data['total_compra'], $factura['total'], $data['suma_facturas']);
                     if(!$facturadoTotal){
                          $orden->pagado = 2;

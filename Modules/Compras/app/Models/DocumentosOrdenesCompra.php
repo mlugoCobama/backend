@@ -24,7 +24,12 @@ class DocumentosOrdenesCompra extends Model
         'comprobante_pago',
         'orden_compra_id',
         'sync',
-        'syncned_at'
+        'syncned_at',
+        'serie',
+        'folio',
+        'subtotal',
+        'emisor_rfc',
+        'total'
     ];
     /**
      * Nombre de la tabla

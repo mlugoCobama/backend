@@ -8,13 +8,30 @@ use Exception;
 class CfdiService
 {
     /**
-     * Extrae los datos relevantes del XML CFDI.
+     * Parsear un archivo subido (UploadedFile)
      */
     public function parsear(UploadedFile $archivo): array
     {
-        $contenido = file_get_contents($archivo->getRealPath());
+        return $this->parsearContenido(file_get_contents($archivo->getRealPath()));
+    }
 
-        // Suprimir warnings y cargar el XML
+    /**
+     * Parsear un archivo almacenado en disco (ruta)
+     */
+    public function parsearDesdeRuta(string $ruta): array
+    {
+        if (!file_exists($ruta)) {
+            throw new Exception("El archivo no existe en la ruta: {$ruta}");
+        }
+
+        return $this->parsearContenido(file_get_contents($ruta));
+    }
+
+    /**
+     * Lógica común de parseo (reutilizada)
+     */
+    private function parsearContenido(string $contenido): array
+    {
         libxml_use_internal_errors(true);
         $xml = simplexml_load_string($contenido);
 
@@ -22,11 +39,9 @@ class CfdiService
             throw new Exception('El archivo XML no es válido o está malformado.');
         }
 
-        // Namespaces del CFDI 4.0 (también funciona con 3.3)
         $ns = $xml->getNamespaces(true);
         $cfdi = $xml->attributes();
 
-        // Atributos principales del comprobante
         $total      = (float) $cfdi['Total'];
         $subtotal   = (float) $cfdi['SubTotal'];
         $version    = (string) $cfdi['Version'];
@@ -37,16 +52,14 @@ class CfdiService
         $tipoCambio = (float)  ($cfdi['TipoCambio'] ?? 1);
         $tipoComp   = (string) $cfdi['TipoDeComprobante'];
 
-        // Emisor y Receptor
         $emisorNode   = $xml->children($ns['cfdi'] ?? 'http://www.sat.gob.mx/cfd/4')->Emisor;
         $receptorNode = $xml->children($ns['cfdi'] ?? 'http://www.sat.gob.mx/cfd/4')->Receptor;
 
-        $emisorRfc  = (string) ($emisorNode->attributes()['Rfc']  ?? '');
-        $emisorNombre = (string) ($emisorNode->attributes()['Nombre'] ?? '');
-        $receptorRfc  = (string) ($receptorNode->attributes()['Rfc']  ?? '');
+        $emisorRfc      = (string) ($emisorNode->attributes()['Rfc']  ?? '');
+        $emisorNombre   = (string) ($emisorNode->attributes()['Nombre'] ?? '');
+        $receptorRfc    = (string) ($receptorNode->attributes()['Rfc']  ?? '');
         $receptorNombre = (string) ($receptorNode->attributes()['Nombre'] ?? '');
 
-        // Impuestos (nodo opcional)
         $totalImpuestosTrasladados = 0.0;
         $totalImpuestosRetenidos   = 0.0;
 

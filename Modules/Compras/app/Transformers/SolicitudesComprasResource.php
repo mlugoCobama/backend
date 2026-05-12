@@ -68,6 +68,10 @@ class SolicitudesComprasResource extends JsonResource
             'modo_pago' =>  $this->labelModoPago($this->modo_pago ?? null),
             'pagado' => $this->labelFlagPagado($this->pagado ?? null),
             'motivo_revision' => $this->motivo_revision ?? null,
+            'surtido' => $this->surtido ? true : false,
+            'surtido_solicitado' => $this->surtido_solcitado ? true : false,
+            'facturas_xml' => $this->facturas_xml ?? 0,
+            'comprobantes_pago' => $this->comprobantes_pago ?? 0
         ];
     }
 

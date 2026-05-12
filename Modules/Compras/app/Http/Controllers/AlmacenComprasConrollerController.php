@@ -7,9 +7,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Modules\Compras\Transformers\AlmacenComprasResource;
 
 class AlmacenComprasConrollerController extends Controller
 {
+
+    /**
+     * Rcupera los detalles de las compras de ti
+     */
     public function index()
     {   
         $query = DB::table('com_solicitudes_compra as sc')
@@ -47,7 +52,7 @@ class AlmacenComprasConrollerController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Compras de recursos tecnologico recuperadas correctamete',
-                'data' => $query,
+                'data' => AlmacenComprasResource::collection($query),
             ]);
     }
 

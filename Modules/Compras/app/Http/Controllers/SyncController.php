@@ -56,10 +56,7 @@ class SyncController extends Controller
     public function show($id)
     
     {
-        $archivos = DB::select(
-            'CALL SP_GetFacturasEmpresasTesting(?)',
-            [$id]
-        );
+        $archivos = DB::select('CALL SP_GetFacturasEmpresasTesting(?)',[$id]);
 
         return response()->json([
             'intercompania' => $id,
