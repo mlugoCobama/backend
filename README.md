@@ -79,7 +79,7 @@ Se actualiza el sp para obtener comisiones
 - Api para la descarga de reporte de flujo de solicitudes de compras
 
 
-**Fecha de liberación:** 15 de mayo de 2026
+#**Fecha de liberación:** 15 de mayo de 2026
 ## Compras 
 - Se agregan datos a la consulta principal para informar estatus de documentos de orden de compra
 ## Compras — Reportes
