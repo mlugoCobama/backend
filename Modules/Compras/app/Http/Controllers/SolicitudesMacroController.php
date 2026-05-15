@@ -51,27 +51,27 @@ class SolicitudesMacroController extends Controller
         $isAdmin = in_array($id, $usuariosAdmin );
 
         if( $isCompras){
-            $query = DB::select("call SistemaTickets.SP_GetSolicitudesComprasMacro(?, ?, ?, ?, ?, ?)",[333, 1, 1, 1,'compras',$id]);
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTesting(?, ?, ?, ?, ?, ?)",[333, 1, 1, 1,'compras',$id]);
             // DB::select("call SistemaTickets.SP_GetSolicitudesMacro()")
             $data = SolicitudesMacroResource::collection($query);
             $tipo = 'compras';
         }
 
         if($isAdminz){
-            $query = DB::select("call SistemaTickets.SP_GetSolicitudesComprasMacro(?, ?, ?, ?, ?, ?)",[null, 1, 1, 1,'adminz',$id]);
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTesting(?, ?, ?, ?, ?, ?)",[null, 1, 1, 1,'adminz',$id]);
             $data = SolicitudesMacroResource::collection($query);
             $tipo = 'compras';
         }
 
         if($isMacro){
-            $query = DB::select("call SistemaTickets.SP_GetSolicitudesComprasMacro(?, ?, ?, ?, ?, ?)",[null, 1, 1, 0,'macro',$id]);
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTesting(?, ?, ?, ?, ?, ?)",[null, 1, 1, 0,'macro',$id]);
             // DB::select("call SistemaTickets.SP_GetSolicitudesMacroTaller()")
             $data = SolicitudesMacroResource::collection( $query );
             $tipo = 'macro';
         }
 
         if($isAdmin){
-            $query = DB::select("call SistemaTickets.SP_GetSolicitudesComprasMacro(?, ?, ?, ?, ?, ?)",[null, 0, 0, 0,'admin',$id]);
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTesting(?, ?, ?, ?, ?, ?)",[null, 0, 0, 0,'admin',$id]);
             // DB::select("call SistemaTickets.SP_GetSolicitudesMacroAdmin()")
             $data = SolicitudesMacroResource::collection($query);
             $tipo = 'macro';
@@ -79,7 +79,7 @@ class SolicitudesMacroController extends Controller
 
         if(!$isMacro && !$isCompras && !$isAdmin && !$isAdminz)
         {
-            $query = DB::select("call SistemaTickets.SP_GetSolicitudesComprasMacro(?, ?, ?, ?, ?, ?)",[$intercompania, 0, 0, 0,'empresa',$id]);
+            $query = DB::select("call SistemaTickets.SP_GetSolicitudesMacroTesting(?, ?, ?, ?, ?, ?)",[$intercompania, 0, 0, 0,'empresa',$id]);
             // DB::select("call SistemaTickets.SP_GetSolicitudesMacroGasera($intercompania)")
             $data = SolicitudesMacroResource::collection( $query );
             $tipo = 'gasera';

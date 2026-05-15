@@ -57,6 +57,7 @@ class OrdenCompraService{
         $ordenCompra->observaciones = $data["observaciones"];
         $ordenCompra->cotizaciones_id = $data["cotizaciones_id"];
         $ordenCompra->fecha_entrega = $data["fechaEntrega"];
+        $ordenCompra->total_orden = $this->calcularTotalOrden($data['id_cotizacion_prov'] ?? $data['idCotProv']) ?? null;
         $ordenCompra->save();
     }
 
@@ -70,6 +71,7 @@ class OrdenCompraService{
         $ordenCompra->entrega = $data["entrega"];
         $ordenCompra->modo_pago = $data["modoPago"];
         $ordenCompra->fecha_entrega = $data["fechaEntrega"];
+        $ordenCompra->total_orden = $this->calcularTotalOrden($data['id_cotizacion_prov'] ?? $data['idCotProv']) ?? null;
         $ordenCompra->save();
 
         return $ordenCompra;
@@ -109,7 +111,7 @@ class OrdenCompraService{
             'solicita' => $userSolicita
         ];
 
-        //Llamada a la funcion quue genera el formato
+        //Llamada a la funcion que genera el formato
             $pdf = new OrdenCompraPdfController();
             $file = $pdf->OrdenCompraFormatoInterno($data);
 
@@ -177,5 +179,28 @@ class OrdenCompraService{
 
         Mail::to($correoProveedor)->send(new SolicitudSurtido($datos, $pdfContenido['archivoPDF'], $rutaComPago));
     }
+
+    public function calcularTotalOrden($idCotProv)
+    {
+        $total = DetalleSolicitud::with([
+            'DetallesCotizacion' => function ($query) use ($idCotProv) {
+                $query->where('cotizaciones_proveedores_proveedores_id', $idCotProv);
+            }
+        ])
+        ->where('confirmado', 1)
+        ->get()
+        ->sum(function ($detalle) {
+            return $detalle->DetallesCotizacion->sum(function ($dc) use ($detalle) {
+                return $dc->importe_unitario * $detalle->cantidad;
+            });
+        });
+
+        // Aplicar IVA
+        $totalConIva = $total * 1.16;
+
+        return round($totalConIva, 4); // devolver con 4 decimales
+    }
+
+    
 
 }

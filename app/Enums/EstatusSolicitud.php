@@ -45,7 +45,7 @@ class EstatusSolicitud
             self::AUTORIZADO_A_PAGO => 'AUTORIZADO A PAGO',
             self::EN_SURTIDO => 'EN SURTIDO',
             self::ENTREGADA => 'ENTREGADA',
-            self::FACTURADO => 'FACTURADO',
+            self::FACTURADO => 'POR FACTURAR',
             self::SOLICITADO_PAGO => 'SOLICITADO A PAGO',
             self::PAGADA => 'PAGADA',
             self::CARGA_COMPLEMENTO => 'CARGA COMPLEMENTO',

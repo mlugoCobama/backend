@@ -689,4 +689,133 @@ class ReportesService{
 
         return $this->usuariosCache[$id] = $result;
     }
+
+
+
+public function queryComprasDocumentos($empresa, $tipo = null)
+{
+    $empresas = $this->rawEmpresas;
+    $labels   = EstatusSolicitud::labels();
+    $allRows  = [];
+
+    SolicitudesCompra::with([
+            'Cotizaciones.orden_compra.documentos.documentosFactura',
+            'Cotizaciones.orden_compra.acusesEntrega',
+            'DetallesSolicitud.unidadMedida',
+            'DetallesSolicitud.DetallesCotizacion.CotizacionesProveedores.datos_proveedor',
+        ])
+        ->where('estatus', '>', EstatusSolicitud::EN_ORDEN_COMPRA)
+        ->where('estatus', '<>', EstatusSolicitud::CANCELADA)
+        ->where('activo', 1)
+        ->where('tipo', $tipo)
+        ->where('empresa', $empresa)
+        ->whereHas('DetallesSolicitud', fn($q) => $q->where('confirmado', 1))
+        ->chunk(200, function ($solicitudes) use (&$allRows, $empresas, $labels) {
+
+            foreach ($solicitudes as $solicitud) {
+                $label          = $labels[$solicitud->estatus] ?? 'DESCONOCIDO';
+                $empresaNombre  = $empresas[$solicitud->empresa] ?? 'N/A';
+                $fechaFormateada = $solicitud->fecha
+                    ? date('d/m/Y H:i', strtotime($solicitud->fecha))
+                    : '';
+
+                $cotizacionOC = $solicitud->Cotizaciones->firstWhere('orden_compra', '!=', null);
+                $ordenCompra  = $cotizacionOC?->orden_compra;
+                $folioOC      = $ordenCompra->folio_oc ?? '';
+                $fechaEntregaFormateada = $ordenCompra->fecha_entrega
+                ? date('d/m/Y H:i', strtotime($ordenCompra->fecha_entrega))
+                    : '';
+
+                /*
+                |----------------------------------------------------------
+                | Documentos: facturas, comprobantes, complementos
+                |----------------------------------------------------------
+                */
+                $documentos = $ordenCompra?->documentos ?? collect();
+
+                $tieneFacturas = false;
+                $tieneComprobantes = false;
+                $tieneComplementos = false;
+
+                foreach ($documentos as $doc) {
+
+                    if (!$tieneFacturas && !empty($doc->ruta_xml_factura)) {
+                        $tieneFacturas = true;
+                    }
+
+                    if (!$tieneComprobantes) {
+                        $comprobanteDirecto = !empty($doc->comprobante_pago);
+                        $comprobanteFactura = $doc->facturas?->contains(
+                            fn($f) => $f->tipo_documento === 'comprobante_pago'
+                                   && !empty($f->representacion_impresa)
+                        );
+                        if ($comprobanteDirecto || $comprobanteFactura) {
+                            $tieneComprobantes = true;
+                        }
+                    }
+
+                    if (!$tieneComplementos) {
+                        $tieneComplementos = (bool) $doc->facturas?->contains(
+                            fn($f) => $f->tipo_documento === 'complemento_pago'
+                                   && !empty($f->xml)
+                        );
+                    }
+
+                    // Si ya encontramos todo, no seguimos iterando
+                    if ($tieneFacturas && $tieneComprobantes && $tieneComplementos) {
+                        break;
+                    }
+                }
+
+                $tieneAcuseEntrega = $ordenCompra?->acusesEntrega?->isNotEmpty() ? '1' : '0';
+
+
+                // Proveedor seleccionado
+                $proveedor = 'N/A';
+
+                foreach ($solicitud->DetallesSolicitud as $detalle) {
+                    if ($proveedor === 'N/A') {
+                        $cotSel = $detalle->DetallesCotizacion
+                            ->firstWhere(fn($cot) =>
+                                $cot->CotizacionesProveedores &&
+                                $cot->CotizacionesProveedores->seleccionado == 1
+                            );
+                        $nombreProveedor = $cotSel?->CotizacionesProveedores?->datos_proveedor->nombre ?? 'N/A';
+                        if ($nombreProveedor !== 'N/A') {
+                            $proveedor = $nombreProveedor;
+                        }
+                    }
+                }
+
+                $baseRow = [
+                    'Folio'                 => $solicitud->folio,
+                    'Folio_OC'              => $folioOC,
+                    'Fecha'                 => $fechaFormateada,
+                    'Empresa'               => $empresaNombre,
+                    'Estado'                => $label,
+                    'proveedor'             => $proveedor,
+                    'FechaEntregaPrometida' => $fechaEntregaFormateada,
+                    'FechaEntregaReal'      => '',
+                    'TieneAcuseEntrega'     => $tieneAcuseEntrega,
+                    'TieneFacturas'         => $tieneFacturas  ? '1' : '0',
+                    'TieneComplementos'     => $tieneComplementos ? '1' : '0',
+                    'TieneComprobantes'     => $tieneComprobantes ? '1' : '0',
+                ];
+
+                foreach ($solicitud->DetallesSolicitud as $detalle) {
+                    $allRows[] = $baseRow + [
+                        'Cantidad'    => $detalle->cantidad    ?? 0,
+                        'Unidad'      => $detalle->unidadMedida->nombre ?? '',
+                        'Descripcion' => $detalle->descripcion ?? '',
+                    ];
+                }
+
+                // Liberar relaciones del modelo para que el GC las recoja
+                $solicitud->unsetRelation('Cotizaciones');
+                $solicitud->unsetRelation('DetallesSolicitud');
+            }
+        });
+
+    return collect($allRows);
+}
 }

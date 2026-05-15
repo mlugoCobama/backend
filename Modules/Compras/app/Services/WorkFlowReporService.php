@@ -167,7 +167,7 @@ public function getLogsEventos($tipo = 1)
         // $minutos = floor(($totalSegundos % 3600) / 60);
         // $segundos = $totalSegundos % 60;
 
-        return $dias;
+        return (string) $dias;
         // return "{$dias} días, {$horas} horas, {$minutos} minutos, {$segundos} segundos";
     }
 

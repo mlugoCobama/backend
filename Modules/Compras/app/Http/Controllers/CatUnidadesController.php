@@ -63,6 +63,17 @@ class CatUnidadesController extends Controller
         $userId = $request->user()->id;
 
         try {
+
+            $vehiculo = DatosVehiculo::where($data['datosVehiculo']['no_serie']);
+            
+            if($vehiculo){
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'El vehiculo ya existe dentro del parque vehicular con el numero economico'. $vehiculo->nro_economico,
+                    'data' => []
+                ]);
+            }
+
             $datosVehiculo = $data['datosVehiculo'];
             $datosTanque = $data['datosTanque'] ?? null;
             $datosPoliza = $data['datosPoliza'] ?? null;

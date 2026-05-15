@@ -3,6 +3,7 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Enums\EstatusSolicitud;
+use App\Exports\ComprasDocumentosMultihojaExport;
 use App\Exports\GastosDetalleEmpresaExport;
 use App\Exports\GastosMultiHojaExport;
 use App\Exports\GatosDetalleMultiHojaExport;
@@ -163,9 +164,15 @@ class ReportesComprasController extends Controller
             return $this->{$metodos[$tipo]}();
         }
 
-    $filename = "SC_{$hoy}_{$estatus}_{$tipos[$tipo]}.xlsx";
-    return $this->genReportSolicitudesByStatus(
-        $tipo, $estatus, $fechaInicial, $fechaFinal, $filename);
+        if($estatus === 'seg'){
+            return $this->exportComprasDocumentos($tipo);
+        }
+
+
+
+        $filename = "SC_{$hoy}_{$estatus}_{$tipos[$tipo]}.xlsx";
+        return $this->genReportSolicitudesByStatus(
+            $tipo, $estatus, $fechaInicial, $fechaFinal, $filename);
     }
 
     public function genReportSolicitudesByStatus( $tipo, $estatus, $fechaInicial, $fechaFinal, $filename){
@@ -241,6 +248,25 @@ class ReportesComprasController extends Controller
         return Excel::download(
             new ReporteConcentradoComprasMultihojaExport($detalleData),
             $nombreArchivo
+        );
+    }
+
+    public function exportComprasDocumentos($tipo)
+    {
+        $concentrado = [
+            333, 201, 131, 130, 251, 210, 155, 135, 110, 111, 250,
+            240, 132, 200, 119, 190, 133, 353, 191, 354, 353111, 
+            251250, 710,7051, 712, 700, 2000, 7064, 7062, 7063, 7061,
+        ];
+
+        $detalleData = [];
+        foreach ($concentrado as $empresa) {
+              $detalleData[$empresa] = $this->reportesService->queryComprasDocumentos($empresa, $tipo);
+        }
+
+        return Excel::download(
+            new ComprasDocumentosMultihojaExport($detalleData),
+            'reporte_compras_documentos.xlsx'
         );
     }
 

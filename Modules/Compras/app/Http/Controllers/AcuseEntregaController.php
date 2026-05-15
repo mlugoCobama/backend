@@ -77,10 +77,14 @@ class AcuseEntregaController extends Controller
 
         $this->storeAcuse($ordenCompraId, $file, $validated);
         $this->ingresarAlmacen($validated['detalles_entrada'], $userId);
+
+        $esEntregaCompleta = $this->esEntregaCompleta($ordenCompraId); 
+
         $this->actStatusOrdenSolicitud(
             $ordenCompraId,
             EstatusOrdenCompra::ENTREGADA,
-            EstatusSolicitud::ENTREGADA
+            EstatusSolicitud::ENTREGADA,
+            $esEntregaCompleta
         );
 
 
@@ -153,16 +157,53 @@ class AcuseEntregaController extends Controller
         //
     }
 
-    public function actStatusOrdenSolicitud($idOrdenCompra, $statusOrdenCompra, $estatusSolicitud){
+    public function esEntregaCompleta(int $ordenCompraId): bool
+    {
+        // Obtener la orden y de ahí la solicitud relacionada
+        $orden = OrdenCompra::with('cotizacion')->find($ordenCompraId);
+
+        if (!$orden || !$orden->cotizacion) {
+            return false;
+        }
+
+        $solicitudId = $orden->cotizacion->solicitudes_compra_id;
+
+        // Traer todos los detalles confirmados con su registro de almacén
+        $detalles = DetalleSolicitud::where('solicitudes_compra_id', $solicitudId)
+            ->with('almacenCompras')
+            ->confirmadas()
+            ->get();
+
+        if ($detalles->isEmpty()) {
+            return false;
+        }
+
+        // La entrega es completa solo si TODOS los detalles tienen
+        // su existencia igual o mayor a la cantidad solicitada
+        return $detalles->every(function ($detalle) {
+            $existencia = $detalle->almacenCompras->existencia ?? 0;
+            return $existencia >= $detalle->cantidad;
+        });
+    }
+
+    public function actStatusOrdenSolicitud($idOrdenCompra, $statusOrdenCompra, $estatusSolicitud, $esEntregaCompleta){
 
         $orden = OrdenCompra::where('id', $idOrdenCompra)->first();
         if ($orden) {
+            $facturas = count($orden->documentos);
+            $requiereFactura = ($facturas == 0);
             if( $orden->modo_pago == 2 && $orden->pagado != 1) {
-                $facturas = count($orden->documentos);
-                $requiereFactura = ($facturas == 0);
-                $orden->estatus = $requiereFactura ? EstatusOrdenCompra::FACTURADO: EstatusOrdenCompra::SOLICITADO_PAGO;
+                // Flujo comrpas a credito
+                $orden->estatus = $requiereFactura  ? EstatusOrdenCompra::FACTURADO: EstatusOrdenCompra::SOLICITADO_PAGO;
+
             }else{
-                $orden->estatus = $statusOrdenCompra;
+                // Flujo compras de contado
+                if(!$esEntregaCompleta){
+                    $orden->estatus = $statusOrdenCompra;
+                }else{
+                    $orden->estatus = EstatusOrdenCompra::FINALIZADA;
+                }
+                
             }      
             $orden->save(); 
 
@@ -170,10 +211,17 @@ class AcuseEntregaController extends Controller
 
             $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
             if ($solicitud) {
+                // Flujo comrpas a credito
                 if( $orden->modo_pago == 2 && $orden->pagado != 1) {
                     $solicitud->estatus = $requiereFactura ? EstatusSolicitud::FACTURADO : EstatusSolicitud::SOLICITADO_PAGO;
                 }else{
+                    // Flujo compras de contado
                     $solicitud->estatus = $estatusSolicitud;
+                    if(!$esEntregaCompleta){
+                        $solicitud->estatus = $estatusSolicitud;
+                    }else{
+                        $orden->estatus = EstatusSolicitud::FINALIZADA;
+                    }
                 }  
                 $solicitud->save(); 
             }

@@ -27,7 +27,8 @@ class OrdenCompra extends Model
         'modo_pago',
         'surtido_solcitado',
         'pagado',
-        'fecha_entrega'
+        'fecha_entrega',
+        'total_orden'
     ];
     /**
      * Nombre de la tabla

@@ -70,7 +70,7 @@ class OrdenesComprasController extends Controller
                         if ($cotizacion) {
                             // Quitar el proveedor seleccionado
                             $this->cotizacionesService->desmarcarCotizacionSeleccionada($data["cotizaciones_id"]);
-                            //Asignar le nuevo proveedor seleccionado
+                            //Asignarle nuevo proveedor seleccionado
                             $this->cotizacionesService->cotizacionProveedorSeleccionada($data['id_cotizacion_prov']);
                             $this->ordenCompraService->actualizarOrdenCompra($ocExistente, $data);
                         }

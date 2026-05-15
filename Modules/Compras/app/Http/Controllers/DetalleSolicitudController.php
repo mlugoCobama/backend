@@ -26,56 +26,7 @@ public function __construct(
      */
     public function index()
     {
-    //     $docs = DocumentosOrdenesCompra::whereNotNull('ruta_xml_factura')
-    // ->where('ruta_xml_factura', '<>', '')
-    // ->get();
-
-    //     foreach ($docs as $doc) {
-    //         try {
-    //             if (Storage::exists($doc->ruta_xml_factura)) {
-    //                 // Parsear el XML
-    //                 $factura = $this->cfdiService->parsearDesdeRuta(Storage::path($doc->ruta_xml_factura));
-
-    //                 // Actualizar campos
-    //                 $doc->serie      = $factura['serie'];
-    //                 $doc->folio      = $factura['folio'];
-    //                 $doc->subtotal   = $factura['subtotal'];
-    //                 $doc->total      = $factura['total'];
-    //                 $doc->emisor_rfc = $factura['emisor_rfc'];
-    //                 $doc->save();
-    //             }
-    //         } catch (\Throwable $e) {
-    //             // Registrar el error y continuar con el siguiente documento
-    //             Log::error("Error al procesar documento ID {$doc->id}: ".$e->getMessage());
-    //             continue;
-    //         }
-    //     }
-
-        $ordenes = DB::table('com_orden_compra as oc')
-        ->join('com_cotizaciones as c', 'oc.cotizaciones_id', '=', 'c.id')
-        ->join('com_cotizaciones_proveedores as cp', function($join) {
-            $join->on('c.id', '=', 'cp.cotizaciones_id')
-                ->where('cp.seleccionado', 1);
-        })
-        ->join('com_detalle_solicitud as ds', function($join) {
-            $join->on('ds.solicitudes_compra_id', '=', 'c.solicitudes_compra_id')
-                ->where('ds.confirmado', 1);
-        })
-        ->join('com_detalles_cotizacion as dc', function($join) {
-            $join->on('dc.detalle_solicitud_id', '=', 'ds.id')
-                ->on('dc.cotizaciones_proveedores_proveedores_id', '=', 'cp.id');
-        })
-        ->select('oc.id')
-        ->selectRaw('SUM(dc.importe_unitario * ds.cantidad) as total_orden')
-        ->groupBy('oc.id')
-        ->get();
-
-    foreach ($ordenes as $orden) {
-        DB::table('com_orden_compra')
-            ->where('id', $orden->id)
-            ->update(['total_orden' => ($orden->total_orden * 1.16)]);
-    }
-
+        
     }
 
     /**

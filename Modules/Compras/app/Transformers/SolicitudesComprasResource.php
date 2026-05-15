@@ -62,17 +62,21 @@ class SolicitudesComprasResource extends JsonResource
             'razon_cancelacion' => $this->razon_cancelacion ?? null,
             'multiUnidad' => $multiUnidad,
             'observaciones' => $this->observaciones ?? null,
-            'total_orden' => (float) $this->total_orden * 1.16 ?? 0,
+            'total_orden' => (float) $this->total_orden  ?? 0,
             'proveedor' => $this->proveedor ?? '-',
             'folio_oc' => $this->folio_oc ?? '-',
             'modo_pago' =>  $this->labelModoPago($this->modo_pago ?? null),
             'pagado' => $this->labelFlagPagado($this->pagado ?? null),
             'motivo_revision' => $this->motivo_revision ?? null,
-            'surtido' => $this->surtido ? true : false,
+            'surtido' => $this->surtido ?? 0,
             'surtido_solicitado' => $this->surtido_solcitado ? true : false,
             'facturas_xml' => $this->facturas_xml ?? 0,
-            'comprobantes_pago' => $this->comprobantes_pago ?? 0
+            'comprobantes_pago' => $this->comprobantes_pago ?? 0,
+            'complementos_pago' => $this->complementos_pago ?? 0,
+            'total_facturas' => $this->total_facturas ?? 0,
+            'vencido' => !Carbon::parse($this->fecha_entrega)->endOfDay()->isPast(),
         ];
+            
     }
 
     /**
@@ -80,8 +84,8 @@ class SolicitudesComprasResource extends JsonResource
      */
     private function getNombreUsuario($tipoSolicitud, $usuarioId, $empresa)
     {
-        $cacheKey = $tipoSolicitud . '_' . $usuarioId . '_' . $empresa;
-
+        // $cacheKey = $tipoSolicitud . '_' . $usuarioId . '_' . $empresa;
+        $cacheKey = $usuarioId;
         if (isset(self::$usuariosCache[$cacheKey])) {
             return self::$usuariosCache[$cacheKey];
         }
@@ -130,8 +134,8 @@ class SolicitudesComprasResource extends JsonResource
             6 => ['estado' => 'AUTORIZADA', 'claseEstado' => 'badge-soft-success'],
             7 => ['estado' => 'AUTO. A PAGO', 'claseEstado' => 'badge-soft-primary'],
             8 => ['estado' => 'EN SURTIDO', 'claseEstado' => 'bg-primary'],
-            9 => ['estado' => 'ENTREGADO', 'claseEstado' => 'badge-soft-dark'],
-            10 => ['estado' => 'FACTURADO', 'claseEstado' => 'badge-soft-primary'],
+            9 => ['estado' => 'ENTREGADO PARCIALMENTE', 'claseEstado' => 'badge-soft-dark'],
+            10 => ['estado' => 'POR FACTURAR', 'claseEstado' => 'badge-soft-primary'],
             11 => ['estado' => 'PAGO SOLICITADO', 'claseEstado' => 'bg-warning'],
             12 => ['estado' => 'PAGADO', 'claseEstado' => 'bg-success'],
             13 => ['estado' => 'CARGA COMPLEMENTO', 'claseEstado' => 'bg-secondary'],
