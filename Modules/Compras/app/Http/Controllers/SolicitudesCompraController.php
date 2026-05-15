@@ -630,7 +630,7 @@ class SolicitudesCompraController extends Controller
      * @param mixed $idUserObjetivo usuario objetivo (null = no aplica el filtro)
      */
     public function getSolicitudesCompras($intercompania, $autoga, $autogg, $tipoSolicitud, $idUserObjetivo, $tipoUsuario){
-        return DB::select('CALL SP_GetSolicitudesComprasDesarollo(?, ?, ?, ?, ?, ?)', [ $intercompania , $autoga, $autogg, $tipoSolicitud, $idUserObjetivo, $tipoUsuario]);
+        return DB::select('CALL SP_GetSolicitudesCompras(?, ?, ?, ?, ?, ?)', [ $intercompania , $autoga, $autogg, $tipoSolicitud, $idUserObjetivo, $tipoUsuario]);
     }
 
 
