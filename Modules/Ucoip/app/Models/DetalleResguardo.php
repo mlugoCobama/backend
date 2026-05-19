@@ -14,8 +14,8 @@ class DetalleResguardo extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'resguardo_id',
-        'hardware_id',
+        'ucoip_resguardo_ucoip_id',
+        'ucoip_hardware_id',
         'fecha_entrega',
         'fecha_devolucion',
         'observaciones',
@@ -38,6 +38,6 @@ class DetalleResguardo extends Model
     // Relación: pertenece a un hardware
     public function hardware()
     {
-        return $this->belongsTo(HardwarePcModel::class, 'hardware_id', 'id');
+        return $this->belongsTo(HardwarePcModel::class, 'ucoip_hardware_id', 'id');
     }
 }

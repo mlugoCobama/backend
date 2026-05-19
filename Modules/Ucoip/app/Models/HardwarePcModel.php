@@ -2,6 +2,7 @@
 
 namespace Modules\Ucoip\Models;
 
+use App\Models\CatEmpresas;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -25,6 +26,7 @@ class HardwarePcModel extends Model
         "observaciones",
         "estado",
         "cat_hardware_id",
+        "cat_empresa_id"
     ];
     /**
      * Campo "tipo" se ocupa para diferenciar el tipo de cpu
@@ -50,6 +52,10 @@ class HardwarePcModel extends Model
      */
     public function Tipo() {
         return  $this->hasOne(CatHardwareModel::class, 'id', 'cat_hardware_id');
+    }
+
+    public function empresa(){
+        return $this->belongsTo(CatEmpresas::class, 'cat_empresa_id', 'id');
     }
 
 }

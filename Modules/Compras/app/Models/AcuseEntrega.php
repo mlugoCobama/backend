@@ -2,6 +2,7 @@
 
 namespace Modules\Compras\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Compras\Database\Factories\AcuseEntregaFactory;
@@ -9,6 +10,7 @@ use Modules\Compras\Database\Factories\AcuseEntregaFactory;
 class AcuseEntrega extends Model
 {
     use HasFactory;
+    use Auditable;
 
     /**
      * The attributes that are mass assignable.

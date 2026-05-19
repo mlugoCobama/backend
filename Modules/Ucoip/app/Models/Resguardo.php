@@ -14,14 +14,14 @@ class Resguardo extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'usuario_asignado',
+        'id_usuario_asignado',
         'fecha_inicio',
         'fecha_fin',
         'comentarios',
         'admin_rt',
     ];
 
-    protected $table = 'ucoip_resguardo';
+    protected $table = 'ucoip_resguardos_ucoip';
 
     protected static function newFactory(): ResguardoFactory
     {
@@ -31,6 +31,6 @@ class Resguardo extends Model
     // Relación: un resguardo tiene muchos detalles
     public function detalles()
     {
-        return $this->hasMany(DetalleResguardo::class);
+        return $this->hasMany(DetalleResguardo::class, 'ucoip_resguardo_ucoip_id', 'id');
     }
 }

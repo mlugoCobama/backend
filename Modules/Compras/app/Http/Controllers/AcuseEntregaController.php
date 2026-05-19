@@ -235,7 +235,7 @@ class AcuseEntregaController extends Controller
      * @param string $file Nombre del archivo que se desea recuperar.
      * @return \Illuminate\Http\Response Archivo solicitado como respuesta HTTP con cabecera Content-Type.
      */
-    public function getFile($id, $file, )
+    public function getFile($id, $file)
     {
         $path = storage_path("app/acuses/$id/$file");
         if (!File::exists($path)) {

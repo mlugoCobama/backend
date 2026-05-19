@@ -9,24 +9,34 @@ use Modules\Ucoip\Models\HardwarePcModel;
 class HardwareService{
 
     public function storeHardware($data){
-        $hardware  =  new HardwarePcModel();
 
-        $hardware->marca            = $data['marca'];
-        $hardware->modelo           = $data['modelo'];
-        $hardware->no_serie         = $data['no_serie'];
-        $hardware->tipo             = $data['tipo'];
-        $hardware->mac              = $data['mac'];
-        $hardware->memoria_ram      = $data['memoria_ram'];
-        $hardware->disco_duro       = $data['disco_duro'];
-        $hardware->procesador       = $data['procesador'];
-        $hardware->caracteristicas  = $data['caracteristicas'];
-        $hardware->observaciones    = $data['observaciones'];
-        $hardware->estado           = $data['estado'];
-        $hardware->cat_hardware_id  = $data['cat_hardware_id'];
-        $hardware->cat_empresa_id   = $data['cat_empresa_id'];
-        $hardware->save();
+        $existe = HardwarePcModel::where('no_serie', $data['no_serie'])->first();
+        if(!$existe){
+             $hardware  =  new HardwarePcModel();
 
-        return $hardware;
+            $hardware->marca            = $data['marca'] ?? 'N/D';
+            $hardware->modelo           = $data['modelo'] ?? 'N/D';
+            $hardware->no_serie         = $data['no_serie'] ?? 'N/D';
+            $hardware->tipo             = $data['tipo'];
+            $hardware->mac              = $data['mac'] ?? 'N/D';
+            $hardware->memoria_ram      = $data['memoria_ram'] ?? 'N/D';
+            $hardware->disco_duro       = $data['disco_duro'] ?? 'N/D';
+            $hardware->procesador       = $data['procesador'] ?? 'N/D';
+            $hardware->caracteristicas  = $data['caracteristicas'] ?? '';
+            $hardware->observaciones    = $data['observaciones'] ?? '';
+            $hardware->estado           = $data['estado'] ?? 1;
+            $hardware->cat_hardware_id  = $data['cat_hardware_id'] ?? 1;
+            $hardware->cat_empresa_id   = $data['cat_empresa_id'];
+            $hardware->save();
+
+            return $hardware;
+        }
+
+        return $existe;  
+    }
+
+    public function asignarEquipo(){
+        
     }
 
     public function updateEstatusHardware($id, $estado){
