@@ -134,7 +134,7 @@ class SolicitudesComprasResource extends JsonResource
             6 => ['estado' => 'AUTORIZADA', 'claseEstado' => 'badge-soft-success'],
             7 => ['estado' => 'AUTO. A PAGO', 'claseEstado' => 'badge-soft-primary'],
             8 => ['estado' => 'EN SURTIDO', 'claseEstado' => 'bg-primary'],
-            9 => ['estado' => 'ENTREGADO PARCIALMENTE', 'claseEstado' => 'badge-soft-dark'],
+            9 => ['estado' => 'ENTREGADO', 'claseEstado' => 'badge-soft-dark'],
             10 => ['estado' => 'POR FACTURAR', 'claseEstado' => 'badge-soft-primary'],
             11 => ['estado' => 'PAGO SOLICITADO', 'claseEstado' => 'bg-warning'],
             12 => ['estado' => 'PAGADO', 'claseEstado' => 'bg-success'],
