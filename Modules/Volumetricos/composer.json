@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/volumetricos",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Volumetricos\\": "app/",
+            "Modules\\Volumetricos\\Database\\Factories\\": "database/factories/",
+            "Modules\\Volumetricos\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Volumetricos\\Tests\\": "tests/"
+        }
+    }
+}

@@ -54,16 +54,25 @@ class FinanciamientoController extends Controller
      */
     public function store(StoreFinanciamientoRequest $request)
     {
-        $resultados = [];
+        $guardados = [];
+        $omitidos = [];
 
         foreach ($request->financiamientos as $i => $datos) {
-            $resultados[] = $this->guardarFinanciamiento($datos, $request->file("financiamientos.$i.archivo"));
-        }
+            $resultado = $this->guardarFinanciamiento($datos, $request->file("financiamientos.$i.archivo"));
+
+            if ($resultado['status'] === 'saved') {
+            $guardados[] = $resultado['data'];
+            }
+
+            if ($resultado['status'] === 'ignored') {
+                $omitidos[] = $resultado['message'];
+            }
+            }
 
         return response()->json([
             'status'  => 'success',
-            'message' => count($resultados) . ' financiamiento(s) guardado(s) correctamente',
-            'data'    => $resultados
+            'message' => count($guardados) . ' financiamiento(s) guardado(s) '. count($omitidos). ' omitido(s) por duplicidad' ,
+            'data'    => [...$guardados, ...$omitidos]
         ], 201);
     }
 
@@ -75,6 +84,17 @@ class FinanciamientoController extends Controller
         $datosVenta  = !$isNoSerie
             ? $this->comService->getVentaByParam('no_factura', $datos['numero_factura'])
             : $this->comService->getVentaByParam('serie',      $datos['numero_factura']);
+
+            // Evitar asignar dos veces una comision por financiamiento a una mis venta
+        if (empty($datos['id']) && $datosVenta) {
+            $ventaAsignada = ComFinanciamiento::where('com_datos_venta_id',$datosVenta->id)->first();
+                if ($ventaAsignada) {
+                    return [
+                        'status' => 'ignored',
+                        'message' => "La venta {$datos['numero_factura']} ya tiene una comisión asignada"
+                    ];
+                }
+        }
 
         $comision->agencia                = $datos['agencia']                ?? null;
         $comision->com_vendedores_id      = $datos['com_vendedores_id']      ?? null;
@@ -123,7 +143,10 @@ class FinanciamientoController extends Controller
            }
         }
 
-        return $comision;
+        return [
+            'status' => 'saved',
+            'message' => 'Se asigno una comision la venta con factura'.  $comision->numero_factura
+        ];
     }
 
     /**

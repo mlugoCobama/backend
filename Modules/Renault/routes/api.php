@@ -64,4 +64,4 @@ Route::prefix('renault')->group(function () {
 
 Route::get('storage/renault/citas_servicio/{fileName}', [VisorCitasController::class, 'getFile'])->name('visor-citas.getFile');
 Route::get('renault/financiamiento/archivo/{id}', [FinanciamientoController::class, 'mostrarArchivo'])->name('financiamiento.mostrarArchivo');
-Route::get('renault/seguro/archivo/{id}', [FinanciamientoController::class, 'mostrarArchivo'])->name('seguro.mostrarArchivo');
+Route::get('renault/seguro/archivo/{id}', [SegurosController::class, 'mostrarArchivo'])->name('seguro.mostrarArchivo');

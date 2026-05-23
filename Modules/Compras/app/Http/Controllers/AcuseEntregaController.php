@@ -20,9 +20,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Modules\Compras\Models\DetalleSolicitud;
+use Modules\Ucoip\Services\HardwareService;
 
 class AcuseEntregaController extends Controller
 {
+
+protected $hardwareService;
+
+    public function __construct(
+        HardwareService $hardwareService
+    ){
+        $this->hardwareService =
+        $hardwareService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -58,9 +68,60 @@ class AcuseEntregaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store1(Request $request)
     {
+        try {
+            DB::beginTransaction();
+
+            $userId = $request->user()->id;
+
+            $validated = $request->validate([
+                'archivo' => 'required|file|mimes:pdf',
+                'observaciones' => 'nullable|string',
+                'orden_compra_id' => 'required|integer',
+                'detalles_entrada' => 'nullable',
+            ]);
+
+            $ordenCompraId = $validated['orden_compra_id'];
+            $file = $request->file('archivo');
+
+            $this->storeAcuse($ordenCompraId, $file, $validated);
+            $this->ingresarAlmacen($validated['detalles_entrada'], $userId);
+
+            $esEntregaCompleta = $this->esEntregaCompleta($ordenCompraId); 
+
+            $this->actStatusOrdenSolicitud(
+                $ordenCompraId,
+                EstatusOrdenCompra::ENTREGADA,
+                EstatusSolicitud::ENTREGADA,
+                $esEntregaCompleta
+            );
+
+
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Acuse de entrega creado correctamente',
+                'data' => []
+            ], 201);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al crear el acuse de entrega',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+public function store(Request $request)
+{
     try {
+
         DB::beginTransaction();
 
         $userId = $request->user()->id;
@@ -69,42 +130,47 @@ class AcuseEntregaController extends Controller
             'archivo' => 'required|file|mimes:pdf',
             'observaciones' => 'nullable|string',
             'orden_compra_id' => 'required|integer',
-            'detalles_entrada' => 'nullable',
+            'proceso' => 'required'
         ]);
 
-        $ordenCompraId = $validated['orden_compra_id'];
+        $proceso = json_decode($validated['proceso'], true);
+
+        $detallesEntrada = $proceso['detalles_entrada'] ?? [];
+        $inventario = $proceso['inventario'] ?? [];
+        $requiereInventario = $proceso['requiereInventario'] ?? false;
+
+        $ordenCompraId =  $validated['orden_compra_id'];
+
         $file = $request->file('archivo');
 
-        $this->storeAcuse($ordenCompraId, $file, $validated);
-        $this->ingresarAlmacen($validated['detalles_entrada'], $userId);
 
-        $esEntregaCompleta = $this->esEntregaCompleta($ordenCompraId); 
-
-        $this->actStatusOrdenSolicitud(
-            $ordenCompraId,
-            EstatusOrdenCompra::ENTREGADA,
-            EstatusSolicitud::ENTREGADA,
-            $esEntregaCompleta
-        );
-
-
-
+        // guardar acuse
+        $this->storeAcuse($ordenCompraId,$file,$validated);
+        // ingresar almacén
+        $this->ingresarAlmacen(json_encode($detallesEntrada),$userId);
+        // guardar inventario solo si aplica
+        if($requiereInventario && count($inventario)>0){
+            $this->guardarInventario($inventario);
+        }
+        $esEntregaCompleta = $this->esEntregaCompleta($ordenCompraId);
+        $this->actStatusOrdenSolicitud($ordenCompraId,EstatusOrdenCompra::ENTREGADA,EstatusSolicitud::ENTREGADA,$esEntregaCompleta);
         DB::commit();
 
         return response()->json([
-            'status' => 'success',
-            'message' => 'Acuse de entrega creado correctamente',
-            'data' => []
-        ], 201);
+            'status'=>'success',
+            'message'=>'Acuse creado correctamente'
+        ]);
 
-    } catch (\Throwable $e) {
+    }
+    catch(\Throwable $e){
+
         DB::rollBack();
 
         return response()->json([
-            'status' => 'error',
-            'message' => 'Error al crear el acuse de entrega',
-            'error' => $e->getMessage()
-        ], 500);
+            'status'=>'error',
+            'message'=>$e->getMessage()
+        ],500);
+
     }
 }
 
@@ -301,6 +367,42 @@ class AcuseEntregaController extends Controller
 
     public function generarEntrada(){
 
+    }
+
+    public function guardarInventario(array $inventario)
+    {
+
+        foreach($inventario as $activo){
+            $almacen = AlmacenCompras::where(
+                'com_detalle_solicitud_id',
+                $activo['detalleId']
+            )->first();
+
+            $hardware = $this->hardwareService
+            ->storeHardware([
+                'marca'=>$activo['marca'] ?? 'N/D',
+                'modelo'=>$activo['modelo'] ?? 'N/D',
+                'no_serie'=>$activo['serie'] ?? 'N/D',
+                'tipo'=>1,
+                'mac'=>$activo['mac'] ?? null,
+                'memoria_ram'=>$activo['ram'] ?? null,
+                'disco_duro'=>$activo['disco'] ?? null,
+                'procesador'=>$activo['procesador'] ?? null,
+                'caracteristicas'=>$activo['caracteristicas'] ?? '',
+                'observaciones'=>$activo['observaciones'] ?? '',
+                'estado'=>1,
+                'cat_empresa_id'=>1,
+                'almacen_compra_id' => $almacen?->id
+            ]);
+
+            if(!empty($activo['usuario_asignar'])){
+                // $this->hardwareService
+                //     ->asignarEquipo(
+                //         $hardware->id,
+                //         $activo['usuario_asignar']
+                //     );
+            }
+        }
     }
 
 

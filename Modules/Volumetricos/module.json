@@ -1,0 +1,11 @@
+{
+    "name": "Volumetricos",
+    "alias": "volumetricos",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Volumetricos\\Providers\\VolumetricosServiceProvider"
+    ],
+    "files": []
+}

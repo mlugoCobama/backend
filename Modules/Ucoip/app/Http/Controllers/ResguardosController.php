@@ -2,33 +2,21 @@
 
 namespace Modules\Ucoip\Http\Controllers;
 
-use Illuminate\Support\Facades\DB;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Modules\Ucoip\Models\Resguardo;
+use Modules\Ucoip\Transformers\ResguardoResource;
 
-class UcoipController extends Controller
+class ResguardosController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-
-        $user = DB::connection('intranet')
-                ->table('glpi_users')
-                ->join('glpi_entities', 'glpi_users.intercompania', '=', 'glpi_entities.intercompania')
-                ->select('glpi_users.id', 'glpi_users.name', 'glpi_users.realname', 'glpi_users.firstname', 'glpi_entities.name as empresa')
-                ->where('glpi_users.is_active', '1')
-                ->get();
-
-        return response()->json([
-            'success' => true,
-            'message' => '',
-            'data' => $user
-        ]);
+        return view('ucoip::index');
     }
 
     /**
@@ -52,7 +40,12 @@ class UcoipController extends Controller
      */
     public function show($id)
     {
-        return view('ucoip::show');
+        $resguardo = Resguardo::with(['detalles.hardware.tipo'])->where('id_usuario_asignado', $id)->get();
+
+        return response()->json([
+            'success' => 'Datos recuperados correctamente',
+            'data' => ResguardoResource::collection($resguardo),
+        ]);
     }
 
     /**

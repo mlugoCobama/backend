@@ -2,34 +2,38 @@
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class ImportarTomaUnidades extends Command
 {
-    protected $signature = 'toma:importar {anio} {clave}';
+    protected $signature = 'toma:importar {clave?} {anio?}';
     protected $description = 'Importa unidades usadas al módulo de toma de unidad parametros Anio y clave (US ó NU)' ;
 
     public function handle()
     {
-        $anio = $this->argument('anio');
-        $clave = strtoupper($this->argument('clave'));
+        $anio = $this->argument('anio') ??  Carbon::now()->format('Y');
+        $clave =  !empty($this->argument('clave')) ? strtoupper($this->argument('clave')) : 'US';
 
-        $conexiones = [
-            'nissan_universidad' => 710,
+         $conexiones = [
+            'renault',
+            'nissan_universidad',
+            'nissan_campestre',
+            'nissan_azcapotzalco',
         ];
 
-        foreach ($conexiones as $conexion => $agenciaId) {
+        foreach ($conexiones as $conexion) {
 
             $this->info("Procesando inventario: {$conexion}");
 
-            $this->procesarConexion($conexion, $agenciaId, $anio, $clave);
+            $this->procesarConexion($conexion, $anio, $clave);
         }
 
         $this->info('Importación de tomas completada');
     }
 
-    private function procesarConexion($conexion, $agenciaId, $anio, $clave)
+    private function procesarConexion($conexion, $anio, $clave)
     {
         $origen  = DB::connection($conexion);
         $destino = DB::connection('autos');
@@ -38,10 +42,12 @@ class ImportarTomaUnidades extends Command
 
         if ($unidades->isEmpty()) return;
 
-        DB::connection('autos')->transaction(function () use ($unidades, $destino, $agenciaId, $anio, $clave) {
+        DB::connection('autos')->transaction(function () use ($unidades, $destino, $anio, $clave, $conexion) {
 
             foreach ($unidades as $unidad) {
 
+            $agenciaId = $this->obtenerAgencia($conexion, $unidad);
+                
                 // Validar duplicado por número de inventario
                 $existe = $destino->table('com_toma_unidad')
                     ->where('no_serie', $unidad->vehi_serie)
@@ -85,8 +91,21 @@ class ImportarTomaUnidades extends Command
                 'IA.vehi_anio',
                 'IA.vehi_fechaasignacion',
                 'IA.vehi_serie',
-                'M.mode_descripcion'
+                'M.mode_descripcion',
+                'IA.vehi_idagencia AS id_agencia'
             )
             ->get();
+    }
+
+    private function obtenerAgencia($conexion, $factura)
+    {
+        return match ($conexion) {
+            'renault' => $factura->id_agencia,
+            'nissan_universidad' => 710,
+            'nissan_azcapotzalco' => 730,
+            'nissan_campestre' => 714,
+            
+            default => $factura->id_agencia
+        };
     }
 }

@@ -155,14 +155,24 @@ class ComisionesController extends Controller
      */
     public function queryDatosVentas($estatus, $agencia, $vendedor, $tipoVenta, $fechaInicio, $fechaFin ){
                 // intercompanias => Azcapo   Campestre  Universidad    Agencia ingresada
-             $agencia = match($agencia){ '7051' => '730', '712' => '714', '710' => '710', '333' => null, default => $agencia}; 
+        $agencia = match($agencia){ '7051' => '730', '712' => '714', '710' => '710', '333' => null, default => $agencia}; 
+
+        $mezclarFlotillas = match($agencia){
+            '7051' => false,
+            '712' => false,
+            '710' => false,
+            '333' => true,
+            default => true
+        };
 
          $ventas = DatosVenta::
             with(['vendedor', 'tipoVenta', 'gatosVenta'])
             ->when($agencia, fn($q) => $q->where('agencia', $agencia))
             ->when($vendedor, fn($q) => $q->where('id_vendedor', $vendedor))
             ->when($estatus, fn($q) => $q->where('estatus', $estatus))
-            ->when($tipoVenta, fn($q) => $q->where('clave_producto', $tipoVenta))
+            ->when($tipoVenta && $tipoVenta != 'flotilla', fn($q) => $q->where('clave_producto', $tipoVenta))
+            ->when(!$mezclarFlotillas && $tipoVenta != 'flotilla', fn($q) => $q->where('tipo_venta' ,'!=', 'FLOTILLA'))
+            ->when($tipoVenta && $tipoVenta == 'flotilla', fn($q) => $q->where('tipo_venta', 'FLOTILLA'))
             ->when($fechaInicio && $fechaFin , fn($q) => $q->whereBetween('fecha_factura', [$fechaInicio, $fechaFin]))
             ->get();
 

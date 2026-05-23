@@ -195,7 +195,7 @@ class TomaUnidadController extends Controller
             ->when($vendedor, fn($q) => $q->where('com_vendedores_id', $vendedor))
             ->when($estatus, fn($q) => $q->where('estatus', $estatus))
             // ->when($tipoVenta, fn($q) => $q->where('clave_producto', $tipoVenta))
-            ->when($fechaInicio && $fechaFin , fn($q) => $q->whereBetween('created_at', [$fechaInicio, $fechaFin]))
+            ->when($fechaInicio && $fechaFin , fn($q) => $q->whereBetween('fecha_toma', [$fechaInicio, $fechaFin]))
             ->active()
             ->get();
 
@@ -211,7 +211,7 @@ class TomaUnidadController extends Controller
      * @param mixed $fechaFin fecha final de búsqueda
      * @param mixed $vendedor id de vendedor
      */
-    public function getTomaUnidad($estatus = null, $agencia =null, $tipoVenta = null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
+    public function getTomaUnidad($estatus = null, $agencia =null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
     
 
     $data = $this->queryFinanciamientos(

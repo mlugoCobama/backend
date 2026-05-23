@@ -26,7 +26,8 @@ class HardwarePcModel extends Model
         "observaciones",
         "estado",
         "cat_hardware_id",
-        "cat_empresa_id"
+        "cat_empresa_id",
+        "almacen_compra_id"
     ];
     /**
      * Campo "tipo" se ocupa para diferenciar el tipo de cpu

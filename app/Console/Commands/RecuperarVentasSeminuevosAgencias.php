@@ -10,27 +10,27 @@ use Modules\Nissan\Models\DatosVenta;
 use Modules\Nissan\Models\TipoVenta;
 use Modules\Nissan\Models\Vendedor;
 
-class RecuperarVentasAgencias extends Command
+class RecuperarVentasSeminuevosAgencias extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:recuperar-ventas-agencias {fechaInicio?} {fechaFin?}';
+    protected $signature = 'app:recuperar-ventas-seminuevos-agencias {fechaInicio?} {fechaFin?}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Recupera datos de venta de agencias de un periodo especifico (especifica inicio y fin en formato YYYY-MM-DD) ';
+    protected $description = 'Command description';
 
     /**
      * Execute the console command.
      */
     public function handle()
-    {
+   {
         $conexiones = ['renault', 'nissan_campestre', 'nissan_azcapotzalco', 'nissan_universidad'];
         $fechaInicio = $this->argument('fechaInicio') ?? Carbon::yesterday()->toDateString();
         $fechaFin    = $this->argument('fechaFin')  ?? Carbon::today()->toDateString();
@@ -55,50 +55,39 @@ class RecuperarVentasAgencias extends Command
     private function sincronizarVentas($conexion, $fechaInicio, $fechaFin)
     {
         $libroVentas = DB::connection($conexion)->select("
-            WITH RegistrosOrdenados AS (
-                SELECT *,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY saau_vehi_vehiculoid
-                        ORDER BY fechaalta DESC
-                    ) AS rn
-                FROM [SISTEMAS].[dbo].[Vt_SalidaAutos]
-                WHERE CAST(saau_fecha AS DATE) BETWEEN ? AND ?
-            )
-            SELECT  
-                CAST(fa.faau_fecha AS DATE) AS fecha_factura,
-                CAST(fa.faau_fechacancelacion AS DATE) AS fecha_cancelacion,
-                fa.faau_vend_clave,
-                fa.faau_nofactura, 
-                fa.faau_razonfactura,
-                fa.faau_idagencia AS id_agencia,
-                vi.vehi_clas_clave,
-                vi.vehi_anio,
-                vi.vehi_numeroinventario,
-                vi.vehi_serie,
-                mo.mode_clave,
-                mo.mode_descripcion,
-                sa.saau_folio,
-                CAST(sa.saau_fecha AS DATE) AS fecha_salida,
-                fa.faau_form_TipoVenta,
-                sa.saau_vehi_vehiculoid,
-                fa.faau_iva,
-                fa.faau_total,
-                (fa.faau_total - (fa.faau_iva + fa.faau_isan)) as Venta,
-                (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos) AS Costo,
-                (bo.prim_importe / 1.16) AS bonificacion,
-                (((fa.faau_total - (fa.faau_iva + fa.faau_isan)) ) - (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos )) + (bo.prim_importe / 1.16) as Utilidad
-            FROM [SISTEMAS].[dbo].[Vt_FacturaAutos] fa
-            JOIN RegistrosOrdenados sa
-                ON fa.faau_vehi_vehiculoid = sa.saau_vehi_vehiculoid
-            JOIN [SISTEMAS].[dbo].[Vt_InventarioAutos] vi
-                ON fa.faau_vehi_vehiculoid = vi.vehi_vehiculoid
-            JOIN [SISTEMAS].[dbo].[Vt_Modelos] mo
-                ON mo.mode_modeloid = vi.vehi_mode_modeloid
-            JOIN [SISTEMAS].[dbo].[vt_PrimBonif] bo
-                ON bo.prim_documento = fa.faau_nofactura
-            WHERE sa.rn = 1
-            AND fa.faau_fechacancelacion IS NULL
-            ORDER BY fa.faau_fecha, fa.faau_vend_clave", 
+            SELECT 
+            CAST(fa.faau_fecha AS DATE) AS fecha_factura,
+            CAST(fa.faau_fechacancelacion AS DATE) AS fecha_cancelacion,
+            fa.faau_vend_clave,
+            fa.faau_nofactura, 
+            fa.faau_razonfactura,
+            fa.faau_idagencia AS id_agencia,
+            vi.vehi_clas_clave,
+            vi.vehi_anio,
+            vi.vehi_numeroinventario,
+            vi.vehi_serie,
+            mo.mode_clave,
+            mo.mode_descripcion,      
+            fa.faau_form_TipoVenta,
+            CAST(fa.faau_fecha AS DATE) AS fecha_salida,         
+            fa.faau_iva,
+            fa.faau_total,
+            (fa.faau_total - (fa.faau_iva + fa.faau_isan)) as Venta,
+            (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos) AS Costo,
+            (((fa.faau_total - (fa.faau_iva + fa.faau_isan)) ) - (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos ))  as Utilidad
+        FROM 
+            [SISTEMAS].[dbo].[Vt_InventarioAutos] vi
+        JOIN [SISTEMAS].[dbo].[Vt_FacturaAutos] fa
+            ON fa.faau_vehi_vehiculoid = vi.vehi_vehiculoid
+        JOIN [SISTEMAS].[dbo].[Vt_Modelos] mo
+            ON mo.mode_modeloid = vi.vehi_mode_modeloid
+
+        WHERE 
+            vi.vehi_clas_clave = 'US'
+        AND 
+            CAST(fa.faau_fecha AS DATE) BETWEEN ? AND ?
+        AND
+            fa.faau_fechacancelacion IS NULL", 
             [$fechaInicio, $fechaFin]
         );
 
@@ -135,7 +124,7 @@ class RecuperarVentasAgencias extends Command
                 DatosVenta::create([
                     'fecha_as_salida'   => $dato->fecha_salida,
                     'fecha_factura'     => $dato->fecha_factura,
-                    'no_factura'        => $dato->faau_nofactura,
+                    'no_factura'        => $dato->faau_nofactura ?? 'TESTND'.$dato->vehi_numeroinventario,
                     'razon_social'      => $dato->faau_razonfactura,
                     'descripcion'       => $dato->mode_descripcion,
                     'no_inventario'     => $dato->vehi_numeroinventario,
@@ -143,7 +132,7 @@ class RecuperarVentasAgencias extends Command
                     'serie'             => $dato->vehi_serie,
                     'total_venta'       => $dato->Venta,
                     'costos'            => $dato->Costo,
-                    'bonificaciones'    => $dato->bonificacion,
+                    'bonificaciones'    => $dato->bonificacion ?? 0,
                     'utilidad_inicial'  => $dato->Utilidad,
                     'tipo_venta_id'     => $tipoVenta->id ?? 2,
                     'tipo_venta'        => $dato->faau_form_TipoVenta,   
@@ -157,6 +146,4 @@ class RecuperarVentasAgencias extends Command
         }
         return $libroVentas;
     }
-
-
 }

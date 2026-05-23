@@ -6,5 +6,6 @@
     "Renault": true,
     "Macro": true,
     "Capacitaciones": true,
-    "TarjetaClientes": true
+    "TarjetaClientes": true,
+    "Volumetricos": true
 }

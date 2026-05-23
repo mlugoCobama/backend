@@ -92,14 +92,14 @@ class CatHardwareController extends Controller
             ];
         }
 
-        foreach ($formatData as $data) {
+        // foreach ($formatData as $data) {
 
-          $inventario = $this->hwService->storeHardware($data);
-          $dataUcoip =  $this->findUcoipGlpi($data['usuario'], $data['empresa']);
+        //   $inventario = $this->hwService->storeHardware($data);
+        //   $dataUcoip =  $this->findUcoipGlpi($data['usuario'], $data['empresa']);
 
-          $resguardo = $this->resguardoService->storeResguardo($dataUcoip);
-          $this->resguardoService->storeDetalle($inventario->id, [], $resguardo->id);
-        }
+        //   $resguardo = $this->resguardoService->storeResguardo($dataUcoip);
+        //   $this->resguardoService->storeDetalle($inventario->id, [], $resguardo->id);
+        // }
 
         return response()->json([
             'status' => $response->status(),
@@ -179,11 +179,6 @@ class CatHardwareController extends Controller
      */
     public function destroy($id)
     {
-        $resguardo = Resguardo::with(['detalles.hardware.tipo'])->where('id_usuario_asignado', $id)->get();
-
-        return response()->json([
-            'success' => 'Datos recuperados correctamente',
-            'data' => $resguardo,
-        ]);
+        
     }
 }

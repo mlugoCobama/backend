@@ -6,6 +6,7 @@ use Modules\Ucoip\Http\Controllers\CatServicioController;
 use Modules\Ucoip\Http\Controllers\HardwareController;
 use Modules\Ucoip\Http\Controllers\ModulosController;
 use Modules\Ucoip\Http\Controllers\PermisosController;
+use Modules\Ucoip\Http\Controllers\ResguardosController;
 use Modules\Ucoip\Http\Controllers\ServiciosController;
 use Modules\Ucoip\Http\Controllers\UcoipController;
 
@@ -28,5 +29,6 @@ Route::middleware([])->prefix('ucoip')->group(function () {
     Route::apiResource('permisos', PermisosController::class)->names('permisos');
     Route::apiResource('cat-servicios', CatServicioController::class)->names('cat-servicios');
     Route::apiResource('servicios', ServiciosController::class)->names('servicios');
+    Route::apiResource('resguardos', ResguardosController::class)->names('resguardos');
     
 });

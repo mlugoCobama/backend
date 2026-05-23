@@ -2,60 +2,92 @@
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class ImportarFacturasServicios extends Command
 {
-    protected $signature = 'facturas:importar-servicios {fechaInicio} {fechaFin}';
+    protected $signature = 'facturas:importar-servicios {fechaInicio?} {fechaFin?}';
     protected $description = 'Importa facturas de servicios AAAA-DD-MM AAAA-DD-MM';
 
     public function handle()
     {
-        $fechaInicio = $this->argument('fechaInicio');
-        $fechaFin    = $this->argument('fechaFin');
+        $fechaInicio = $this->argument('fechaInicio') ?? Carbon::yesterday()->toDateString();
+        $fechaFin = $this->argument('fechaFin') ?? Carbon::today()->toDateString();
+
+        // $conexiones = [
+        //     'nissan_universidad' => 710,
+        // ];
 
         $conexiones = [
-            'nissan_universidad' => 710,
+            'renault',
+            'nissan_universidad',
+            'nissan_campestre',
+            'nissan_azcapotzalco',
         ];
 
-        foreach ($conexiones as $conexion => $agenciaId) {
+        foreach ($conexiones as $conexion) {
 
             $this->info("Procesando servicios: {$conexion}");
 
-            $this->procesarConexion($conexion, $agenciaId, $fechaInicio, $fechaFin);
+            $this->procesarConexion($conexion, $fechaInicio, $fechaFin);
         }
 
         $this->info('Importación de servicios completada');
     }
 
-    private function procesarConexion($conexion, $agenciaId, $fechaInicio, $fechaFin)
+    private function procesarConexion($conexion, $fechaInicio, $fechaFin)
     {
         $origen  = DB::connection($conexion);
         $destino = DB::connection('autos');
 
-        $facturas = $this->queryFacturasServicios($origen, $fechaInicio, $fechaFin);
+        $fechas = $this->formatDateToConnection($fechaInicio, $fechaFin, $conexion);
+        $facturas = $this->queryFacturasServicios($origen, $fechas['fInicio'], $fechas['fFin']);
 
         if ($facturas->isEmpty()) return;
 
-        DB::connection('autos')->transaction(function () use ($facturas, $destino, $agenciaId) {
+        DB::connection('autos')->transaction(function () use ($facturas, $destino, $conexion) {
 
             $claves = $facturas->pluck('vendedor_clave')->unique();
 
-            $empleadosCache = $destino->table('com_vendedores')
-                ->where('agencia', $agenciaId)
-                ->whereIn('nro_vendedor_as', $claves)
-                ->get()
-                ->keyBy('nro_vendedor_as');
+            $empleadosCache = collect();
+
+            // $empleadosCache = $destino->table('com_vendedores')
+            //     ->where('agencia', $agenciaId)
+            //     ->whereIn('nro_vendedor_as', $claves)
+            //     ->get()
+            //     ->keyBy('nro_vendedor_as');
 
             foreach ($facturas as $factura) {
 
-                $claveEmpleado = $factura->vendedor_clave;
-                $empleado = $empleadosCache->get($claveEmpleado);
+                $agenciaId = $this->obtenerAgencia($conexion, $factura);
+
+                // $claveEmpleado = $factura->vendedor_clave;
+                // $empleado = $empleadosCache->get($claveEmpleado);
+
+                if (!$empleadosCache->has($agenciaId)) {
+
+                    $empleados = $destino->table('com_vendedores')
+                        ->where('agencia', $agenciaId)
+                        ->whereIn('nro_vendedor_as', $claves)
+                        ->get()
+                        ->keyBy('nro_vendedor_as');
+
+                    $empleadosCache->put($agenciaId, $empleados);
+                }
+
+                $cacheAgencia = $empleadosCache->get($agenciaId);
+
+                $claveEmpleado = $factura->pedi_empl_clave;
+
+                $empleado = $cacheAgencia->get($claveEmpleado);
 
                 if ($empleado) {
+
                     $empleadoId = $empleado->id;
                 } else {
+
                     $empleadoId = $destino->table('com_vendedores')->insertGetId([
                         'nro_vendedor_as' => $claveEmpleado,
                         'nombre' => 'SIN NOMBRE',
@@ -66,10 +98,16 @@ class ImportarFacturasServicios extends Command
                         'updated_at' => now(),
                     ]);
 
-                    $empleadosCache->put($claveEmpleado, (object)[
+                    // Actualizar cache
+                    $cacheAgencia->put($claveEmpleado, (object)[
                         'id' => $empleadoId
                     ]);
+
+                    $empleadosCache->put($agenciaId, $cacheAgencia);
                 }
+
+
+
 
                 // Validar duplicado
                 $existe = $destino->table('com_accesorios')
@@ -120,6 +158,7 @@ class ImportarFacturasServicios extends Command
     {
         $facturas = $connection->table('Se_FacturaServicios as FS')
             ->join('Se_OrdenServicio as OS', 'OS.orse_folio', '=', 'FS.fase_orse_folio')
+            ->join('empleados as E', 'OS.orse_ases_clave', '=', 'E.empl_clave')
             ->where('FS.fase_cancelado', 0)
             ->whereBetween('FS.fase_fecha', [$fechaInicio, $fechaFin])
             ->select(
@@ -130,7 +169,8 @@ class ImportarFacturasServicios extends Command
                 'FS.fase_subtotal',
                 'FS.fase_iva',
                 'FS.fase_total',
-                'OS.orse_ases_clave as vendedor_clave'
+                'OS.orse_ases_clave as vendedor_clave',
+                'E.empl_agen_idagencia AS id_agencia'
             )
             ->get();
 
@@ -154,5 +194,31 @@ class ImportarFacturasServicios extends Command
             $factura->detalles = $detalles->get($factura->fase_orse_folio, collect([]))->values();
             return $factura;
         });
+    }
+
+
+    private function obtenerAgencia($conexion, $factura)
+    {
+        return match ($conexion) {
+            'renault' => $factura->id_agencia,
+            'nissan_universidad' => 710,
+            'nissan_azcapotzalco' => 730,
+            'nissan_campestre' => 714,
+            
+            default => $factura->id_agencia
+        };
+    }
+
+    public function formatDateToConnection($fechaInicio, $fechaFin, $connection){
+
+        return match ($connection) {
+                'nissan_universidad' =>  
+                                        ['fInicio' => Carbon::parse($fechaInicio)->format('Y-d-m'),
+                                        'fFin' => Carbon::parse($fechaFin)->format('Y-d-m')],
+                'renault' => ['fInicio' => Carbon::parse($fechaInicio)->format('Y-d-m'),
+                                'fFin' => Carbon::parse($fechaFin)->format('Y-d-m')],
+                
+                default => ['fInicio' => $fechaInicio, 'fFin' => $fechaFin]
+        };
     }
 }
