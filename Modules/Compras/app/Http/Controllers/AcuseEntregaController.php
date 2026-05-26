@@ -152,13 +152,18 @@ public function store(Request $request)
         if($requiereInventario && count($inventario)>0){
             $this->guardarInventario($inventario);
         }
+
         $esEntregaCompleta = $this->esEntregaCompleta($ordenCompraId);
+
+
         $this->actStatusOrdenSolicitud($ordenCompraId,EstatusOrdenCompra::ENTREGADA,EstatusSolicitud::ENTREGADA,$esEntregaCompleta);
         DB::commit();
 
         return response()->json([
             'status'=>'success',
-            'message'=>'Acuse creado correctamente'
+            'message'=>'Acuse creado correctamente',
+            'data'=> [],
+            'esEntragaCompleta' => $esEntregaCompleta
         ]);
 
     }
@@ -225,7 +230,6 @@ public function store(Request $request)
 
     public function esEntregaCompleta(int $ordenCompraId): bool
     {
-        // Obtener la orden y de ahí la solicitud relacionada
         $orden = OrdenCompra::with('cotizacion')->find($ordenCompraId);
 
         if (!$orden || !$orden->cotizacion) {
@@ -234,25 +238,22 @@ public function store(Request $request)
 
         $solicitudId = $orden->cotizacion->solicitudes_compra_id;
 
-        // Traer todos los detalles confirmados con su registro de almacén
-        $detalles = DetalleSolicitud::where('solicitudes_compra_id', $solicitudId)
-            ->with('almacenCompras')
-            ->confirmadas()
-            ->get();
+        $detalles = DetalleSolicitud::where('solicitudes_compra_id',$solicitudId)
+        ->with('almacenCompras')
+        ->confirmadas()
+        ->get();
 
         if ($detalles->isEmpty()) {
             return false;
         }
 
-        // La entrega es completa solo si TODOS los detalles tienen
-        // su existencia igual o mayor a la cantidad solicitada
         return $detalles->every(function ($detalle) {
-            $existencia = $detalle->almacenCompras->existencia ?? 0;
+            $existencia = optional( $detalle->almacenCompras)->existencia ?? 0;
             return $existencia >= $detalle->cantidad;
         });
     }
 
-    public function actStatusOrdenSolicitud($idOrdenCompra, $statusOrdenCompra, $estatusSolicitud, $esEntregaCompleta){
+    public function actStatusOrdenSolicitud2($idOrdenCompra, $statusOrdenCompra, $estatusSolicitud, $esEntregaCompleta){
 
         $orden = OrdenCompra::where('id', $idOrdenCompra)->first();
         if ($orden) {
@@ -260,12 +261,12 @@ public function store(Request $request)
             $requiereFactura = ($facturas == 0);
             if( $orden->modo_pago == 2 && $orden->pagado != 1) {
                 // Flujo comrpas a credito
-                $orden->estatus = $requiereFactura  ? EstatusOrdenCompra::FACTURADO: EstatusOrdenCompra::SOLICITADO_PAGO;
+                $orden->estatus = $requiereFactura  ? EstatusOrdenCompra::FACTURADO : EstatusOrdenCompra::SOLICITADO_PAGO;
 
             }else{
                 // Flujo compras de contado
                 if(!$esEntregaCompleta){
-                    $orden->estatus = $statusOrdenCompra;
+                    $orden->estatus = $orden->pagado != 1 ? EstatusOrdenCompra::SOLICITADO_PAGO : $statusOrdenCompra;
                 }else{
                     $orden->estatus = EstatusOrdenCompra::FINALIZADA;
                 }
@@ -282,17 +283,98 @@ public function store(Request $request)
                     $solicitud->estatus = $requiereFactura ? EstatusSolicitud::FACTURADO : EstatusSolicitud::SOLICITADO_PAGO;
                 }else{
                     // Flujo compras de contado
-                    $solicitud->estatus = $estatusSolicitud;
+                    // $solicitud->estatus = $estatusSolicitud;
                     if(!$esEntregaCompleta){
-                        $solicitud->estatus = $estatusSolicitud;
+                        $solicitud->estatus = $orden->pagado != 1 ? EstatusSolicitud::SOLICITADO_PAGO : $estatusSolicitud;
                     }else{
-                        $orden->estatus = EstatusSolicitud::FINALIZADA;
+                        $solicitud->estatus = EstatusSolicitud::FINALIZADA;
                     }
                 }  
                 $solicitud->save(); 
             }
         }
     }
+
+
+    public function actStatusOrdenSolicitud(int $idOrdenCompra,int $statusOrdenCompra,int $statusSolicitud,bool $esEntregaCompleta){
+    $orden = OrdenCompra::with(['documentos','cotizacion'])->find($idOrdenCompra);
+
+    if(!$orden || !$orden->cotizacion){
+        return;
+    }
+
+    $solicitud = SolicitudesCompra::find($orden->cotizacion->solicitudes_compra_id);
+
+    if(!$solicitud){
+        return;
+    }
+
+    $faltanFacturas = $orden->documentos()->count() == 0;
+
+    $estatusOrdenFinal = $statusOrdenCompra;
+    $estatusSolicitudFinal = $statusSolicitud;
+
+    // 
+    // COMPRAS A CRÉDITO
+    // 
+    if($orden->modo_pago == 2){
+        // Crédito pendiente de pago
+        if($orden->pagado != 1){
+            if($faltanFacturas){
+                $estatusOrdenFinal =EstatusOrdenCompra::FACTURADO;
+                $estatusSolicitudFinal =EstatusSolicitud::FACTURADO;
+            }else{
+                $estatusOrdenFinal =EstatusOrdenCompra::SOLICITADO_PAGO;
+                $estatusSolicitudFinal =EstatusSolicitud::SOLICITADO_PAGO;
+            }
+        }
+        else{
+            // Ya pagado
+            if($esEntregaCompleta){
+                $estatusOrdenFinal =EstatusOrdenCompra::FINALIZADA;
+                $estatusSolicitudFinal =EstatusSolicitud::FINALIZADA;
+            }else{
+                $estatusOrdenFinal = $statusOrdenCompra;
+                $estatusSolicitudFinal = $statusSolicitud;
+            }
+        }
+    }
+
+    // 
+    // COMPRAS DE CONTADO
+    //
+    else{
+        if($orden->pagado != 1){
+            if($faltanFacturas){
+                $estatusOrdenFinal =EstatusOrdenCompra::FACTURADO;
+                $estatusSolicitudFinal =EstatusSolicitud::FACTURADO;
+            }else{
+                $estatusOrdenFinal =EstatusOrdenCompra::SOLICITADO_PAGO;
+                $estatusSolicitudFinal =EstatusSolicitud::SOLICITADO_PAGO;
+            }
+        }
+        else{
+            if($esEntregaCompleta){
+                if($faltanFacturas){
+                    $estatusOrdenFinal =EstatusOrdenCompra::FACTURADO;
+                    $estatusSolicitudFinal =EstatusSolicitud::FACTURADO;
+                }else{
+                    $estatusOrdenFinal = EstatusOrdenCompra::FINALIZADA;
+                    $estatusSolicitudFinal = EstatusSolicitud::FINALIZADA;
+                }
+            }else{
+                $estatusOrdenFinal = $statusOrdenCompra;
+                $estatusSolicitudFinal = $statusSolicitud;
+            }
+        }
+    }
+
+    $orden->estatus = $estatusOrdenFinal;
+    $orden->save();
+
+    $solicitud->estatus = $estatusSolicitudFinal;
+    $solicitud->save();
+}
 
     /**
      * Recupera un archivo relacionado con una orden de compra desde el servidor.
