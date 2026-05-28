@@ -2,14 +2,23 @@
 
 namespace Modules\Compras\Services;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Modules\Compras\Models\DatosTanque;
 use Modules\Compras\Models\DatosVehiculo;
 use Modules\Macro\Models\SeguroVehiculo;
+use Modules\Compras\Integrations\TecnoGpsApi;
 
 class ParqueVehicularService{
 
-protected $status = [
+    protected $gpsApi;
+
+    public function __construct(TecnoGpsApi $gpsApi)
+    {
+        $this->gpsApi = $gpsApi;
+    }
+
+    protected $status = [
         "ACTIVA" => 1,
         "EN TALLER" => 2,
         "VENDIDA" => 3,
@@ -212,4 +221,101 @@ public function calcularSaldo($saldo, $saliente, $entrante){
             };
 
         }
+
+
+    /**
+     * -----------------------------------------------------------------
+     * INTEGRACION CON GPS
+     * -----------------------------------------------------------------
+     */
+
+
+    /**
+     * Sincroniza el parque veicular con sus gps
+     */
+    public function sincronizarGpsVehiculos()
+    {
+        $rawData = $this->gpsApi->obtenerVehiculosEmpresa();
+        $data = $rawData['data']['units'];
+        foreach ($data as $item) {
+            $vehiculo = DatosVehiculo::where('no_serie', $item['vin'])->first();
+            if($vehiculo){
+                $vehiculo->unit_id_gps =  $item['unit_id'];
+                $vehiculo->save();
+            }
+        }
+        return  $data;
     }
+
+    /**
+     * Recupera el recorrido de unidades del dia anterior
+     */
+    public function calcularRecorridoUnidad($idUnidad){
+        // Inicio del dia anterior
+        $fechaInicio = Carbon::yesterday('America/Mexico_City')
+            ->startOfDay()
+            ->utc()
+            ->format('Y-m-d\TH:i:s\Z');
+        // Fin del dia anterior
+        $fechaFin = Carbon::yesterday('America/Mexico_City')
+            ->endOfDay()
+            ->utc()
+            ->format('Y-m-d\TH:i:s\Z');
+        $data = [];
+        $unidad = DatosVehiculo::find($idUnidad);
+        if($unidad && !empty($unidad->unit_id_gps)){
+           $data = $this->gpsApi->obtenerRutas($unidad->unit_id_gps, $fechaInicio, $fechaFin);
+        }
+        return $data;
+    }
+
+
+
+    /**
+     * Calcula datos como distancia_total_metros, distancia_total_km
+     * veces_detenido, tiempo_detenido_segundos, tiempo_manejando_segundos
+     */
+    public function calcularResumenRecorrido($data)
+    {
+        $resumen = [
+            'distancia_total_metros' => 0,
+            'distancia_total_km' => 0,
+            'veces_detenido' => 0,
+            'tiempo_detenido_segundos' => 0,
+            'tiempo_manejando_segundos' => 0,
+        ];
+
+        $routes = $data['data']['units'][0]['routes'] ?? [];
+
+        foreach ($routes as $route) {
+
+            // calcular tiempos manejando o recorrido
+            if ($route['type'] === 'route') {
+                $resumen['distancia_total_metros'] += $route['distance'] ?? 0;
+                $inicio = Carbon::parse($route['start']['time']);
+                $fin = Carbon::parse($route['end']['time']);
+                $resumen['tiempo_manejando_segundos'] +=
+                    $inicio->diffInSeconds($fin);
+            }
+
+            // Cuando está detenido
+            if ($route['type'] === 'stop') {
+                $resumen['veces_detenido']++;
+                $inicio =Carbon::parse($route['start']['time']);
+                $fin = Carbon::parse($route['end']['time']);
+                $resumen['tiempo_detenido_segundos'] +=
+                    $inicio->diffInSeconds($fin);
+            }
+        }
+
+        // Convertir metros a km
+        $resumen['distancia_total_km'] = round($resumen['distancia_total_metros'] / 1000,2);
+
+        // Formatear tiempos
+        $resumen['tiempo_manejando'] =gmdate('H:i:s',$resumen['tiempo_manejando_segundos']);
+
+        $resumen['tiempo_detenido'] =gmdate('H:i:s',$resumen['tiempo_detenido_segundos']);
+
+        return $resumen;
+    }
+}

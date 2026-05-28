@@ -4,12 +4,14 @@ namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sucursales;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Modules\Compras\Models\ComRecargasVehiculos;
+use Modules\Compras\Models\DatosGps;
 use Modules\Compras\Models\DatosTanque;
 use Modules\Compras\Models\DatosVehiculo;
 use Modules\Compras\Models\ObservacionVehiculo;

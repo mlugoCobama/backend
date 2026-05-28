@@ -87,3 +87,7 @@ Se actualiza el sp para obtener comisiones
 ## Compras- Documentos ordenes compras
 - Cambios en el manejo de estatus en compras de contado
 - Se añade soporte para lectura y almacenamiento de datos de facturas
+
+# **Fecha de liberación:** 27 de mayo de 2026
+## Compras-Paque vehicular
+- Se agrega el calculo de distancias recorridas de las unidades integrandolo mediante al gps

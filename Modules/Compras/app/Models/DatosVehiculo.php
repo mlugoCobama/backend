@@ -3,9 +3,12 @@
 namespace Modules\Compras\Models;
 
 use App\Traits\Auditable;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Modules\Compras\Database\Factories\DatosVehiculoFactory;
+use Modules\Compras\Models\DatosTanque;
+use Modules\Compras\Models\DetalleAutotanque;
+use Modules\Compras\Models\ObservacionVehiculo;
 
 class DatosVehiculo extends Model
 {
@@ -35,7 +38,8 @@ class DatosVehiculo extends Model
         'gps',
         'limite', // limite del tag
         'num_tarjeta_toka',
-        'num_tag'
+        'num_tag',
+        'unit_id_gps'
 
     ];
      /**
@@ -63,10 +67,21 @@ class DatosVehiculo extends Model
     }
 
     /**
+     * Un vehiculo tiene muchos datos de gps
+     */
+    public function datosGps(){
+        return $this->hasMany(DatosGps::class, 'com_datos_vehiculos_id', 'id');
+    }
+
+    /**
      * Función para obtener los datos activos
      */
     public function scopeAutorizadas ($query) {
         return $query->where('estatus', 1);
+    }
+
+    public function scopeActivas ($query) {
+        return $query->where('activo', 1);
     }
 
     protected static function newFactory(): DatosVehiculoFactory

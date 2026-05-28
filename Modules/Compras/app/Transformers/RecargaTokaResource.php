@@ -19,6 +19,7 @@ class RecargaTokaResource extends JsonResource
             'submarca'   => $this->submarca,
             'no_serie'    => $this->no_serie,
             'numTarjetaToka'    => $this->num_tarjeta_toka ?? 'No Disponible',
+            'distanciaRecorrida'    => ($this->distancia_recorrida ?? 0) / 1000,
             'placas'  => $this->placas,
             'modelo'  => $this->modelo,
             'tipo'    => $this->tipo,

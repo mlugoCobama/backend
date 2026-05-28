@@ -722,9 +722,7 @@ public function queryComprasDocumentos($empresa, $tipo = null)
                 $cotizacionOC = $solicitud->Cotizaciones->firstWhere('orden_compra', '!=', null);
                 $ordenCompra  = $cotizacionOC?->orden_compra;
                 $folioOC      = $ordenCompra->folio_oc ?? '';
-                $fechaEntregaFormateada = $ordenCompra->fecha_entrega
-                ? date('d/m/Y H:i', strtotime($ordenCompra->fecha_entrega))
-                    : '';
+                $fechaEntregaFormateada = $ordenCompra->fecha_entrega ? date('d/m/Y H:i', strtotime($ordenCompra->fecha_entrega)): '';
 
                 /*
                 |----------------------------------------------------------
@@ -768,7 +766,9 @@ public function queryComprasDocumentos($empresa, $tipo = null)
                 }
 
                 $tieneAcuseEntrega = $ordenCompra?->acusesEntrega?->isNotEmpty() ? '1' : '0';
-
+                $fechaEntregaInsumos = $ordenCompra?->acusesEntrega?->isNotEmpty() 
+                ? date('d/m/Y H:i', strtotime($ordenCompra?->acusesEntrega[0]->fecha)) 
+                : '-';
 
                 // Proveedor seleccionado
                 $proveedor = 'N/A';
@@ -795,7 +795,7 @@ public function queryComprasDocumentos($empresa, $tipo = null)
                     'Estado'                => $label,
                     'proveedor'             => $proveedor,
                     'FechaEntregaPrometida' => $fechaEntregaFormateada,
-                    'FechaEntregaReal'      => '',
+                    'FechaEntregaReal'      => $fechaEntregaInsumos,
                     'TieneAcuseEntrega'     => $tieneAcuseEntrega,
                     'TieneFacturas'         => $tieneFacturas  ? '1' : '0',
                     'TieneComplementos'     => $tieneComplementos ? '1' : '0',
