@@ -350,9 +350,9 @@ class OrdenCompraPdfController extends Controller
                 
                 // Calcular altura aproximada basada en longitud de texto
                 $lineasDescripcion = max(1, ceil(strlen($descripcion) / 40)); // ~45 caracteres por línea
-                $lineasObservaciones = max(1, ceil(strlen($observaciones) / 40)); // ~35 caracteres por línea
+                $lineasObservaciones = max(1, ceil(strlen($observaciones) / 42)); // ~35 caracteres por línea
                 
-                $alturaFila = (max($lineasDescripcion, $lineasObservaciones)) * 4.5;
+                $alturaFila = (max($lineasDescripcion, $lineasObservaciones)) * 4.4;
                 // $alturaFila = $lineasDescripcion * 4.5;
 
                 $alturasFilas[] = $alturaFila;
@@ -407,8 +407,8 @@ class OrdenCompraPdfController extends Controller
                 $cantidad = $detalle->detalle_solicitud->cantidad;
                 $precio_unitario = $detalle->importe_unitario;
                 $tipo = $detalle->detalle_solicitud->unidadMedida->nombre;
-                $descripcion = $detalle->detalle_solicitud->descripcion;
-                $observaciones = $detalle->detalle_solicitud->observaciones;
+                $descripcion =  str_replace("•", "-", $detalle->detalle_solicitud->descripcion);
+                $observaciones =  str_replace("•", "-", $detalle->detalle_solicitud->observaciones);
                 $eco = '';
 
                 $detalleAutotanque = $detalle->detalle_solicitud->DetalleAutotanque;
@@ -506,37 +506,37 @@ class OrdenCompraPdfController extends Controller
 
             // Datos de usuario destino
             if($data['solicitudCompra']['c_c'] === 0){
-                $pdf->SetXY(57, 37.9);
+                $pdf->SetXY(56.5, 37.9);
                 $pdf->Write(0, utf8_decode('' . $data['destino'][0]->firstname . ' ' . $data['destino'][0]->realname . ''));
-                $pdf->SetXY(57, 40.6);
+                $pdf->SetXY(56.5, 40.6);
                 $pdf->Write(0, utf8_decode($data['destino'][0]->puesto));
             }else{
-                $pdf->SetXY(57, 37.9);
+                $pdf->SetXY(56.5, 37.9);
                 $pdf->Write(0, utf8_decode($dataCC['descripcion']));
-                $pdf->SetXY(57, 40.6);
+                $pdf->SetXY(56.5, 40.6);
                 $pdf->Write(0, '---------------------------------');
             }
 
-            $pdf->SetXY(57, 42.8);
+            $pdf->SetXY(56.5, 43);
             $pdf->Write(0, strtoupper(utf8_decode($this->setEmpresaName($data['solicitudCompra']['empresa']))));
 
             $pdf->SetFont('Arial', '', 5);
-            $pdf->SetXY(56, 44.3);
+            $pdf->SetXY(56.5, 44.3);
             $motivo = $this->formatearCadena($data['solicitudCompra']['motivo']);
             $textoRecortado =  substr($motivo, 0, 230) . (strlen($motivo) > 230 ? '...':'');
             $pdf->MultiCell(100, 2, $textoRecortado, 0, 'L');
 
             $pdf->SetFont('Arial', '', 6);
-            $pdf->SetXY(57, 56);
+            $pdf->SetXY(56.5, 56);
             $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['nombre'])));
-            $pdf->SetXY(57, 58.6);
+            $pdf->SetXY(56.5, 58.6);
             $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['localidad'])));
-            $pdf->SetXY(57, 61.1);
+            $pdf->SetXY(56.5, 61.1);
             $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['contacto'])));
-            $pdf->SetXY(57, 63.6);
+            $pdf->SetXY(56.5, 63.6);
             $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['telefono'])));
             // $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['datosPago'])));
-            $pdf->SetXY(57, 66.1);
+            $pdf->SetXY(56.5, 66.1);
             // $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['condiciones'])));
             
             $fechaE = 'Dato No Disponible';
@@ -694,11 +694,11 @@ class OrdenCompraPdfController extends Controller
             $pdf->Write(0, $tipoCambio);
 
             // Importe
-            $pdf->SetXY(141.5, 221.5);
+            $pdf->SetXY(141.5, 221.8);
             $pdf->Cell(14, 2.5, "$ " . number_format($totalImporte, 2), 0, '0', $align = 'R');
-            $pdf->SetXY(156, 221.5);
+            $pdf->SetXY(156, 221.8);
             $pdf->Cell(16, 2.5, "$ 0.00", 0, '0', $align = 'R');
-            $pdf->SetXY(172, 221.5);
+            $pdf->SetXY(172, 221.8);
             $pdf->Cell(26, 2.5, "$ " . number_format($totalImporte, 2), 0, '0', $align = 'R');
 
             // Tipo cambio
@@ -728,21 +728,21 @@ class OrdenCompraPdfController extends Controller
             $pdf->Cell(26, 2.5, "", 0, '0', $align = 'R');
 
             // IVA
-            $pdf->SetXY(141.5, 231.8);
+            $pdf->SetXY(141.5, 232);
             $pdf->Cell(14, 2.5, "$ " . number_format($iva, 2), 0, '0', $align = 'R');
-            $pdf->SetXY(156, 231.8);
+            $pdf->SetXY(156, 232);
             $pdf->Cell(16, 2.5, '$ 0.00', 0, '0', $align = 'R');
-            $pdf->SetXY(172, 231.8);
+            $pdf->SetXY(172, 232);
             $pdf->Cell(26, 2.5, "$ " . number_format($iva, 2), 0, '0', $align = 'R');
 
             $total = $subtotal + $iva;
 
             // TOTAL
-            $pdf->SetXY(141.5, 234.2);
+            $pdf->SetXY(141.5, 234.5);
             $pdf->Cell(14, 2.5, "$ " . number_format($total, 2), 0, '0', $align = 'R');
-            $pdf->SetXY(156, 234.2);
+            $pdf->SetXY(156, 234.5);
             $pdf->Cell(16, 2.5, '$ 0.00', 0, '0', $align = 'R');
-            $pdf->SetXY(172, 234.2);
+            $pdf->SetXY(172, 234.5);
             $pdf->Cell(26, 2.5, "$ " . number_format($total, 2), 0, '0', $align = 'R');
         }
 
@@ -760,8 +760,7 @@ class OrdenCompraPdfController extends Controller
 
         function formatearCadena($texto) {
 
-            
-            $texto = str_replace(["\r\n", "\n", "\r"], ' ', $texto);
+            $texto = str_replace(["\r\n", "\n", "\r", "•"], ' ', $texto);
             $texto = trim(preg_replace('/\s+/', ' ', $texto));
             $texto = mb_strtolower($texto);
             $texto = ucfirst($texto);

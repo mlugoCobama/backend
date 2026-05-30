@@ -473,7 +473,7 @@ public function store(Request $request)
                 'caracteristicas'=>$activo['caracteristicas'] ?? '',
                 'observaciones'=>$activo['observaciones'] ?? '',
                 'estado'=>1,
-                'cat_empresa_id'=>1,
+                'cat_empresa_id'=>15,
                 'almacen_compra_id' => $almacen?->id
             ]);
 

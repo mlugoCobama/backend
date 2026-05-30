@@ -20,18 +20,12 @@ class PagoProgramadoService
 
         $fechaInicio = Carbon::parse($servicio->fecha_inicio);
         $fechaLimiteSistema = now()->copy()->addMonths($mesesHaciaFuturo);
-
         // Si tiene fecha_fin, usamos la menor
-        $fechaFin = $servicio->fecha_fin 
-            ? Carbon::parse($servicio->fecha_fin)
-            : $fechaLimiteSistema;
-
+        $fechaFin = $servicio->fecha_fin  ? Carbon::parse($servicio->fecha_fin) : $fechaLimiteSistema;
         $fechaActual = $fechaInicio->copy();
 
         while ($fechaActual <= $fechaFin) {
-
             $this->crearPago($servicio, $fechaActual);
-
             // Avanzar según periodicidad
             $fechaActual->addMonths($periodicidad);
         }

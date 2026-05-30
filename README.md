@@ -90,4 +90,4 @@ Se actualiza el sp para obtener comisiones
 
 # **Fecha de liberación:** 27 de mayo de 2026
 ## Compras-Paque vehicular
-- Se agrega el calculo de distancias recorridas de las unidades integrandolo mediante al gps
+- Se agrega el calculo de distancias recorridas de las unidades integrándolo mediante al gps

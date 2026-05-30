@@ -53,96 +53,41 @@ class CatHardwareController extends Controller
      */
     public function show($id)
     {
-        $response = Http::withHeaders([
-            'x-api-key' => env('TAC_API_KEY'),
-            'Accept' => 'application/json',
-            ])->get(env('TAC_API_ROUTE'), [
-                'site' => $id
-            ]);
-
-        $data = $response->json();
-
+        $data = $this->hwService->getDevicesEmpresa($id);
         $formatData = [];
 
         foreach ($data as $item) {
 
-            $equipo =  $this->separarMarcaModelo($item['make_model']);
-
+            $equipo =  $this->hwService->separarMarcaModelo($item['make_model']);
             $ucoip = $this->findUcoipGlpi($item['logged_username'], $item['site_name']);
 
             $formatData[] = [
                 'marca' => $equipo ['marca'],
                 'modelo' => $equipo ['modelo'],
                 'no_serie' => $item['serial_number'],
-                'tipo' => $this->validateOrigin($item['serial_number']),
-                'disco_duro' => $this->obtenerCapacidad($item['physical_disks'][0] ?? 'OGB'),
+                'tipo' => $this->hwService->validateOrigin($item['serial_number']),
+                'disco_duro' => $this->hwService->obtenerCapacidad($item['physical_disks'][0] ?? 'OGB'),
                 'procesador' => $item['cpu_model'][0],
                 'cat_hardware_id' => 1,
                 'cat_empresa_id' => 14,
-
                 'nombre_equipo' => $item['hostname'],
-                // 'ucoip' => $ucoip,
                 'empresa' => $item['site_name'],
                 'usuario' => $item['logged_username'],
-                // 'dsc' => $item['make_model'],
-                // 'sistema' => $item['plat'],
-                // 'dsc_sistema' => $item['operating_system'],
-                
-                // 'tarjeta_grafica' => $item['graphics'],
             ];
         }
 
         // foreach ($formatData as $data) {
-
         //   $inventario = $this->hwService->storeHardware($data);
         //   $dataUcoip =  $this->findUcoipGlpi($data['usuario'], $data['empresa']);
-
         //   $resguardo = $this->resguardoService->storeResguardo($dataUcoip);
         //   $this->resguardoService->storeDetalle($inventario->id, [], $resguardo->id);
         // }
 
         return response()->json([
-            'status' => $response->status(),
-            // 'rawData' => $data,
+            'status' => 'success',
             'data' => $formatData,
             'message' => 'Datos recuperados correctamente'
         ]);
-    }
-
-    public function validateOrigin($serie){
-        return $serie == "To be filled by O.E.M." ? 2 : 1;
-    }
-
-
-    public function obtenerCapacidad(string $texto)
-    {
-        preg_match('/(\d+(?:\.\d+)?(?:GB|TB))/', $texto, $matches);
-        return $matches[1] ?? null;
-    }
-
-    public function separarMarcaModelo(string $texto): array
-    {
-        $texto = trim($texto);
-        $partes = explode(' ', $texto);
-        $marca = $partes[0] ?? null;
-
-        $modelo = implode(' ', array_slice($partes, 1));
-
-        $modelo = str_replace([
-            'Technology Co., Ltd.',
-            'Inc.',
-            'Corporation',
-            'COMPUTER INC.',
-            'Ltd.',
-            'Co.,'
-        ], '', $modelo);
-
-        $modelo = trim(preg_replace('/\s+/', ' ', $modelo));
-
-        return [
-            'marca' => $marca,
-            'modelo' => $modelo
-        ];
     }
 
     public function findUcoipGlpi($ucoip, $nombreSite){

@@ -19,12 +19,12 @@ class ResguardosService
     {
         return DB::transaction(function () use ($data, $detalles) {
             $resguardo = Resguardo::create([
-                'usuario_asignado' => $data['usuario_asignado'],
-                'fecha_inicio'     => $data['fecha_inicio'],
-                'fecha_fin'        => $data['fecha_fin'],
-                'empresa'        => $data['empresa'],
-                'comentarios'      => $data['comentarios'] ?? null,
-                'admin_rt'         => $data['admin_rt'],
+                'usuario_asignado'  => $data['usuario_asignado'],
+                'fecha_inicio'      => $data['fecha_inicio'],
+                'fecha_fin'         => $data['fecha_fin'],
+                'empresa'           => $data['empresa'],
+                'comentarios'       => $data['comentarios'] ?? null,
+                'admin_rt'          => $data['admin_rt'],
             ]);
 
             foreach ($detalles as $detalle) {
@@ -44,8 +44,8 @@ class ResguardosService
 
     public function storeResguardo( $data ){
         $resguardo                      = new Resguardo();
-        $resguardo->id_usuario_asignado    = $data['id_usuario'];
-        $resguardo->id_empresa    = $data['id_empresa'];
+        $resguardo->id_usuario_asignado = $data['id_usuario'];
+        $resguardo->id_empresa          = $data['id_empresa'];
         $resguardo->fecha_inicio        = now();
         $resguardo->fecha_fin           = null;
         $resguardo->comentarios         = $data['comentarios'] ?? null;
@@ -55,16 +55,13 @@ class ResguardosService
     }
 
     public function storeDetalle( $idHardware, $detalle, $idResguardo ){
-
         $detalle =  new DetalleResguardo();
-        $detalle->ucoip_resguardo_ucoip_id      = $idResguardo;
-        $detalle->ucoip_hardware_id       = $idHardware;
-        $detalle->fecha_entrega     = now();
-        $detalle->fecha_devolucion  = $detalle['fecha_devolucion'] ?? null;
-        $detalle->observaciones     = $detalle['observaciones'] ?? null;
-        $detalle->caracteristicas   = $detalle['caracteristicas'] ?? null;
+        $detalle->ucoip_resguardo_ucoip_id  = $idResguardo;
+        $detalle->ucoip_hardware_id         = $idHardware;
+        $detalle->fecha_entrega             = now();
+        $detalle->fecha_devolucion          = $detalle['fecha_devolucion'] ?? null;
+        $detalle->observaciones             = $detalle['observaciones'] ?? null;
+        $detalle->caracteristicas           = $detalle['caracteristicas'] ?? null;
         $detalle->save();
-
-        
     }
 }
