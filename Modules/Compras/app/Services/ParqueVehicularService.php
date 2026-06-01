@@ -237,14 +237,21 @@ public function calcularSaldo($saldo, $saliente, $entrante){
     {
         $rawData = $this->gpsApi->obtenerVehiculosEmpresa();
         $data = $rawData['data']['units'];
+
+        $noAsignados = []; // aquí guardaremos los que no se pudieron mapear
         foreach ($data as $item) {
             $vehiculo = DatosVehiculo::where('no_serie', $item['vin'])->first();
             if($vehiculo){
-                $vehiculo->unit_id_gps =  $item['unit_id'];
-                $vehiculo->save();
+                // $vehiculo->unit_id_gps =  $item['unit_id'];
+                // $vehiculo->save();
+            }else{
+                 $noAsignados[] = $item;
             }
         }
-        return  $data;
+        return  [
+            'asignados'   => $data,
+            'no_asignados'=> $noAsignados
+        ];
     }
 
     /**

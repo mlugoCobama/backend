@@ -37,7 +37,8 @@ class CatUnidadesController extends Controller
      */
     public function index()
     {
-        $data = VehiculosTanquesResources::collection(DB::select("call SistemaTickets.SP_GetDataAutotanques()"));
+        // $data = VehiculosTanquesResources::collection(DB::select("call SistemaTickets.SP_GetDataAutotanques()"));
+        $data =  $this->pvService->sincronizarGpsVehiculos();
         // $data = DatosVehiculo::with('datos_tanque')->get();
         return response()->json(
             [

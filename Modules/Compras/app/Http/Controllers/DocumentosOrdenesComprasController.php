@@ -586,10 +586,6 @@ class DocumentosOrdenesComprasController extends Controller
              $orden = OrdenCompra::find($data["orden_compra_id"]);
              
              $this->eventosComprobantePago($data["orden_compra_id"], $orden, $docsFactura->representacion_impresa);
-            // Si no se ha marcado como entregado solicitar surtido
-            if($orden->entregado != 1 ){
-                $this->ordenCompraService->enviarCorreoSurtido($orden->id, $docsFactura->representacion_impresa);      
-            }
          }
 
         return response()->json([
