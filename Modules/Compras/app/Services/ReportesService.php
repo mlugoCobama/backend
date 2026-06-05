@@ -743,17 +743,19 @@ public function queryComprasDocumentos($empresa, $tipo = null)
 
                     if (!$tieneComprobantes) {
                         $comprobanteDirecto = !empty($doc->comprobante_pago);
-                        $comprobanteFactura = $doc->facturas?->contains(
+
+                        $comprobanteFactura = $doc->documentosFactura?->contains(
                             fn($f) => $f->tipo_documento === 'comprobante_pago'
                                    && !empty($f->representacion_impresa)
                         );
+
                         if ($comprobanteDirecto || $comprobanteFactura) {
                             $tieneComprobantes = true;
                         }
                     }
 
                     if (!$tieneComplementos) {
-                        $tieneComplementos = (bool) $doc->facturas?->contains(
+                        $tieneComplementos = (bool) $doc->documentosFactura?->contains(
                             fn($f) => $f->tipo_documento === 'complemento_pago'
                                    && !empty($f->xml)
                         );
@@ -766,6 +768,7 @@ public function queryComprasDocumentos($empresa, $tipo = null)
                 }
 
                 $tieneAcuseEntrega = $ordenCompra?->acusesEntrega?->isNotEmpty() ? '1' : '0';
+
                 $fechaEntregaInsumos = $ordenCompra?->acusesEntrega?->isNotEmpty() 
                 ? date('d/m/Y H:i', strtotime($ordenCompra?->acusesEntrega[0]->fecha)) 
                 : '-';
