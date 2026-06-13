@@ -27,4 +27,19 @@ class AlmacenCompras extends Model
     {
         //return AlmacenComprasFactory::new();
     }
+
+    
+    public function detalle(){
+        return $this->belongsTo(DetalleSolicitud::class, 'com_detalle_solicitud_id', 'id');
+    }
+
+    public function movimientos(){
+        return $this->hasMany(DetalleSolicitud::class, 'com_detalle_solicitud_id', 'id');
+    }
+
+    public function salidas(){
+        return $this->hasMany(MovimientosAlmacen::class, 'com_almacen_id', 'id')->where('tipo', 's');
+    }
+
+
 }

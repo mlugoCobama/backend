@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ImportarFacturasAccesorios extends Command
 {
@@ -29,15 +30,41 @@ class ImportarFacturasAccesorios extends Command
         // ];
         
         
-
+        $this->info('Iniciando Importacion de accesorios');
+        Log::info('Iniciando Importacion de accesorios');
         foreach ($conexiones as $conexion) {
 
-            $this->info("Procesando conexión: {$conexion}");
+            // $this->info("Procesando conexión: {$conexion}");
+            // Log::info("Procesando conexión: {$conexion}");
             
-            $this->procesarConexion($conexion, $fechaInicio, $fechaFin);
+            // $this->procesarConexion($conexion, $fechaInicio, $fechaFin);
+
+            try {
+
+                $this->info("Procesando conexión: {$conexion}");
+                Log::info("Procesando conexión: {$conexion}");
+
+                $this->procesarConexion($conexion, $fechaInicio, $fechaFin);
+
+                $this->info("Conexión {$conexion} procesada correctamente");
+                Log::info("Conexión {$conexion} procesada correctamente");
+
+            } catch (\Throwable $e) {
+
+                $this->error("Error en conexión {$conexion}: " . $e->getMessage());
+
+                Log::error("Error en conexión {$conexion}", [
+                    'hora' => now(),
+                    'mensaje' => $e->getMessage(),
+                    'archivo' => $e->getFile(),
+                    'linea' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
         }
 
-        $this->info('Importación completada');
+        $this->info('Importación de accesorios completada');
+        Log::info('Importación de accesorios completada');
     }
 
     private function procesarConexion($conexion, $fechaInicio, $fechaFin)

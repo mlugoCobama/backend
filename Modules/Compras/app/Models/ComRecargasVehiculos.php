@@ -21,6 +21,8 @@ class ComRecargasVehiculos extends Model
         'activo',
         'fecha_dispersion',
         'saldo_actual',
+        'com_solicitud_diesel_id',
+        'com_vehiculos_toka_id',
     ];
 
     protected $casts = [
@@ -36,6 +38,16 @@ class ComRecargasVehiculos extends Model
     public function vehiculo()
     {
         return $this->belongsTo(DatosVehiculo::class, 'vehiculo_id', 'id');
+    }
+
+    public function vehiculoToka()
+    {
+        return $this->belongsTo(VehiculosToka::class, 'com_vehiculos_toka_id', 'id');
+    }
+
+    public function solicitudDiesel()
+    {
+        return $this->belongsTo(SolcitudDiesel::class, 'com_solicitud_diesel_id', 'id');
     }
 }
 

@@ -37,6 +37,7 @@ class AsignarGpsVehiculos extends Command
     {
         $this->info('Iniciando asignación de GPS...');
         $data = $this->pvService->sincronizarGpsVehiculos();
+        $this->info('Se sincronizaron '. $data['totalAsignados'].' de '. $data['totalGps']. ' quedan '. $data['total_no_asignados'] );
         $this->info('Finalizo asignación de GPS...');
     }
 }

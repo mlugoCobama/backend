@@ -308,6 +308,23 @@ class UsuariosController extends Controller
         ]);
     }
 
+    public function getTecnicos(){
+        $data = DB::connection('intranet')->select("call SOPORTEZM.SP_GetTecnicosTi()");
+        
+        if(empty($data)){
+             return response()->json([
+                 'status' => 'error',
+                 'message' => 'No hay técnicos disponibles'
+             ]);
+         }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $data,
+            'message' => 'Datos recuperados correctamente'
+        ]);
+    }
+
 
 
 

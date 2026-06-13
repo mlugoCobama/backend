@@ -21,17 +21,19 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Modules\Compras\Models\DetalleSolicitud;
 use Modules\Ucoip\Services\HardwareService;
+use Modules\Ucoip\Services\ResguardosService;
 
 class AcuseEntregaController extends Controller
 {
 
 protected $hardwareService;
-
+protected $resguardoService;
     public function __construct(
-        HardwareService $hardwareService
+        HardwareService $hardwareService,
+        ResguardosService $resguardoService
     ){
-        $this->hardwareService =
-        $hardwareService;
+        $this->hardwareService = $hardwareService;
+        $this->resguardoService = $resguardoService;
     }
     /**
      * Display a listing of the resource.
@@ -127,10 +129,12 @@ public function store(Request $request)
         $userId = $request->user()->id;
 
         $validated = $request->validate([
-            'archivo' => 'required|file|mimes:pdf',
-            'observaciones' => 'nullable|string',
-            'orden_compra_id' => 'required|integer',
-            'proceso' => 'required'
+            'archivo'           => 'required|file|mimes:pdf',
+            'observaciones'     => 'nullable|string',
+            'orden_compra_id'   => 'required|integer',
+            'usuario_destino'   => 'required|integer',
+            'intercompania'     => 'required|integer',
+            'proceso'           => 'required'
         ]);
 
         $proceso = json_decode($validated['proceso'], true);
@@ -150,7 +154,7 @@ public function store(Request $request)
         $this->ingresarAlmacen(json_encode($detallesEntrada),$userId);
         // guardar inventario solo si aplica
         if($requiereInventario && count($inventario)>0){
-            $this->guardarInventario($inventario);
+            $this->guardarInventario($inventario, $validated['intercompania']);
         }
 
         $esEntregaCompleta = $this->esEntregaCompleta($ordenCompraId);
@@ -186,13 +190,23 @@ public function store(Request $request)
      */
     public function show($id)
     {
-        $detalles = (DetalleSolicitud::where('solicitudes_compra_id', $id)->with('unidadMedida')->with('almacenCompras')
+        $detalles = (DetalleSolicitud::where('solicitudes_compra_id', $id)
+        ->with('unidadMedida')
+        ->with('almacenCompras.salidas')
                 ->confirmadas()
                 // ->pendientes()
                 ->get());
 
         $todasEnCero = $detalles->every(function ($detalle) {
-            return ($detalle->cantidad - ($detalle->almacenCompras->existencia ?? 0)) === 0;
+            //existencia registrada en la tabla almacen
+            $existencias = $detalle->almacenCompras->existencia ?? 0;
+            //material que ya fue entregado y que fue usado 
+            $salidasDetalle = $detalle->almacenCompras?->salidas ? $detalle->almacenCompras->salidas->sum('cantidad') : 0;
+            $materialEntregado = $existencias + $salidasDetalle;
+
+            // $detalle->almacenCompras->existencia = $materialEntregado;
+
+            return ($detalle->cantidad - $materialEntregado) <= 0;
         });
         
                 
@@ -253,49 +267,6 @@ public function store(Request $request)
         });
     }
 
-    public function actStatusOrdenSolicitud2($idOrdenCompra, $statusOrdenCompra, $estatusSolicitud, $esEntregaCompleta){
-
-        $orden = OrdenCompra::where('id', $idOrdenCompra)->first();
-        if ($orden) {
-            $facturas = count($orden->documentos);
-            $requiereFactura = ($facturas == 0);
-            if( $orden->modo_pago == 2 && $orden->pagado != 1) {
-                // Flujo comrpas a credito
-                $orden->estatus = $requiereFactura  ? EstatusOrdenCompra::FACTURADO : EstatusOrdenCompra::SOLICITADO_PAGO;
-
-            }else{
-                // Flujo compras de contado
-                if(!$esEntregaCompleta){
-                    $orden->estatus = $orden->pagado != 1 ? EstatusOrdenCompra::SOLICITADO_PAGO : $statusOrdenCompra;
-                }else{
-                    $orden->estatus = EstatusOrdenCompra::FINALIZADA;
-                }
-                
-            }      
-            $orden->save(); 
-
-            $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
-
-            $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
-            if ($solicitud) {
-                // Flujo comrpas a credito
-                if( $orden->modo_pago == 2 && $orden->pagado != 1) {
-                    $solicitud->estatus = $requiereFactura ? EstatusSolicitud::FACTURADO : EstatusSolicitud::SOLICITADO_PAGO;
-                }else{
-                    // Flujo compras de contado
-                    // $solicitud->estatus = $estatusSolicitud;
-                    if(!$esEntregaCompleta){
-                        $solicitud->estatus = $orden->pagado != 1 ? EstatusSolicitud::SOLICITADO_PAGO : $estatusSolicitud;
-                    }else{
-                        $solicitud->estatus = EstatusSolicitud::FINALIZADA;
-                    }
-                }  
-                $solicitud->save(); 
-            }
-        }
-    }
-
-
     public function actStatusOrdenSolicitud(int $idOrdenCompra,int $statusOrdenCompra,int $statusSolicitud,bool $esEntregaCompleta){
     $orden = OrdenCompra::with(['documentos','cotizacion'])->find($idOrdenCompra);
 
@@ -340,9 +311,7 @@ public function store(Request $request)
         }
     }
 
-    // 
     // COMPRAS DE CONTADO
-    //
     else{
         if($orden->pagado != 1){
             if($faltanFacturas){
@@ -451,21 +420,18 @@ public function store(Request $request)
 
     }
 
-    public function guardarInventario(array $inventario)
+    public function guardarInventario(array $inventario, $intercompania)
     {
 
         foreach($inventario as $activo){
-            $almacen = AlmacenCompras::where(
-                'com_detalle_solicitud_id',
-                $activo['detalleId']
-            )->first();
+            $almacen = AlmacenCompras::where('com_detalle_solicitud_id',$activo['detalleId'])->first();
 
             $hardware = $this->hardwareService
             ->storeHardware([
                 'marca'=>$activo['marca'] ?? 'N/D',
                 'modelo'=>$activo['modelo'] ?? 'N/D',
                 'no_serie'=>$activo['serie'] ?? 'N/D',
-                'tipo'=>1,
+                'cat_hardware_id' => $activo['tipo']['id'],
                 'mac'=>$activo['mac'] ?? null,
                 'memoria_ram'=>$activo['ram'] ?? null,
                 'disco_duro'=>$activo['disco'] ?? null,
@@ -473,16 +439,21 @@ public function store(Request $request)
                 'caracteristicas'=>$activo['caracteristicas'] ?? '',
                 'observaciones'=>$activo['observaciones'] ?? '',
                 'estado'=>1,
-                'cat_empresa_id'=>15,
-                'almacen_compra_id' => $almacen?->id
+                'cat_empresa_id'=> 15,
+                'almacen_compra_id' => $almacen?->id ?? null
             ]);
 
             if(!empty($activo['usuario_asignar'])){
-                // $this->hardwareService
-                //     ->asignarEquipo(
-                //         $hardware->id,
-                //         $activo['usuario_asignar']
-                //     );
+              $resguardo = $this->resguardoService->storeResguardo([
+                'id_usuario' => $activo['usuario_asignar'],
+                'id_empresa' =>  $intercompania,
+                'admin_rt' => 2395
+               ]);
+               $this->resguardoService->storeDetalle($hardware->id, [], $resguardo->id);
+                    //  ->asignarEquipo(
+                    //     $hardware->id,
+                    //   $activo['usuario_asignar']
+            // );
             }
         }
     }

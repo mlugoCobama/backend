@@ -4,6 +4,9 @@ namespace Modules\Macro\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\Compras\Models\DetalleSolicitud;
+use Modules\Compras\Models\MovimientosAlmacen;
+use Modules\Compras\Transformers\MovimientoAlmacenResource;
 use Modules\Macro\Database\Factories\AlmacenFactory;
 
 class Almacen extends Model

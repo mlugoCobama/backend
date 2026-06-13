@@ -36,15 +36,30 @@ class RecuperarVentasAgencias extends Command
         $fechaFin    = $this->argument('fechaFin')  ?? Carbon::today()->toDateString();
 
         foreach ($conexiones as $conexion) {
-            $mensajeInicio = "Iniciando sincronización para: {$conexion}";
-            Log::info($mensajeInicio);
-            $this->info($mensajeInicio);
 
-            $ventas = $this->sincronizarVentas($conexion, $fechaInicio, $fechaFin);
+            try {
+                $mensajeInicio = "Iniciando sincronización para: {$conexion} nuevos";
+                Log::info($mensajeInicio);
+                $this->info($mensajeInicio);
 
-            $mensajeFin = "Finalizada sincronización {$conexion}. Registros procesados: " . count($ventas);
-            Log::info($mensajeFin);
-            $this->info($mensajeFin);
+                $ventas = $this->sincronizarVentas($conexion, $fechaInicio, $fechaFin);
+
+                $mensajeFin = "Finalizada sincronización {$conexion}. Registros procesados: " . count($ventas);
+                Log::info($mensajeFin);
+                $this->info($mensajeFin);
+
+            } catch (\Throwable $e) {
+
+                $this->error("Error en conexión {$conexion}: " . $e->getMessage());
+
+                Log::error("Error en conexión {$conexion}", [
+                    'hora' => now(),
+                    'mensaje' => $e->getMessage(),
+                    'archivo' => $e->getFile(),
+                    'linea' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
         }
 
         $mensajeExito = "Todas las conexiones fueron sincronizadas correctamente.";
@@ -103,7 +118,8 @@ class RecuperarVentasAgencias extends Command
         );
 
         foreach ($libroVentas as $dato) {
-            $existe = DatosVenta::where('no_factura', $dato->faau_nofactura)->exists();
+            // $existe = DatosVenta::where('no_factura', $dato->faau_nofactura)->exists();
+            $existe = !empty($dato->faau_nofactura) ? DatosVenta::where('no_factura', $dato->faau_nofactura)->first() : true;
 
             $agenciaId = match ($conexion) {
                             'renault'               => $dato->id_agencia,   // usar valor que viene de la base 

@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ImportarTomaUnidades extends Command
 {
@@ -23,14 +24,40 @@ class ImportarTomaUnidades extends Command
             'nissan_azcapotzalco',
         ];
 
+        $this->info("Iniciando sincronizacion de toma de unidades");
+        Log::info("Iniciando sincronizacion de toma de unidades");
+
         foreach ($conexiones as $conexion) {
+            try {
 
-            $this->info("Procesando inventario: {$conexion}");
+                $this->info("Procesando conexión: {$conexion}");
+                Log::info("Procesando conexión: {$conexion}");
 
-            $this->procesarConexion($conexion, $anio, $clave);
+                $this->procesarConexion($conexion, $anio, $clave);
+
+                $this->info("Conexión {$conexion} procesada correctamente");
+                Log::info("Conexión {$conexion} procesada correctamente");
+
+            } catch (\Throwable $e) {
+
+                $this->error("Error en conexión {$conexion}: " . $e->getMessage());
+
+                Log::error("Error en conexión {$conexion}", [
+                    'hora' => now(),
+                    'mensaje' => $e->getMessage(),
+                    'archivo' => $e->getFile(),
+                    'linea' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+            // $this->info("Procesando inventario: {$conexion}");
+            // Log::info("Procesando inventario: {$conexion}");
+
+            // $this->procesarConexion($conexion, $anio, $clave);
         }
 
         $this->info('Importación de tomas completada');
+        Log::info("Importación de tomas completada");
     }
 
     private function procesarConexion($conexion, $anio, $clave)

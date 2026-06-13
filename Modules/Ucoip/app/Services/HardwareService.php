@@ -19,7 +19,7 @@ class HardwareService{
             $hardware->marca            = $data['marca'] ?? 'N/D';
             $hardware->modelo           = $data['modelo'] ?? 'N/D';
             $hardware->no_serie         = $data['no_serie'] ?? 'N/D';
-            $hardware->tipo             = $data['tipo'];
+            $hardware->tipo             = $data['tipo'] ?? null;
             $hardware->mac              = $data['mac'] ?? 'N/D';
             $hardware->memoria_ram      = $data['memoria_ram'] ?? 'N/D';
             $hardware->disco_duro       = $data['disco_duro'] ?? 'N/D';

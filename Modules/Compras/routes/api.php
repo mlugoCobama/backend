@@ -20,9 +20,11 @@ use Modules\Compras\Http\Controllers\UsuariosController;
 use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Http\Controllers\DetalleSolicitudController;
 use Modules\Compras\Http\Controllers\CatTiposMantenimientoController;
+use Modules\Compras\Http\Controllers\DispersionesDieselController;
 use Modules\Compras\Models\AcuseEntrega;
 use Modules\Compras\Http\Controllers\ReportesComprasController;
 use Modules\Compras\Http\Controllers\SyncController;
+use Modules\Compras\Http\Controllers\TokaController;
 
 /*
  *--------------------------------------------------------------------------
@@ -53,6 +55,8 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::resource('AcuseEntrega', AcuseEntregaController::class);
     Route::resource('ReportesCompras', ReportesComprasController::class);
     Route::resource('AlmacenCompras', AlmacenComprasConrollerController::class);
+    Route::resource('Toka', TokaController::class);
+    Route::resource('DispersionesDiesel', DispersionesDieselController::class);
     
     Route::get('/Solicitudes/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
     Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
@@ -84,9 +88,11 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     
     Route::get('/getUserByEmail/{correo}', [UsuariosController::class, 'getDataUsuario'])->name('Usuarios.getDataUsuario');
     Route::get('/getUserById/{correo}', [UsuariosController::class, 'showById'])->name('Usuarios.showById');
+    Route::get('/getTecnicos', [UsuariosController::class, 'getTecnicos'])->name('Usuarios.getTecnicos');
+    Route::get('/getExsitencias/{tipo}', [AlmacenComprasConrollerController::class, 'getAlmacenDisponible'])->name('Almacen.getAlmacenDisponible');
+    Route::get('/getMovimientos', [AlmacenComprasConrollerController::class, 'getSalidas'])->name('Almacen.getSalidas');
 
     //*Rutas para el catalogo de vehiculos
-    
     Route::post('/importar-datos-seguro', [CatUnidadesController::class, 'importarDatosSeguro']);
     Route::get('/recuperar-autotanques/{intercompania}', [CatUnidadesController::class, 'getAutotanques']);
     Route::get('/recuperar-gastos-vehiculo/{id}', [CatUnidadesController::class, 'getGastoUnidad']);
@@ -103,6 +109,12 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::post('/solictar-surtido-orden-compra', [OrdenesComprasController::class, 'solicitarSurtido'])->name('OrdenesCompra.solicitarSurtido');
     Route::post('/cambiar-proveedor-seleccionado', [OrdenesComprasController::class, 'cambiarProveedorSeleccionado'])->name('OrdenesCompra.cambiarProveedorSeleccionado');
     Route::get('/marcar-como-finalizada/{idOrdenCompra}', [OrdenesComprasController::class, 'markAsFinalizada'])->name('OrdenesCompra.markAsFinalizada');
+
+    Route::get('/toka/clientes', [TokaController::class, 'getClientesToka'])->name('Toka.getClientes');
+
+    Route::post('/CatalogoUnidades/SolicitaToka', [CatUnidadesController::class, 'saveSolicitudRecargaToka']);
+    Route::post('/CatalogoUnidades/DispersaToka', [CatUnidadesController::class, 'saveRecargaToka']);
+    Route::get('/CatalogoUnidades/ParqueVehicularToka/{id}', [CatUnidadesController::class, 'getParqueWithToka']);
 });
 
 Route::prefix('compras')->group(function(){
@@ -156,9 +168,7 @@ Route::prefix('compras')->group(function(){
 
     Route::post('/asignar-permisos-kanban', [UsuariosController::class, 'asignar']);
 
-    Route::post('/CatalogoUnidades/SolicitaToka', [CatUnidadesController::class, 'saveSolicitudRecargaToka']);
-    Route::post('/CatalogoUnidades/DispersaToka', [CatUnidadesController::class, 'saveRecargaToka']);
-    Route::get('/CatalogoUnidades/ParqueVehicularToka/{id}', [CatUnidadesController::class, 'getParqueWithToka']);
+
 
     Route::get('/reportes/workflow/concentrado/{tipo}', [ReportesComprasController::class, 'getReporteEstatus']);
 });

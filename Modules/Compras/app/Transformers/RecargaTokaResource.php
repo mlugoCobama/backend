@@ -14,6 +14,7 @@ class RecargaTokaResource extends JsonResource
     {
         return [
             'id'  => $this->id,
+            'id_asignacion'  => $this->id_asignacion,
             'eco' => $this->eco,
             'marca_vehiculo'  =>$this->marca_vehiculo,
             'submarca'   => $this->submarca,
@@ -34,6 +35,7 @@ class RecargaTokaResource extends JsonResource
             'saldoSolicitado' => $this->monto_solicitado,
 
             'idSolicitud' => $this->id_solicitud, 
+            'saldoActual' => $this->saldoActual ?? 0,
             // 'saldoActual' => $this-> number,
             // 'saldoDispersar'  => $this->number,
         ];

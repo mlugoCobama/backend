@@ -61,7 +61,7 @@ class FinanciamientoController extends Controller
             $resultado = $this->guardarFinanciamiento($datos, $request->file("financiamientos.$i.archivo"));
 
             if ($resultado['status'] === 'saved') {
-            $guardados[] = $resultado['data'];
+                $guardados[] = $resultado['message'];
             }
 
             if ($resultado['status'] === 'ignored') {

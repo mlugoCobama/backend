@@ -91,3 +91,17 @@ Se actualiza el sp para obtener comisiones
 # **Fecha de liberación:** 27 de mayo de 2026
 ## Compras-Paque vehicular
 - Se agrega el calculo de distancias recorridas de las unidades integrándolo mediante al gps
+
+---
+## **Fecha de liberación:** 13 de junio de 2026
+## Parque vehicular - Toka
+- Se modifican los datos datos de registro para dispersiones de toka, se agrega datos de contexto como periodo, fecha de solicitud, folio de solicitud, y empresa
+- Se genera una notificacion por correo a compras y la plata cada que se genera un solicitude de diesel 
+## Compras - Catalogo de tarjetas Toka
+- Se genera un catalogo de tarjetas de toka de las empresas 
+## Compras - Dispersiones de diesel
+- Se genera un nuevo sp para recupera dispersiones basada en una solicitud de dispersion
+- Se genera una notification por correo cuando se realiza una dispersion de combustible
+## Compras - Almacen
+- Se agrupan las salidas de almacén en entregas, y se realiza foliado
+

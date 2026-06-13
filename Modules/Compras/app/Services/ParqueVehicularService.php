@@ -32,28 +32,31 @@ class ParqueVehicularService{
         "BAJA" => 10
     ];
 
-public function queryVehiculosForToka($idSucursal)
-{
-    $id = $this->intercompaniaConverter($idSucursal);
-    return DB::select('CALL SP_GetPvRecargaToka(?)',[$id]);
-}
+    public function queryVehiculosForToka($idSucursal)
+    {
+        $id = $this->intercompaniaConverter($idSucursal);
+        return DB::select('CALL SP_GetPvRecargaToka(?)',[$id]);
+    }
 
-public function queryVehiculosForTag($idSucursal)
-{
-    return DatosVehiculo::where('estatus', 1)
-        ->where('nro_economico', '<>', '2000')
-        ->whereNotNull('num_tag')
-        ->where('id_sucursal', $idSucursal)
-        ->where('estatus', 1)
-        ->get();
-}
+    public function queryVehiculosForTag($idSucursal)
+    {
+        return DatosVehiculo::where('estatus', 1)
+            ->where('nro_economico', '<>', '2000')
+            ->whereNotNull('num_tag')
+            ->where('id_sucursal', $idSucursal)
+            ->where('estatus', 1)
+            ->get();
+    }
 
-public function calcularSaldo($saldo, $saliente, $entrante){
-    return ($saldo - $saliente) + $entrante;
-}
+    public function calcularSaldo($saldo, $saliente, $entrante){
+        return ($saldo - $saliente) + $entrante;
+    }
 
-
-
+    // Elimina todos los caracteres que no sean dígitos
+    public function limpiarNumeroTarjeta($cadena) {
+        $soloNumeros = preg_replace('/\D/', '', $cadena);
+        return $soloNumeros;
+    }
 
     public function procesarCSV($ruta)
     {
@@ -238,19 +241,27 @@ public function calcularSaldo($saldo, $saliente, $entrante){
         $rawData = $this->gpsApi->obtenerVehiculosEmpresa();
         $data = $rawData['data']['units'];
 
-        $noAsignados = []; // aquí guardaremos los que no se pudieron mapear
+        $noAsignados = []; 
+        $asignados = []; //
         foreach ($data as $item) {
-            $vehiculo = DatosVehiculo::where('no_serie', $item['vin'])->first();
-            if($vehiculo){
-                // $vehiculo->unit_id_gps =  $item['unit_id'];
-                // $vehiculo->save();
-            }else{
-                 $noAsignados[] = $item;
+            if(!empty($item['vin'])){
+                $vehiculo = DatosVehiculo::where('no_serie', $item['vin'])->first();
+                if($vehiculo){
+                    $vehiculo->unit_id_gps =  $item['unit_id'];
+                    $vehiculo->save();
+                    $asignados[] = $item;
+                }else{
+                    $noAsignados[] = $item;
+                }
             }
+            
         }
         return  [
-            'asignados'   => $data,
-            'no_asignados'=> $noAsignados
+            'totalGps' => count($data),
+            'asignados'   => $asignados,
+            'totalAsignados' => count($asignados),
+            'no_asignados'=> $noAsignados,
+            'total_no_asignados' => count($noAsignados),
         ];
     }
 

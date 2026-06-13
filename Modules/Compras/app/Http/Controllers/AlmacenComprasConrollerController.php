@@ -7,47 +7,54 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Modules\Compras\Services\AlmacenService;
 use Modules\Compras\Transformers\AlmacenComprasResource;
+use Modules\Compras\Transformers\MovimientoAlmacenResource;
+use Modules\Macro\Models\Almacen;
 
 class AlmacenComprasConrollerController extends Controller
 {
+    protected $almacenService;
+
+    public function __construct(
+        AlmacenService $almacenService
+    ){
+        $this->almacenService = $almacenService;
+    }
 
     /**
      * Rcupera los detalles de las compras de ti
      */
     public function index()
     {   
-        $query = DB::table('com_solicitudes_compra as sc')
-            ->select([
-                'sc.id as solicitud_id',
-                'sc.folio',
-                'sc.empresa',
-                'sc.usuario_destino',
-                'sc.fecha',
-                'sc.com_cat_sistemas_auto_id',
-                'cs.sistema as categoria',
-
-                'ds.id as detalle_id',
-
-                'ds.cantidad',
-                'um.nombre as unidad',
-                'ds.descripcion',
-                'ds.observaciones',
-                'ds.estatus_almacen'
-            ])
-            ->join('com_detalle_solicitud as ds', function ($join) {
-                $join->on('ds.solicitudes_compra_id', '=', 'sc.id')
-                    ->where('ds.confirmado', '=', 1);
-            })
-            ->join('com_cat_unidades_medida as um', 'ds.cat_unidades_medida_id', '=', 'um.id')
-            ->join('com_catalogo_sistemas_auto as cs', 'sc.com_cat_sistemas_auto_id', '=', 'cs.id')
-            ->where('sc.activo', 1)
-            ->where('sc.estatus', '>', 8)
-            ->where('sc.tipo', 3)
-            // ->whereIn('sc.com_cat_sistemas_auto_id', [27, 28, 34])
-            ->orderBy('sc.usuario_destino')
-            ->orderBy('sc.id')
-            ->get();
+        $query = DB::table('com_almacen as ca')
+        ->join('com_detalle_solicitud as cds', 'ca.com_detalle_solicitud_id', '=', 'cds.id')
+        ->join('com_cat_unidades_medida as ccum', 'ccum.id', '=', 'cds.cat_unidades_medida_id')
+        ->join('com_solicitudes_compra as csc', 'csc.id', '=', 'cds.solicitudes_compra_id')
+        ->join('com_catalogo_sistemas_auto as ccsa', 'ccsa.id', '=', 'csc.com_cat_sistemas_auto_id')
+        ->where('cds.confirmado', 1)
+        ->where('csc.tipo', 3)
+        ->where('ca.existencia','>', 0)
+        ->select([
+            'ca.id',
+            'csc.id as solicitud_id',
+            'csc.folio',
+            'csc.empresa',
+            'csc.usuario_destino',
+            'ca.fecha_actualizacion as fecha',
+            'csc.com_cat_sistemas_auto_id',
+            'ccsa.sistema as categoria',
+            'cds.id as detalle_id',
+            // 'cds.cantidad',
+            'ca.existencia as cantidad',
+            'ccum.nombre as unidad',
+            'cds.descripcion',
+            'cds.observaciones',
+            'ccum.nombre as unidad',
+            'cds.estatus_almacen'
+            
+        ])
+        ->get();
 
             return response()->json([
                 'status' => 'success',
@@ -63,9 +70,39 @@ class AlmacenComprasConrollerController extends Controller
     }
 
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        //
+        
+        $data = $request->all();
+        $tecnicoAsignado = $data['tecnico'];
+
+        $movimientos = $data['materiales'];
+
+        $user = $request->user();
+        $userId = $user->id;
+        try {
+        DB::beginTransaction();
+            $entrega =  $this->almacenService->storeEntregaTecnico( $userId ,$tecnicoAsignado);
+            foreach ($movimientos as $movimiento) {
+            $this->almacenService->storeMovimientoAlmacen($movimiento,$userId,$tecnicoAsignado, $entrega->id);
+            $this->almacenService->actualizarExistencia($movimiento['id'], $movimiento['cantidad'], -1);
+        }
+        DB::commit();
+        } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'message' => 'Error al generar movimientos',
+            'error' => $e->getMessage(),
+            'status' => 'error',
+        ], 500);
+    }
+    
+        return response()->json([
+            'data' => $data,
+            'message' => 'Movimientos generados correctamente',
+            'status' => 'success',
+        ]);
     }
 
     public function show($id)
@@ -109,5 +146,72 @@ class AlmacenComprasConrollerController extends Controller
 
     }
 
+    public function getAlmacenDisponible( $tipo ){
+        $almacen = DB::table('com_almacen as ca')
+        ->join('com_detalle_solicitud as cds', 'ca.com_detalle_solicitud_id', '=', 'cds.id')
+        ->join('com_cat_unidades_medida as ccum', 'ccum.id', '=', 'cds.cat_unidades_medida_id')
+        ->join('com_solicitudes_compra as csc', 'csc.id', '=', 'cds.solicitudes_compra_id')
+        ->join('com_catalogo_sistemas_auto as ccsa', 'ccsa.id', '=', 'csc.com_cat_sistemas_auto_id')
+        ->where('cds.confirmado', 1)
+        ->where('csc.tipo', $tipo)
+        ->where('ca.existencia','>', 0)
+        ->select([
+            'ca.id',
+            'csc.empresa',
+            'csc.usuario_destino',
+            'ca.fecha_actualizacion',
+            'ccsa.sistema as categoria',
+            'ca.existencia',
+            'ccum.nombre as unidad',
+            'cds.descripcion',
+            'cds.observaciones'
+        ])
+        ->get();
+
+        return  response()->json([
+            'status' => 'success',
+            'data' => $almacen,
+            'message' => "Existencias recuperadas correctamente"
+        ]);
+    }
+
+    public function getSalidas(){
+        $almacen = DB::table('com_movimientos_almacen as cma')
+                    ->select(
+                        'cma.fecha as fecha_movimiento',
+                        'cma.tipo as tipo_movimiento',
+                        'cma.cantidad',
+                        'cds.descripcion',
+                        'ca.id as id_almacen',
+                        'cma.id_usuario as usuario_entrega',
+                        'cma.id_usuario_entrega as usuario_recibe'
+                    )
+                    ->join('com_almacen as ca', 'cma.com_almacen_id', '=', 'ca.id')
+                    ->join('com_detalle_solicitud as cds', 'ca.com_detalle_solicitud_id', '=', 'cds.id')
+                    ->get();
+
+
+        return  response()->json([
+            'status' => 'success',
+            'data' => MovimientoAlmacenResource::collection($almacen),
+            'message' => "Movimientos recuperadas correctamente"
+        ]);
+    }
+
+    function generarNumeroControl($intercompania, $tipoCompra)
+    {
+
+        $prefijo = $intercompania.'-'.$tipoCompra.'-';
+        $ultimo = Almacen::where('codigo_producto','LIKE', $prefijo.'%')->orderBy('id', 'desc')->first('codigo_producto');
+        if ($ultimo) {
+            $ultimoNro = $ultimo->codigo_producto;
+            $numero = intval(substr($ultimoNro, strlen($prefijo))) + 1;
+        } else {
+            $numero = 1;
+        }
+
+        $nuevoNro = $prefijo . str_pad($numero, 5, '0', STR_PAD_LEFT);
+        return $nuevoNro;
+    }
 
 }

@@ -3,6 +3,7 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Mail\RequisicionDieselMail;
 use App\Models\Sucursales;
 use Carbon\Carbon;
 use Exception;
@@ -10,11 +11,17 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rules\Exists;
 use Modules\Compras\Models\ComRecargasVehiculos;
 use Modules\Compras\Models\DatosGps;
 use Modules\Compras\Models\DatosTanque;
 use Modules\Compras\Models\DatosVehiculo;
 use Modules\Compras\Models\ObservacionVehiculo;
+use Modules\Compras\Models\SolcitudDiesel;
+use Modules\Compras\Models\TarjetasToka;
+use Modules\Compras\Models\VehiculosToka;
+use Modules\Compras\Services\DispersionDiesel;
 use Modules\Compras\Services\ParqueVehicularService;
 use Modules\Compras\Transformers\ObservacionesVehiculoResource;
 use Modules\Compras\Transformers\PolizasSeguroResource;
@@ -26,10 +33,12 @@ class CatUnidadesController extends Controller
 {
 
     protected $pvService;
+    protected $dispersionDiesel;
 
-    public function __construct(ParqueVehicularService $pvService)
+    public function __construct(ParqueVehicularService $pvService, DispersionDiesel $dispersionDiesel)
     {
         $this->pvService = $pvService;
+        $this->dispersionDiesel = $dispersionDiesel;
     }
 
     /**
@@ -37,9 +46,9 @@ class CatUnidadesController extends Controller
      */
     public function index()
     {
+        $data = $this->dispersionDiesel->notificarDispersion('s' ,7);
         // $data = VehiculosTanquesResources::collection(DB::select("call SistemaTickets.SP_GetDataAutotanques()"));
-        $data =  $this->pvService->sincronizarGpsVehiculos();
-        // $data = DatosVehiculo::with('datos_tanque')->get();
+        // $data =  $this->pvService->sincronizarGpsVehiculos();
         return response()->json(
             [
                 'status' => 'success',
@@ -67,12 +76,12 @@ class CatUnidadesController extends Controller
 
         try {
 
-            $vehiculo = DatosVehiculo::where($data['datosVehiculo']['no_serie']);
+            $vehiculo = DatosVehiculo::where( 'no_serie' , $data['datosVehiculo']['no_serie'])->first();
             
             if($vehiculo){
                 return response()->json([
-                    'status' => 'success',
-                    'message' => 'El vehiculo ya existe dentro del parque vehicular con el numero economico'. $vehiculo->nro_economico,
+                    'status' => 'error',
+                    'message' => 'El vehiculo ya existe dentro del parque vehicular con el numero economico '. $vehiculo->nro_economico,
                     'data' => []
                 ]);
             }
@@ -85,11 +94,13 @@ class CatUnidadesController extends Controller
             DB::beginTransaction();
             if (isset($data['datosVehiculo'])) {
                 $vehiculo = $this->storeVehiculo($datosVehiculo, $numIntercompania, $userId);
+                $idToka = $data['datosVehiculo']['num_tarjeta_toka'] === 'null' ? null : $data['datosVehiculo']['num_tarjeta_toka'];
 
+                 $this->asignarToka($idToka,  $vehiculo);   
                 if (
-                    $datosVehiculo['tipo_vehiculo'] == "reparto"
-                    || $datosVehiculo['tipo_vehiculo'] == "autotanque"
-                    || $datosVehiculo['tipo_combustible'] == "gas_lp"
+                    $datosVehiculo['tipo_vehiculo'] == "1"
+                    || $datosVehiculo['tipo_vehiculo'] == "3"
+                    || $datosVehiculo['tipo_combustible'] == "4"
                 ) {
                     if (isset($data['datosTanque'])) {
                         $this->storeTanque($vehiculo, $datosTanque, $numIntercompania);
@@ -138,6 +149,7 @@ class CatUnidadesController extends Controller
         }
 
         $data = VehiculosTanquesResources::collection(DB::select("call SistemaTickets.SP_GetDataAutotanques($id, $limite)"));
+
         return response()->json([
             "status" => "Success",
             "data" => $data,
@@ -179,10 +191,14 @@ class CatUnidadesController extends Controller
 
             $this->updateVehiculo($datosVehiculo, $id_vehiculo, $userId);
 
+            $idToka = $data['datosVehiculo']['num_tarjeta_toka'] == 'null' ? null : $data['datosVehiculo']['num_tarjeta_toka'];
+
+            $this->asignarToka($idToka,  $datosVehiculo['id']);
+
             if (
-                $datosVehiculo['tipo_vehiculo'] == "reparto"
-                || $datosVehiculo['tipo_vehiculo'] == "autotanque"
-                || $datosVehiculo['tipo_combustible'] == "gas_lp"
+                $datosVehiculo['tipo_vehiculo'] == "1"
+                || $datosVehiculo['tipo_vehiculo'] == "3"
+                || $datosVehiculo['tipo_combustible'] == "4"
             ) {
                 $this->updateTanque($datosTanque, $id_tanque, $id_vehiculo, $numIntercompania);
             }
@@ -294,7 +310,7 @@ class CatUnidadesController extends Controller
      * 
      * @param array $data 
      * @param array $intercompania
-     * @return number $dataVehiculo->id
+     * @return $dataVehiculo->id
      */
     public function storeVehiculo($data, $intercompania, $userId)
     {
@@ -327,6 +343,52 @@ class CatUnidadesController extends Controller
         }
 
         return $dataVehiculo->id;
+    }
+
+    public function asignarToka( $idToka, $idVehiculo)
+    {
+        DB::transaction(function () use ($idToka, $idVehiculo) {
+            $asignacionActual = VehiculosToka::where('com_id_datos_vehiculos', $idVehiculo)->whereNull('fecha_fin')->first();
+            // Retirar tarjeta
+            if (is_null($idToka)) {
+                if ($asignacionActual) {
+                    $asignacionActual->update(['fecha_fin' => now()]);
+                    TarjetasToka::where('id', $asignacionActual->com_id_tarjetas_toka)->update(['estatus' => '0']);
+                }
+                return;
+            }
+            // Validar que la tarjeta no esté asignada
+            $tarjetaAsignada = VehiculosToka::where('com_id_tarjetas_toka',$idToka)->whereNull('fecha_fin')->first();
+
+            if ($tarjetaAsignada &&$tarjetaAsignada->com_id_datos_vehiculos != $idVehiculo) {
+                throw new \Exception(
+                    'La tarjeta ya se encuentra asignada a otro vehículo.'
+                );
+            }
+            // Si el vehículo ya tiene una asignación
+            if ($asignacionActual) {
+                // Si es la misma tarjeta no hacer nada
+                if ($asignacionActual->com_id_tarjetas_toka == $idToka) {
+                    return;
+                }
+
+                // Finalizar asignación anterior
+                $asignacionActual->update(['fecha_fin' => now()
+                ]);
+                // Liberar tarjeta anterior
+                TarjetasToka::where('id',$asignacionActual->com_id_tarjetas_toka)->update([
+                    'estatus' => '0'
+                ]);
+            }
+            // Crear nueva asignación
+            VehiculosToka::create([
+                'com_id_datos_vehiculos' => $idVehiculo,
+                'com_id_tarjetas_toka' => $idToka,
+                'fecha_inicio' => now(),
+            ]);
+            // Marcar tarjeta como asignada
+            TarjetasToka::where('id', $idToka)->update(['estatus' => '1']);
+        });
     }
 
     /**
@@ -362,7 +424,7 @@ class CatUnidadesController extends Controller
                                   ->latest('id')
                                   ->first();
 
-            $nuevo = [
+        $nuevo = [
             'aseguradora'       => $datosPoliza['aseguradora'],
             'cobertura'         => $datosPoliza['cobertura'],
             'fecha_renovacion'  => $datosPoliza['fecha_emision'],
@@ -583,43 +645,156 @@ class CatUnidadesController extends Controller
         ]);
     }
 
-    public function saveSolicitudRecargaToka(Request $request){
-        $recargas =  $request->captura;
-        foreach ($recargas as $recarga) {
-            if (((float) $recarga['ventaLitros'] + (float) $recarga['abonoNuevo']) > 0 && empty($recarga['idSolicitud'])) {
-                $newRow                     = new ComRecargasVehiculos();
-                $newRow->vehiculo_id        = $recarga['id'];
-                $newRow->fecha              = now();
-                $newRow->monto_solicitado   = $recarga['abonoNuevo'];
-                $newRow->ventas_litros      = $recarga['ventaLitros'];
+    public function saveSolicitudRecargaToka(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+
+            $userId = $request->user()->id;
+            $recargas = $request->captura;
+
+            // Validar que exista al menos una recarga
+            $recargasValidas = collect($recargas)->filter(function ($recarga) {
+                return (
+                    ((float)$recarga['ventaLitros'] + (float)$recarga['abonoNuevo']) > 0
+                    && empty($recarga['idSolicitud'])
+                );
+            });
+
+            if ($recargasValidas->isEmpty()) {
+                return response([
+                    'message' => 'Debe capturar al menos una recarga.',
+                    'status' => 'error'
+                ], 422);
+            }
+
+            $solicitudDiesel = $this->dispersionDiesel->storeSolicitudDiesel(
+                $userId,
+                $request->solicitud['periodoInicio'],
+                $request->solicitud['periodoFin'],
+                $request->solicitud['precioCombustible'],
+                $request->solicitud['empresa'],
+            );
+
+            foreach ($recargasValidas as $recarga) {
+
+                $newRow = new ComRecargasVehiculos();
+                $newRow->vehiculo_id = $recarga['id'];
+                $newRow->fecha = now();
+                $newRow->monto_solicitado = $recarga['abonoNuevo'];
+                $newRow->ventas_litros = $recarga['ventaLitros'];
+                $newRow->com_solicitud_diesel_id = $solicitudDiesel->id;
+                $newRow->com_vehiculos_toka_id = $recarga['id_asignacion'];
                 $newRow->save();
             }
+
+            $this->dispersionDiesel->notificarDispersion('s', $solicitudDiesel->id);
+
+            DB::commit();
+
+            return response([
+                'message' => 'Datos Guardados Correctamente',
+                'data' => $solicitudDiesel,
+                'status' => 'success'
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response([
+                'message' => $e->getMessage(),
+                'status' => 'error'
+            ], 500);
         }
-        return response([
-            'message' => 'Datos Guardados Correctamente',
-            'data' => [],
-            'status' => 'success'
-        ]);
     }
 
-     public function saveRecargaToka(Request $request){
-        $recargas =  $request->captura;
-        foreach ($recargas as $recarga) {
-            if (((float) $recarga['saldoActual'] + (float) $recarga['saldoDispersar']) > 0) {
-                $row                        = ComRecargasVehiculos::find($recarga['idSolicitud']);
-                if($row){
-                    $row->fecha_dispersion   = now();
-                    $row->monto_dispersado   = $recarga['saldoDispersar'];
-                    $row->saldo_actual       = $recarga['saldoActual'];
-                    $row->estatus            = 2;
-                    $row->save();
-                }
+    public function saveRecargaToka(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            $solicitud = $data['solicitudDiesel'];
+            $recargas = $data['saldosDispersar'];
+
+            $recargasValidas = collect($recargas)->filter(function ($recarga) {
+                return (
+                    ((float)$recarga['saldoActual'] + (float)$recarga['saldoDispersar']) > 0
+                    && !empty($recarga['idSolicitud'])
+                );
+            });
+
+            if ($recargasValidas->isEmpty()) {
+                return response([
+                    'message' => 'No existen registros para dispersar.',
+                    'status' => 'error'
+                ], 422);
             }
+
+            $this->updateSolicitudDiesel($solicitud['id']);
+
+            foreach ($recargasValidas as $recarga) {
+
+                $row = ComRecargasVehiculos::find($recarga['idSolicitud']);
+
+                if (!$row) {
+                    throw new \Exception(
+                        "No se encontró la recarga con ID {$recarga['idSolicitud']}"
+                    );
+                }
+
+                $row->fecha_dispersion = now();
+                $row->monto_dispersado = $recarga['saldoDispersar'];
+                $row->saldo_actual = $recarga['saldoActual'];
+                $row->estatus = 2;
+                $row->save();
+            }
+
+            $this->dispersionDiesel->notificarDispersion('d', $solicitud['id']);
+
+            DB::commit();
+
+            return response([
+                'message' => 'Datos Guardados Correctamente',
+                'data' => [],
+                'status' => 'success'
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response([
+                'message' => $e->getMessage(),
+                'status' => 'error'
+            ], 500);
         }
-        return response([
-            'message' => 'Datos Guardados Correctamente',
-            'data' => [],
-            'status' => 'success'
-        ]);
     }
+
+       
+
+    public function storeSolicitudDiesel($usuarioSolicita, $inicio,  $fin, $precio ){
+        $nuevaSolicitud = new SolcitudDiesel();
+        $nuevaSolicitud->usuario_solicita = $usuarioSolicita;
+        $nuevaSolicitud->inicio_periodo = $inicio; 
+        $nuevaSolicitud->fin_periodo = $fin; 
+        $nuevaSolicitud->precio_combustible = $precio; 
+        $nuevaSolicitud->folio = $this->dispersionDiesel->generarFolio(); 
+        $nuevaSolicitud->fecha = now();
+        $nuevaSolicitud->save();
+        return $nuevaSolicitud;
+    }
+
+    public function updateSolicitudDiesel($idSolicitud){
+        $solicitud = SolcitudDiesel::find($idSolicitud);
+        if($solicitud){
+            $solicitud->fecha_dispersion = now();
+            $solicitud->estatus = 2; 
+            $solicitud->save();
+            return $solicitud;
+        }
+    }
+
+        
 }

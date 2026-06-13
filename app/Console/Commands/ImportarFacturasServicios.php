@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ImportarFacturasServicios extends Command
 {
@@ -27,14 +28,42 @@ class ImportarFacturasServicios extends Command
             'nissan_azcapotzalco',
         ];
 
+        $this->info('Iniciando Importacion de servicios');
+        Log::info('Iniciando Importacion de servicios');
+
         foreach ($conexiones as $conexion) {
 
-            $this->info("Procesando servicios: {$conexion}");
+            try {
 
-            $this->procesarConexion($conexion, $fechaInicio, $fechaFin);
+                $this->info("Procesando conexión: {$conexion}");
+                Log::info("Procesando conexión: {$conexion}");
+
+                $this->procesarConexion($conexion, $fechaInicio, $fechaFin);
+
+                $this->info("Conexión {$conexion} procesada correctamente");
+                Log::info("Conexión {$conexion} procesada correctamente");
+
+            } catch (\Throwable $e) {
+
+                $this->error("Error en conexión {$conexion}: " . $e->getMessage());
+
+                Log::error("Error en conexión {$conexion}", [
+                    'hora' => now(),
+                    'mensaje' => $e->getMessage(),
+                    'archivo' => $e->getFile(),
+                    'linea' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
+
+            // $this->info("Procesando servicios: {$conexion}");
+            // Log::info("Procesando servicios: {$conexion}");
+
+            // $this->procesarConexion($conexion, $fechaInicio, $fechaFin);
         }
 
         $this->info('Importación de servicios completada');
+        Log::info('Importación de servicios completada');
     }
 
     private function procesarConexion($conexion, $fechaInicio, $fechaFin)
@@ -79,7 +108,7 @@ class ImportarFacturasServicios extends Command
 
                 $cacheAgencia = $empleadosCache->get($agenciaId);
 
-                $claveEmpleado = $factura->pedi_empl_clave;
+                $claveEmpleado = $factura->vendedor_clave;
 
                 $empleado = $cacheAgencia->get($claveEmpleado);
 
