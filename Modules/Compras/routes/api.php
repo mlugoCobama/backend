@@ -115,6 +115,9 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::post('/CatalogoUnidades/SolicitaToka', [CatUnidadesController::class, 'saveSolicitudRecargaToka']);
     Route::post('/CatalogoUnidades/DispersaToka', [CatUnidadesController::class, 'saveRecargaToka']);
     Route::get('/CatalogoUnidades/ParqueVehicularToka/{id}', [CatUnidadesController::class, 'getParqueWithToka']);
+    
+    Route::get('/DispersionesDiesel/Plantilla/{id}', [DispersionesDieselController::class, 'descargarDispersion']);
+    
 });
 
 Route::prefix('compras')->group(function(){

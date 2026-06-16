@@ -2,11 +2,14 @@
 
 namespace Modules\Compras\Http\Controllers;
 
+use App\Exports\EasyGasExport;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+// use Maatwebsite\Excel\Excel;
+use Maatwebsite\Excel\Facades\Excel;
 use Modules\Compras\Services\DispersionDiesel;
 use Modules\Compras\Transformers\RecargaTokaResource;
 
@@ -84,4 +87,13 @@ class DispersionesDieselController extends Controller
     {
         //
     }
+    
+    public function descargarDispersion($id){
+            $data = DB::connection('dashboard')->select('CALL SP_GetPalntillaDispersionDiesel(?)', [$id]);
+                    return Excel::download(
+                        new EasyGasExport($data),
+                        'GenerarPedidoDeAltas.xlsx'
+                    );
+    }
+    
 }
