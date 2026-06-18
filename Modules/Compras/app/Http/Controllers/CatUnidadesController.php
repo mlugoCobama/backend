@@ -747,11 +747,11 @@ class CatUnidadesController extends Controller
                 $row->fecha_dispersion = now();
                 $row->monto_dispersado = $recarga['saldoDispersar'];
                 $row->saldo_actual = $recarga['saldoActual'];
-                $row->estatus = 2;
+                // $row->estatus = 1;
                 $row->save();
             }
 
-            $this->dispersionDiesel->notificarDispersion('d', $solicitud['id']);
+            // $this->dispersionDiesel->notificarDispersion('d', $solicitud['id']);
 
             DB::commit();
 
@@ -793,6 +793,56 @@ class CatUnidadesController extends Controller
             $solicitud->estatus = 2; 
             $solicitud->save();
             return $solicitud;
+        }
+    }
+
+    public function notificarDispersion(Request $request){ 
+       DB::beginTransaction();
+        try {
+            $data = $request->all();
+            $solicitud = $data['solicitudDiesel'];
+            $recargas = $data['saldosDispersar'];
+            $recargasValidas = collect($recargas)->filter(function ($recarga) {
+                return (
+                    ((float)$recarga['saldoActual'] + (float)$recarga['saldoDispersar']) > 0
+                    && !empty($recarga['idSolicitud'])
+                );
+            });
+            if ($recargasValidas->isEmpty()) {
+                return response([
+                    'message' => 'No existen registros para dispersar.',
+                    'status' => 'error'
+                ], 422);
+            }
+            $this->updateSolicitudDiesel($solicitud['id']);
+            foreach ($recargasValidas as $recarga) {
+                $row = ComRecargasVehiculos::find($recarga['idSolicitud']);
+                if (!$row) {
+                    throw new \Exception(
+                        "No se encontró la recarga con ID {$recarga['idSolicitud']}"
+                    );
+                }
+                $row->fecha_dispersion = now();
+                $row->estatus = 2;
+                $row->save();
+            }
+            $this->dispersionDiesel->notificarDispersion('d', $solicitud['id']);
+            DB::commit();
+
+            return response([
+                'message' => 'Datos Guardados Correctamente',
+                'data' => [],
+                'status' => 'success'
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response([
+                'message' => $e->getMessage(),
+                'status' => 'error'
+            ], 500);
         }
     }
 

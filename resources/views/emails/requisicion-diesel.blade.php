@@ -9,9 +9,9 @@
 
 # Requisición de Dispersión de Diésel
 @if ($tipo == 's' )
-## Se a generado una solicitud de dispersion de diesel con los siguientes detalles
+## Se ha generado una solicitud de dispersión de diésel con los siguientes detalles
 @else
-## Se a realizado la dispersion de diesel el dia {{ $solicitud['fecha_dispersion'] ?? 'Pendiente' }} con los siguientes detalles
+## Se ha realizado la dispersión de diesel el dia {{ $solicitud['fecha_dispersion'] ?? 'Pendiente' }} con los siguientes detalles
 @endif
 
 ## Información General
