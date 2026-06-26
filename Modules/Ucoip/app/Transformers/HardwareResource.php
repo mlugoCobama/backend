@@ -25,8 +25,11 @@ class HardwareResource extends JsonResource
             'procesador' => $this->procesador,
             'caracteristicas' => $this->caracteristicas,
             'observaciones' => $this->observaciones,
+            'estatus' => $this->estatus,
             'estado' => $this->estado,
             'tipo' => new CatHardwareResource($this->Tipo),
+            'id_empresa' => $this->empresa->id ?? null,
+            'empresa' => $this->empresa->nombre ?? 'No Asignado'
         ];
     }
 }

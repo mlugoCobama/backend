@@ -2,6 +2,7 @@
 
 namespace Modules\Ucoip\Models;
 
+use App\Models\CatEmpresas;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Ucoip\Database\Factories\ResguardoFactory;
@@ -19,6 +20,7 @@ class Resguardo extends Model
         'fecha_fin',
         'comentarios',
         'admin_rt',
+        'folio'
     ];
 
     protected $table = 'ucoip_resguardos_ucoip';
@@ -32,5 +34,10 @@ class Resguardo extends Model
     public function detalles()
     {
         return $this->hasMany(DetalleResguardo::class, 'ucoip_resguardo_ucoip_id', 'id');
+    }
+
+    public function empresa()
+    {
+        return $this->belongsTo(CatEmpresas::class, 'id_empresa', 'id');
     }
 }

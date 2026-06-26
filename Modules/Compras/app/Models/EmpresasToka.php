@@ -29,11 +29,11 @@ class EmpresasToka extends Model
         //return EmpresasTokaFactory::new();
     }
 
-    public function tarjetas(){
+    public function tarjetasDisponibles(){
         return $this->hasMany(TarjetasToka::class, 'com_empresas_toka_id', 'id');
     }
 
-    public function tarjetasDisponibles()
+    public function tarjetasDisponiblesf()
     {
         return $this->hasMany(TarjetasToka::class, 'com_empresas_toka_id', 'id')
                     ->where('estatus', '0');

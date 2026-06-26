@@ -5,30 +5,56 @@ namespace Modules\Ucoip\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 
 use App\Http\Controllers\Controller;
+
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Modules\Ucoip\Models\CatAreas;
+use Modules\Ucoip\Models\CatRecursos;
+use Modules\Ucoip\Models\CatSistemas;
+use Modules\Ucoip\Models\Ucoip;
+use Modules\Ucoip\Models\UsuarioPuesto;
+use Modules\Ucoip\Services\CifradoService;
+use Modules\Ucoip\Services\GlpiService;
+use Symfony\Component\CssSelector\Node\FunctionNode;
 
 class UcoipController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    protected $cifradoService;
+    protected $glpiService;
+    public function __construct(
+        CifradoService $cifradoService,
+        GlpiService $glpiService,
+    ){
+        $this->cifradoService = $cifradoService;
+        $this->glpiService = $glpiService;
+    }
+
+
     public function index()
     {
 
         $user = DB::connection('intranet')
                 ->table('glpi_users')
                 ->join('glpi_entities', 'glpi_users.intercompania', '=', 'glpi_entities.intercompania')
-                ->select('glpi_users.id', 'glpi_users.name', 'glpi_users.realname', 'glpi_users.firstname', 'glpi_entities.name as empresa')
+                ->join('glpi_directorio_puestos', 'glpi_users.id_puesto_directorio', '=', 'glpi_directorio_puestos.id_glpi_directorio_puestos')
+                ->join('glpi_directorio_area', 'glpi_users.id_areas_directorio', '=', 'glpi_directorio_area.id_glpi_directorio_area')
+                ->select('glpi_users.id', 'glpi_users.name',
+                 'glpi_users.realname', 'glpi_users.firstname', 'glpi_entities.name as empresa',
+                'glpi_directorio_puestos.nombre as puesto',
+                'glpi_directorio_area.nombre as area')
                 ->where('glpi_users.is_active', '1')
                 ->get();
+
+        // $user =  $this->queryPuestosUsuarios();
 
         return response()->json([
             'success' => true,
             'message' => '',
             'data' => $user
         ]);
+
+    
     }
 
     /**
@@ -42,9 +68,36 @@ class UcoipController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        //
+        $data =  $request->all();
+
+        if(!empty($data['idUcoip'])){
+            $ucoip = Ucoip::find($data['idUcoip']);
+        }else{
+            $ucoip = new Ucoip();
+        }
+
+        $ucoip->ucoip =  $data['ucoip'];
+        if(!empty($data['password'])){
+            $ucoip->contrasenia = $this->cifradoService->encrypt($data['password']);
+        }
+        $ucoip->user_id =  $data['id']; 
+        $ucoip->ucoip_cat_puestos =  $data['puesto_id'];
+        $ucoip->cat_empresa_id=  15;
+        $ucoip->save();
+
+        // $this->glpiService->updateGlpiUser($data['id'], $data['nombre'], $data['apellidos'], $data['password'], $data['area_id'],$data['departamento_id'],$data['puesto_id'] );
+
+
+        
+        return response()->json([
+            'status' => 'success',
+            'data' => [],
+            'message' => 'Ucoip guardado correctamente'
+        ]);
+
+
     }
 
     /**
@@ -52,7 +105,13 @@ class UcoipController extends Controller
      */
     public function show($id)
     {
-        return view('ucoip::show');
+       $ucoip = Ucoip::with(['puesto.departamento.area'])->where('user_id', $id)->first();
+
+       return response()->json([
+        'status' => 'success',
+        'data' => $ucoip,
+        'message' => 'Ucoip recuperado correctamente'
+       ]);
     }
 
     /**
@@ -77,5 +136,37 @@ class UcoipController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    public function queryPuestosUsuarios(){
+        $data = UsuarioPuesto::with(['userGlpi', 'puesto.departamento.area'])->get();
+        return $data;
+    }
+
+    public function getPassword(int $id)
+    {
+        $ucoip = Ucoip::findOrFail($id);
+        $password = $this->cifradoService->decrypt($ucoip->contrasenia);
+
+        return response()->json([
+            'success' => true,
+            'data' => $password,
+            'message' => 'Dato recuperado correctamente'
+        ]);
+    }
+
+
+    public function getCatalogosUcoip(){
+        $data =[
+           'areas' => CatAreas::with(['departamentos.puestos'])->get(),
+           'sistemas' => CatSistemas::get(),
+           'recursos' => CatRecursos::get(), 
+        ];
+        
+        return response()->json([
+        'status'  => 'success',
+        'data'    => $data,    
+        'message' => 'Catalogos recuperados Correctamente'
+        ]);
     }
 }

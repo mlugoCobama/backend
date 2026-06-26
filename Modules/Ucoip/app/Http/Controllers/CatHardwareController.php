@@ -69,40 +69,57 @@ class CatHardwareController extends Controller
                 'disco_duro' => $this->hwService->obtenerCapacidad($item['physical_disks'][0] ?? 'OGB'),
                 'procesador' => $item['cpu_model'][0],
                 'cat_hardware_id' => 1,
-                'cat_empresa_id' => 14,
+                'cat_empresa_id' => $ucoip['id_empresa'],
                 'nombre_equipo' => $item['hostname'],
                 'empresa' => $item['site_name'],
-                'usuario' => $item['logged_username'],
+                'usuario' => $item['logged_username'].' '.'correo'. $ucoip['correo'],
+                'idUcoip' => $ucoip['id_usuario'],
+                'correo' => $ucoip['correo']
+
             ];
         }
 
-        // foreach ($formatData as $data) {
-        //   $inventario = $this->hwService->storeHardware($data);
-        //   $dataUcoip =  $this->findUcoipGlpi($data['usuario'], $data['empresa']);
-        //   $resguardo = $this->resguardoService->storeResguardo($dataUcoip);
+        foreach ($formatData as $item) {
+          $inventario = $this->hwService->storeHardware($item);
+        //   $datoUcoip =  $this->findUcoipGlpi($item['correo'], $item['empresa']);
+        //   $resguardo = $this->resguardoService->storeResguardo(
+        //     ['id_usuario' => $item['idUcoip'],
+        //     'id_empresa' => $item['cat_empresa_id']]);
         //   $this->resguardoService->storeDetalle($inventario->id, [], $resguardo->id);
-        // }
+
+        if(
+            !empty($item['idUcoip'])
+        ){
+            $this->resguardoService->asignarRecurso($inventario->id, null, $item['idUcoip']  );
+            $this->hwService->updateEstatusHardware($inventario->id, 2);
+        }
+        
+
+        }
 
         return response()->json([
             'status' => 'success',
             'data' => $formatData,
+            'data2' => $data,
             'message' => 'Datos recuperados correctamente'
         ]);
     }
 
     public function findUcoipGlpi($ucoip, $nombreSite){
         $empresa = ModelsCatEmpresas::where('nombre', 'like', '%' . $nombreSite . '%')->first();
-        
+
         $data = [
             'id_usuario' => null,
-            'id_empresa' => null
+            'id_empresa' => null ?? 15,
+            'correo' => null
         ];
 
         if($empresa){
             $usuario = DB::connection('intranet')->select('CALL SP_GetUsuarioEmail(?)', [$ucoip.'@'.$empresa->dominio]);
             $data = [
-            'id_usuario' => $usuario[0]->id ?? null,
-            'id_empresa' => $empresa->id ?? null 
+                'id_usuario' => $usuario[0]->id ?? null,
+                'id_empresa' => $empresa->id ?? 15,
+                'correo' => $ucoip.'@'.$empresa->dominio
             ];
         }
 
@@ -125,5 +142,15 @@ class CatHardwareController extends Controller
     public function destroy($id)
     {
         
+    }
+
+    public function getCatalogoDisponible(){
+        $data = CatHardwareModel::with('hardwareDisponible')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $data,
+            'message' => 'Hardware disponible recuperado correctamente'
+        ]);
     }
 }

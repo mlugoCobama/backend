@@ -4,6 +4,8 @@ namespace Modules\Ucoip\Services;
 
 use Modules\Ucoip\Models\DetalleResguardo;
 use Illuminate\Support\Facades\DB;
+use Modules\Ucoip\Models\GlpiUser;
+use Modules\Ucoip\Models\HardwareUcoip;
 use Modules\Ucoip\Models\Resguardo;
 
 class ResguardosService
@@ -50,9 +52,33 @@ class ResguardosService
         $resguardo->fecha_fin           = null;
         $resguardo->comentarios         = $data['comentarios'] ?? null;
         $resguardo->admin_rt            = $data['admin_rt'] ?? null;
+        $resguardo->folio            = $this->generarFolio();
         $resguardo->save();
         return $resguardo;
     }
+
+    private function generarFolio()
+    {
+        // Obtener el último folio registrado
+
+        $ultimoFolio = Resguardo::orderBy('id', 'desc')->first();
+
+        if ($ultimoFolio) {
+            // Extraer la parte numérica del folio
+            $numero = (int) str_replace('RRT-', '', $ultimoFolio->folio);
+            $nuevoNumero = $numero + 1;
+        } else {
+            // Si no existe ningún folio, empezamos en 1
+            $nuevoNumero = 1;
+        }
+
+        // Formatear con ceros a la izquierda (ejemplo: ETI-00001)
+        $nuevoFolio = 'RRT-' . str_pad($nuevoNumero, 5, '0', STR_PAD_LEFT);
+
+        return $nuevoFolio;
+    }
+
+
 
     public function storeDetalle( $idHardware, $detalle, $idResguardo ){
         $detalle =  new DetalleResguardo();
@@ -63,5 +89,29 @@ class ResguardosService
         $detalle->observaciones             = $detalle['observaciones'] ?? null;
         $detalle->caracteristicas           = $detalle['caracteristicas'] ?? null;
         $detalle->save();
+    }
+
+
+    public function asignarRecurso($idHardware, $idUcoip, $idUserGlpi){
+        $asignacion                     = new HardwareUcoip();
+        $asignacion->ucoip_hardware_id  = $idHardware;
+        $asignacion->ucoip_ucoip_id     = $idUcoip;
+        $asignacion->glpi_user_id       = $idUserGlpi;
+        $asignacion->fecha_inicio       = now();
+        $asignacion->estatus            = 1;
+        $asignacion->save();
+
+        return $asignacion;
+    }
+
+    public function removerRecurso($idAsignacion){
+       $asignacion =  HardwareUcoip::find($idAsignacion);
+       if($asignacion){
+        $asignacion->fecha_fin       = now();
+        $asignacion->estatus            = 2;
+        $asignacion->save();
+       }
+
+       return $asignacion;
     }
 }

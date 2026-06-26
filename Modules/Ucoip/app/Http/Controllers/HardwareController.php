@@ -25,7 +25,7 @@ class HardwareController extends Controller
         return response()->json([
             'success' => true,
             'message' => '',
-            'data' => HardwareResource::collection($this->hardwarePC->all())
+            'data' => HardwareResource::collection(HardwarePcModel::with(['Tipo','empresa'])->get())
         ]);
     }
 
@@ -46,6 +46,7 @@ class HardwareController extends Controller
             "caracteristicas" => $request->caracteristicas,
             "observaciones" => $request->observaciones,
             "estado" => $request->estado,
+            "cat_empresa_id" => $request->empresa,
             "cat_hardware_id" => $request->cat_hardware_id
         ]);
         /*
@@ -120,9 +121,30 @@ class HardwareController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+       $hardware = $this->hardwarePC->find($request->id);
 
-        return response()->json([]);
+        $hardware->update([
+            "marca" => $request->marca,
+            "modelo" => $request->modelo,
+            "no_serie" => $request->no_serie,
+            "tipo" => $request->tipo,
+            "mac" => $request->mac,
+            "memoria_ram" => $request->memoria_ram,
+            "disco_duro" => $request->disco_duro,
+            "procesador" => $request->procesador,
+            "caracteristicas" => $request->caracteristicas,
+            "observaciones" => $request->observaciones,
+            "estado" => $request->estado,
+            "cat_empresa_id" => $request->empresa,
+            "cat_hardware_id" => $request->cat_hardware_id
+        ]);
+
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Se ha completado la tarea satisfactoriamente',
+            'data' => []
+        ]);
     }
 
     /**

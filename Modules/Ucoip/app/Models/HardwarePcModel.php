@@ -2,7 +2,6 @@
 
 namespace Modules\Ucoip\Models;
 
-use App\Models\CatEmpresas;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -53,6 +52,10 @@ class HardwarePcModel extends Model
      */
     public function Tipo() {
         return  $this->hasOne(CatHardwareModel::class, 'id', 'cat_hardware_id');
+    }
+
+    public function tipoHardware() {
+        return  $this->belongsTo(CatHardwareModel::class, 'cat_hardware_id', 'id');
     }
 
     public function empresa(){

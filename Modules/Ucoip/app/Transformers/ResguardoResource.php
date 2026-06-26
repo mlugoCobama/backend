@@ -14,6 +14,7 @@ class ResguardoResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'folio' => $this->folio,
             'id_usuario_asignado' => $this->id_usuario_asignado,
             'fecha_inicio' => $this->fecha_inicio,
             'fecha_fin' => $this->fecha_fin,

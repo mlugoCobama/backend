@@ -34,4 +34,12 @@ class CatHardwareModel extends Model
     public function Hardware() {
         $this->belongsTo(HardwarePcModel::class, 'cat_hardware_id', 'id');
     }
+
+    public function hardwareDisponible()
+    {
+        return $this->hasMany(HardwarePcModel::class, 'cat_hardware_id', 'id')
+                    ->where('estado', 1)
+                    ->select('id', 'marca', 'modelo', 'no_serie', 'cat_hardware_id');
+    }
+
 }
