@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\Ucoip\Models\CatAreas;
+use Modules\Ucoip\Models\CatEmpresas;
 use Modules\Ucoip\Models\CatRecursos;
 use Modules\Ucoip\Models\CatSistemas;
 use Modules\Ucoip\Models\Ucoip;
@@ -39,10 +40,14 @@ class UcoipController extends Controller
                 ->join('glpi_entities', 'glpi_users.intercompania', '=', 'glpi_entities.intercompania')
                 ->join('glpi_directorio_puestos', 'glpi_users.id_puesto_directorio', '=', 'glpi_directorio_puestos.id_glpi_directorio_puestos')
                 ->join('glpi_directorio_area', 'glpi_users.id_areas_directorio', '=', 'glpi_directorio_area.id_glpi_directorio_area')
-                ->select('glpi_users.id', 'glpi_users.name',
-                 'glpi_users.realname', 'glpi_users.firstname', 'glpi_entities.name as empresa',
-                'glpi_directorio_puestos.nombre as puesto',
-                'glpi_directorio_area.nombre as area')
+                ->select('glpi_users.id',
+                        'glpi_users.name',
+                        'glpi_users.realname',
+                        'glpi_users.firstname',
+                        'glpi_users.intercompania',
+                        'glpi_entities.name as empresa',
+                        'glpi_directorio_puestos.nombre as puesto',
+                        'glpi_directorio_area.nombre as area')
                 ->where('glpi_users.is_active', '1')
                 ->get();
 
@@ -84,7 +89,7 @@ class UcoipController extends Controller
         }
         $ucoip->user_id =  $data['id']; 
         $ucoip->ucoip_cat_puestos =  $data['puesto_id'];
-        $ucoip->cat_empresa_id=  15;
+        $ucoip->cat_empresa_id =  $this->matchEmpresa($data['intercompania'])->id ?? 15;
         $ucoip->save();
 
         // $this->glpiService->updateGlpiUser($data['id'], $data['nombre'], $data['apellidos'], $data['password'], $data['area_id'],$data['departamento_id'],$data['puesto_id'] );
@@ -168,5 +173,11 @@ class UcoipController extends Controller
         'data'    => $data,    
         'message' => 'Catalogos recuperados Correctamente'
         ]);
+    }
+
+    public function matchEmpresa($intercompania){
+        $empresa =  CatEmpresas::where('intercompania', $intercompania)->first();
+
+        return $empresa;
     }
 }

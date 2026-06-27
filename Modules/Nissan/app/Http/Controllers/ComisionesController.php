@@ -134,10 +134,19 @@ class ComisionesController extends Controller
                                         $fechaInicio    == 'todos' ? null : $fechaInicio,
                                         $fechaFin       == 'todos' ? null : $fechaFin
                                     );
+    $data2 = $this->queryDatosVentas(
+                                        $estatus        == '12345' ? null : $estatus + 1,
+                                        $agencia        == 'todos' ? null : $agencia,
+                                        $vendedor       == 'todos' ? null : $vendedor,
+                                        $tipoVenta      == 'todos' ? null : $tipoVenta,
+                                        $fechaInicio    == 'todos' ? null : $fechaInicio,
+                                        $fechaFin       == 'todos' ? null : $fechaFin
+                                    );
         return response()->json([
             'status' => 'success',
             'message' => 'Datos recuperados correctamente',
             'data' => DatosVentaResource::collection($data),
+            'realizados' => DatosVentaResource::collection($data2),
             'estado' => $estatus
         ]);
 
@@ -161,11 +170,13 @@ class ComisionesController extends Controller
             '7051' => false,
             '712' => false,
             '710' => false,
+            '730' => false,
+            '714' => false,
             '333' => true,
             default => true
         };
 
-         $ventas = DatosVenta::
+         $ventas2 = DatosVenta::
             with(['vendedor', 'tipoVenta', 'gatosVenta'])
             ->when($agencia, fn($q) => $q->where('agencia', $agencia))
             ->when($vendedor, fn($q) => $q->where('id_vendedor', $vendedor))
@@ -176,6 +187,19 @@ class ComisionesController extends Controller
             ->when($fechaInicio && $fechaFin , fn($q) => $q->whereBetween('fecha_factura', [$fechaInicio, $fechaFin]))
             ->get();
 
+        $ventas = DatosVenta::with(['vendedor', 'tipoVenta', 'gatosVenta'])
+            ->when($agencia, fn($q) => $q->where('agencia', $agencia))
+            ->when($vendedor, fn($q) => $q->where('id_vendedor', $vendedor))
+            // ->when($estatus, fn($q) => $q->whereIn('estatus', [$estatus, $estatus + 1]))
+            ->when($estatus, fn($q) => $q->where('estatus', $estatus))
+            // Si el tipoVenta es flotilla, solo flotilla
+            ->when($tipoVenta === 'flotilla', fn($q) => $q->where('tipo_venta', 'FLOTILLA'))
+            // Si no es flotilla y no se deben mezclar, excluye flotilla
+            ->when($tipoVenta !== 'flotilla' && !$mezclarFlotillas, fn($q) => $q->where('tipo_venta', '!=', 'FLOTILLA'))
+            // Si se especifica otro tipo de venta, filtra por clave_producto
+            ->when($tipoVenta && $tipoVenta !== 'flotilla', fn($q) => $q->where('clave_producto', $tipoVenta))
+            ->when($fechaInicio && $fechaFin, fn($q) => $q->whereBetween('fecha_factura', [$fechaInicio, $fechaFin]))
+            ->get();
         return $ventas;
     }
 

@@ -16,7 +16,9 @@ class CatEmpresas extends Model
     protected $fillable = [
         'id',
         'nombre',
-        'dominio'
+        'dominio',
+        'intercompania'
+
     ];
     /**
      * Nombre de la tabla

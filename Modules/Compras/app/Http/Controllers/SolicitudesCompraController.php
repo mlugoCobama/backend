@@ -46,6 +46,7 @@ use Modules\Compras\Models\DatosVehiculo;
 use Modules\Compras\Models\ProveedorContacto;
 use Modules\Compras\Services\ComprasGeneralesService;
 use Modules\Compras\Services\CotizacionesService;
+use Normalizer;
 
 class SolicitudesCompraController extends Controller
 {
@@ -389,8 +390,8 @@ class SolicitudesCompraController extends Controller
         foreach ($detalles as $index => $detalle) {
             $detalleSolicitud = new DetalleSolicitud();
             $detalleSolicitud->cantidad = $detalle["cantidad"];
-            $detalleSolicitud->descripcion = $detalle["descripcion"];
-            $detalleSolicitud->observaciones = $detalle["observaciones"];
+            $detalleSolicitud->descripcion = $this->sanitizeMeasurementText($detalle["descripcion"]);
+            $detalleSolicitud->observaciones = $this->sanitizeMeasurementText($detalle["observaciones"]);
             $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
             $detalleSolicitud->recuperable = $detalle["recuperar_costo"];
 
@@ -814,8 +815,8 @@ private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $
         }
         
         $detalleSolicitud->cantidad = $detalle["cantidad"];
-        $detalleSolicitud->descripcion = $detalle["descripcion"];
-        $detalleSolicitud->observaciones = $detalle["observaciones"];
+        $detalleSolicitud->descripcion = $this->sanitizeMeasurementText($detalle["descripcion"]);
+        $detalleSolicitud->observaciones = $this->sanitizeMeasurementText($detalle["observaciones"]);
         $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
         $detalleSolicitud->recuperable = $detalle["recuperar_costo"] ?? $detalle["recuperable"] ?? 0;
         
@@ -838,6 +839,31 @@ private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $
         }
         $detalleSolicitud->save();
     }
+}
+
+function sanitizeMeasurementText($text) {
+
+    $text = mb_convert_encoding($text, 'UTF-8', 'auto');
+    if (class_exists('Normalizer')) {
+        $text = normalizer_normalize($text, Normalizer::FORM_C);
+    }
+
+    $replacements = [
+        "″" => '"', 
+        "”" => '"',
+        "“" => '"',
+        "′" => "'",  
+        "’" => "'",
+        "‘" => "'",
+        "–" => "-",   
+        "—" => "-",
+        "×" => "x",   
+        "⁄" => "/",   
+    ];
+
+    $text = strtr($text, $replacements);
+    $text = preg_replace('/[^\P{C}\n]+/u', '', $text);
+    return trim($text);
 }
 
 }

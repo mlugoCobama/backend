@@ -12,7 +12,9 @@ class HardwareService{
 
     public function storeHardware($data){
         $existe = false;
+
         // $existe = HardwarePcModel::where('no_serie', $data['no_serie'])->first();
+
         if(!$existe){
              $hardware  =  new HardwarePcModel();
 

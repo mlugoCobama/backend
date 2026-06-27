@@ -170,7 +170,7 @@ class UsuariosController extends Controller
             if(!$existe){
                 $data[] = [
                 'permission_id' => $permisoId,
-                'model_type'    => 'App\\Models\\User', // Ajusta según tu modelo
+                'model_type'    => 'App\\Models\\User', 
                 'model_id'      => $id,
             ];
             }
