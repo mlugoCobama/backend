@@ -17,20 +17,22 @@ class DispersionesTokaResource extends JsonResource
     public function toArray(Request $request): array
     {
         $usuario = $this->getNombreUsuario(1, $this->usuario_solicita);
+        $empresa = $this->setEmpresaName($this->empresa);
         return [
             "id" => $this->id,
             "inicio_periodo" => $this->inicio_periodo,
             "fin_periodo" => $this->fin_periodo,
             "precio_combustible" => $this->precio_combustible,
             "folio" => $this->folio,
-            "usuario_solicita" => 2395,
+            "usuario_solicita" => $this->usuario_solicita,
             "solicita" => $usuario['nombre_completo'],
-            "empresa" => $usuario['empresa'],
+            "empresa" => $empresa,
             "area" => $usuario['area'],
             "fecha" => $this->fecha,
-            "estatus" => 1,
-            "activo" => 1,
-            "fecha_dispersion" => $this->fecha_dispersion 
+            "estatus" => $this->estatus,
+            "activo" => $this->activo,
+            "fecha_dispersion" => $this->fecha_dispersion,
+            "notifico_dispersion" => $this->notifico_dispersion  
         ];
 
 
@@ -69,5 +71,20 @@ class DispersionesTokaResource extends JsonResource
 
         self::$usuariosCache[$cacheKey] = $resultado;
         return $resultado;
+    }
+
+     private static $empresasCache = [];
+    private function setEmpresaName($intercompania)
+    {
+        if (isset(self::$empresasCache[$intercompania])) {
+            return self::$empresasCache[$intercompania];
+        }
+        $empresas = DB::connection('intranet')->select('CALL SP_GetEmpresas()');
+
+        foreach ($empresas as $empresa) {
+            self::$empresasCache[$empresa->intercompania] = $empresa->name;
+        }
+
+        return self::$empresasCache[$intercompania] ?? null;
     }
 }

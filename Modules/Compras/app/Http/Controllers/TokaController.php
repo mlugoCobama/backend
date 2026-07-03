@@ -43,12 +43,14 @@ class TokaController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
+        $existe = false;
 
         if($data['tipo'] == 'nueva'){
             $existe = TarjetasToka::with('cliente')->where('tarjeta', $data['numeroTarjeta'])->first();
-        }else{
-            $existe = TarjetasToka::with('cliente')->where('tarjeta', $data['numeroTarjeta'])->where('id','<>',$data['numeroTarjeta'])->first();
         }
+        // else{
+        //     $existe = TarjetasToka::with('cliente')->where('tarjeta', $data['numeroTarjeta'])->where('id','<>',$data['id'])->first();
+        // }
 
         if($existe){
             return response()->json([

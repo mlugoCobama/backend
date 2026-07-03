@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\Ucoip\Models\CatSoftware;
+use Modules\Ucoip\Models\Software;
 
 class CatSoftwareController extends Controller
 {
@@ -15,7 +16,7 @@ class CatSoftwareController extends Controller
      */
     public function index()
     {
-        $data = CatSoftware::with('licenciasDisponible')->get();
+        $data = Software::with(['tipoSoftware'])->get();
 
         return response()->json([
             'status' => 'success',

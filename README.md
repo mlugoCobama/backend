@@ -105,3 +105,16 @@ Se actualiza el sp para obtener comisiones
 ## Compras - Almacen
 - Se agrupan las salidas de almacén en entregas, y se realiza foliado
 
+---
+## **Fecha de liberación:** 3 de julio de 2026
+## Compras - Dispersiones de diesel
+- Se integra un nuevo estado en el apartado de dispersiones de diesel para identificar con mayor facilidad, solicitudes pendientes, guardadas y realizadas ( notificadas ).
+- Se modifica el SP para corregir errores de visualizacion de informacion
+## Compras - Catalogo de Tags
+- Se genera un catalogo de tarjetas de tags para las empresas
+## UCOIP 
+- Asignación de sistemas y almacenado de credenciales
+- Asignación de recursos de red
+- Asignación de licencias de software
+
+

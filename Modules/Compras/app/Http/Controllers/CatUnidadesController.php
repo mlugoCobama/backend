@@ -19,7 +19,9 @@ use Modules\Compras\Models\DatosTanque;
 use Modules\Compras\Models\DatosVehiculo;
 use Modules\Compras\Models\ObservacionVehiculo;
 use Modules\Compras\Models\SolcitudDiesel;
+use Modules\Compras\Models\Tags;
 use Modules\Compras\Models\TarjetasToka;
+use Modules\Compras\Models\VehiculosTags;
 use Modules\Compras\Models\VehiculosToka;
 use Modules\Compras\Services\DispersionDiesel;
 use Modules\Compras\Services\ParqueVehicularService;
@@ -95,8 +97,9 @@ class CatUnidadesController extends Controller
             if (isset($data['datosVehiculo'])) {
                 $vehiculo = $this->storeVehiculo($datosVehiculo, $numIntercompania, $userId);
                 $idToka = $data['datosVehiculo']['num_tarjeta_toka'] === 'null' ? null : $data['datosVehiculo']['num_tarjeta_toka'];
-
-                 $this->asignarToka($idToka,  $vehiculo);   
+                $idTag = $data['datosVehiculo']['num_tag'] === 'null' ? null : $data['datosVehiculo']['num_tag'];
+                 $this->asignarToka($idToka,  $vehiculo);
+                 $this->asignarTag($idTag, $vehiculo);   
                 if (
                     $datosVehiculo['tipo_vehiculo'] == "1"
                     || $datosVehiculo['tipo_vehiculo'] == "3"
@@ -194,6 +197,8 @@ class CatUnidadesController extends Controller
             $idToka = $data['datosVehiculo']['num_tarjeta_toka'] == 'null' ? null : $data['datosVehiculo']['num_tarjeta_toka'];
 
             $this->asignarToka($idToka,  $datosVehiculo['id']);
+            $idTag = $data['datosVehiculo']['num_tag'] === 'null' ? null : $data['datosVehiculo']['num_tag'];
+            $this->asignarTag($idTag, $datosVehiculo['id']);
 
             if (
                 $datosVehiculo['tipo_vehiculo'] == "1"
@@ -334,6 +339,8 @@ class CatUnidadesController extends Controller
         $dataVehiculo->estatus = $datosVehiculos['estatus'];
         $dataVehiculo->categoria = $datosVehiculos['categoria'];
         $dataVehiculo->gps = $datosVehiculos['gps'];
+        $dataVehiculo->capacidad_combustible = $datosVehiculos['tanque_combustible'];
+        $dataVehiculo->rendimiento_x_litro = $datosVehiculos['rendimiento'];
         $dataVehiculo->activo = 2;
 
         $dataVehiculo->save();
@@ -388,6 +395,53 @@ class CatUnidadesController extends Controller
             ]);
             // Marcar tarjeta como asignada
             TarjetasToka::where('id', $idToka)->update(['estatus' => '1']);
+        });
+    }
+
+
+    public function asignarTag( $idTag, $idVehiculo)
+    {
+        DB::transaction(function () use ($idTag, $idVehiculo) {
+            $asignacionActual = VehiculosTags::where('com_id_datos_vehiculos', $idVehiculo)->whereNull('fecha_fin')->first();
+            // Retirar tag
+            if (is_null($idTag)) {
+                if ($asignacionActual) {
+                    $asignacionActual->update(['fecha_fin' => now()]);
+                    Tags::where('id', $asignacionActual->com_id_tags)->update(['estatus' => '0']);
+                }
+                return;
+            }
+            // Validar que el tag no esté asignado
+            $tarjetaAsignada = VehiculosTags::where('com_id_tags',$idTag)->whereNull('fecha_fin')->first();
+
+            if ($tarjetaAsignada &&$tarjetaAsignada->com_id_datos_vehiculos != $idVehiculo) {
+                throw new \Exception(
+                    'La tarjeta ya se encuentra asignada a otro vehículo.'
+                );
+            }
+            // Si el vehículo ya tiene una asignación
+            if ($asignacionActual) {
+                // Si es el mismo tag no hacer nada
+                if ($asignacionActual->com_id_tags == $idTag) {
+                    return;
+                }
+
+                // Finalizar asignación anterior
+                $asignacionActual->update(['fecha_fin' => now()
+                ]);
+                // Liberar el tag anterior
+                Tags::where('id', $asignacionActual->com_id_tags)->update([
+                    'estatus' => '0'
+                ]);
+            }
+            // Crear nueva asignación
+            VehiculosTags::create([
+                'com_id_datos_vehiculos' => $idVehiculo,
+                'com_id_tags' => $idTag,
+                'fecha_inicio' => now(),
+            ]);
+            // Marcar tarjeta como asignada
+            Tags::where('id', $idTag)->update(['estatus' => '1']);
         });
     }
 
@@ -477,7 +531,9 @@ class CatUnidadesController extends Controller
             'gps' => $data['gps'],
             'num_tarjeta_toka' => $data['num_tarjeta_toka'],
             'num_tag' => $data['num_tag'],
-            'limite' => $data['limite']
+            'limite' => $data['limite'],
+            'capacidad_combustible' => $data['tanque_combustible'],
+            'rendimiento_x_litro' => $data['rendimiento'],
         ]);
 
         if (isset($data['observacion']) && !empty($data['observacion'])) {
@@ -786,11 +842,11 @@ class CatUnidadesController extends Controller
         return $nuevaSolicitud;
     }
 
-    public function updateSolicitudDiesel($idSolicitud){
+    public function updateSolicitudDiesel($idSolicitud, $status = 2){
         $solicitud = SolcitudDiesel::find($idSolicitud);
         if($solicitud){
             $solicitud->fecha_dispersion = now();
-            $solicitud->estatus = 2; 
+            $solicitud->estatus = $status; 
             $solicitud->save();
             return $solicitud;
         }
@@ -814,7 +870,7 @@ class CatUnidadesController extends Controller
                     'status' => 'error'
                 ], 422);
             }
-            $this->updateSolicitudDiesel($solicitud['id']);
+            $this->updateSolicitudDiesel($solicitud['id'], 3);
             foreach ($recargasValidas as $recarga) {
                 $row = ComRecargasVehiculos::find($recarga['idSolicitud']);
                 if (!$row) {

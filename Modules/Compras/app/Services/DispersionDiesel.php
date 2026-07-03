@@ -73,10 +73,12 @@ class DispersionDiesel
         }
 
         public function getDispersionesDiesel(){
-            $dispersionesPendientes = SolcitudDiesel::where('estatus','1')->get();
-            $dispersionesRealizadas = SolcitudDiesel::where('estatus','2')->get();
+            $dispersionesPendientes = SolcitudDiesel::where('estatus','1')->latest()->get();
+            $dispersionesGuardadas = SolcitudDiesel::where('estatus','2')->latest()->get();
+            $dispersionesRealizadas = SolcitudDiesel::where('estatus','3')->latest()->get();
             return [
                 'pendientes' => DispersionesTokaResource::collection($dispersionesPendientes),
+                'guardadas' => DispersionesTokaResource::collection($dispersionesGuardadas),
                 'realizadas' => DispersionesTokaResource::collection($dispersionesRealizadas)
         ];
         }

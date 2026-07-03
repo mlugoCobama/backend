@@ -55,51 +55,8 @@ class CatHardwareController extends Controller
     {
         $data = $this->hwService->getDevicesEmpresa($id);
         $formatData = [];
-
-        foreach ($data as $item) {
-
-            $equipo =  $this->hwService->separarMarcaModelo($item['make_model']);
-            $ucoip = $this->findUcoipGlpi($item['logged_username'], $item['site_name']);
-
-            $formatData[] = [
-                'marca' => $equipo ['marca'],
-                'modelo' => $equipo ['modelo'],
-                'no_serie' => $item['serial_number'],
-                'tipo' => $this->hwService->validateOrigin($item['serial_number']),
-                'disco_duro' => $this->hwService->obtenerCapacidad($item['physical_disks'][0] ?? 'OGB'),
-                'procesador' => $item['cpu_model'][0],
-                'cat_hardware_id' => 1,
-                'cat_empresa_id' => $ucoip['id_empresa'],
-                'nombre_equipo' => $item['hostname'],
-                'empresa' => $item['site_name'],
-                'usuario' => $item['logged_username'].' '.'correo'. $ucoip['correo'],
-                'idUcoip' => $ucoip['id_usuario'],
-                'correo' => $ucoip['correo']
-
-            ];
-        }
-
-        foreach ($formatData as $item) {
-          $inventario = $this->hwService->storeHardware($item);
-        //   $datoUcoip =  $this->findUcoipGlpi($item['correo'], $item['empresa']);
-        //   $resguardo = $this->resguardoService->storeResguardo(
-        //     ['id_usuario' => $item['idUcoip'],
-        //     'id_empresa' => $item['cat_empresa_id']]);
-        //   $this->resguardoService->storeDetalle($inventario->id, [], $resguardo->id);
-
-        if(
-            !empty($item['idUcoip'])
-        ){
-            $this->resguardoService->asignarRecurso($inventario->id, null, $item['idUcoip']  );
-            $this->hwService->updateEstatusHardware($inventario->id, 2);
-        }
-        
-
-        }
-
         return response()->json([
             'status' => 'success',
-            'data' => $formatData,
             'data2' => $data,
             'message' => 'Datos recuperados correctamente'
         ]);

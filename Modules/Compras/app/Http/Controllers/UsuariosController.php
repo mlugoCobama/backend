@@ -14,34 +14,8 @@ class UsuariosController extends Controller
      *******************************************************************/
     public function index()
     {
-        // $idsAExcluir = [7074, 7072, 7075, 7102];
-
-        // $data = DB::connection('intranet')
-        // ->table('glpi_entities')
-        // ->select('name','intercompania')
-        // ->where('intercompania', '>', '0')
-        // ->whereNotIn('intercompania', $idsAExcluir)
-        // ->orderBy('name')->get();
  
         $data = DB::connection('intranet')->select('CALL SP_GetEmpresas()');
-
-        // $dataArray = $data->toArray();
-
-        // $dataArray[] = (object)[
-        //     'name' => 'MACRO TALLER',
-        //     'intercompania' => 119,
-        //     'isAgencia' => false
-        // ];
-        // $dataArray[] = (object)[
-        //     'name' => 'Flamamex - Flamazul',
-        //     'intercompania' => 250,
-        //     'isAgencia' => false
-        // ];
-        // $dataArray[] = (object)[
-        //     'name' => 'Garza Sur - Urbano',
-        //     'intercompania' => 111,
-        //     'isAgencia' => false
-        // ];
 
         return response()->json([
             'status' => 'success',
@@ -192,7 +166,7 @@ class UsuariosController extends Controller
         ]);
     }
 
-        public function getAllPermission(Request $request){
+    public function getAllPermission(Request $request){
         $data = $request->all();
         $correoUsuaio = $data['correo'] ?? null;
 
@@ -215,7 +189,10 @@ class UsuariosController extends Controller
                 'p.sistema',
                 'p.descripcion'
             )
-            ->where('p.sistema', '<>', 2);
+            ->where('p.sistema', '<>', 2)
+            // ->orderBy('um.nombre', 'asc')
+            // ->orderBy('p.descripcion', 'asc')
+            ;
 
         // Si hay usuario, hacemos LEFT JOIN para marcar permisos activos
         if ($idUsuario) {

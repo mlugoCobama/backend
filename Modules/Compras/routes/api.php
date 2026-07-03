@@ -24,6 +24,7 @@ use Modules\Compras\Http\Controllers\DispersionesDieselController;
 use Modules\Compras\Models\AcuseEntrega;
 use Modules\Compras\Http\Controllers\ReportesComprasController;
 use Modules\Compras\Http\Controllers\SyncController;
+use Modules\Compras\Http\Controllers\TagController;
 use Modules\Compras\Http\Controllers\TokaController;
 
 /*
@@ -57,6 +58,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::resource('AlmacenCompras', AlmacenComprasConrollerController::class);
     Route::resource('Toka', TokaController::class);
     Route::resource('DispersionesDiesel', DispersionesDieselController::class);
+    Route::resource('Tags', TagController::class);
     
     Route::get('/Solicitudes/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
     Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');

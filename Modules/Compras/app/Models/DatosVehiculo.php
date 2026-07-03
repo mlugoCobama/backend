@@ -39,8 +39,9 @@ class DatosVehiculo extends Model
         'limite', // limite del tag
         'num_tarjeta_toka',
         'num_tag',
-        'unit_id_gps'
-
+        'unit_id_gps', 
+        'capacidad_combustible',
+        'rendimiento_x_litro'
     ];
      /**
      * Nombre de la tabla
@@ -71,6 +72,10 @@ class DatosVehiculo extends Model
      */
     public function datosGps(){
         return $this->hasMany(DatosGps::class, 'com_datos_vehiculos_id', 'id');
+    }
+
+    public function asigancionTag(){
+        return $this->hasMany(VehiculosTags::class, 'com_datos_vehiculos_id', 'id');
     }
 
     /**
