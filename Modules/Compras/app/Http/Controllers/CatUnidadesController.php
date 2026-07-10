@@ -333,6 +333,7 @@ class CatUnidadesController extends Controller
         $dataVehiculo->nro_economico = $datosVehiculos['nro_economico'];
         $dataVehiculo->id_cre = $datosVehiculos['id_cre'];
         $dataVehiculo->tipo_combustible = $datosVehiculos['tipo_combustible'];
+        $dataVehiculo->tipo = $datosVehiculos['tipo_vehiculo'];
         $dataVehiculo->num_tarjeta_toka = $datosVehiculos['num_tarjeta_toka'];
         $dataVehiculo->num_tag = $datosVehiculos['num_tag'];
         $dataVehiculo->limite = $datosVehiculos['limite'];
