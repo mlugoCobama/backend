@@ -11,7 +11,7 @@
 @if ($tipo == 's' )
 ## Se ha generado una solicitud de dispersión de diésel con los siguientes detalles
 @else
-## Se ha realizado la dispersión de diesel el dia {{ $solicitud['fecha_dispersion'] ?? 'Pendiente' }} con los siguientes detalles
+## Se ha realizado la dispersión de diesel el dia {{ $solicitud['fecha_dispersion'] ? \Carbon\Carbon::parse($solicitud['fecha_dispersion'])->format('d/m/Y H:i') : 'Pendiente' }} con los siguientes detalles
 @endif
 
 ## Información General
