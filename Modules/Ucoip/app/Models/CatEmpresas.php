@@ -17,7 +17,8 @@ class CatEmpresas extends Model
         'id',
         'nombre',
         'dominio',
-        'intercompania'
+        'intercompania',
+        'division'
 
     ];
     /**

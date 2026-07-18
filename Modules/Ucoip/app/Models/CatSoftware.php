@@ -2,6 +2,7 @@
 
 namespace Modules\Ucoip\Models;
 
+use App\Enums\EstatusActivos;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Ucoip\Database\Factories\CatSoftwareFactory;
@@ -32,7 +33,7 @@ class CatSoftware extends Model
     public function licenciasDisponible()
     {
         return $this->hasMany(Software::class, 'cat_software_id', 'id')
-                    ->where('estatus', 1)
+                    ->where('estatus', EstatusActivos::DISPONIBLE)
                     ->select('id',
                             'version', 
                             'licencia', 

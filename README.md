@@ -117,4 +117,23 @@ Se actualiza el sp para obtener comisiones
 - Asignación de recursos de red
 - Asignación de licencias de software
 
+---
+## **Fecha de liberación:**- 17 de julio de 2026
+
+### Parque vehicular
+* **Segmentación del Parque Vehicular:** Se dividió el parque vehicular en las categorías de **Vehículos Operativos** y **Vehículos Utilitarios** para mejorar el control analítico y la asignación de recursos.
+* **Actualización del Catálogo de Tags:** Se ajustó y homologó el catálogo de TAGs vehiculares tomando como base la estructura y datos del layout en Excel proporcionado por el equipo de Compras.
+
+### Comisiones
+* **Optimización de Recuperación de Ventas:** Se actualizó y corrigió el comando encargado de consultar y recuperar el flujo de datos de ventas de autos nuevos.
+
+
+### UCOIP
+* **Ampliación del Catálogo de Software:** Se extendió el alcance del catálogo para brindar soporte nativo al registro y seguimiento de **Hardware de Infraestructura**.
+* **Módulo de Intercambios Inter-compañías:** Se implementó el registro y trazabilidad de intercambios de hardware entre las diferentes empresas del grupo.
+* **Catálogo de Puestos:** Se generó e integró formalmente el catálogo de puestos específicos por Marca.
+* **Control de Asignación de Compras:** Se revisó y optimizó la lógica de asignación de compras, asegurando la correcta vinculación de insumos tanto a nivel de Equipos como a nivel de Usuarios individuales.
+
+---
+
 

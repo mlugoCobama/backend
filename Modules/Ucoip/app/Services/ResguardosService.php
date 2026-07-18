@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\DB;
 use Modules\Ucoip\Models\GlpiUser;
 use Modules\Ucoip\Models\HardwareUcoip;
 use Modules\Ucoip\Models\Resguardo;
+use App\Enums\EstatusActivos;
+use App\Enums\EstatusAsignaciones;
+use Modules\Compras\Models\DetalleSolicitud;
+use Modules\Ucoip\Models\ComponenteHardware;
 
 class ResguardosService
 {
@@ -98,20 +102,58 @@ class ResguardosService
         $asignacion->ucoip_ucoip_id     = $idUcoip;
         $asignacion->glpi_user_id       = $idUserGlpi;
         $asignacion->fecha_inicio       = now();
-        $asignacion->estatus            = 1;
+        $asignacion->estatus            = EstatusAsignaciones::ACTIVA;
         $asignacion->save();
 
         return $asignacion;
     }
 
     public function removerRecurso($idAsignacion){
-       $asignacion =  HardwareUcoip::find($idAsignacion);
+       $asignacion                  = HardwareUcoip::find($idAsignacion);
        if($asignacion){
-        $asignacion->fecha_fin       = now();
-        $asignacion->estatus            = 2;
+        $asignacion->fecha_fin      = now();
+        $asignacion->estatus        = EstatusAsignaciones::FINALIZADA;
         $asignacion->save();
        }
 
        return $asignacion;
+    }
+
+
+    /**
+     * Recupera la computadora que tiene asignada un usuario
+     */
+    public function getPcUsuario($id)
+    {
+        $tipoHardware = 1;
+        $resguardo = HardwareUcoip::with(['hardware.tipoHardware'])
+            ->where('glpi_user_id', $id)
+            ->where(function ($query) {     $query->where('fecha_fin', null);   })
+            ->whereHas('hardware', function ($query) use ($tipoHardware) {
+                $query->where('cat_hardware_id', $tipoHardware);
+            })
+            ->get();
+        return $resguardo;
+    }
+
+    public function asignarRecursoPc( $idEquipo, $idDetalleSolicitud){
+        $detalle = DetalleSolicitud::with('cotizacionSeleccionada')->find($idDetalleSolicitud);
+
+        $componente =  new ComponenteHardware();
+        $componente->ucoip_hardware_id = $idEquipo; 
+        $componente->tipo = 1;
+        $componente->descripcion = $detalle->descripcion ?? '';
+        $componente->cantidad = 1;
+        $componente->costo_unitario = $detalle->cotizacionSeleccionada->importe_unitario ?? 0;
+        $componente->costo_total = ($detalle->cotizacionSeleccionada->importe_unitario  ?? 0) * 1.16;
+        $componente->componente_reemplazado = '';
+        $componente->fecha_instalacion = now();
+        $componente->fecha_retiro = null;
+        $componente->observaciones = '';
+        $componente->com_detalle_solicitud_id =  $idDetalleSolicitud;
+        $componente->save();
+
+        return $detalle;
+
     }
 }

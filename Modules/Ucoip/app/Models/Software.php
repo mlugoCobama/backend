@@ -2,6 +2,7 @@
 
 namespace Modules\Ucoip\Models;
 
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Ucoip\Database\Factories\SoftwareFactory;
@@ -19,7 +20,13 @@ class Software extends Model
         'observaciones', 
         'cat_software_id', 
         'usuario_empresa_id',
-        'estatus' 
+        'estatus',
+        'activo',
+        'tipo_licencia',
+        'cuenta', 
+        'pass_cuenta',
+        'fecha_adquisicion',
+        'empresa'
     ];
 
     protected $table = 'ucoip_software'; 
@@ -31,5 +38,9 @@ class Software extends Model
 
     public function tipoSoftware(){
         return $this->belongsTo(CatSoftware::class, 'cat_software_id','id');
+    }
+
+    public function sucursal(){
+        return $this->belongsTo(CatEmpresas::class, 'empresa' ,'id');
     }
 }

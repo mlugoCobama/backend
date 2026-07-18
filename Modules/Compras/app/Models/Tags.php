@@ -16,14 +16,14 @@ class Tags extends Model
     protected $fillable = [
         'proveedor', 
         'num_tag', 
-        'numero_cuenta', 
         'serie', 
-        'fecha_alta', 
-        'fecha_venciemiento', 
-        'saldo_actual', 
+        // 'fecha_alta', 
+        // 'fecha_venciemiento', 
+        // 'saldo_actual', 
         'estatus', 
         'observaciones',
-        'intercompania'
+        'intercompania',
+        'activo'
     ];
 
     protected $table = 'com_tags';

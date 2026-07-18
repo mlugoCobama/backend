@@ -120,6 +120,8 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::get('/CatalogoUnidades/ParqueVehicularToka/{id}', [CatUnidadesController::class, 'getParqueWithToka']);
     
     Route::get('/DispersionesDiesel/Plantilla/{id}', [DispersionesDieselController::class, 'descargarDispersion']);
+
+    Route::get('/CatalogoUnidades/{id}/{tipo}', [CatUnidadesController::class, 'show'])->name('CatUnidades.unidadesxtipo');
     
 });
 

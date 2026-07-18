@@ -2,6 +2,7 @@
 
 namespace Modules\Ucoip\Models;
 
+use App\Enums\EstatusActivos;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Ucoip\Database\Factories\CatHardwareModelFactory;
@@ -15,10 +16,16 @@ class CatHardwareModel extends Model
      */
     protected $fillable = [
         'tipo',
-        'icono'
+        'icono',
+        'categoria',
+        'campos'
     ];
 
     public $timestamps = false;
+
+    protected $casts = [
+        'campos' => 'array',
+    ];
     /**
      * Nombre de la tabla
      */
@@ -38,8 +45,16 @@ class CatHardwareModel extends Model
     public function hardwareDisponible()
     {
         return $this->hasMany(HardwarePcModel::class, 'cat_hardware_id', 'id')
-                    ->where('estado', 2)
+                    ->where('estado', EstatusActivos::DISPONIBLE)
                     ->select('id', 'marca', 'modelo', 'no_serie', 'cat_hardware_id');
+    }
+
+    public function scopeUsuarios ($query) {
+        return $query->where('categoria', 1);
+    }
+
+    public function scopeInfraestructura ($query) {
+        return $query->where('categoria', 2);
     }
 
 }

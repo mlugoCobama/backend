@@ -139,7 +139,7 @@ class CatUnidadesController extends Controller
      * 
      * @param $id int numero intercompania de la empresa
      */
-    public function show(Request $request, $id)
+    public function show(Request $request, $id, $tipo)
     {
         $usuario = $request->user()->id;
 
@@ -151,7 +151,7 @@ class CatUnidadesController extends Controller
             $limite =  1;
         }
 
-        $data = VehiculosTanquesResources::collection(DB::select("call SistemaTickets.SP_GetDataAutotanques($id, $limite)"));
+        $data = VehiculosTanquesResources::collection(DB::select("call SistemaTickets.SP_GetDataAutotanques(?,?,?)", [$id, $limite, $tipo]));
 
         return response()->json([
             "status" => "Success",

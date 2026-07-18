@@ -29,7 +29,10 @@ class HardwareResource extends JsonResource
             'estado' => $this->estado,
             'tipo' => new CatHardwareResource($this->Tipo),
             'id_empresa' => $this->empresa->id ?? null,
-            'empresa' => $this->empresa->nombre ?? 'No Asignado'
+            'empresa' => $this->empresa->nombre ?? 'No Asignado',
+            'asignacion' => $this->whenLoaded('asignacion'),
+            'cambiosHardware' => $this->whenLoaded('cambiosHardware'),
+            'intercambios' => $this->whenLoaded('intercambios')
         ];
     }
 }

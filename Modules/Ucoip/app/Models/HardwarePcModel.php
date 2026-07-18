@@ -54,12 +54,57 @@ class HardwarePcModel extends Model
         return  $this->hasOne(CatHardwareModel::class, 'id', 'cat_hardware_id');
     }
 
+    /**
+     * Und hardware tiene un tipo
+     */
     public function tipoHardware() {
         return  $this->belongsTo(CatHardwareModel::class, 'cat_hardware_id', 'id');
     }
 
+    /**
+     * Un hardware tiene una empresa
+     */
     public function empresa(){
         return $this->belongsTo(CatEmpresas::class, 'cat_empresa_id', 'id');
+    }
+
+    /**
+     * Un hardware tiene muchas asignaciones
+     */
+    public function asignacion(){
+        return $this->hasMany(HardwareUcoip::class, 'ucoip_hardware_id', 'id');
+    }
+
+    /**
+     * Un hardware puede tener muchos cambios
+     */
+    public function cambiosHardware(){
+        return $this->hasMany(ComponenteHardware::class,'ucoip_hardware_id', 'id');
+    }
+
+    public function intercambios(){
+        return $this->hasMany(IntercambioHardware::class,'ucoip_hardware_id', 'id')
+        ->select('id',
+                'empresa_origen',
+                'empresa_destino',
+                'fecha_traspaso',
+                'ucoip_hardware_id'
+                );
+    }
+
+
+    public function scopeUsuarios($query)
+    {
+        return $query->whereHas('Tipo', function ($q) {
+            $q->usuarios();
+        });
+    }
+
+    public function scopeInfraestructura($query)
+    {
+        return $query->whereHas('Tipo', function ($q) {
+            $q->infraestructura();
+        });
     }
 
 }

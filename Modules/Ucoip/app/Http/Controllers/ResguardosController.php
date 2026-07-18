@@ -52,7 +52,6 @@ class ResguardosController extends Controller
             ->header('Pragma', 'no-cache')
             ->header('X-Filename', $fileName)
             ->header('Access-Control-Expose-Headers', 'X-Filename');
-         return $resguardo;
 
     }
 
@@ -92,8 +91,9 @@ class ResguardosController extends Controller
         $resguardo = HardwareUcoip::with(['hardware.tipoHardware'])->where('glpi_user_id', $id)->get();
 
         return response()->json([
-            'success' => 'Datos recuperados correctamente',
+            'success' => true,
             'data' => $resguardo,
+            'message' => 'Datos recuperados correctamente',
         ]);
     }
 
@@ -152,9 +152,5 @@ class ResguardosController extends Controller
             'data' => [],
             'messages' => 'Activo retirado correctamente'
         ]);
-
-
-
-
     }
 }

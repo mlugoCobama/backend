@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
  * Models
  */
 use Modules\Ucoip\Models\HardwarePcModel;
+use Modules\Ucoip\Models\IntercambioHardware;
 use Modules\Ucoip\Transformers\HardwareResource;
 
 class HardwareController extends Controller
@@ -22,10 +23,21 @@ class HardwareController extends Controller
      */
     public function index()
     {
+       $data = HardwarePcModel::usuarios()
+            ->with([
+                'Tipo',
+                'empresa',
+                'asignacion.userGlpi',
+                'cambiosHardware.detalle',
+                'intercambios.origen',
+                'intercambios.destino',
+            ])
+            ->get();
+        // , 'cambiosHardware.detalle.cotizacionSeleccionada'
         return response()->json([
             'success' => true,
             'message' => '',
-            'data' => HardwareResource::collection(HardwarePcModel::with(['Tipo','empresa'])->get())
+            'data' => HardwareResource::collection($data)
         ]);
     }
 
@@ -119,9 +131,14 @@ class HardwareController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request,$id )
     {
-       $hardware = $this->hardwarePC->find($request->id);
+       $hardware = $this->hardwarePC->find($id);
+
+       //Si se detecta que el activo ha cambiado de empresa en referencia a su empresa actual registramos el cambio
+       if((int) $hardware->cat_empresa_id !== (int) $request->empresa){
+        $this->storeIntercambio($hardware->id, $hardware->cat_empresa_id, $request->empresa );                    
+       }
 
         $hardware->update([
             "marca" => $request->marca,
@@ -155,5 +172,14 @@ class HardwareController extends Controller
         //
 
         return response()->json([]);
+    }
+
+    public function storeIntercambio($idHardware, $idEmpOrigen, $idEmpDestino){
+        $intercambio =  new IntercambioHardware();
+        $intercambio->empresa_origen = $idEmpOrigen;
+        $intercambio->empresa_destino = $idEmpDestino;
+        $intercambio->ucoip_hardware_id = $idHardware;
+        $intercambio->fecha_traspaso = now();
+        $intercambio->save();
     }
 }

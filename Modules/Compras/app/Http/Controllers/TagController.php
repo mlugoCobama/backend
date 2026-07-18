@@ -43,13 +43,12 @@ class TagController extends Controller
         $data = $request->all();
         $existe = false;
 
+        // Validamos que este tag no halla sido registrado anteriormente, solo en registros nuevos
         if($data['tipo'] == 'nueva'){
             $existe = Tags::where('num_tag', $data['num_tag'])->first();
         }
-        // else{
-        //     $existe = Tags::where('tarjeta', $data['num_tag'])->where('id','<>',$data['num_tag'])->first();
-        // }
 
+        //Si ya fue registrado se notifica la usuario
         if($existe){
             return response()->json([
                 'status' => 'error',
@@ -58,18 +57,17 @@ class TagController extends Controller
              ]);
         }
 
+        // si el tipo es nuevo se intancia al modelo para crear un nuevo registro
         if($data['tipo'] == 'nueva'){
             $tag = new Tags();
+        // si no se actualiza el registro
         }else{
             $tag = Tags::find($data['id']);
         }
         
         $tag->proveedor = $data['proveedor'];
         $tag->num_tag = $data['num_tag'];
-        $tag->numero_cuenta = $data['numero_cuenta'];
         $tag->serie = $data['serie'];
-        $tag->fecha_alta = $data['fecha_alta'];
-        $tag->fecha_venciemiento = $data['fecha_vencimiento'];
         $tag->observaciones = $data['observaciones'];
         $tag->intercompania = $data['intercompania'];
         $tag->estatus = $data['estatus'];

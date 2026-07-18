@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\Ucoip\Models\CatSoftware;
 use Modules\Ucoip\Models\Software;
+use Modules\Ucoip\Transformers\SoftwareResource;
 
 class CatSoftwareController extends Controller
 {
@@ -16,11 +17,13 @@ class CatSoftwareController extends Controller
      */
     public function index()
     {
-        $data = Software::with(['tipoSoftware'])->get();
+        $data = Software::with(['tipoSoftware', 'sucursal'])->get();
+        $tipos =  CatSoftware::get();
 
         return response()->json([
             'status' => 'success',
-            'data' => $data,
+            'data' => SoftwareResource::collection($data),
+            'tipos' => $tipos,
             'message' => 'Software disponible recuperado correctamente'
         ]);
     }
@@ -36,9 +39,42 @@ class CatSoftwareController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        //
+        if($request->id){
+            $software =  Software::where('id', $request->id);
+            $software->update([
+                "empresa" => $request->empresa,
+                "version" => $request->version,
+                "licencia" => $request->licencia,
+                "observaciones" => $request->observaciones,
+                "cat_software_id" => $request->cat_software_id,
+                "estatus" => $request->estatus,
+                "tipo_licencia" => $request->tipo_licencia,
+                "cuenta" => $request->cuenta,
+                "pass_cuenta" => $request->pass_cuenta,
+                "fecha_adquisicion" => $request->fecha_adquisicion,
+            ]);
+        }else{
+            Software::create([
+            "version" => $request->version,
+            "licencia" => $request->licencia,
+            "observaciones" => $request->observaciones,
+            "cat_software_id" => $request->cat_software_id,
+            "tipo_licencia" => $request->tipo_licencia,
+            "cuenta" => $request->cuenta,
+            "pass_cuenta" => $request->pass_cuenta,
+            "fecha_adquisicion" => $request->fecha_adquisicion,
+            "estatus" => $request->estatus ?? 1
+        ]);
+        }
+        
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Software almacenado correctamente',
+            'data' => []
+        ]);
     }
 
     /**
@@ -73,8 +109,12 @@ class CatSoftwareController extends Controller
         //
     }
 
-    public function getCatalogoDisponible(){
-        $data = CatSoftware::with('licenciasDisponible')->get();
+    public function getCatalogoDisponible($idEmpresa){
+        $data = CatSoftware::with([
+            'licenciasDisponible' => function ($query) use ($idEmpresa) {
+                $query->where('empresa', $idEmpresa);
+            }
+        ])->get();
 
         return response()->json([
             'status' => 'success',

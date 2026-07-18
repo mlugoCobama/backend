@@ -142,6 +142,7 @@ public function store(Request $request)
         $detallesEntrada = $proceso['detalles_entrada'] ?? [];
         $inventario = $proceso['inventario'] ?? [];
         $requiereInventario = $proceso['requiereInventario'] ?? false;
+        $asignarEquipo = $proceso['asing_equipo_usuario'] ?? false;
 
         $ordenCompraId =  $validated['orden_compra_id'];
 
@@ -444,12 +445,23 @@ public function store(Request $request)
             ]);
 
             if(!empty($activo['usuario_asignar'])){
-              $resguardo = $this->resguardoService->storeResguardo([
-                'id_usuario' => $activo['usuario_asignar'],
-                'id_empresa' =>  $intercompania,
-                'admin_rt' => 2395
-               ]);
-               $this->resguardoService->storeDetalle($hardware->id, [], $resguardo->id);
+                if(!$activo['asing_equipo_usuario']){
+                    $this->resguardoService->asignarRecurso($hardware->id,null,$activo['usuario_asignar']);
+                }else{
+                    $equipoUsuario = $this->resguardoService->getPcUsuario($activo['usuario_asignar']);
+                    if($equipoUsuario){
+                        $this->resguardoService->asignarRecursoPc($equipoUsuario[0]->ucoip_hardware_id, $activo['detalleId']);
+
+                    }
+                }
+                 
+
+            //   $resguardo = $this->resguardoService->storeResguardo([
+            //     'id_usuario' => $activo['usuario_asignar'],
+            //     'id_empresa' =>  $intercompania,
+            //     'admin_rt' => 2395
+            //    ]);
+            //    $this->resguardoService->storeDetalle($hardware->id, [], $resguardo->id);
                     //  ->asignarEquipo(
                     //     $hardware->id,
                     //   $activo['usuario_asignar']

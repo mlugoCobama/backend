@@ -37,4 +37,14 @@ class Ucoip extends Model
     public function puesto(){
         return $this->belongsTo(CatPuestos::class, 'ucoip_cat_puestos', 'id');
     }
+
+    public function extensiones()
+    {
+        return $this->hasMany(RecursosRedUcoip::class,'ucoip_ucoip_id', 'id' )->where('ucoip_cat_recursos_id', '4');
+    }
+
+    public function recursosRed()
+    {
+        return $this->belongsTo(RecursosRedUcoip::class,'ucoip_ucoip_id', 'id' );
+    }
 }

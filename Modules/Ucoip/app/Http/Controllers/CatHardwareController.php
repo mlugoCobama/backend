@@ -31,10 +31,12 @@ class CatHardwareController extends Controller
      */
     public function index()
     {
+
+        $data = $this->catHardware->usuarios()->get();
         return response()->json([
             'success' => true,
             'message' => '',
-            'data' => CatHardwareResource::collection($this->catHardware->all())
+            'data' => CatHardwareResource::collection($data)
         ]);
     }
 
@@ -62,27 +64,6 @@ class CatHardwareController extends Controller
         ]);
     }
 
-    public function findUcoipGlpi($ucoip, $nombreSite){
-        $empresa = ModelsCatEmpresas::where('nombre', 'like', '%' . $nombreSite . '%')->first();
-
-        $data = [
-            'id_usuario' => null,
-            'id_empresa' => null ?? 15,
-            'correo' => null
-        ];
-
-        if($empresa){
-            $usuario = DB::connection('intranet')->select('CALL SP_GetUsuarioEmail(?)', [$ucoip.'@'.$empresa->dominio]);
-            $data = [
-                'id_usuario' => $usuario[0]->id ?? null,
-                'id_empresa' => $empresa->id ?? 15,
-                'correo' => $ucoip.'@'.$empresa->dominio
-            ];
-        }
-
-        return $data;
-    }
-
     /**
      * Update the specified resource in storage.
      */
@@ -101,8 +82,21 @@ class CatHardwareController extends Controller
         
     }
 
-    public function getCatalogoDisponible(){
-        $data = CatHardwareModel::with('hardwareDisponible')->get();
+    public function getCatInfra(){
+        $data = $this->catHardware->infraestructura()->get();
+        return response()->json([
+            'success' => true,
+            'message' => '',
+            'data' => CatHardwareResource::collection($data)
+        ]);
+    }
+
+    public function getCatalogoDisponible($idEmpresa){
+        $data = CatHardwareModel::usuarios()->with([
+            'hardwareDisponible' => function ($query) use ($idEmpresa) {
+                $query->where('cat_empresa_id', $idEmpresa);
+            }
+        ])->get();
 
         return response()->json([
             'status' => 'success',

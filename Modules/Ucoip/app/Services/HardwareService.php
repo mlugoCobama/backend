@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Modules\Ucoip\Models\HardwarePcModel;
 use Modules\Ucoip\Models\Resguardo;
+use App\Enums\EstatusActivos;
 
 class HardwareService{
 
@@ -28,7 +29,7 @@ class HardwareService{
             $hardware->procesador       = $data['procesador'] ?? 'N/D';
             $hardware->caracteristicas  = $data['caracteristicas'] ?? '';
             $hardware->observaciones    = $data['observaciones'] ?? '';
-            $hardware->estado           = $data['estado'] ?? 1;
+            $hardware->estado           = $data['estado'] ?? EstatusActivos::DISPONIBLE;
             $hardware->cat_hardware_id  = $data['cat_hardware_id'] ?? 1;
             $hardware->cat_empresa_id   = $data['cat_empresa_id'];
             $hardware->save();
@@ -55,7 +56,7 @@ class HardwareService{
 
             $hardware = HardwarePcModel::findOrFail($hardwareId);
 
-            if ($hardware->estado != 1) {
+            if ($hardware->estado != EstatusActivos::ASIGNADA) {
                 throw new \Exception(
                     'El equipo ya no está disponible'
                 );
@@ -69,7 +70,7 @@ class HardwareService{
             ]);
 
             // actualizar estado
-            $hardware->estado = 1; // asignado
+            $hardware->estado = EstatusActivos::ASIGNADA; // asignado
             $hardware->save();
 
             DB::commit();

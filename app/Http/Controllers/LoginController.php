@@ -37,9 +37,7 @@ class LoginController extends Controller
          }
 
         $token = $user->createToken($fields['email'])->plainTextToken;
-
         $permisos = $this->getPermisos($user->id);
-
         $usuarioActivo = $this->getUsuarioActivo($fields['email']);
 
         return response()->json([

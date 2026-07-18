@@ -5,20 +5,19 @@ namespace App\Enums;
 enum EstatusAsignaciones
 {
 
-    public const NO_ASIGNABLE = 0;
-    public const DISPONIBLE = 1;
-    public const ASIGNADA = 2;
-    public const OBSOLETO = 3;
-    public const EXTRAVIADA = 4;
+    public const INACTIVA   = 0;
+    public const ACTIVA     = 1;
+    public const FINALIZADA = 2;
+    public const SUSPENDIDA = 3;
+
 
     public static function labels()
     {
         return [
-            self::NO_ASIGNABLE => 'NO ASIGNABLE',
-            self::DISPONIBLE => 'DISPONIBLE',
-            self::ASIGNADA => 'ASIGNADA',
-            self::OBSOLETO => 'OBSOLETO',
-            self::EXTRAVIADA => 'EXTRAVIADA',
+            self::INACTIVA => 'INACTIVA',
+            self::ACTIVA => 'ACTIVA',
+            self::FINALIZADA => 'FINALIZADA',
+            self::SUSPENDIDA => 'SUSPENDIDA',
         ];
     }
 
@@ -30,16 +29,15 @@ enum EstatusAsignaciones
     public static function colorsBS()
     {
         return [
-            self::NO_ASIGNABLE => 'secondary',
-            self::DISPONIBLE => 'success',
-            self::ASIGNADA => 'primary',
-            self::OBSOLETO => 'warning',
-            self::EXTRAVIADA => 'danger',
+            self::INACTIVA => 'dark',
+            self::ACTIVA => 'success',
+            self::FINALIZADA => 'danger',
+            self::SUSPENDIDA => 'info',
         ];
     }
 
     public static function colorBS($value)
     {
-        return self::labels()[$value] ?? 'DESCONOCIDO';
+        return self::colorsBS()[$value] ?? 'primary';
     }
 }

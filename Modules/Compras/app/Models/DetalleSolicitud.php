@@ -71,6 +71,17 @@ class DetalleSolicitud extends Model
         return $this->hasOne(AlmacenCompras::class, 'com_detalle_solicitud_id', 'id');
     }
 
+    public function cotizacionSeleccionada()
+    {
+        return $this->hasOne(
+                DetallesCotizacion::class,
+                'detalle_solicitud_id',
+                'id'
+            )->whereHas('CotizacionesProveedores', function ($q) {
+                $q->where('seleccionado', 1);
+            });
+    }
+
     /**
      * Scopes
      */

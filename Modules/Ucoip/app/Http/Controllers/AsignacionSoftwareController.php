@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\Ucoip\Models\Software;
 use Modules\Ucoip\Models\SoftwareUcoip;
+use App\Enums\EstatusActivos;
+use App\Enums\EstatusAsignaciones;
 
 class AsignacionSoftwareController extends Controller
 {
@@ -39,7 +41,7 @@ class AsignacionSoftwareController extends Controller
         $asignacion->fecha_asignacion = now();
         $asignacion->save();
 
-        $this->updateStatusSoftware($data['software'], 2);
+        $this->updateStatusSoftware($data['software'], EstatusActivos::ASIGNADA);
 
         return response()->json([
             'status' => 'success',
@@ -87,9 +89,9 @@ class AsignacionSoftwareController extends Controller
        $asignacion = SoftwareUcoip::find($id);
        if($asignacion){
         $asignacion->fecha_retiro = now();
-        $asignacion->activo = 0;
+        $asignacion->activo = EstatusAsignaciones::FINALIZADA;
         $asignacion->save();
-        $this->updateStatusSoftware($asignacion->ucoip_software_id, 1);
+        $this->updateStatusSoftware($asignacion->ucoip_software_id, EstatusActivos::DISPONIBLE);
        }
 
         return response()->json([
@@ -108,7 +110,5 @@ class AsignacionSoftwareController extends Controller
             $software->estatus = $status;
             $software->save();
         }
-
-
     }
 }

@@ -480,12 +480,24 @@ class OrdenCompraPdfController extends Controller
             $pdf->SetTextColor(0, 0, 0);
             $pdf->SetFont('Arial', 'B', 7);
 
+            $abvTipo = match ($data['solicitudCompra']['tipo']) {
+                    1 => 'CG',
+                    2 => 'CM',
+                    3 => 'RT',
+                    4 => 'CA',
+                default =>  'CG'
+            };
+
             // Folio OC
             $folioOC = $data['ordenCompra']['folio_oc'];
             $pdf->SetXY(172, 12.5);
             $pdf->Write(0, $folioOC);
-
+            
             $pdf->SetFont('Arial', 'B', 5);
+
+            $pdf->SetFillColor(255, 255, 255);
+            $pdf->SetXY(161, 17);
+            $pdf->Cell(5, 2, $abvTipo, 0, 0, 'L', true);
 
             // Datos de usuario solicita
             $areaSolicita = $data['solicita'][0]->area;
@@ -552,7 +564,7 @@ class OrdenCompraPdfController extends Controller
             }
 
             $pdf->Write(0, strtoupper(utf8_decode($modoPago)));
-            $pdf->SetXY(150, 66.1);
+            $pdf->SetXY(154, 66.1);
             $pdf->Write(0, strtoupper(utf8_decode('Fecha de entrega: '. $fechaE)));
             // Datos de referencia de cotización
             $pdf->SetXY(173.6, 58.6);

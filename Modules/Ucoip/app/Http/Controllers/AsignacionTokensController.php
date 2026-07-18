@@ -2,15 +2,17 @@
 
 namespace Modules\Ucoip\Http\Controllers;
 
+use App\Enums\EstatusActivos;
+use App\Enums\EstatusAsignaciones;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Modules\Ucoip\Models\SistemasUcoip;
+use Modules\Ucoip\Models\TokenAgencia;
+use Modules\Ucoip\Models\TokensUcoip;
 use Modules\Ucoip\Services\CifradoService;
-use App\Enums\EstatusAsignaciones;
 
-class AsignacionSistemaController extends Controller
+class AsignacionTokensController extends Controller
 {
 
     protected $cifradoService;
@@ -19,7 +21,6 @@ class AsignacionSistemaController extends Controller
     ){
         $this->cifradoService = $cifradoService;
     }
-    
     /**
      * Display a listing of the resource.
      */
@@ -41,16 +42,19 @@ class AsignacionSistemaController extends Controller
      */
     public function store(Request $request)
     {
-
         $data =  $request->all();
-        $asignacion =  new SistemasUcoip();
-        $asignacion->username =  $data['usuario'];
-        $asignacion->password =  $this->cifradoService->encrypt($data['password']);
-        $asignacion->ucoip_cat_sistemas_id = $data['sistema'];
-        $asignacion->ucoip_ucoip_id =  $data['idUcoip'];
-        $asignacion->observaciones =  $data['observaciones'];
+        $asignacion =  new TokensUcoip();
+
+        $asignacion->ucoip_ucoip_id =  $data['ucoip_ucoip_id'];
+        $asignacion->ucoip_token_agencias_id =  $data['token'];
+        $asignacion->usuario =  $data['usuario'];
+
+        $asignacion->acceso =  $this->cifradoService->encrypt($data['acceso']);
+        $asignacion->contrasenia =  $this->cifradoService->encrypt($data['contrasenia']);
         $asignacion->fecha_asignacion =  now();
         $asignacion->save();
+
+        $this->updateStatusToken($asignacion->ucoip_token_agencias_id, EstatusActivos::ASIGNADA);
 
         return response()->json([
             'status' => 'success',
@@ -64,7 +68,7 @@ class AsignacionSistemaController extends Controller
      */
     public function show($id)
     {
-        $accesos =  SistemasUcoip::with(['sistema'])->where('ucoip_ucoip_id', $id)->get();
+        $accesos =  TokensUcoip::with(['token'])->where('ucoip_ucoip_id', $id)->get();
 
         return response()->json([
             'status' => 'success',
@@ -94,13 +98,14 @@ class AsignacionSistemaController extends Controller
      */
     public function destroy($id)
     {
-        $asignacion = SistemasUcoip::find($id);
+        $asignacion = TokensUcoip::find($id);
         if($asignacion){
-            $asignacion->fecha_fin = now();
-            $asignacion->activo = EstatusAsignaciones::INACTIVA;
+            $asignacion->fecha_retiro = now();
+            $asignacion->estatus = EstatusAsignaciones::INACTIVA;
             $asignacion->save();
         }
 
+        $this->updateStatusToken($asignacion->ucoip_token_agencias_id, EstatusActivos::DISPONIBLE);
 
         return response()->json([
             'status' => 'success',
@@ -109,10 +114,26 @@ class AsignacionSistemaController extends Controller
         ]);
     }
 
-    public function getPassword(int $id)
+        public function updateStatusToken($id, $status){
+        $software = TokenAgencia::find($id);
+
+        if($software){
+            $software->estatus = $status;
+            $software->save();
+        }
+    }
+
+    public function getPassword(int $id, $campo)
     {
-        $ucoip = SistemasUcoip::findOrFail($id);
-        $password = $this->cifradoService->decrypt($ucoip->password);
+        $ucoip = TokensUcoip::findOrFail($id);
+        if($campo == 'acc'){
+            $word = $ucoip->acceso;
+        }else{
+            $word = $ucoip->contrasenia;
+        }
+
+        
+        $password = $this->cifradoService->decrypt($word);
 
         return response()->json([
             'success' => true,

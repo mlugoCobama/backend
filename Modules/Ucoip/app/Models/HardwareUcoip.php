@@ -38,6 +38,6 @@ class HardwareUcoip extends Model
     // }
  
     public function userGlpi(){
-       return $this->belongsTo(GlpiUser::class,  'glpi_user_id',  'id');
+       return $this->belongsTo(GlpiUser::class,  'glpi_user_id',  'id')->select('id', 'firstname', 'realname',  'name');
     }
 }

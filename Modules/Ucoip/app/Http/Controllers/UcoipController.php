@@ -53,6 +53,7 @@ class UcoipController extends Controller
 
         // $user =  $this->queryPuestosUsuarios();
 
+
         return response()->json([
             'success' => true,
             'message' => '',
@@ -110,7 +111,7 @@ class UcoipController extends Controller
      */
     public function show($id)
     {
-       $ucoip = Ucoip::with(['puesto.departamento.area'])->where('user_id', $id)->first();
+       $ucoip = Ucoip::with(['puesto.departamento.area', 'extensiones'])->where('user_id', $id)->first();
 
        return response()->json([
         'status' => 'success',
@@ -177,7 +178,28 @@ class UcoipController extends Controller
 
     public function matchEmpresa($intercompania){
         $empresa =  CatEmpresas::where('intercompania', $intercompania)->first();
-
         return $empresa;
+    }
+
+    public function queryUsuariosRenault(){
+        $data=  DB::connection('intranet')->select("SELECT id, name, realname, firstname, intercompania  FROM SOPORTEZM.glpi_users where  intercompania in (7062,7064,7063,7061) and is_active = 1;");
+        return $data;
+    }
+
+    public function storeUcoipFromQuery(){
+                $user =  $this->queryUsuariosRenault();
+
+                foreach ($user as $item) {
+
+                $correo = $item->name;
+                $partes = explode('@', $correo);
+                $usuario = $partes[0];
+
+                    $ucoip = new Ucoip();
+                    $ucoip->ucoip = $usuario;
+                    $ucoip->user_id = $item->id;
+                    $ucoip->cat_empresa_id =  $this->matchEmpresa($item->intercompania)->id;
+                    $ucoip->save();
+                }
     }
 }

@@ -31,7 +31,7 @@ class AsignacionRecursoController extends Controller
      */
     public function store(Request $request)
     {
-       $data =  $request->all();
+        $data =  $request->all();
         $asignacion                         =  new RecursosRedUcoip();
         $asignacion->equipo_id              =  $data['hardware'] ?? null;
         $asignacion->valor                  =  $data['valor'];
