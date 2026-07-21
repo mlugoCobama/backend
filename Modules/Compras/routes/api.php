@@ -20,6 +20,7 @@ use Modules\Compras\Http\Controllers\UsuariosController;
 use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Http\Controllers\DetalleSolicitudController;
 use Modules\Compras\Http\Controllers\CatTiposMantenimientoController;
+use Modules\Compras\Http\Controllers\ComprasController;
 use Modules\Compras\Http\Controllers\DispersionesDieselController;
 use Modules\Compras\Models\AcuseEntrega;
 use Modules\Compras\Http\Controllers\ReportesComprasController;
@@ -59,6 +60,8 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::resource('Toka', TokaController::class);
     Route::resource('DispersionesDiesel', DispersionesDieselController::class);
     Route::resource('Tags', TagController::class);
+    Route::resource('Compras', ComprasController::class);
+
     
     Route::get('/Solicitudes/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
     Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
@@ -98,6 +101,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::post('/importar-datos-seguro', [CatUnidadesController::class, 'importarDatosSeguro']);
     Route::get('/recuperar-autotanques/{intercompania}', [CatUnidadesController::class, 'getAutotanques']);
     Route::get('/recuperar-gastos-vehiculo/{id}', [CatUnidadesController::class, 'getGastoUnidad']);
+    Route::get('/descargar-gastos-vehiculo/{id}', [CatUnidadesController::class, 'descargarGastosUnidad']);
     Route::get('/recuperar-comentarios-vehiculo/{id}', [CatUnidadesController::class, 'getObservaciones']);
     Route::get('/recuperar-polizas-vehiculo/{id}', [CatUnidadesController::class, 'getDatosPoliza']);
     Route::post('/autorizar-alta-vehiculo', [CatUnidadesController::class, 'autorizarVehiculo']);

@@ -4,6 +4,8 @@ namespace Modules\Ucoip\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\Ucoip\Models\CatEmpresas;
+
 /**
  * Models
  */
@@ -33,7 +35,7 @@ class HardwareController extends Controller
                 'intercambios.destino',
             ])
             ->get();
-        // , 'cambiosHardware.detalle.cotizacionSeleccionada'
+
         return response()->json([
             'success' => true,
             'message' => '',
@@ -47,6 +49,7 @@ class HardwareController extends Controller
     public function store(Request $request)
     {
         $this->hardwarePC->create([
+            "no_inventario" => $this->generarNoInventario($request->empresa),
             "marca" => $request->marca,
             "modelo" => $request->modelo,
             "no_serie" => $request->no_serie,
@@ -61,54 +64,7 @@ class HardwareController extends Controller
             "cat_empresa_id" => $request->empresa,
             "cat_hardware_id" => $request->cat_hardware_id
         ]);
-        /*
-            $archivo = fopen("C:\Users\mlugo\Desarrollos\backend-dashboard\Modules\Ucoip\app\Http\Controllers\\teclados.csv", "r");
-            
-            while (($fila = fgetcsv($archivo, 1000, ",")) !== FALSE) {
-                
-                $tipo = 0;
 
-                switch ($fila[2]) {
-                    case 'LAPTOP':
-                        $tipo = 3;
-                        break;
-                    case 'COMPU  DE MARCA':
-                        $tipo = 1;
-                        break;
-                    case 'COMPU  ARMADA':
-                        $tipo = 2;
-                        break;
-                    case 'TERMINAL':
-                        $tipo = 4;
-                        break;
-                    case 'ALL IN ONE':
-                        $tipo = 5;
-                        break;
-                    case 'LAPTOP CONSULT':
-                        $tipo = 6;
-                        break;
-                    default:
-                        $tipo = 0;
-                        break;
-                }
-                
-                $this->hardwarePC->create([
-                    "marcar" => "Marca",
-                    "modelo" => $fila[0],
-                    "no_serie" => $fila[1],
-                    "tipo" => 0,
-                    "mac" => "",
-                    "memoria_ram" => "",
-                    "disco_duro" => "",
-                    "procesador" => "",
-                    "caracteristicas" => "",
-                    "observaciones" => "",
-                    "estado" => 1,
-                    "cat_hardware_id" => 3
-                ]);
-
-            }
-        */
         return response()->json([
             'success' => true,
             'message' => 'Se ha completado la tarea satisfactoriamente',
@@ -181,5 +137,21 @@ class HardwareController extends Controller
         $intercambio->ucoip_hardware_id = $idHardware;
         $intercambio->fecha_traspaso = now();
         $intercambio->save();
+    } 
+
+
+    public function generarNoInventario($idEmpresa)
+    {
+        $empresa = CatEmpresas::findOrFail($idEmpresa);
+        $ultimoRegistro = HardwarePcModel::where('cat_empresa_id', $idEmpresa)
+            ->orderByDesc('id')
+            ->first();
+        if (!$ultimoRegistro) {
+            $consecutivo = 1;
+        } else {
+            $ultimoConsecutivo = intval(substr($ultimoRegistro->no_inventario, -6));
+            $consecutivo = $ultimoConsecutivo + 1;
+        }
+        return $empresa->intercompania . '-' . str_pad($consecutivo, 6, '0', STR_PAD_LEFT);
     }
 }

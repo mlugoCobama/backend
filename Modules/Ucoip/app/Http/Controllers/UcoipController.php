@@ -13,6 +13,7 @@ use Modules\Ucoip\Models\CatAreas;
 use Modules\Ucoip\Models\CatEmpresas;
 use Modules\Ucoip\Models\CatRecursos;
 use Modules\Ucoip\Models\CatSistemas;
+use Modules\Ucoip\Models\TitularesUcoip;
 use Modules\Ucoip\Models\Ucoip;
 use Modules\Ucoip\Models\UsuarioPuesto;
 use Modules\Ucoip\Services\CifradoService;
@@ -93,8 +94,21 @@ class UcoipController extends Controller
         $ucoip->cat_empresa_id =  $this->matchEmpresa($data['intercompania'])->id ?? 15;
         $ucoip->save();
 
-        // $this->glpiService->updateGlpiUser($data['id'], $data['nombre'], $data['apellidos'], $data['password'], $data['area_id'],$data['departamento_id'],$data['puesto_id'] );
+        $this->glpiService->updateGlpiUser($data['id'], $data['nombre'], $data['apellidos'], $data['password'], $data['area_id'],$data['departamento_id'],$data['puesto_id'] );
+        
+        $ultimoTitular = TitularesUcoip::where('ucoip_ucoip_id', $ucoip->id)->latest('id')->first();
 
+            $nuevoNombre = trim($data['nombre'].' '.$data['apellidos']);
+            if (!$ultimoTitular) {
+                // Es la primera asignación
+                $this->storeTitular($ucoip->id, $data);
+            } elseif ($ultimoTitular->nombre_titular != $nuevoNombre) {
+                // Finalizar el registro anterior
+                $ultimoTitular->fecha_fin = now();
+                $ultimoTitular->save();
+                // Crear el nuevo titular
+                $this->storeTitular($ucoip->id, $data);
+            }
 
         
         return response()->json([
@@ -182,7 +196,8 @@ class UcoipController extends Controller
     }
 
     public function queryUsuariosRenault(){
-        $data=  DB::connection('intranet')->select("SELECT id, name, realname, firstname, intercompania  FROM SOPORTEZM.glpi_users where  intercompania in (7062,7064,7063,7061) and is_active = 1;");
+    
+        $data=  DB::connection('intranet')->select("SELECT id, name, realname, firstname, intercompania  FROM SOPORTEZM.glpi_users where  intercompania in (7051,712,710) and is_active = 1;");
         return $data;
     }
 
@@ -201,5 +216,16 @@ class UcoipController extends Controller
                     $ucoip->cat_empresa_id =  $this->matchEmpresa($item->intercompania)->id;
                     $ucoip->save();
                 }
+    }
+
+    public function storeTitular( $idUcoip , $data){
+        $titular = new TitularesUcoip();
+        $titular->ucoip_ucoip_id = $idUcoip;
+        $titular->nombre_titular = $data['nombre'].' '.$data['apellidos'];
+        $titular->correo = $data['name'];
+        $titular->puesto = $data['puesto'];
+        $titular->empresa = $data['empresa'];
+        $titular->fecha_incio = now();
+        $titular->save();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Modules\Compras\Http\Controllers;
 
+use App\Exports\GastosVehiculoExport;
 use App\Http\Controllers\Controller;
 use App\Mail\RequisicionDieselMail;
 use App\Models\Sucursales;
@@ -13,6 +14,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Exists;
+use Maatwebsite\Excel\Facades\Excel;
 use Modules\Compras\Models\ComRecargasVehiculos;
 use Modules\Compras\Models\DatosGps;
 use Modules\Compras\Models\DatosTanque;
@@ -599,6 +601,15 @@ class CatUnidadesController extends Controller
             "data" => $data,
             "message" => "Datos recuperados correctamente"
         ]);
+    }
+
+    public function descargarGastosUnidad($idVehiculo){
+        $data = DB::select("call SistemaTickets.SP_GetGastosUnidad($idVehiculo)");
+        $filename = 'Gastos_vehiculo_'.$idVehiculo.'.xlsx';
+        
+         return Excel::download( new GastosVehiculoExport($data), $filename,
+            null, ['Content-Disposition' => 'attachment; filename="'.$filename.'"']
+        );
     }
 
 
