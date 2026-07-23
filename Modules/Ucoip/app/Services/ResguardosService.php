@@ -64,7 +64,6 @@ class ResguardosService
     private function generarFolio()
     {
         // Obtener el último folio registrado
-
         $ultimoFolio = Resguardo::orderBy('id', 'desc')->first();
 
         if ($ultimoFolio) {
@@ -75,7 +74,6 @@ class ResguardosService
             // Si no existe ningún folio, empezamos en 1
             $nuevoNumero = 1;
         }
-
         // Formatear con ceros a la izquierda (ejemplo: ETI-00001)
         $nuevoFolio = 'RRT-' . str_pad($nuevoNumero, 5, '0', STR_PAD_LEFT);
 

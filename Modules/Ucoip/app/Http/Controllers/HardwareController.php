@@ -33,6 +33,7 @@ class HardwareController extends Controller
                 'cambiosHardware.detalle',
                 'intercambios.origen',
                 'intercambios.destino',
+                'asignacionActual.userGlpi'
             ])
             ->get();
 
@@ -62,7 +63,8 @@ class HardwareController extends Controller
             "observaciones" => $request->observaciones,
             "estado" => $request->estado,
             "cat_empresa_id" => $request->empresa,
-            "cat_hardware_id" => $request->cat_hardware_id
+            "cat_hardware_id" => $request->cat_hardware_id,
+            "estado_fisico" => $request->estado_fisico
         ]);
 
         return response()->json([
@@ -109,7 +111,8 @@ class HardwareController extends Controller
             "observaciones" => $request->observaciones,
             "estado" => $request->estado,
             "cat_empresa_id" => $request->empresa,
-            "cat_hardware_id" => $request->cat_hardware_id
+            "cat_hardware_id" => $request->cat_hardware_id,
+            "estado_fisico" => $request->estado_fisico
         ]);
 
 

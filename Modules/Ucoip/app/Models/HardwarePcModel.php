@@ -27,7 +27,8 @@ class HardwarePcModel extends Model
         "cat_hardware_id",
         "cat_empresa_id",
         "almacen_compra_id",
-        "no_inventario"
+        "no_inventario",
+        "estado_fisico"
     ];
     /**
      * Campo "tipo" se ocupa para diferenciar el tipo de cpu
@@ -83,6 +84,9 @@ class HardwarePcModel extends Model
         return $this->hasMany(ComponenteHardware::class,'ucoip_hardware_id', 'id');
     }
 
+    /**
+     * Un hardware puede tener muchos intercambios
+     */
     public function intercambios(){
         return $this->hasMany(IntercambioHardware::class,'ucoip_hardware_id', 'id')
         ->select('id',
@@ -106,6 +110,14 @@ class HardwarePcModel extends Model
         return $query->whereHas('Tipo', function ($q) {
             $q->infraestructura();
         });
+    }
+
+    /**Un hgardware tien una asignacion actual */
+    public function asignacionActual()
+    {
+        return $this->hasOne(HardwareUcoip::class, 'ucoip_hardware_id', 'id')
+                    ->whereNull('fecha_fin')
+                    ->latestOfMany();
     }
 
 }

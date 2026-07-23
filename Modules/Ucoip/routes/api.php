@@ -30,7 +30,7 @@ use Modules\Ucoip\Http\Controllers\UcoipController;
  *
 */
 
-Route::middleware([])->prefix('ucoip')->group(function () {
+Route::middleware(['auth:sanctum'])->prefix('ucoip')->group(function () {
     Route::apiResource('ucoip', UcoipController::class)->names('ucoip');
     Route::apiResource('areas', CatAreasController::class)->names('areas');
     Route::apiResource('hardware', HardwareController::class)->names('hardware');

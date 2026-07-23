@@ -2,6 +2,7 @@
 
 namespace Modules\Ucoip\Http\Controllers;
 
+use App\Enums\EstatusAsignaciones;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -88,6 +89,18 @@ class AsignacionRecursoController extends Controller
      */
     public function destroy($id)
     {
-        //
+       $asignacion = RecursosRedUcoip::find($id);
+        if($asignacion){
+            $asignacion->fecha_retiro = now();
+            $asignacion->activo = EstatusAsignaciones::INACTIVA;
+            $asignacion->save();
+        }
+
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [],
+            'messages' => 'Activo retirado correctamente'
+        ]);
     }
 }

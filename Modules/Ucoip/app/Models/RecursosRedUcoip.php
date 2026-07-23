@@ -21,7 +21,8 @@ class RecursosRedUcoip extends Model
         'fecha_asignacion', 
         'fecha_retiro',  
         'ucoip_ucoip_id', 
-        'ucoip_cat_recursos_id'
+        'ucoip_cat_recursos_id',
+        'activo'
     ];
 
     protected $table =  'ucoip_recursos_red';

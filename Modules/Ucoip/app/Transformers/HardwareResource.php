@@ -2,6 +2,7 @@
 
 namespace Modules\Ucoip\Transformers;
 
+use App\Enums\EstatusFisicosActivos;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Modules\Ucoip\Models\CatHardwareModel;
@@ -18,7 +19,7 @@ class HardwareResource extends JsonResource
             'marca' => $this->marca,
             'modelo' => $this->modelo,
             'no_serie' => $this->no_serie,
-            'tipo_cpu' => $this->tipo,
+            'tipo_cpu' => (string) $this->tipo,
             'mac' => $this->mac,
             'disco_duro' => $this->disco_duro,
             'memoria_ram' => $this->memoria_ram,
@@ -27,12 +28,16 @@ class HardwareResource extends JsonResource
             'observaciones' => $this->observaciones,
             'estatus' => $this->estatus,
             'estado' => $this->estado,
+            'estado_fisico'=> $this->estado_fisico,
+            'lbl_est_fisico' => EstatusFisicosActivos::label($this->estado_fisico),
+            'color_est_fisico' => EstatusFisicosActivos::colorBS($this->estado_fisico),
             'tipo' => new CatHardwareResource($this->Tipo),
             'id_empresa' => $this->empresa->id ?? null,
             'empresa' => $this->empresa->nombre ?? 'No Asignado',
             'asignacion' => $this->whenLoaded('asignacion'),
             'cambiosHardware' => $this->whenLoaded('cambiosHardware'),
-            'intercambios' => $this->whenLoaded('intercambios')
+            'intercambios' => $this->whenLoaded('intercambios'),
+            'usuario_actual' => optional($this->asignacionActual?->userGlpi)->name ?? '-------------',
         ];
     }
 }

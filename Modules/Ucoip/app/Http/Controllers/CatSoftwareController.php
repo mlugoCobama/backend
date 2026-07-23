@@ -57,6 +57,7 @@ class CatSoftwareController extends Controller
             ]);
         }else{
             Software::create([
+            "empresa" => $request->empresa,
             "version" => $request->version,
             "licencia" => $request->licencia,
             "observaciones" => $request->observaciones,

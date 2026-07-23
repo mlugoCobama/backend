@@ -24,8 +24,8 @@ class ResguardosController extends Controller
 
     public function __construct(  
         PdfResguardoService $resguardoPdfService,
-         ResguardosService $resguardoService,
-         HardwareService $hwService) {
+        ResguardosService $resguardoService,
+        HardwareService $hwService) {
 
         $this->resguardoService = $resguardoService;
         $this->resguardoPDFService = $resguardoPdfService;
