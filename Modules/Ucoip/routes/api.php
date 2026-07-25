@@ -52,6 +52,7 @@ Route::middleware(['auth:sanctum'])->prefix('ucoip')->group(function () {
 
     Route::get('/hardware/catalogo/disponible/{idEmpresa}',[CatHardwareController::class, 'getCatalogoDisponible'])->name('cat-hardware.disponible');
     Route::get('/software/catalogo/disponible/{idEmpresa}',[CatSoftwareController::class, 'getCatalogoDisponible'])->name('cat-software.disponible');
+    Route::get('/software/licencias/disponibles/{idEmpresa}/{tipo}',[CatSoftwareController::class, 'getLicenciasDisponiblesTipo'])->name('cat-software.getLicenciasDisponiblesTipo');
     Route::get('/sistema-ucoip/password/{id}',[AsignacionSistemaController::class, 'getPassword'])->name('sistemas-ucoip.getPassword');
     Route::get('/tokens-ucoip/password/{id}/{campo}',[AsignacionTokensController::class, 'getPassword'])->name('tokens-ucoip-ucoip.getPassword');
     Route::get('/ucoip/password/{id}',[UcoipController::class, 'getPassword'])->name('ucoip.getPassword');

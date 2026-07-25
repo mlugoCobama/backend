@@ -16,6 +16,7 @@ class CatHardwareResource extends JsonResource
             'id' => $this->id,
             'tipo' => $this->tipo,
             'campos' => $this->campos,
+            'mantenible' => $this->mantenible,
         ];
     }
 }

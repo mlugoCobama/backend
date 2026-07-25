@@ -47,4 +47,12 @@ class Ucoip extends Model
     {
         return $this->belongsTo(RecursosRedUcoip::class,'ucoip_ucoip_id', 'id' );
     }
+
+    /**Un hgardware tien una asignacion actual */
+    public function titularActual()
+    {
+        return $this->hasOne(TitularesUcoip::class, 'ucoip_ucoip_id', 'id')
+                    ->whereNull('fecha_fin')
+                    ->latestOfMany();
+    }
 }

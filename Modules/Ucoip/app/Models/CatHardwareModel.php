@@ -18,7 +18,8 @@ class CatHardwareModel extends Model
         'tipo',
         'icono',
         'categoria',
-        'campos'
+        'campos',
+        'mantenible'
     ];
 
     public $timestamps = false;
