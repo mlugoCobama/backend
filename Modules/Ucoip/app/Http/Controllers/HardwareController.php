@@ -2,6 +2,7 @@
 
 namespace Modules\Ucoip\Http\Controllers;
 
+use App\Enums\EstatusActivos;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\Ucoip\Models\CatEmpresas;
@@ -10,7 +11,9 @@ use Modules\Ucoip\Models\CatEmpresas;
  * Models
  */
 use Modules\Ucoip\Models\HardwarePcModel;
+use Modules\Ucoip\Models\HardwareSoftware;
 use Modules\Ucoip\Models\IntercambioHardware;
+use Modules\Ucoip\Models\Software;
 use Modules\Ucoip\Transformers\HardwareResource;
 
 class HardwareController extends Controller
@@ -49,12 +52,21 @@ class HardwareController extends Controller
      */
     public function store(Request $request)
     {
-        $this->hardwarePC->create([
+        $existe = HardwarePcModel::where('no_serie', $request->no_serie)->exists();
+
+        if ($existe) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El número de serie ya se encuentra registrado.'
+            ], 422);
+        }
+
+       $hardware = $this->hardwarePC->create([
             "no_inventario" => $this->generarNoInventario($request->empresa),
             "marca" => $request->marca,
             "modelo" => $request->modelo,
             "no_serie" => $request->no_serie,
-            "tipo" => $request->tipo,
+            "tipo" => $request->tipo_cpu,
             "mac" => $request->mac,
             "memoria_ram" => $request->memoria_ram,
             "disco_duro" => $request->disco_duro,
@@ -64,8 +76,16 @@ class HardwareController extends Controller
             "estado" => $request->estado,
             "cat_empresa_id" => $request->empresa,
             "cat_hardware_id" => $request->cat_hardware_id,
-            "estado_fisico" => $request->estado_fisico
+            "estado_fisico" => $request->estado_fisico ?? null
         ]);
+
+        if (isset($request->licencia_so_id) && !empty($request->licencia_so_id)) {
+            $this->sincronizarSoftwareHardware($hardware->id, $request->licencia_so_id);
+        }
+
+        if (isset($request->licencia_office_id) && !empty($request->licencia_office_id)) {
+            $this->sincronizarSoftwareHardware($hardware->id, $request->licencia_office_id);
+        }
 
         return response()->json([
             'success' => true,
@@ -82,7 +102,7 @@ class HardwareController extends Controller
         //
 
         return response()->json([
-            
+
         ]);
     }
 
@@ -95,26 +115,38 @@ class HardwareController extends Controller
 
        //Si se detecta que el activo ha cambiado de empresa en referencia a su empresa actual registramos el cambio
        if((int) $hardware->cat_empresa_id !== (int) $request->empresa){
-        $this->storeIntercambio($hardware->id, $hardware->cat_empresa_id, $request->empresa );                    
+            $this->storeIntercambio($hardware->id, $hardware->cat_empresa_id, $request->empresa );
        }
 
-        $hardware->update([
-            "marca" => $request->marca,
-            "modelo" => $request->modelo,
-            "no_serie" => $request->no_serie,
-            "tipo" => $request->tipo,
-            "mac" => $request->mac,
-            "memoria_ram" => $request->memoria_ram,
-            "disco_duro" => $request->disco_duro,
-            "procesador" => $request->procesador,
-            "caracteristicas" => $request->caracteristicas,
-            "observaciones" => $request->observaciones,
-            "estado" => $request->estado,
-            "cat_empresa_id" => $request->empresa,
-            "cat_hardware_id" => $request->cat_hardware_id,
-            "estado_fisico" => $request->estado_fisico
-        ]);
+       $licenciaSoActual     = $this->obtenerLicenciaActiva($id, 1);
+       $licenciaOfficeActual = $this->obtenerLicenciaActiva($id, 2);
 
+       if($hardware){
+            $hardware->update([
+                "marca" => $request->marca,
+                "modelo" => $request->modelo,
+                "no_serie" => $request->no_serie,
+                "tipo" => $request->tipo_cpu,
+                "mac" => $request->mac,
+                "memoria_ram" => $request->memoria_ram,
+                "disco_duro" => $request->disco_duro,
+                "procesador" => $request->procesador,
+                "caracteristicas" => $request->caracteristicas,
+                "observaciones" => $request->observaciones,
+                "estado" => $request->estado,
+                "cat_empresa_id" => $request->empresa,
+                "cat_hardware_id" => $request->cat_hardware_id,
+                "estado_fisico" => $request->estado_fisico
+            ]);
+
+            if(isset($request->licencia_so_id) && !empty($request->licencia_so_id)){
+                $this->sincronizarSoftwareHardware($id, $request->licencia_so_id, $licenciaSoActual);
+            }
+
+            if(isset($request->licencia_office_id) && !empty($request->licencia_office_id)){
+                $this->sincronizarSoftwareHardware($id, $request->licencia_office_id, $licenciaOfficeActual);
+            }
+       }
 
         return response()->json([
             'success' => true,
@@ -140,7 +172,7 @@ class HardwareController extends Controller
         $intercambio->ucoip_hardware_id = $idHardware;
         $intercambio->fecha_traspaso = now();
         $intercambio->save();
-    } 
+    }
 
 
     public function generarNoInventario($idEmpresa)
@@ -157,4 +189,49 @@ class HardwareController extends Controller
         }
         return $empresa->intercompania . '-' . str_pad($consecutivo, 6, '0', STR_PAD_LEFT);
     }
+
+    public function sincronizarSoftwareHardware($idHardware, $nuevoSoftwareId, $softwareAnteriorId = null)
+    {
+        if ((int)$nuevoSoftwareId === (int)$softwareAnteriorId) {
+            return;
+        }
+        if (!empty($softwareAnteriorId)) {
+            HardwareSoftware::where('ucoip_hardware_id', $idHardware)
+                ->where('ucoip_software_id', $softwareAnteriorId)
+                ->whereNull('fecha_retiro')
+                ->update([
+                    'fecha_retiro' => now(),
+                ]);
+            $this->setEstatusLicencia($softwareAnteriorId, EstatusActivos::DISPONIBLE);
+        }
+
+        if (!empty($nuevoSoftwareId)) {
+            HardwareSoftware::create([
+                'ucoip_hardware_id' => $idHardware,
+                'ucoip_software_id' => $nuevoSoftwareId,
+                'fecha_asignacion'  => now(),
+                'fecha_retiro' => null,
+            ]);
+            $this->setEstatusLicencia($nuevoSoftwareId, EstatusActivos::ASIGNADA);
+        }
+    }
+
+    private function obtenerLicenciaActiva($hardwareId, $tipoSoftware)
+    {
+        return HardwareSoftware::where('ucoip_hardware_id', $hardwareId)
+            ->whereHas('software', function ($query) use ($tipoSoftware) {
+                $query->where('cat_software_id', $tipoSoftware);
+            })
+            ->whereNull('fecha_retiro')
+            ->value('ucoip_software_id');
+    }
+
+    public function setEstatusLicencia($idLicencia, $estatus){
+        $licencia =  Software::find($idLicencia);
+        if($licencia){
+                $licencia->estatus = $estatus;
+                $licencia->save();
+        }
+    }
+
 }

@@ -33,12 +33,15 @@ class CatSoftware extends Model
     public function licenciasDisponible()
     {
         return $this->hasMany(Software::class, 'cat_software_id', 'id')
-                    ->where('estatus', EstatusActivos::DISPONIBLE)
+                    ->where(function ($query) {
+                        $query->where('estatus', EstatusActivos::DISPONIBLE)
+                            ->orWhere('tipo_licencia', 3);
+                    })
                     ->select('id',
-                            'version', 
-                            'licencia', 
-                            'observaciones', 
-                            'cat_software_id', 
+                            'version',
+                            'licencia',
+                            'observaciones',
+                            'cat_software_id',
                             'usuario_empresa_id',
                             'estatus');
     }

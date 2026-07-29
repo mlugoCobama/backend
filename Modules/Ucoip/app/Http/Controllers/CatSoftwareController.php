@@ -72,7 +72,7 @@ class CatSoftwareController extends Controller
                 "estatus" => $request->estatus ?? EstatusActivos::DISPONIBLE
             ]);
         }
-        
+
 
         return response()->json([
             'status' => 'success',
@@ -128,9 +128,12 @@ class CatSoftwareController extends Controller
     }
 
     public function getLicenciasDisponiblesTipo($idEmpresa, $tipo){
-        $data =  Software::where('estatus', EstatusActivos::DISPONIBLE)
+        $data =  Software::where(function ($query) {
+            $query->where('estatus', EstatusActivos::DISPONIBLE)
+                  ->orWhere('tipo_licencia', 3);
+        })
         ->where('cat_software_id', $tipo)
-        ->where('empresa', $idEmpresa)  
+        ->where('empresa', $idEmpresa)
         ->get();
         return response()->json([
             'status' => 'success',
@@ -139,5 +142,5 @@ class CatSoftwareController extends Controller
         ]);
     }
 
-    
+
 }
