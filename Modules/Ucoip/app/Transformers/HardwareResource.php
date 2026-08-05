@@ -37,6 +37,7 @@ class HardwareResource extends JsonResource
             'asignacion' => $this->whenLoaded('asignacion'),
             'cambiosHardware' => $this->whenLoaded('cambiosHardware'),
             'intercambios' => $this->whenLoaded('intercambios'),
+            'mantenimientos' => $this->whenLoaded('mantenimientos'),
             'usuario_actual' => optional($this->asignacionActual?->userGlpi)->name ?? '-------------',
         ];
     }
