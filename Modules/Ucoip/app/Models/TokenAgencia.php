@@ -18,7 +18,7 @@ class TokenAgencia extends Model
         'ucoip_puesto_marca_id',
         'ucoip_cat_empresas_id',
         'activo',
-        'observaciones'
+        'observaciones',
     ];
 
     protected static function newFactory(): TokenAgenciaFactory
@@ -40,5 +40,15 @@ class TokenAgencia extends Model
     public function sucursal(){
         return $this->belongsTo(CatEmpresas::class, 'ucoip_cat_empresas_id');
     }
+
+    /**
+     * Función para obtener los datos activos
+     */
+
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
+    }
 }
-    
+
+
+

@@ -16,7 +16,8 @@ class CatSoftware extends Model
      */
     protected $fillable = [
         'tipo',
-        'icono'
+        'icono',
+        'activo'
     ];
 
     protected $table = 'ucoip_cat_software';
@@ -44,6 +45,14 @@ class CatSoftware extends Model
                             'cat_software_id',
                             'usuario_empresa_id',
                             'estatus');
+    }
+
+    /**
+     * Función para obtener los datos activos
+     */
+
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
     }
 
 }

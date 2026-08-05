@@ -14,10 +14,11 @@ class IntercambioHardware extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'empresa_origen', 
-        'empresa_destino', 
+        'empresa_origen',
+        'empresa_destino',
         'fecha_traspaso',
-        'ucoip_hardware_id'
+        'ucoip_hardware_id',
+        'activo'
     ];
 
     protected $table = 'ucoip_hardware_intercambios';
@@ -40,4 +41,13 @@ class IntercambioHardware extends Model
         return $this->belongsTo(CatEmpresas::class, 'empresa_destino', 'id')->select('id',
                             'nombre');
     }
+
+            /**
+     * Función para obtener los datos activos
+     */
+
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
+    }
+
 }

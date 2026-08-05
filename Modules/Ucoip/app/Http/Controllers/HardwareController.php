@@ -28,7 +28,8 @@ class HardwareController extends Controller
      */
     public function index()
     {
-       $data = HardwarePcModel::usuarios()
+       $data = HardwarePcModel::active()
+            ->usuarios()
             ->with([
                 'Tipo',
                 'empresa',
@@ -36,8 +37,12 @@ class HardwareController extends Controller
                 'cambiosHardware.detalle',
                 'intercambios.origen',
                 'intercambios.destino',
-                'asignacionActual.userGlpi'
-            ])
+                'asignacionActual.userGlpi',
+                'mantenimientos' => function ($query) {
+                        $query->select('id', 'ucoip_hardware_id', 'tipo', 'fecha', 'id_tecnico')->orderByDesc('fecha');
+                    },
+                'mantenimientos.tecnico:id,firstname,realname',
+                ])
             ->get();
 
         return response()->json([
@@ -160,9 +165,17 @@ class HardwareController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $registro = HardwarePcModel::find($id);
+        if($registro){
+            $registro->activo = 0;
+            $registro->save();
+        }
 
-        return response()->json([]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Registro eliminado correctamente',
+            'data' => []
+        ]);
     }
 
     public function storeIntercambio($idHardware, $idEmpOrigen, $idEmpDestino){

@@ -12,7 +12,7 @@ class PdfResguardoService{
         {
             $pdf = new Fpdi();
             $pdf->AddPage('P', 'Letter');
-            
+
             //Plantilla PDF: Formato de resguardo
             $pdf->setSourceFile(base_path('Modules/Ucoip/resources/assets/Formatos/resguardo.pdf'));
             $template = $pdf->importPage(1);
@@ -34,7 +34,7 @@ class PdfResguardoService{
             $pdf->Cell(37, 7, $fechaInicio , 0, 1 ,'C');
             // $pdf->SetXY(169, 44);
             // $pdf->Cell(37, 7, $fechaFin , 0, 1 ,'C');
-   
+
 
             $pdf->SetFont('Arial', 'B', 7);
             $pdf->SetXY(40, 61);
@@ -50,7 +50,7 @@ class PdfResguardoService{
              */
             $detalles = $data;
             $pdf->SetFont('Arial', 'B', 6);
-            
+
             $y = 132.1;
 
             foreach ($detalles as $detalle) {
@@ -60,7 +60,7 @@ class PdfResguardoService{
                 $pdf->Cell(21, 3, $this->formatearTexto($hardware->marca), 0, 0, 'C');
                 $pdf->Cell(29, 3, $this->formatearTexto($hardware->modelo), 0, 0, 'C');
                 $pdf->Cell(37, 3, $this->formatearTexto($hardware->no_serie), 0, 0, 'C');
-                $pdf->Cell(16, 3, $this->formatearTexto($hardware->id), 0, 0, 'C');
+                $pdf->Cell(16, 3, $this->formatearTexto($hardware->no_inventario), 0, 0, 'C');
                 // $pdf->Cell(29, 3, $this->formatearTexto($hardware->caracteristicas), 0, 0, 'C');
                 $pdf->Cell(29, 3, $this->formatearTexto($hardware->tipoHardware->tipo), 0, 0, 'C');
                 $pdf->Cell(39, 3, $this->formatearTexto($hardware->observaciones), 0, 0, 'C');
@@ -73,7 +73,7 @@ class PdfResguardoService{
             // Establecer color de fondo blanco
             $pdf->SetFillColor(255, 255, 255);
             $pdf->Cell(
-                80,6,$this->formatearTexto($nombreUsuario),0,0,'C',true 
+                80,6,$this->formatearTexto($nombreUsuario),0,0,'C',true
             );
 
             return $pdf->Output('S');
@@ -87,7 +87,7 @@ class PdfResguardoService{
             }
 
             return $fechaFormateada;
-            
+
         }
 
         function formatearTexto($cadena)

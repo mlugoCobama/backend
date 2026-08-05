@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 use Throwable;
@@ -30,7 +31,7 @@ class VisorCitasController extends Controller
         $data = [];
         $date = date('Ymd');
         $empleadosCache = [];
-        for ($j=1; $j < 5; $j++) { 
+        for ($j=1; $j < 5; $j++) {
             $citas = DB::connection('renault')
                     ->table('Se_Citas')
                     ->select(
@@ -186,23 +187,71 @@ class VisorCitasController extends Controller
                 ]);
             }
 
-            foreach( $request->fotos as $foto) {
+            // foreach( $request->fotos as $foto) {
 
-                $image = $foto['webviewPath'];  // your base64 encoded
-                $image = str_replace('data:image/jpeg;base64,', '', $image);
-                $image = str_replace(' ', '+', $image);
-                Storage::disk('local')->put("renault/citas_servicio/".$foto['filepath'], base64_decode($image));
-                /**
-                 * Insertamos los testigos fotograficos
-                 */
-                RenTestigosFotograficos::create([
-                    "folio" => $request->form['folio'],
-                    "ruta" => "renault/citas_servicio/",
-                    "nombre" => basename($foto['filepath']),
-                    'ren_entrada_vehiculo_id' => $entrada->id
-                ]);
+            //     $image = $foto['webviewPath'];  // your base64 encoded
+            //     $image = str_replace('data:image/jpeg;base64,', '', $image);
+            //     $image = str_replace(' ', '+', $image);
+            //     Storage::disk('local')->put("renault/citas_servicio/".$foto['filepath'], base64_decode($image));
+            //     /**
+            //      * Insertamos los testigos fotograficos
+            //      */
+            //     RenTestigosFotograficos::create([
+            //         "folio" => $request->form['folio'],
+            //         "ruta" => "renault/citas_servicio/",
+            //         "nombre" => basename($foto['filepath']),
+            //         'ren_entrada_vehiculo_id' => $entrada->id
+            //     ]);
 
-            }
+            // }
+
+            foreach ($request->fotos as $foto) {
+                    $webviewPath = $foto['webviewPath'];
+                    $filepath = $foto['filepath']; // nombre de archivo con extensión, ej: 14762_..._x.png
+
+                    $isDataUri = preg_match('/^data:([\w\/\+\-]+);base64,(.*)$/s', $webviewPath, $matches);
+
+                    if ($isDataUri) {
+                        // --- Imagen (o video) enviado como data URI base64 ---
+                        $mimeType = $matches[1];   // ej: image/png, image/jpeg, video/mp4
+                        $base64Data = $matches[2];
+
+                        // Corrige espacios que a veces reemplazan el '+' al transmitir por URL/form
+                        $base64Data = str_replace(' ', '+', $base64Data);
+
+                        $decoded = base64_decode($base64Data, true);
+
+                        if ($decoded === false || strlen($decoded) === 0) {
+                            Log::warning("No se pudo decodificar base64 para archivo: {$filepath}");
+                            continue; // evitamos guardar un archivo corrupto/vacío
+                        }
+
+                        Storage::disk('local')->put(
+                            "renault/citas_servicio/" . $filepath,
+                            $decoded
+                        );
+
+                    }
+                    //  elseif (filter_var($webviewPath, FILTER_VALIDATE_URL) || Str::startsWith($webviewPath, ['http://', 'https://', 'blob:'])) {
+                    //     // --- Caso: viene como URL/blob (ej. video con convertFileSrc) ---
+                    //     // Si tu frontend en su lugar sube el archivo real por multipart, este bloque
+                    //     // no debería ejecutarse; ver nota más abajo sobre el enfoque recomendado.
+                    //     Log::warning("webviewPath es una URL/blob, no un data URI, no se puede decodificar en backend: {$filepath}");
+                    //     continue;
+
+                    // }
+                    else {
+                        Log::warning("Formato de webviewPath no reconocido para archivo: {$filepath}");
+                        continue;
+                    }
+
+                    RenTestigosFotograficos::create([
+                        "folio" => $request->form['folio'],
+                        "ruta" => "renault/citas_servicio/",
+                        "nombre" => basename($filepath),
+                        'ren_entrada_vehiculo_id' => $entrada->id
+                    ]);
+                }
             /**
              * Guardarmos la firma
              */
@@ -225,14 +274,14 @@ class VisorCitasController extends Controller
 
         } catch (Throwable $e) {
             report($e);
-     
+
             return response()->json([
                 'status' => false,
                 'message' => 'Se ha presentado un problema al guardar la información',
                 'data' => []
             ]);
         }
-        
+
 
     }
 
@@ -280,7 +329,7 @@ class VisorCitasController extends Controller
                 'data' =>  []
             ]);
         }
-        
+
     }
 
     public function descargarPdfOrdenServicio($id){
@@ -289,7 +338,7 @@ class VisorCitasController extends Controller
             $pdf = new OrdenServicioPdfController();
         $file = $pdf->OrdenServicioFormatoInterno($cita);
         $fileName = 'orden_de_reparacion_mecanica_'.($cita->Datos->num_entrada ?? 0).'.pdf';
-        
+
         return response($file, 200)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'inline; filename="' . $fileName . '"')
@@ -298,7 +347,7 @@ class VisorCitasController extends Controller
             ->header('X-Filename', $fileName)
             ->header('Access-Control-Expose-Headers', 'X-Filename');
         }
-        
+
     }
 
     public function datosFiltrados($intercomapania, $aps, $fechaInicial, $fechaFinal ){
@@ -391,14 +440,14 @@ class VisorCitasController extends Controller
                                 ->where('intercompania', $intercompania)
                                 ->where('is_active', 1)
                                 ->get(['id','name', 'firstname', 'realname', 'intercompania' ]);
-        
+
         return response()->json([
             'status' => 'success',
             'data' => $data,
             'message' => 'Aps Recuperados correctamente'
         ]);
 
-    } 
+    }
 
 
 }

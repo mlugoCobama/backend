@@ -11,23 +11,28 @@ use Illuminate\Http\Response;
 use Modules\Ucoip\Models\CatEmpresas;
 use Modules\Ucoip\Models\CatPuestosMarca;
 use Modules\Ucoip\Models\TokenAgencia;
+use Modules\Ucoip\Services\TokensService;
 
 class TokensAgenciaController extends Controller
 {
+
+ public function __construct(
+        private TokensService $tokenAgenciaService
+    ) {}
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
 
-        $tokens =  TokenAgencia::with(['puestoMarca','sucursal'])->get();
-        $catalogo =  CatPuestosMarca::get();
+        $tokens =  TokenAgencia::with(['puestoMarca','sucursal'])->active()->get();
+        $catalogo =  CatPuestosMarca::active()->get();
         $empresas = CatEmpresas::where('division', 4)->get();
 
         $data = [
             'tokens' => $tokens,
             'puestos' => $catalogo ?? [],
-            'sucursales' => $empresas ?? [] 
+            'sucursales' => $empresas ?? []
         ];
 
         return response()->json([
@@ -51,40 +56,30 @@ class TokensAgenciaController extends Controller
      */
     public function store(Request $request)
     {
-        if (!empty($request->id) && $tokenAgencia = TokenAgencia::find($request->id)) {
+        try {
 
-            $message = 'Registro actualizado con éxito';
+            $resultado = $this->tokenAgenciaService->guardar(
+                $request->id,
+                $request->token,
+                $request->puesto_marca,
+                $request->cat_empresas_id,
+                $request->observaciones
+            );
 
-        } else {
-            // VALIDAR QUE EL TOKEN NO ESTE REGISTRADO ANTERIORMENTE
-            $existe = $tokenAgencia = TokenAgencia::where('token',$request->token)->first();
+            return response()->json([
+                'status' => 'success',
+                'message' => $resultado['message'],
+                'data' => $resultado['data']
+            ]);
 
-            //Si YA EXISTE NOTIFICAR
-            if($existe){
-                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'Este token ya existe en otra sucursal',
-                    'data' => []
-                ]);
-            }
+        } catch (\Exception $e) {
 
-            $tokenAgencia = new TokenAgencia();
-            $tokenAgencia->activo = 1;
-
-            $message = 'Registro creado con éxito';
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'data' => []
+            ], 422);
         }
-
-        $tokenAgencia->token = $request->token;
-        $tokenAgencia->ucoip_puesto_marca_id = $request->puesto_marca;
-        $tokenAgencia->ucoip_cat_empresas_id = $request->cat_empresas_id;
-        $tokenAgencia->observaciones = $request->observaciones;
-        $tokenAgencia->save();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => $message,
-            'data' => []
-        ]);
     }
 
     /**
@@ -121,7 +116,17 @@ class TokensAgenciaController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $registro = TokenAgencia::find($id);
+        if($registro){
+            $registro->activo = 0;
+            $registro->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registro eliminado correctamente',
+            'data' => []
+        ]);
     }
 
 

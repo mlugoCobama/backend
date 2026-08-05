@@ -12,6 +12,7 @@ use Modules\Ucoip\Http\Controllers\CatSoftwareController;
 use Modules\Ucoip\Http\Controllers\EmpresasController;
 use Modules\Ucoip\Http\Controllers\HardwareController;
 use Modules\Ucoip\Http\Controllers\HardwareInfraController;
+use Modules\Ucoip\Http\Controllers\MantenimientoController;
 use Modules\Ucoip\Http\Controllers\ModulosController;
 use Modules\Ucoip\Http\Controllers\PermisosController;
 use Modules\Ucoip\Http\Controllers\ResguardosController;
@@ -32,6 +33,7 @@ use Modules\Ucoip\Http\Controllers\UcoipController;
 
 Route::middleware(['auth:sanctum'])->prefix('ucoip')->group(function () {
     Route::apiResource('ucoip', UcoipController::class)->names('ucoip');
+    Route::apiResource('mantenimiento', MantenimientoController::class)->names('mantenimiento');
     Route::apiResource('areas', CatAreasController::class)->names('areas');
     Route::apiResource('hardware', HardwareController::class)->names('hardware');
     Route::apiResource('hardware-infra', HardwareInfraController::class)->names('hardware-infra');
@@ -56,8 +58,9 @@ Route::middleware(['auth:sanctum'])->prefix('ucoip')->group(function () {
     Route::get('/sistema-ucoip/password/{id}',[AsignacionSistemaController::class, 'getPassword'])->name('sistemas-ucoip.getPassword');
     Route::get('/tokens-ucoip/password/{id}/{campo}',[AsignacionTokensController::class, 'getPassword'])->name('tokens-ucoip-ucoip.getPassword');
     Route::get('/ucoip/password/{id}',[UcoipController::class, 'getPassword'])->name('ucoip.getPassword');
-    
+
     Route::get ('/catalogos', [UcoipController::class, 'getCatalogosUcoip'])->name('ucoip.catalogos');
+    Route::get ('/catalogos/mantenimiento', [CatHardwareController::class, 'getCatalogoMantenimientos'])->name('ucoip.catalogo-mantenimientos');
     Route::get ('/cat/hardware/infra', [CatHardwareController::class, 'getCatInfra'])->name('cat-hardware.getCatInfra');
 
 });

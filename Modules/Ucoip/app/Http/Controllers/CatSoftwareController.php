@@ -9,16 +9,22 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\Ucoip\Models\CatSoftware;
 use Modules\Ucoip\Models\Software;
+use Modules\Ucoip\Services\SoftwareService;
 use Modules\Ucoip\Transformers\SoftwareResource;
 
 class CatSoftwareController extends Controller
 {
+    protected $softwareService;
+    public function __construct(SoftwareService $softwareService)
+    {
+        $this->softwareService = $softwareService;
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $data = Software::with(['tipoSoftware', 'sucursal'])->get();
+        $data = Software::with(['tipoSoftware', 'sucursal'])->active()->get();
         $tipos =  CatSoftware::get();
 
         return response()->json([
@@ -43,36 +49,19 @@ class CatSoftwareController extends Controller
     public function store(Request $request)
     {
         if($request->id){
-            $software =  Software::where('id', $request->id);
-            if($software){
-                $software->update([
-                    "empresa" => $request->empresa,
-                    "version" => $request->version,
-                    "licencia" => $request->licencia,
-                    "observaciones" => $request->observaciones,
-                    "cat_software_id" => $request->cat_software_id,
-                    "estatus" => $request->estatus,
-                    "tipo_licencia" => $request->tipo_licencia,
-                    "cuenta" => $request->cuenta,
-                    "pass_cuenta" => $request->pass_cuenta,
-                    "fecha_adquisicion" => $request->fecha_adquisicion,
-                ]);
-            }
+            $software = $this->softwareService->updateSoftware(
+                $request->id, $request->empresa, $request->version, $request->licencia,
+                $request->observaciones, $request->cat_software_id,
+                $request->estatusm, $request->tipo_licencia, $request->cuenta,
+                $request->pass_cuenta, $request->fecha_adquisicion
+            );
         }else{
-            $software = Software::create([
-                "empresa" => $request->empresa,
-                "version" => $request->version,
-                "licencia" => $request->licencia,
-                "observaciones" => $request->observaciones,
-                "cat_software_id" => $request->cat_software_id,
-                "tipo_licencia" => $request->tipo_licencia,
-                "cuenta" => $request->cuenta,
-                "pass_cuenta" => $request->pass_cuenta,
-                "fecha_adquisicion" => $request->fecha_adquisicion ??  now(),
-                "estatus" => $request->estatus ?? EstatusActivos::DISPONIBLE
-            ]);
+            $software =  $this->softwareService->storeSoftware(
+                $request->empresa, $request->version, $request->licencia,
+                $request->observaciones, $request->cat_software_id,
+                $request->tipo_licencia, $request->cuenta, $request->pass_cuenta,
+                $request->fecha_adquisicion, $request->estatus);
         }
-
 
         return response()->json([
             'status' => 'success',
@@ -110,15 +99,21 @@ class CatSoftwareController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $registro = Software::find($id);
+        if($registro){
+            $registro->activo = 0;
+            $registro->save();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Registro eliminado correctamente',
+            'data' => []
+        ]);
     }
 
     public function getCatalogoDisponible($idEmpresa){
-        $data = CatSoftware::with([
-            'licenciasDisponible' => function ($query) use ($idEmpresa) {
-                $query->where('empresa', $idEmpresa);
-            }
-        ])->get();
+        $data = $this->softwareService->getCatalogoDisponible($idEmpresa);
 
         return response()->json([
             'status' => 'success',
@@ -128,13 +123,8 @@ class CatSoftwareController extends Controller
     }
 
     public function getLicenciasDisponiblesTipo($idEmpresa, $tipo){
-        $data =  Software::where(function ($query) {
-            $query->where('estatus', EstatusActivos::DISPONIBLE)
-                  ->orWhere('tipo_licencia', 3);
-        })
-        ->where('cat_software_id', $tipo)
-        ->where('empresa', $idEmpresa)
-        ->get();
+        $data = $this->softwareService->getLicenciasDisponiblesTipo($idEmpresa, $tipo);
+
         return response()->json([
             'status' => 'success',
             'data' => $data,

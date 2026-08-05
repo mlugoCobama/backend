@@ -15,21 +15,21 @@ class Software extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'version', 
-        'licencia', 
-        'observaciones', 
-        'cat_software_id', 
+        'version',
+        'licencia',
+        'observaciones',
+        'cat_software_id',
         'usuario_empresa_id',
         'estatus',
         'activo',
         'tipo_licencia',
-        'cuenta', 
+        'cuenta',
         'pass_cuenta',
         'fecha_adquisicion',
         'empresa'
     ];
 
-    protected $table = 'ucoip_software'; 
+    protected $table = 'ucoip_software';
 
     protected static function newFactory(): SoftwareFactory
     {
@@ -42,5 +42,13 @@ class Software extends Model
 
     public function sucursal(){
         return $this->belongsTo(CatEmpresas::class, 'empresa' ,'id');
+    }
+
+    /**
+     * Función para obtener los datos activos
+     */
+
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
     }
 }

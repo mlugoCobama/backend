@@ -29,9 +29,10 @@ class ComponenteHardware extends Model
         'created_at',
         'updated_at',
         'com_detalle_solicitud_id',
+        'activo'
   ];
 
-  protected $table = 'ucoip_hardware_componentes'; 
+  protected $table = 'ucoip_hardware_componentes';
 
     protected static function newFactory(): ComponenteHarwdwareFactory
     {
@@ -51,5 +52,13 @@ class ComponenteHardware extends Model
 
     public function hardwarePadre(){
         return $this->belongsTo(HardwarePcModel::class, 'ucoip_hardware_id', 'id');
+    }
+
+    /**
+     * Función para obtener los datos activos
+     */
+
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
     }
 }

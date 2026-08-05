@@ -4,9 +4,9 @@ namespace Modules\Ucoip\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Modules\Ucoip\Database\Factories\CatPuestosMarcaFactory;
+use Modules\Ucoip\Database\Factories\CatCheckListMantenimientosFactory;
 
-class CatPuestosMarca extends Model
+class CatCheckListMantenimientos extends Model
 {
     use HasFactory;
 
@@ -14,24 +14,22 @@ class CatPuestosMarca extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'puesto',
+        'tipo',
+        'codigo_control',
+        'etiqueta',
+        'orden',
         'activo'
     ];
 
-    protected $table = 'ucoip_puestos_marca';
+    protected $table = "ucoip_cat_checklist_mantenimiento";
 
-    protected static function newFactory(): CatPuestosMarcaFactory
+    protected static function newFactory(): CatCheckListMantenimientosFactory
     {
-        //return CatPuestosMarcaFactory::new();
-    }
-
-    public function tokens(){
-        return $this->hasMany(TokenAgencia::class, 'ucoip_puesto_marca_id', 'id');
+        //return CatCheckListMantenimientosFactory::new();
     }
     /**
      * Función para obtener los datos activos
      */
-
     public function scopeActive ($query) {
         return $query->where('activo', 1);
     }

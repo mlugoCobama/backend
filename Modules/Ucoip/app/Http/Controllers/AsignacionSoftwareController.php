@@ -10,9 +10,16 @@ use Modules\Ucoip\Models\Software;
 use Modules\Ucoip\Models\SoftwareUcoip;
 use App\Enums\EstatusActivos;
 use App\Enums\EstatusAsignaciones;
+use Modules\Ucoip\Services\SoftwareService;
 
 class AsignacionSoftwareController extends Controller
 {
+
+    protected $softwareService;
+    public function __construct(SoftwareService $softwareService)
+    {
+        $this->softwareService = $softwareService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -35,20 +42,13 @@ class AsignacionSoftwareController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
-        $asignacion = new SoftwareUcoip();
-        $asignacion->ucoip_ucoip_id = $data['idUcoip'];
-        $asignacion->ucoip_software_id = $data['software']; 
-        $asignacion->fecha_asignacion = now();
-        $asignacion->save();
-
-        $this->updateStatusSoftware($data['software'], EstatusActivos::ASIGNADA);
-
+        $asignacion = $this->softwareService->asignacionSoftware($data['idUcoip'],$data['software'], now());
         return response()->json([
             'status' => 'success',
             'data' => [],
             'message' => "Asignación realizada correctamente"
         ]);
-    
+
     }
 
     /**
@@ -62,7 +62,7 @@ class AsignacionSoftwareController extends Controller
             'message' => 'asignaciones recuperadas correctamente',
             'data' => $asiganciones,
             'status' => 'success'
-        ]); 
+        ]);
     }
 
     /**
@@ -86,13 +86,7 @@ class AsignacionSoftwareController extends Controller
      */
     public function destroy($id)
     {
-       $asignacion = SoftwareUcoip::find($id);
-       if($asignacion){
-        $asignacion->fecha_retiro = now();
-        $asignacion->activo = EstatusAsignaciones::FINALIZADA;
-        $asignacion->save();
-        $this->updateStatusSoftware($asignacion->ucoip_software_id, EstatusActivos::DISPONIBLE);
-       }
+        $asignacion = $this->softwareService->finalizarAsignacion($id);
 
         return response()->json([
             'status' => 'success',
@@ -100,15 +94,6 @@ class AsignacionSoftwareController extends Controller
             'message' => "Operación realizada correctamente"
         ]);
 
-      
-    }
 
-    public function updateStatusSoftware($id, $status){
-        $software = Software::find($id);
-
-        if($software){
-            $software->estatus = $status;
-            $software->save();
-        }
     }
 }

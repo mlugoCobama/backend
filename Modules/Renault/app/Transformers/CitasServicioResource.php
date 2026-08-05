@@ -34,7 +34,14 @@ class CitasServicioResource extends JsonResource
             'color' => $this->color,
             'anio' => $this->anio,
             'estatus' => $this->estatus,
-            'tipoCita' => $this->tipo_cita
+            'tipoCita' => $this->tipo_cita,
+            'agencia' => 'RENAULT '.$this->setNameAgencia($this->agencia_id)
         ];
     }
+
+     private function setNameAgencia($id){
+        return match($id){
+            1 => 'AZCAPOTZALCO', 2 => 'ECATEPEC', 3 => 'VALLEJO',  4 => 'PACHUCA', default => 'Desconocido',
+        };
+     }
 }

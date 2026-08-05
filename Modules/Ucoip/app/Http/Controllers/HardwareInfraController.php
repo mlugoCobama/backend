@@ -16,7 +16,8 @@ class HardwareInfraController extends Controller
      */
     public function index()
     {
-       $data = HardwarePcModel::infraestructura()
+       $data = HardwarePcModel::active()
+            ->infraestructura()
             ->with([
                 'Tipo',
                 'empresa',
@@ -24,6 +25,10 @@ class HardwareInfraController extends Controller
                 'cambiosHardware.detalle',
                 'intercambios.origen',
                 'intercambios.destino',
+                'mantenimientos' => function ($query) {
+                        $query->select('id', 'ucoip_hardware_id', 'tipo', 'fecha', 'id_tecnico')->orderByDesc('fecha');
+                    },
+                'mantenimientos.tecnico:id,firstname,realname',
             ])
             ->get();
         // , 'cambiosHardware.detalle.cotizacionSeleccionada'

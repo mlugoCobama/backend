@@ -24,19 +24,19 @@ class GlpiUser extends Model
         'realname',
         'firstname',
         'locations_id',
-        'is_active', 
+        'is_active',
         'comment',
-        'entities_id', 
-        'intercompania', 
-        'dominio', 
-        'fecha_nacimiento', 
-        'id_areas_directorio', 
-        'id_puesto_directorio', 
+        'entities_id',
+        'intercompania',
+        'dominio',
+        'fecha_nacimiento',
+        'id_areas_directorio',
+        'id_puesto_directorio',
         'id_departamentos_directorio',
-        'ipl'
+        'ip'
     ];
 
-    protected $connection =  'intranet'; 
+    protected $connection =  'intranet';
     protected $table = 'glpi_users';
 
     protected static function newFactory(): GlpiUserFactory

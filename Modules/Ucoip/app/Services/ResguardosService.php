@@ -11,6 +11,7 @@ use App\Enums\EstatusActivos;
 use App\Enums\EstatusAsignaciones;
 use Modules\Compras\Models\DetalleSolicitud;
 use Modules\Ucoip\Models\ComponenteHardware;
+use Modules\Ucoip\Models\HardwarePcModel;
 
 class ResguardosService
 {
@@ -19,7 +20,6 @@ class ResguardosService
      *
      * @param mixed $data Datos del resguardo
      * @param mixed $detalles Lista de detalles
-     * @return Resguardo
      */
     public function crearResguardoConDetalles(array $data, array $detalles)
     {
@@ -48,6 +48,11 @@ class ResguardosService
         });
     }
 
+    /**
+     * Crear un resguardo sin detalles
+     *
+     * @param mixed $data Datos del resguardo
+     */
     public function storeResguardo( $data ){
         $resguardo                      = new Resguardo();
         $resguardo->id_usuario_asignado = $data['id_usuario'];
@@ -61,6 +66,11 @@ class ResguardosService
         return $resguardo;
     }
 
+    /**
+     * Genera un folio para un nuevo resguardo
+     *
+     * @return string
+     */
     private function generarFolio()
     {
         // Obtener el último folio registrado
@@ -93,7 +103,13 @@ class ResguardosService
         $detalle->save();
     }
 
-
+    /**
+     * Asignar recurso a hardware
+     *
+     * @param mixed $idHardware ID del equipo
+     * @param mixed $idUcoip ID de UCOIP
+     * @param mixed $idUserGlpi ID del usuario en GLPI
+     */
     public function asignarRecurso($idHardware, $idUcoip, $idUserGlpi){
         $asignacion                     = new HardwareUcoip();
         $asignacion->ucoip_hardware_id  = $idHardware;
@@ -103,9 +119,30 @@ class ResguardosService
         $asignacion->estatus            = EstatusAsignaciones::ACTIVA;
         $asignacion->save();
 
+        $this->updateEstatusHardware($idHardware, EstatusActivos::ASIGNADA);
+
         return $asignacion;
     }
 
+    /**
+     * Actualizar el estatus de un hardware
+     *
+     * @param mixed $id Id del hardware
+     * @param string $estado Nuevo estado del hardware
+     */
+    public function updateEstatusHardware($id, $estado){
+        $hardware =  HardwarePcModel::find($id);
+        if($hardware){
+            $hardware->estado = $estado;
+        }
+        $hardware->save();
+    }
+
+    /**
+     * Remover recurso asignado a hardware
+     *
+     * @param mixed $idAsignacion ID de la asignación
+     */
     public function removerRecurso($idAsignacion){
        $asignacion                  = HardwareUcoip::find($idAsignacion);
        if($asignacion){
@@ -119,7 +156,9 @@ class ResguardosService
 
 
     /**
-     * Recupera la computadora que tiene asignada un usuario
+     * Recuperar la computadora que tiene asignada un usuario
+     *
+     * @param mixed $id Id del usuario
      */
     public function getPcUsuario($id)
     {
@@ -134,11 +173,17 @@ class ResguardosService
         return $resguardo;
     }
 
+    /**
+     * Asignar recurso a equipo de PC
+     *
+     * @param mixed $idEquipo ID del equipo de PC
+     * @param mixed $idDetalleSolicitud ID del detalle de solicitud
+     */
     public function asignarRecursoPc( $idEquipo, $idDetalleSolicitud){
         $detalle = DetalleSolicitud::with('cotizacionSeleccionada')->find($idDetalleSolicitud);
 
         $componente =  new ComponenteHardware();
-        $componente->ucoip_hardware_id = $idEquipo; 
+        $componente->ucoip_hardware_id = $idEquipo;
         $componente->tipo = 1;
         $componente->descripcion = $detalle->descripcion ?? '';
         $componente->cantidad = 1;

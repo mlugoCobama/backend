@@ -28,7 +28,8 @@ class HardwarePcModel extends Model
         "cat_empresa_id",
         "almacen_compra_id",
         "no_inventario",
-        "estado_fisico"
+        "estado_fisico",
+        'activo'
     ];
     /**
      * Campo "tipo" se ocupa para diferenciar el tipo de cpu
@@ -78,6 +79,13 @@ class HardwarePcModel extends Model
     }
 
     /**
+     * Un hardware tiene muchas asignaciones
+     */
+    public function mantenimientos(){
+        return $this->hasMany(HardwareMantenimiento::class, 'ucoip_hardware_id', 'id');
+    }
+
+    /**
      * Un hardware puede tener muchos cambios
      */
     public function cambiosHardware(){
@@ -98,6 +106,16 @@ class HardwarePcModel extends Model
     }
 
 
+    /**Un hgardware tien una asignacion actual */
+    public function asignacionActual()
+    {
+        return $this->hasOne(HardwareUcoip::class, 'ucoip_hardware_id', 'id')
+                    ->whereNull('fecha_fin')
+                    ->latestOfMany();
+    }
+
+
+
     public function scopeUsuarios($query)
     {
         return $query->whereHas('Tipo', function ($q) {
@@ -112,12 +130,13 @@ class HardwarePcModel extends Model
         });
     }
 
-    /**Un hgardware tien una asignacion actual */
-    public function asignacionActual()
-    {
-        return $this->hasOne(HardwareUcoip::class, 'ucoip_hardware_id', 'id')
-                    ->whereNull('fecha_fin')
-                    ->latestOfMany();
+
+        /**
+     * Función para obtener los datos activos
+     */
+
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
     }
 
 }

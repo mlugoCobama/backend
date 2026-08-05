@@ -136,4 +136,11 @@ Se actualiza el sp para obtener comisiones
 
 ---
 
+### UCOIP
+* **Baja de registros** Se agrega soporte par aeliminar regitros por medio de borrado logico.
+* **Mantenimiento** Se integra la estrutura para llevar el registro de mantenimientos.
+### RENAULT
+* **Citas de servicio**  Se integra soporte soporte para carga de distintos tipos de archivo y se coloca visible el nombre de agencia
+---
+
 
