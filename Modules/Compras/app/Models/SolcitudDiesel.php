@@ -15,7 +15,7 @@ class SolcitudDiesel extends Model
     /**
      * The attributes that are mass assignable.
      */
-    protected $fillable = [ 
+    protected $fillable = [
         'inicio_periodo',
         'fin_periodo',
         'precio_combustible',
@@ -28,7 +28,8 @@ class SolcitudDiesel extends Model
         'estatus',
         'activo',
         'fecha_dispersion',
-        'empresa'
+        'empresa',
+        'exibiciones'
     ];
 
 

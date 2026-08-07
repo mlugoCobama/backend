@@ -21,6 +21,7 @@ class ComRecargasVehiculos extends Model
         'activo',
         'fecha_dispersion',
         'saldo_actual',
+        'monto_autorizado',
         'com_solicitud_diesel_id',
         'com_vehiculos_toka_id',
     ];
@@ -48,6 +49,10 @@ class ComRecargasVehiculos extends Model
     public function solicitudDiesel()
     {
         return $this->belongsTo(SolcitudDiesel::class, 'com_solicitud_diesel_id', 'id');
+    }
+    public function exhibiciones()
+    {
+        return $this->hasMany(ExhibicionesRecargas::class, 'com_recargas_vehiculos_id');
     }
 }
 

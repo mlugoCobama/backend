@@ -10,7 +10,7 @@ class DispersionesTokaResource extends JsonResource
 
 {
     private static $usuariosCache = [];
-    
+
     /**
      * Transform the resource into an array.
      */
@@ -32,7 +32,8 @@ class DispersionesTokaResource extends JsonResource
             "estatus" => $this->estatus,
             "activo" => $this->activo,
             "fecha_dispersion" => $this->fecha_dispersion,
-            "notifico_dispersion" => $this->notifico_dispersion  
+            "notifico_dispersion" => $this->notifico_dispersion,
+            "exibiciones" => $this->exibiciones
         ];
 
 

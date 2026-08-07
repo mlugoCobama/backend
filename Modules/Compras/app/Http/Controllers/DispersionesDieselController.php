@@ -10,7 +10,9 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 // use Maatwebsite\Excel\Excel;
 use Maatwebsite\Excel\Facades\Excel;
+use Modules\Compras\Models\SolcitudDiesel;
 use Modules\Compras\Services\DispersionDiesel;
+use Modules\Compras\Transformers\ExhibicionRecargaTokaResource;
 use Modules\Compras\Transformers\RecargaTokaResource;
 
 class DispersionesDieselController extends Controller
@@ -54,15 +56,51 @@ class DispersionesDieselController extends Controller
     /**
      * Show the specified resource.
      */
-    public function show($id)
+    public function show2($id)
     {
-        $data = DB::connection('dashboard')->select('CALL SP_GetDispersionDiesel(?)', [$id]);
-        return response()->json([
-            'status' => 'success',
-            'data' => RecargaTokaResource::collection($data),
-            'message' => 'Datos recuperados correctamente'
-        ]);
+
+        // $resultado = [];
+        // $dispersion = SolcitudDiesel::find($id);
+        // for ($i=0; $i < $dispersion->exibiciones; $i++) {
+        //     $data = DB::connection('dashboard')->select('CALL SP_GetDispersionDiesel(?, ?)', [$id, ($i+1)]);
+        //     $resultado[$i] = RecargaTokaResource::collection($data);
+        // }
+        // $data = DB::connection('dashboard')->select('CALL SP_GetDispersionDiesel(?, ?)', [$id, 1]);
+        // return response()->json([
+        //     'status' => 'success',
+        //     'data' => RecargaTokaResource::collection($data),
+        //     // 'data' =>  $resultado,
+        //     'message' => 'Datos recuperados correctamente'
+        // ]);
+
+
     }
+
+    public function show($id)
+        {
+            $solicitud = SolcitudDiesel::findOrFail($id);
+
+            $dispersiones = [];
+
+            for ($i = 1; $i <= $solicitud->exibiciones; $i++) {
+                $data = DB::connection('dashboard')
+                    ->select('CALL SP_GetDispersionDiesel(?, ?)', [$id, $i]);
+
+                $dispersiones[] = [
+                    'numero_exhibicion' => $i,
+                    'vehiculos' => ExhibicionRecargaTokaResource::collection($data),
+                ];
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'solicitud'    => $solicitud,
+                    'dispersiones' => $dispersiones,
+                ],
+                'message' => 'Datos recuperados correctamente'
+            ]);
+        }
 
     /**
      * Show the form for editing the specified resource.
@@ -87,13 +125,13 @@ class DispersionesDieselController extends Controller
     {
         //
     }
-    
-    public function descargarDispersion($id){
-            $data = DB::connection('dashboard')->select('CALL SP_GetPalntillaDispersionDiesel(?)', [$id]);
+
+    public function descargarDispersion($id, $noDispersion =  1){
+            $data = DB::connection('dashboard')->select('CALL SP_GetPalntillaDispersionDiesel(?, ?)', [$id, $noDispersion]);
                     return Excel::download(
                         new EasyGasExport($data),
                         'GenerarPedidoDeAltas.xlsx'
                     );
     }
-    
+
 }

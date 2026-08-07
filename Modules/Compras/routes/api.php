@@ -62,7 +62,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::resource('Tags', TagController::class);
     Route::resource('Compras', ComprasController::class);
 
-    
+
     Route::get('/Solicitudes/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
     Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
     Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores'])->name('Proveedores.getProveedores');
@@ -90,7 +90,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     //*Ruta para leer el XML
     Route::get('/leer-xml/{id}',[OrdenesComprasController::class, 'leerXML'])->name('OrdenesCompras.leerXML');
     Route::get('/get-data-xml/{id}', [DocumentosOrdenesComprasController::class, 'leerYProcesarXML'])->name('OrdenesCompras.leerYProcesarXML');
-    
+
     Route::get('/getUserByEmail/{correo}', [UsuariosController::class, 'getDataUsuario'])->name('Usuarios.getDataUsuario');
     Route::get('/getUserById/{correo}', [UsuariosController::class, 'showById'])->name('Usuarios.showById');
     Route::get('/getTecnicos', [UsuariosController::class, 'getTecnicos'])->name('Usuarios.getTecnicos');
@@ -122,24 +122,23 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::post('/CatalogoUnidades/DispersaToka', [CatUnidadesController::class, 'saveRecargaToka']);
      Route::post('/CatalogoUnidades/NotificarDispersion', [CatUnidadesController::class, 'notificarDispersion']);
     Route::get('/CatalogoUnidades/ParqueVehicularToka/{id}', [CatUnidadesController::class, 'getParqueWithToka']);
-    
-    Route::get('/DispersionesDiesel/Plantilla/{id}', [DispersionesDieselController::class, 'descargarDispersion']);
+
+    Route::get('/DispersionesDiesel/Plantilla/{id}/{noDipsersion}', [DispersionesDieselController::class, 'descargarDispersion']);
 
     Route::get('/CatalogoUnidades/{id}/{tipo}', [CatUnidadesController::class, 'show'])->name('CatUnidades.unidadesxtipo');
-    
 });
 
 Route::prefix('compras')->group(function(){
     Route::resource('SyncFacturas', SyncController::class);
 
     Route::post('/confirmacion-sincronizacion', [SyncController::class, 'confirmar']);
-    
+
     Route::get('/documentos/{id}/archivos',[SyncController::class, 'obtenerArchivos']);
 
     Route::post('/importar-autotanques', [CatUnidadesController::class, 'actualizarDatosPV']);
     Route::get('/get-seguimiento-solicitud/{idSolicitud}', [SolicitudesCompraController::class, 'getSeguimientoSolicitud'])->name('SolicitudesCompras.getSeguimientoSolicitud');
-    
-    //*Ruta para mostra archivos 
+
+    //*Ruta para mostra archivos
     Route::get('expedientes/{id}/{file}', [ExpedientesProveedoresController::class, 'getFile'])->name('ExpedientesProveedores.getFile');
     Route::get('cotizaciones/{id}/{file}', [CotizacionesController::class, 'getFile'])->name('Cotizaciones.getFile');
     Route::get('docsOrdenCompra/{id}/{file}', [DocumentosOrdenesComprasController::class, 'getFile'])->name('DocumentosOrdenesCompras.getFile');
@@ -161,9 +160,9 @@ Route::prefix('compras')->group(function(){
 
     Route::get('/ReportesCompras/GatoMensualConcentrado/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'getGastoEmpresasConcentrado'])->name('ReportesCompras.getGastoEmpresasConcentrado');
     Route::get('/ReportesCompras/GatoMensualDetalle/{intercompania}/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'getGastoEmpresaDetalle'])->name('ReportesCompras.getGastoEmpresaDetalle');
-    Route::get('/ReportesCompras/ComprasMacro/Concentrado', [ReportesComprasController::class, 'descargarConcentradoMacroGlobal'])->name('descargarConcentradoMacroGlobal');   
-    Route::get('/ReportesCompras/ComprasGenerales/Concentrado', [ReportesComprasController::class, 'descargarConcentradoGeneralesGlobal'])->name('descargarConcentradoGeneralGlobal');   
-    Route::get('/ReportesCompras/ComprasGeneralesTi/Concentrado', [ReportesComprasController::class, 'descargarConcentradoGeneralesTiGlobal'])->name('descargarConcentradoGeneralTiGlobal');   
+    Route::get('/ReportesCompras/ComprasMacro/Concentrado', [ReportesComprasController::class, 'descargarConcentradoMacroGlobal'])->name('descargarConcentradoMacroGlobal');
+    Route::get('/ReportesCompras/ComprasGenerales/Concentrado', [ReportesComprasController::class, 'descargarConcentradoGeneralesGlobal'])->name('descargarConcentradoGeneralGlobal');
+    Route::get('/ReportesCompras/ComprasGeneralesTi/Concentrado', [ReportesComprasController::class, 'descargarConcentradoGeneralesTiGlobal'])->name('descargarConcentradoGeneralTiGlobal');
 // Exportar solo una empresa
     Route::get('/gasto-empresa/{empresa}/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'exportEmpresa']);
     // Exportar concentrado
@@ -171,7 +170,7 @@ Route::prefix('compras')->group(function(){
     // Exportar multireporte
     Route::get('/gastos-mensuales/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'exportMulti']);
 
-    
+
     // Multi-hoja
     Route::get('/reportes/gastos/concentrado', [ReportesComprasController::class, 'descargarConcentrado']);
 
