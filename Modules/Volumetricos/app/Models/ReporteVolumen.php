@@ -17,9 +17,14 @@ class ReporteVolumen extends Model
         'id',
         'empresa',
         'ruta_archivo',
+        'ruta_plantilla',
+        'uuid_plantilla',
         'estaciones',
         'tipo',
+        'activo',
+        'fecha_reporte',
         'descripcion',
+        'comentarios',
         'created_at',
         'updated_at',
     ];
@@ -29,5 +34,12 @@ class ReporteVolumen extends Model
     protected static function newFactory(): ReporteVolumenFactory
     {
         //return ReporteVolumenFactory::new();
+    }
+
+    /**
+     * Función para obtener los datos activos
+     */
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
     }
 }

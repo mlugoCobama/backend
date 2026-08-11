@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Volumetricos\Http\Controllers\VolumetricosController;
+use Modules\Volumetricos\Http\Controllers\XlxsToJsonController;
 
 /*
  *--------------------------------------------------------------------------
@@ -16,4 +17,7 @@ use Modules\Volumetricos\Http\Controllers\VolumetricosController;
 
 Route::middleware(['auth:sanctum'])->prefix('volumetricos')->group(function () {
     Route::apiResource('volumetricos', VolumetricosController::class)->names('volumetricos');
+    Route::apiResource('generacion', XlxsToJsonController::class)->names('generacion');
 });
+
+Route::get('/reportes/{id}/descargar-excel', [VolumetricosController::class, 'descargarExcel']);

@@ -4,23 +4,39 @@ namespace Modules\Volumetricos\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use DateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Modules\Volumetricos\Models\ReporteVolumen;
+use Modules\Volumetricos\Services\FileService;
+use Modules\Volumetricos\Services\ParserJsonService;
+use Modules\Volumetricos\Transformers\ReportesVolumetricosResource;
 
 class VolumetricosController extends Controller
 {
+    protected $fileService;
+    protected $jsonService;
+
+    // Inyección de dependencias en el constructor
+    public function __construct(
+        FileService $fileService,
+        ParserJsonService $jsonService,
+    ) {
+        $this->fileService = $fileService;
+         $this->jsonService = $jsonService;
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $data =  ReporteVolumen::get();
+        $data =  ReporteVolumen::active()->latest()->get();
 
         return response()->json([
-            'data' => $data,
+            'data' => ReportesVolumetricosResource::collection($data),
             'message' => 'Datos recuperados correctamente',
             'status' => 'success',
         ]);
@@ -38,62 +54,68 @@ class VolumetricosController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-        {
-        $request->validate([
-            'empresa' => 'required',
-            // 'archivo' => 'required|file|mimes:json',
-            'tipo' => 'required',
-            'descripcion' => 'required',
-            'fecha_reporte' => 'required',
-        ]);
+    {
+       $request->validate([
+        'empresa' => 'required',
+        'archivo' => 'required|file',
+        'tipo' => 'required',
+        'descripcion' => 'required',
+        'fecha_reporte' => 'required|date',
+    ]);
 
-        // Obtener extensión original
-        $extension = $request->file('archivo')->getClientOriginalExtension();
+    $archivo = $request->file('archivo');
+    $extension = strtolower($archivo->getClientOriginalExtension());
 
-        // Convertir fecha a Carbon
-        $fechaReporte = Carbon::parse($request->fecha_reporte);
+    $rutaOriginal = $this->fileService->almacenarArchivo(
+        $archivo,
+        $request->empresa,
+        $request->tipo,
+        $request->fecha_reporte
+    );
 
-        // Obtener extensión
-        $extension = $request->file('archivo')
-            ->getClientOriginalExtension();
+    $rutaJson = null;
 
-        // Limpiar valores
-        $empresa = str_replace('-', '', $request->empresa);
-        $tipo = str_replace('-', '', $request->tipo);
+    if (in_array($extension, ['xlsx', 'xls'])) {
+        $contenido = $this->jsonService->generateJson($archivo);
 
-        // Nombre personalizado SIN guiones
-        $nombreArchivo =
-            'empresa_' .
-            $empresa . '_' .
-            $tipo . '_' .
-            $fechaReporte->format('Ymd') . '_' .
-            now()->format('His') .
-            '.' .
-            $extension;
+        $jsonTexto = is_string($contenido)
+            ? $contenido
+            : json_encode($contenido, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
-        // Guardar
-        $ruta = $request->file('archivo')
-            ->storeAs(
-                'volumenes',
-                $nombreArchivo,
-                'public'
-            );
+        $rutaJson = $this->fileService->almacenarContenido(
+            $jsonTexto,
+            $request->empresa,
+            $request->tipo,
+           $this->parserFecha($request->fecha_reporte) ,
+            'json'
+        );
+    } else if ($extension === 'json') {
+        $rutaJson = $rutaOriginal;
+    }
 
+    $reporte = ReporteVolumen::create([
+        'empresa' => $request->empresa,
+        'ruta_archivo' => $rutaJson,
+        'ruta_plantilla' => $rutaOriginal,
+        'tipo' => $request->tipo,
+        'uuid_plantilla' => null,
+        'descripcion' => $request->descripcion,
+        'fecha_reporte' => $request->fecha_reporte,
+        'comentarios' => $request->comentarios ?? null
+    ]);
 
+    return response()->json([
+        'success' => true,
+        'message' => 'Reporte guardado correctamente',
+        'data' => $reporte
+    ], 201);
+    }
 
-        // Guardar en BD
-        ReporteVolumen::create([
-            'empresa' => $request->empresa,
-            'ruta_archivo' => $ruta,
-            'tipo' => $request->tipo,
-            'descripcion' => $request->descripcion
-        ]);
+    private function parserFecha($fechaIso){
+        $fecha = new DateTime($fechaIso);
+        $fechaFormateada = $fecha->format('d-m-Y');
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Guardado correctamente',
-            'ruta' => $ruta
-        ]);
+        return $fechaFormateada;
     }
 
     /**
@@ -101,7 +123,7 @@ class VolumetricosController extends Controller
      */
     public function show($id)
     {
-        $reporte = ReporteVolumen::find($id);
+    $reporte = ReporteVolumen::find($id);
 
     if (!$reporte) {
         return response()->json([
@@ -159,16 +181,109 @@ class VolumetricosController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id): RedirectResponse
-    {
-        //
-    }
+    public function update(Request $request, $id)
+        {
+            $reporte = ReporteVolumen::findOrFail($id);
+
+            $request->validate([
+                'empresa' => 'required',
+                'archivo' => 'nullable|file',
+                'tipo' => 'required',
+                'descripcion' => 'required',
+                'fecha_reporte' => 'required|date',
+            ]);
+
+            $rutaOriginal = $reporte->ruta_plantilla;
+            $rutaJson = $reporte->ruta_archivo;
+
+            if ($request->hasFile('archivo')) {
+
+                if ($reporte->ruta_plantilla && Storage::disk('public')->exists($reporte->ruta_plantilla)) {
+                    Storage::disk('public')->delete($reporte->ruta_plantilla);
+                }
+                if ($reporte->ruta_archivo && $reporte->ruta_archivo !== $reporte->ruta_plantilla && Storage::disk('public')->exists($reporte->ruta_archivo)) {
+                    Storage::disk('public')->delete($reporte->ruta_archivo);
+                }
+
+                $archivo = $request->file('archivo');
+                $extension = strtolower($archivo->getClientOriginalExtension());
+
+                $rutaOriginal = $this->fileService->almacenarArchivo(
+                    $archivo,
+                    $request->empresa,
+                    $request->tipo,
+                    $request->fecha_reporte
+                );
+
+                if (in_array($extension, ['xlsx', 'xls'])) {
+                    $contenido = $this->jsonService->generateJson($archivo);
+
+                    $jsonTexto = is_string($contenido)
+                        ? $contenido
+                        : json_encode($contenido, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+                    $rutaJson = $this->fileService->almacenarContenido(
+                        $jsonTexto,
+                        $request->empresa,
+                        $request->tipo,
+                        $this->parserFecha($request->fecha_reporte),
+                        'json'
+                    );
+                } else if ($extension === 'json') {
+                    $rutaJson = $rutaOriginal;
+                }
+            }
+
+            $reporte->update([
+                'empresa' => $request->empresa,
+                'ruta_archivo' => $rutaJson,
+                'ruta_plantilla' => $rutaOriginal,
+                'tipo' => $request->tipo,
+                'descripcion' => $request->descripcion,
+                'fecha_reporte' => $request->fecha_reporte,
+                'comentarios' => $request->comentarios ?? null
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Reporte actualizado correctamente',
+                'data' => $reporte
+            ], 200);
+        }
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy($id)
     {
-        //
+        $registro =  ReporteVolumen::find($id);
+        if($registro){
+            $registro->activo = 0;
+            $registro->save();
+        }
+
+        return response()->json([
+            'data' => [],
+            'status' => 'success',
+            'message' => 'Registro eliminado correctamente'
+        ]);
     }
+
+
+public function descargarExcel($id)
+{
+    $reporte = ReporteVolumen::findOrFail($id);
+
+    if (!$reporte->ruta_plantilla || !Storage::disk('public')->exists($reporte->ruta_plantilla)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'El archivo Excel no existe en el servidor.'
+        ], 404);
+    }
+
+    $nombreDescarga = pathinfo($reporte->ruta_plantilla, PATHINFO_BASENAME);
+    $rutaAbsoluta = Storage::disk('public')->path($reporte->ruta_plantilla);
+
+    return response()->download($rutaAbsoluta, $nombreDescarga);
+}
 }

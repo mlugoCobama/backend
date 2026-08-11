@@ -142,5 +142,10 @@ Se actualiza el sp para obtener comisiones
 ### RENAULT
 * **Citas de servicio**  Se integra soporte soporte para carga de distintos tipos de archivo y se coloca visible el nombre de agencia
 ---
+## **Fecha de liberación:**- 11 de agosto de 2026
 
+### Volumtricos
+* **Convertir excel a json:** Se intrega la funcionalidad de poder convertir un formato de excel a un json valido
+Se agrengan nuevos valores, como un nombre de empresa legibe y fecha de periodo reportado
+Se integra ctualizacion de registros y archivos ademas de borrado fisico
 
