@@ -52,6 +52,9 @@ class CatHardwareController extends Controller
     public function index()
     {
         $data = $this->catHardware->usuarios()->get();
+
+
+
         return response()->json([
             'success' => true,
             'message' => '',
@@ -93,10 +96,11 @@ class CatHardwareController extends Controller
     public function show($id)
     {
         $data = $this->hwService->getDevicesEmpresa($id);
-        $formatData = [];
+        // $formatData = [];
         return response()->json([
             'status' => 'success',
             'data2' => $data,
+            'devices' => count($data),
             'message' => 'Datos recuperados correctamente'
         ]);
     }

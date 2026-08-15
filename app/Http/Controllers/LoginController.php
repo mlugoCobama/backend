@@ -66,7 +66,7 @@ class LoginController extends Controller
             // ->get()
             ;
 
-        $permisos_as = 
+        $permisos_as =
             DB::table('permissions as p')
                 ->join('permission_has_puesto as pp', 'p.id', '=', 'pp.permiso_id')
                 ->join('cap_cataologo_puestos as cp', function ($join) {
@@ -79,9 +79,9 @@ class LoginController extends Controller
                 })
                 ->where('up.id_usuario', '=', $id)
                 ->select('p.name', 'p.guard_name')
-            ; 
+            ;
 
-        $union = $permisos->union($permisos_as)->get();    
+        $union = $permisos->union($permisos_as)->get();
         return $union;
 
     }
@@ -92,39 +92,49 @@ class LoginController extends Controller
     }
 
     public function loginMobile(Request $request)
-{
-    $fields = $request->validate([
-        'email' => 'required',
-        'password' => 'required',
-    ]);
+    {
+        $fields = $request->validate([
+            'email' => 'required',
+            'password' => 'required',
+        ]);
 
-    $user = User::where('name', $fields['email'])->first();
+        $user = User::where('name', $fields['email'])->first();
 
-     $validPassword =
-         $user &&
-         (
-             md5($fields['password']) === $user->password ||
-             sha1($fields['password']) === $user->password ||
-             Hash::check($fields['password'], $user->password)
-         );
+        $validPassword =
+            $user &&
+            (
+                md5($fields['password']) === $user->password ||
+                sha1($fields['password']) === $user->password ||
+                Hash::check($fields['password'], $user->password)
+            );
 
-     if (!$validPassword) {
-         return response()->json([
-             'success' => false,
-             'error' => 'Credenciales incorrectas'
-         ], 401);
-     }
+        if (!$validPassword) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Credenciales incorrectas'
+            ], 401);
+        }
 
-    $token = $user->createToken($fields['email'], ['mobile'])->plainTextToken;
-    $usuarioActivo = DB::connection('intranet')->select("call SOPORTEZM.SP_GetUsuarioEmail(?)", [$fields['email']]);
-    
-    return response()->json([
-        'success' => true,
-        'token' => $token,
-        'role' => new AuthResource($user),
-        'ip' => $request->ip(),
-        'usuarioActivo' => $usuarioActivo,
-    ]);
-}
+        $token = $user->createToken($fields['email'], ['mobile'])->plainTextToken;
+        $usuarioActivo = DB::connection('intranet')->select("call SOPORTEZM.SP_GetUsuarioEmail(?)", [$fields['email']]);
+        $permisos = $this->getPermisosMovil($user->id);
+        return response()->json([
+            'success' => true,
+            'token' => $token,
+            'role' => new AuthResource($user),
+            'ip' => $request->ip(),
+            'usuarioActivo' => $usuarioActivo,
+            "permissions" => $permisos
+        ]);
+    }
+
+    private function getPermisosMovil($id)
+    {
+        return DB::table('permissions as p')
+            ->join('model_has_permissions as mp', 'p.id', '=', 'mp.permission_id')
+            ->where('p.sistema', '=', 4)
+            ->where('mp.model_id', '=', $id)
+            ->pluck('p.name');
+    }
 
 }

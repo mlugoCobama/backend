@@ -135,156 +135,110 @@ class VisorCitasController extends Controller
      */
     public function store(Request $request)
     {
-        try {
-            /**
-             * Insertamos la entrada
-             */
-            $entrada = RenEntradaVehiculo::create([
-                "fecha" => date('Y-m-d H:i:s'),
-                "folio" => $request->form['num_entrada'],
-                "num_entrada" => $request->form['num_entrada'],
-                "ren_citas_servicio_id" => $request->form['citas_servicio_id'],
-            ]);
-            /**
-             * Insertamos el inventario del vehiculo
-             */
-            RenInventarioVehiculo::create([
-                'antena' => $request->form['antena'],
-                'espejo' => $request->form['espejo'],
-                'tapones' => $request->form['tapones'],
-                'rines' => $request->form['rines'],
-                'tapon_gasolina' => $request->form['tapon_gasolina'],
-                'radio' => $request->form['radio'],
-                'encendedor' => $request->form['encendedor'],
-                'tapetes' => $request->form['tapetes'],
-                'llanta_refaccion' => $request->form['llanta_refaccion'],
-                'herramientas' => $request->form['herramientas'],
-                'reflejantes' => $request->form['reflejantes'],
-                'extinguidor' => $request->form['extinguidor'],
-                'cables_corriente' => $request->form['cables_corriente'],
-                'gato' => $request->form['gato'],
-                'objetos_valor' => $request->form['objetos_valor'],
-                'otros' => $request->form['otros'],
-                'vestiduras' => $request->form['vestiduras'],
-                'cristales' => $request->form['cristales'],
-                'ren_entrada_vehiculo_id' => $entrada->id,
-                'nivel_gasolina' => $request->form['nivel_gasolina'],
-            ]);
 
-            foreach ($request->trabajos as $trabajo) {
+        DB::beginTransaction();
+        try {
+            // 2. Guardar o actualizar la Cita/Servicio
+
+            $entrada  = $this->storeEntrada($request->input('folio'), $request->input('num_entrada'), $request->input('citas_servicio_id'));
+
+            $inventario = $this->storeInventario(
+            $entrada->id,
+            $request->input('antena'),              $request->input('espejo'),              $request->input('tapones'),
+            $request->input('rines'),               $request->input('tapon_gasolina'),      $request->input('radio'),
+            $request->input('encendedor'),          $request->input('tapetes'),             $request->input('llanta_refaccion'),
+            $request->input('herramientas'),        $request->input('reflejantes'),         $request->input('extinguidor'),
+            $request->input('cables_corriente'),    $request->input('gato'),                $request->input('objetos_valor'),
+            $request->input('otros'),               $request->input('vestiduras'),          $request->input('cristales'),
+            $request->input('nivel_gasolina')
+            );
+
+
+            if($request->has('trabajos') && !empty($request->input('trabajos'))){
+            foreach ($request->input('trabajos') as $trabajo) {
                 RenDetalleTrabajoSolicitado::create([
                 'descripcion' => $trabajo['descripcion'],
                 'partes' => $trabajo['partes'],
                 'ren_entrada_vehiculo_id' => $entrada->id,
                 ]);
             }
+            }
 
-            foreach ($request->garantias as $garantia) {
+
+            if($request->has('garantias') && !empty($request->input('garantias'))){
+               foreach ($request->input('garantias') as $garantia) {
                 RenDetalleGarantia::create([
                 'descripcion' => $garantia['descripcion'] ,
                 'tiempo' => $garantia['tiempo'],
                 'ren_entrada_vehiculo_id' => $entrada->id,
                 ]);
             }
+            }
 
-            // foreach( $request->fotos as $foto) {
 
-            //     $image = $foto['webviewPath'];  // your base64 encoded
-            //     $image = str_replace('data:image/jpeg;base64,', '', $image);
-            //     $image = str_replace(' ', '+', $image);
-            //     Storage::disk('local')->put("renault/citas_servicio/".$foto['filepath'], base64_decode($image));
-            //     /**
-            //      * Insertamos los testigos fotograficos
-            //      */
-            //     RenTestigosFotograficos::create([
-            //         "folio" => $request->form['folio'],
-            //         "ruta" => "renault/citas_servicio/",
-            //         "nombre" => basename($foto['filepath']),
-            //         'ren_entrada_vehiculo_id' => $entrada->id
-            //     ]);
 
-            // }
 
-            foreach ($request->fotos as $foto) {
-                    $webviewPath = $foto['webviewPath'];
-                    $filepath = $foto['filepath']; // nombre de archivo con extensión, ej: 14762_..._x.png
+            // 3. Procesar y guardar cada foto enviada
+            if ($request->has('fotos')) {
+                foreach ($request->input('fotos') as $index => $fotoData) {
+                    if ($request->hasFile("fotos.{$index}.file")) {
+                        $archivo = $request->file("fotos.{$index}.file");
 
-                    $isDataUri = preg_match('/^data:([\w\/\+\-]+);base64,(.*)$/s', $webviewPath, $matches);
+                        $extension = $archivo->getClientOriginalExtension();
+                        $nombreArchivo = $request->input('folio') . '_' .$fotoData['categoria'].'_'. $index . '.' . $extension;
+                        $path = $archivo->storeAs('renault/citas_servicio', $nombreArchivo, 'local');
 
-                    if ($isDataUri) {
-                        // --- Imagen (o video) enviado como data URI base64 ---
-                        $mimeType = $matches[1];   // ej: image/png, image/jpeg, video/mp4
-                        $base64Data = $matches[2];
-
-                        // Corrige espacios que a veces reemplazan el '+' al transmitir por URL/form
-                        $base64Data = str_replace(' ', '+', $base64Data);
-
-                        $decoded = base64_decode($base64Data, true);
-
-                        if ($decoded === false || strlen($decoded) === 0) {
-                            Log::warning("No se pudo decodificar base64 para archivo: {$filepath}");
-                            continue; // evitamos guardar un archivo corrupto/vacío
-                        }
-
-                        Storage::disk('local')->put(
-                            "renault/citas_servicio/" . $filepath,
-                            $decoded
-                        );
-
+                        // Crear registro en la tabla de fotos
+                        RenTestigosFotograficos::create([
+                            'folio'            => $request->input('folio'),
+                            'nombre' =>             $nombreArchivo,
+                            'ruta'             => 'renault/citas_servicio/',
+                            'ren_entrada_vehiculo_id' => $entrada->id,
+                            'categoria'        => $fotoData['categoria'],
+                            'media_type'       => $fotoData['mediaType'],
+                            'descripcion'      => $fotoData['descripcion'] ?? null,
+                        ]);
                     }
-                    //  elseif (filter_var($webviewPath, FILTER_VALIDATE_URL) || Str::startsWith($webviewPath, ['http://', 'https://', 'blob:'])) {
-                    //     // --- Caso: viene como URL/blob (ej. video con convertFileSrc) ---
-                    //     // Si tu frontend en su lugar sube el archivo real por multipart, este bloque
-                    //     // no debería ejecutarse; ver nota más abajo sobre el enfoque recomendado.
-                    //     Log::warning("webviewPath es una URL/blob, no un data URI, no se puede decodificar en backend: {$filepath}");
-                    //     continue;
-
-                    // }
-                    else {
-                        Log::warning("Formato de webviewPath no reconocido para archivo: {$filepath}");
-                        continue;
-                    }
-
-                    RenTestigosFotograficos::create([
-                        "folio" => $request->form['folio'],
-                        "ruta" => "renault/citas_servicio/",
-                        "nombre" => basename($filepath),
-                        'ren_entrada_vehiculo_id' => $entrada->id
-                    ]);
                 }
-            /**
-             * Guardarmos la firma
-             */
-            $image = str_replace('data:image/png;base64,', '', $request->firma);
-            $image = str_replace(' ', '+', $image);
-            Storage::disk('local')->put("renault/citas_servicio/".$request->form['folio']."_firma.png", base64_decode($image));
+            }
 
-            RenCitasServicio::where('id', $request->form['citas_servicio_id'])->update([
+            $image = str_replace('data:image/png;base64,', '', $request->input('firma'));
+            $image = str_replace(' ', '+', $image);
+            Storage::disk('local')->put("renault/citas_servicio/".$request->input('folio')."_firma.png", base64_decode($image));
+
+            RenCitasServicio::where('id', $request->input('citas_servicio_id'))->update([
                 'estatus' => 'AT',
-                'email' => $request->form['correo'],
-                'telefono' => $request->form['telefono'],
+                'email' =>$request->input('correo'),
+                'telefono' =>$request->input('telefono'),
                 ]);
 
+            DB::commit();
 
             return response()->json([
                 'status' => true,
-                'message' => 'Se ha guardado correctamente la información',
-                'data' => []
-            ]);
+                'message' => 'Servicio y fotografías procesados correctamente.',
+                // 'cita_id' => $cita->id
+            ], 200);
 
-        } catch (Throwable $e) {
-            report($e);
-
+        } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'status' => false,
-                'message' => 'Se ha presentado un problema al guardar la información',
-                'data' => []
-            ]);
+                'error'   => 'Error al procesar la solicitud: ' . $e->getMessage()
+            ], 500);
         }
-
-
     }
 
+    public function storeEntrada($folio, $noEntrada, $idCita){
+        $entrada = RenEntradaVehiculo::create([
+                "fecha" => date('Y-m-d H:i:s'),
+                "folio" => $folio,
+                "num_entrada" => $noEntrada,
+                "ren_citas_servicio_id" => $idCita,
+            ]);
+
+        return $entrada;
+    }
     /**
      * Show the specified resource.
      */
@@ -449,5 +403,33 @@ class VisorCitasController extends Controller
 
     }
 
+    public function storeInventario( $id_entrada, $antena, $espejo, $tapones, $rines, $tapon_gasolina, $radio,
+    $encendedor, $tapetes, $llanta_refa, $herramientas, $reflejantes, $extinguidor, $cables_corriente, $gato, $objetos_valor,
+       $otros, $vestiduras, $cristales, $nivel_gasolina ){
+       $inventario = RenInventarioVehiculo::create([
+                'antena' =>$antena ? 1 : 0,
+                'espejo' => $espejo? 1 : 0,
+                'tapones' => $tapones? 1 : 0,
+                'rines' => $rines? 1 : 0,
+                'tapon_gasolina' => $tapon_gasolina? 1 : 0,
+                'radio' => $radio? 1 : 0,
+                'encendedor' => $encendedor? 1 : 0,
+                'tapetes' => $tapetes? 1 : 0,
+                'llanta_refaccion' => $llanta_refa? 1 : 0,
+                'herramientas' => $herramientas? 1 : 0,
+                'reflejantes' => $reflejantes? 1 : 0,
+                'extinguidor' => $extinguidor? 1 : 0,
+                'cables_corriente' => $cables_corriente? 1 : 0,
+                'gato' => $gato ? 1 : 0,
+                'objetos_valor' => $objetos_valor? 1 : 0,
+                'otros' => $otros ?? 0,
+                'vestiduras' => $vestiduras ?? 0,
+                'cristales' => $cristales ?? 0,
+                'ren_entrada_vehiculo_id' => $id_entrada,
+                'nivel_gasolina' => $nivel_gasolina ?? 0
+            ]);
+
+        return $inventario;
+    }
 
 }

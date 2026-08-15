@@ -18,6 +18,9 @@ class TestigosFotograficosResource extends JsonResource
             'imagen' => url('api/storage/'.$this->ruta.$this->nombre),
             'nombre' => $this->nombre,
             'ren_entrada_vehiculo_id' => $this->ren_entrada_vehiculo_id,
+            'media_type' => $this->media_type,
+            'categoria' => $this->categoria,
+            'descripcion' => $this->descripcion
         ];
     }
 }

@@ -96,7 +96,8 @@ class ParserJsonService
                 'ValorNumerico'  => round($colRecepciones->sum(fn($i) => (float)($i['VolumenDocumentado'] ?? 0)), 4),
                 'UnidadDeMedida' => $unidadMedida,
             ],
-            'TotalDocumentosMes'             => $colRecepciones->pluck('CFDI')->filter()->count(),
+            // 'TotalDocumentosMes'             => $colRecepciones->pluck('CFDI')->filter()->count(),
+            'TotalDocumentosMes' => $colRecepciones->count(),
             'ImporteTotalRecepcionesMensual' => round($colRecepciones->sum(fn($i) => (float)($i['PrecioVentaOCompraOContrap'] ?? 0)), 4),
             'Complemento'                     => $complementosRecepciones,
         ];
@@ -114,7 +115,8 @@ class ParserJsonService
                 'ValorNumerico'  => round($colEntregas->sum(fn($i) => (float)($i['VolumenDocumentado'] ?? 0)), 4),
                 'UnidadDeMedida' => $unidadMedida,
             ],
-            'TotalDocumentosMes'          => $colEntregas->pluck('CFDI')->filter()->count(),
+            // 'TotalDocumentosMes'          => $colEntregas->pluck('CFDI')->filter()->count(),
+            'TotalDocumentosMes' => $colEntregas->count(),
             'ImporteTotalEntregasMes' => round($colEntregas->sum(fn($i) => (float)($i['PrecioVentaOCompraOContrap'] ?? 0)), 4),
             'Complemento'                 => $complementosEntregas,
         ];
@@ -125,9 +127,9 @@ class ParserJsonService
         $recepciones = $nodeRecepciones['SumaVolumenRecepcionMes']['ValorNumerico'] ?? 0;
 
         // abs() convierte cualquier resultado negativo en positivo
-        $diferenciaPositiva = abs($entregas - $recepciones);
+        $diferenciaPositiva = ( $recepciones - $entregas);
 
-        $volExistecniasMes = $volumenExistencias - $diferenciaPositiva;
+        $volExistecniasMes = $volumenExistencias + $diferenciaPositiva;
 
         return [
             'ClaveProducto'           => $claveProducto,
@@ -157,6 +159,13 @@ class ParserJsonService
 
         // CASO 1: Existe CFDI
         if ($cfdi !== '') {
+            $nombre = trim(
+                (string)($item['NombreClienteOProveedor'] ?? '')
+            );
+
+            if (strtoupper($nombre) === 'VENTA AL PUBLICO EN GENERAL') {
+                $nombre = 'Público en General';
+            }
             return [
 
                 'TipoComplemento' => $tipoComplemento,
@@ -164,7 +173,7 @@ class ParserJsonService
                     [
                         'RfcClienteOProveedor' => (string)($item['RfcClienteOProveedor'] ?? ''),
 
-                        'NombreClienteOProveedor' => (string)($item['NombreClienteOProveedor'] ?? ''),
+                        'NombreClienteOProveedor' => (string)($nombre),
 
                         'CFDIs' => [
                             [
@@ -174,6 +183,7 @@ class ParserJsonService
                                 'FechaYHoraTransaccion' => (string)($item['FechaYHoraTransaccion'] ?? ''),
                                 'VolumenDocumentado' => [
                                     'ValorNumerico' => (float) round($item['VolumenDocumentado'] ?? 0, 4),
+                                    // 'ValorNumerico' => (float) $item['VolumenDocumentado'] ?? 0,
                                     'UnidadDeMedida' => $unidadMedida,
                                 ],
                             ]
@@ -186,7 +196,10 @@ class ParserJsonService
         // CASO 2: NO existe CFDI
         return [
             'TipoComplemento' => $tipoComplemento,
-            'Aclaracion' => $aclaracion . '. Volumen: ' . (float)round(($item['VolumenDocumentado'] ?? 0)) . ' Litros',
+            'Aclaracion' => $aclaracion .
+                                '. Volumen: ' .
+                                self::formatVolumen($item['VolumenDocumentado'] ?? 0) .
+                                ' Litros',
             // 'VolumenDocumentado' => [
             //     'ValorNumerico' =>
             //         ,
@@ -195,5 +208,18 @@ class ParserJsonService
             //         $unidadMedida,
             // ],
         ];
+    }
+
+    public function buildNodeCaracter($permisos){
+
+
+    }
+
+    private static function formatVolumen($valor): string
+    {
+        return rtrim(
+            rtrim(number_format((float)$valor, 4, '.', ''), '0'),
+            '.'
+        );
     }
 }

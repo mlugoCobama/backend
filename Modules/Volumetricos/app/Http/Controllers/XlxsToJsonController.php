@@ -11,18 +11,22 @@ use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\ToArray;
 use Modules\Volumetricos\Services\ParserJsonService;
+use Modules\Volumetricos\Services\ParserXmlService;
 use SimpleXMLElement;
 
 class XlxsToJsonController extends Controller
 {
 
     protected $parserJson;
+    protected $parserXml;
 
     // Inyección de dependencias en el constructor
     public function __construct(
         ParserJsonService $parserJson,
+        ParserXmlService $parserXml,
     ) {
         $this->parserJson = $parserJson;
+        $this->parserXml = $parserXml;
     }
 
     /**
@@ -121,5 +125,18 @@ private function arrayToXml(array $data, SimpleXMLElement &$xmlData)
         //
     }
 
+    public function descargarXml(Request $request, ParserXmlService $service)
+    {
+        $file = $request->file('archivo');
+
+        $xmlContent = $service->generateXml($file);
+
+        $nombreArchivo = 'reporte_volumetrico_' . now()->format('Ymd_His') . '.xml';
+
+        return response($xmlContent, 200, [
+            'Content-Type'        => 'application/xml',
+            'Content-Disposition' => 'attachment; filename="' . $nombreArchivo . '"',
+        ]);
+    }
 
 }

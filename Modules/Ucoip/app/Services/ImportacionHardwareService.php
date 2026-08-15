@@ -3,6 +3,8 @@
 namespace Modules\Ucoip\Services;
 
 use Illuminate\Support\Facades\DB;
+use Modules\Ucoip\Models\CatEmpresas;
+use Modules\Ucoip\Models\HardwarePcModel;
 
 class ImportacionHardwareService
 {
@@ -24,10 +26,77 @@ class ImportacionHardwareService
             foreach ($rows as $row) {
 
                 $this->procesarFila($row, $division);
-
+                    // $this->updateEmpresa($row, $division);
             }
 
         });
+    }
+
+    private function updateEmpresa(array $row, $division){
+        if (
+            empty($row['Puesto']) ||
+            empty($row['Agencia'])
+        ) {
+            return;
+        }
+
+        $idEmpresa = $this->findEmpresa($row['Agencia'], $division );
+
+        $harwarePc = $this->updateHardware($row['Marca_CPU'], $row['No_Serie_Cpu'], $idEmpresa);
+        $harwareMonitor = $this->updateHardware($row['Marca_Monitor'], $row['Serial_Monitor'], $idEmpresa);
+        $harwareTeclado = $this->updateHardware($row['Marca_Teclado'], $row['Serial_Teclado'], $idEmpresa);
+        $harwareMouse = $this->updateHardware($row['Marca_Mouse'],  $row['Serial_Mouse'], $idEmpresa);
+        $harwareUps = $this->updateHardware($row['Marca_UPS'], $row['Serial_UPS'], $idEmpresa);
+        $harwareTelefono = $this->updateHardware($row['Marca_Telefono'], $row['Serial_Telefono'], $idEmpresa);
+        $impresora = $this->updateHardware($row['Marca_Impresora'], $row['Serie_Impresora'], $idEmpresa);
+    }
+
+    public function updateHardware($marca, $no_serie, $idEmpresa)
+    {
+
+
+        // Catalogo de series  genericos o que pueden generar redundancia
+        $seriesInvalidas = ['N/D', 'N/A', '0000000', 'SIN SERIE', 'PENDIENTE','', 'N/H'];
+        $marcasInvalidas = ['N/D', 'N/A', 'GENERICO', 'SIN MARCA', 'DESCONOCIDO','', 'N/H'];
+
+        $marcaRecibida = trim(mb_strtoupper($marca ?? ''));
+        $serieRecibida = trim(mb_strtoupper($no_serie ?? ''));
+
+        $seriesInvalidasUpper = array_map('mb_strtoupper', $seriesInvalidas);
+        $marcasInvalidasUpper = array_map('mb_strtoupper', $marcasInvalidas);
+
+        $marcaEsValida = !empty($marcaRecibida) && !in_array($marcaRecibida, $marcasInvalidasUpper);
+        $serieEsValida = !empty($serieRecibida) && !in_array($serieRecibida, $seriesInvalidasUpper);
+
+        //Si ninguno de los dos es valido se retorna un false
+        if (!$marcaEsValida && !$serieEsValida) {
+            return false;
+        }
+
+        // Validamos que no exista mas hardware con ese mismo numero de serie
+        if (!empty($no_serie) && $serieEsValida) {
+            $existe = HardwarePcModel::where('no_serie', $no_serie)
+            // ->where('cat_empresa_id', 10)
+            // ->where('marca', $marca)
+            ->first();
+            if ($existe) {
+                $existe->cat_empresa_id = $idEmpresa;
+                $existe->save();
+            }
+        }
+
+    }
+
+
+
+    private function findEmpresa($nombreAgencia, $division){
+        $empresa = CatEmpresas::where('nombre', 'like', '%'.$nombreAgencia.'%')->where('division',$division)->latest()->first();
+
+        if($empresa){
+            return $empresa->id;
+        }
+
+        return false;
     }
 
     private function procesarFila(array $row, int $division): void

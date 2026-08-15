@@ -209,7 +209,7 @@ class OrdenServicioPdfController extends Controller
         /**
          * Datos de seguimiento
          */
-        
+
 
         $pdf->SetXY(162, 104.3);
         $pdf->Write(0, $cita->empleado_id);
@@ -226,7 +226,7 @@ class OrdenServicioPdfController extends Controller
 
 
         /*-----------------------------------------------------
-            * Fila de la tabla  de detalles                                    
+            * Fila de la tabla  de detalles
             -----------------------------------------------------*/
             $pdf->SetFont('Arial', 'B', 5.5);
 
@@ -242,11 +242,11 @@ class OrdenServicioPdfController extends Controller
                 $pdf->Cell(90, 4.5, $descripcionTrabajo, 0, 0, 'C');
                 $pdf->Cell(35, 4.5, $partes, 0, 0, 'C');
                 $y += 5;
-                $pdf->SetY($y); 
+                $pdf->SetY($y);
             }
 
             /*-----------------------------------------------------
-            * Fila de la tabla  de detalles                                    
+            * Fila de la tabla  de detalles
             -----------------------------------------------------*/
             $pdf->SetFont('Arial', 'B', 5.5);
 
@@ -261,9 +261,9 @@ class OrdenServicioPdfController extends Controller
                 $pdf->Cell(90, 4.5, $descripcionGarantia, 0, 0, 'C');
                 $pdf->Cell(25, 4.5, $partes, 0, 0, 'C');
                 $y += 5;
-                $pdf->SetY($y); 
+                $pdf->SetY($y);
             }
-        
+
 
         // Página 2
         $pdf->AddPage();
@@ -280,17 +280,27 @@ class OrdenServicioPdfController extends Controller
 
         $cols       = 2;
         $rows       = 3;
+
         $maxWidth   = 90;
-        $maxHeight  = 75;
+        $maxHeight  = 62; // Altura máxima de la imagen
+
+        $descHeight = 10; // Espacio para descripción
+
         $marginX    = 10;
         $marginY    = 30;
+
         $gapX       = 5;
-        $gapY       = 5;
+        $gapY       = 8;
+
         $imgsPerPage = $cols * $rows; // 6
 
         $count = 0;
+
         foreach ($imagenes as $obj) {
-            $rutaOriginal = storage_path("app/renault/citas_servicio/$obj->nombre");
+
+            $rutaOriginal = storage_path(
+                "app/renault/citas_servicio/$obj->nombre"
+            );
 
             if (!file_exists($rutaOriginal)) {
                 continue;
@@ -298,13 +308,14 @@ class OrdenServicioPdfController extends Controller
 
             // Detectar tipo REAL del archivo
             $info = getimagesize($rutaOriginal);
+
             if (!$info) {
                 continue;
             }
 
             $mimeType = $info['mime'];
 
-            $imagen = match($mimeType) {
+            $imagen = match ($mimeType) {
                 'image/png'  => imagecreatefrompng($rutaOriginal),
                 'image/jpeg' => imagecreatefromjpeg($rutaOriginal),
                 'image/webp' => imagecreatefromwebp($rutaOriginal),
@@ -316,57 +327,156 @@ class OrdenServicioPdfController extends Controller
                 continue;
             }
 
-            // PNG con transparencia → fondo blanco antes de convertir a JPEG
+            // PNG con transparencia → fondo blanco
             if ($mimeType === 'image/png') {
-                $w     = imagesx($imagen);
-                $h     = imagesy($imagen);
+
+                $w = imagesx($imagen);
+                $h = imagesy($imagen);
+
                 $fondo = imagecreatetruecolor($w, $h);
-                $blanco = imagecolorallocate($fondo, 255, 255, 255);
+
+                $blanco = imagecolorallocate(
+                    $fondo,
+                    255,
+                    255,
+                    255
+                );
+
                 imagefill($fondo, 0, 0, $blanco);
-                imagecopy($fondo, $imagen, 0, 0, 0, 0, $w, $h);
+
+                imagecopy(
+                    $fondo,
+                    $imagen,
+                    0,
+                    0,
+                    0,
+                    0,
+                    $w,
+                    $h
+                );
+
                 imagedestroy($imagen);
+
                 $imagen = $fondo;
             }
 
-            // Calcular proporción para que quepa en la celda
-            $realW  = imagesx($imagen);
-            $realH  = imagesy($imagen);
-            $scaleW = $maxWidth  / $realW;
+            // Dimensiones reales
+            $realW = imagesx($imagen);
+            $realH = imagesy($imagen);
+
+            // Calcular proporción
+            $scaleW = $maxWidth / $realW;
             $scaleH = $maxHeight / $realH;
-            $scale  = min($scaleW, $scaleH);
-            $drawW  = round($realW * $scale);
-            $drawH  = round($realH * $scale);
+
+            $scale = min($scaleW, $scaleH);
+
+            $drawW = round($realW * $scale);
+            $drawH = round($realH * $scale);
 
             // Guardar JPEG temporal
-            $tmpPath = tempnam(sys_get_temp_dir(), 'img') . '.jpg';
-            imagejpeg($imagen, $tmpPath, 90);
+            $tmpPath = tempnam(
+                sys_get_temp_dir(),
+                'img'
+            ) . '.jpg';
+
+            imagejpeg(
+                $imagen,
+                $tmpPath,
+                90
+            );
+
             imagedestroy($imagen);
 
             // Nueva página cada 6 imágenes
             if ($count % $imgsPerPage === 0) {
+
                 $pdf->AddPage();
-                $pdf->SetFont('Arial', 'B', 16);
-                $pdf->Cell(0, 10, 'Anexos', 0, 1, 'C');
+
+                $pdf->SetFont(
+                    'Arial',
+                    'B',
+                    16
+                );
+
+                $pdf->Cell(
+                    0,
+                    10,
+                    'Anexos',
+                    0,
+                    1,
+                    'C'
+                );
             }
 
-            // Calcular posición en la cuadrícula
+            // Posición dentro de la página
             $posEnPagina = $count % $imgsPerPage;
-            $col         = $posEnPagina % $cols;
-            $row         = floor($posEnPagina / $cols);
 
-            // Centrar imagen dentro de su celda
-            $offsetX = round(($maxWidth  - $drawW) / 2);
-            $offsetY = round(($maxHeight - $drawH) / 2);
+            $col = $posEnPagina % $cols;
+            $row = floor($posEnPagina / $cols);
 
-            $x = $marginX + $col * ($maxWidth  + $gapX) + $offsetX;
-            $y = $marginY + $row * ($maxHeight + $gapY) + $offsetY;
+            // Posición base de la celda
+            $cellX = $marginX +
+                $col * ($maxWidth + $gapX);
 
-            $pdf->Image($tmpPath, $x, $y, $drawW, $drawH, 'JPEG');
+            $cellY = $marginY +
+                $row * ($maxHeight + $descHeight + $gapY);
+
+            // Centrar imagen horizontalmente
+            $offsetX = ($maxWidth - $drawW) / 2;
+
+            // Centrar imagen verticalmente
+            // dentro del espacio reservado para imagen
+            $offsetY = ($maxHeight - $drawH) / 2;
+
+            $x = $cellX + $offsetX;
+            $y = $cellY + $offsetY;
+
+            // Dibujar imagen
+            $pdf->Image(
+                $tmpPath,
+                $x,
+                $y,
+                $drawW,
+                $drawH,
+                'JPEG'
+            );
+
             unlink($tmpPath);
+
+            // ==========================================
+            // DESCRIPCIÓN
+            // ==========================================
+
+            $descripcion = trim($obj->descripcion ?? 'Sin anotaciones');
+
+            if ($descripcion !== '') {
+
+                // Posición debajo de la imagen
+                $descY = $cellY + $maxHeight + 2;
+
+                $pdf->SetFont(
+                    'Arial',
+                    '',
+                    8
+                );
+
+                $pdf->SetXY(
+                    $cellX,
+                    $descY
+                );
+
+                // Ancho de la descripción
+                $pdf->MultiCell(
+                    $maxWidth,
+                    4,
+                    'Anotaciones: '.utf8_decode($descripcion),
+                    0,
+                    'C'
+                );
+            }
 
             $count++;
         }
-
 
         return $pdf->Output('S');
         // $pdf->Output();
@@ -379,12 +489,12 @@ class OrdenServicioPdfController extends Controller
 
     private function dividirFecha($fechaCompleta){
         $carbon = Carbon::parse($fechaCompleta);
-        // $soloFecha = $carbon->toDateString(); 
-        // $soloHora = $carbon->toTimeString(); 
+        // $soloFecha = $carbon->toDateString();
+        // $soloHora = $carbon->toTimeString();
         // También puedes formatear
         $fechaFormateada = $carbon->format('d/m/Y'); // "19/10/2024"
-        $horaFormateada = $carbon->format('H:i:s A'); 
-        
+        $horaFormateada = $carbon->format('H:i:s A');
+
         return ['fecha' => $fechaFormateada, 'hora' => $horaFormateada];
 
     }

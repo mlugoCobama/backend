@@ -5,6 +5,7 @@ namespace Modules\Ucoip\Http\Controllers;
 use App\Enums\EstatusActivos;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\Ucoip\Models\CatEmpresas;
 
 /**
@@ -55,49 +56,62 @@ class HardwareController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        $existe = HardwarePcModel::where('no_serie', $request->no_serie)->exists();
+public function store(Request $request)
+{
+    $request->validate([
+        'empresa' => 'required',
+        'cat_hardware_id' => 'required',
+        'marca' => 'required',
+        'modelo' => 'required',
+    ]);
 
-        if ($existe) {
-            return response()->json([
-                'success' => false,
-                'message' => 'El número de serie ya se encuentra registrado.'
-            ], 422);
-        }
+    $seriesInvalidas = ['N/D', 'N/A', '0000000', 'SIN SERIE', 'PENDIENTE', '', 'N/H', 'DESCONOCIDO'];
+    $serieRecibida = trim(mb_strtoupper($request->no_serie ?? ''));
+    $serieEsValida = !empty($serieRecibida) && !in_array($serieRecibida, $seriesInvalidas);
 
-       $hardware = $this->hardwarePC->create([
-            "no_inventario" => $this->generarNoInventario($request->empresa),
-            "marca" => $request->marca,
-            "modelo" => $request->modelo,
-            "no_serie" => $request->no_serie,
-            "tipo" => $request->tipo_cpu,
-            "mac" => $request->mac,
-            "memoria_ram" => $request->memoria_ram,
-            "disco_duro" => $request->disco_duro,
-            "procesador" => $request->procesador,
+    if ($serieEsValida && $this->hardwarePC->where('no_serie', $serieRecibida)->exists()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'El número de serie ya se encuentra registrado.'
+        ], 422);
+    }
+
+    return DB::transaction(function () use ($request, $serieEsValida, $serieRecibida) {
+        $noInventario = $this->generarNoInventario($request->empresa);
+
+        $hardware = $this->hardwarePC->create([
+            "no_inventario"   => $noInventario,
+            "marca"           => $request->marca,
+            "modelo"          => $request->modelo,
+            "no_serie"        => $serieEsValida ? $serieRecibida : $noInventario,
+            "tipo"            => $request->tipo_cpu,
+            "mac"             => $request->mac,
+            "memoria_ram"     => $request->memoria_ram,
+            "disco_duro"      => $request->disco_duro,
+            "procesador"      => $request->procesador,
             "caracteristicas" => $request->caracteristicas,
-            "observaciones" => $request->observaciones,
-            "estado" => $request->estado,
-            "cat_empresa_id" => $request->empresa,
+            "observaciones"   => $request->observaciones,
+            "estado"          => $request->estado,
+            "cat_empresa_id"  => $request->empresa,
             "cat_hardware_id" => $request->cat_hardware_id,
-            "estado_fisico" => $request->estado_fisico ?? null
+            "estado_fisico"   => $request->estado_fisico ?? null
         ]);
 
-        if (isset($request->licencia_so_id) && !empty($request->licencia_so_id)) {
+        if ($request->filled('licencia_so_id')) {
             $this->sincronizarSoftwareHardware($hardware->id, $request->licencia_so_id);
         }
 
-        if (isset($request->licencia_office_id) && !empty($request->licencia_office_id)) {
+        if ($request->filled('licencia_office_id')) {
             $this->sincronizarSoftwareHardware($hardware->id, $request->licencia_office_id);
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Se ha completado la tarea satisfactoriamente',
-            'data' => []
+            'data'    => []
         ]);
-    }
+    });
+}
 
     /**
      * Show the specified resource.

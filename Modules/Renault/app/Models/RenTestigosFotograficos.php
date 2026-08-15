@@ -17,7 +17,11 @@ class RenTestigosFotograficos extends Model
         'folio',
         'ruta',
         'nombre',
-        'ren_entrada_vehiculo_id'
+        'ren_entrada_vehiculo_id',
+        'descripcion',
+        'media_type',
+        'categoria'
+
     ];
      /**
      * Nombre de la tabla
