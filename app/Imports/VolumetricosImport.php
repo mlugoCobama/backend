@@ -32,14 +32,14 @@ class VolumetricosImport implements WithMultipleSheets
             'Datos Contribuyente' => $this->generalImport,
             'Permisos'            => $this->permisosImport,
             'Recpciones Nacionales Mismo Mes' => $this->recepcionImports[1],
-            'Recpciones Extranjero Mismo Mes' => $this->recepcionImports[2],
-            'Recepciones Costo $0.0' => $this->recepcionImports[3],
+            'Recepciones Costo $0.0' => $this->recepcionImports[2],
+            'Recpciones Extranjero Mismo Mes' => $this->recepcionImports[3],
             'Recepcs Compra Anticpada +1 mes' => $this->recepcionImports[4],
             'Recepcs Compra Crédito +1 mes' => $this->recepcionImports[5],
 
             'Entregas Mismo Mes CDFI Indvdl'   => $this->entregaImports[1],
-            'Entregas Costo $0.0'   => $this->entregaImports[2],
-            'Entregas Mismo Mes CFDI Global'   => $this->entregaImports[3],
+            'Entregas Mismo Mes CFDI Global'   => $this->entregaImports[2],
+            'Entregas Costo $0.0'   => $this->entregaImports[3],
             'Entregas Crédito +1 mes'   => $this->entregaImports[4],
             'Entregas Compra Antcipda +1 mes'   => $this->entregaImports[5],
             'Control General' => $this->controlGeneralImport

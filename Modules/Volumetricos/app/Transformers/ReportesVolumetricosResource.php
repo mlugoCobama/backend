@@ -48,7 +48,7 @@ class ReportesVolumetricosResource extends JsonResource
             self::$empresasCache[$empresa->intercompania] = $empresa->name;
         }
 
-        return self::$empresasCache[$intercompania] ?? null;
+        return self::$empresasCache[$intercompania] ?? 'No disponible';
     }
 
     // private function parserFecha($fechaIso){

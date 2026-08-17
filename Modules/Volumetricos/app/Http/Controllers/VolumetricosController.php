@@ -8,6 +8,7 @@ use DateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Modules\Volumetricos\Models\ReporteVolumen;
 use Modules\Volumetricos\Services\FileService;
@@ -89,7 +90,7 @@ class VolumetricosController extends Controller
            $this->parserFecha($request->fecha_reporte) ,
             'json'
         );
-    } else if ($extension === 'json') {
+    } else if ($extension === 'json' ||  $extension === 'xml' ) {
         $rutaJson = $rutaOriginal;
     }
 
@@ -119,56 +120,99 @@ class VolumetricosController extends Controller
     }
 
     /**
-     * Show the specified resource.
-     */
-    public function show($id)
-    {
+ * Show the specified resource.
+ */
+public function show($id)
+{
     $reporte = ReporteVolumen::find($id);
 
     if (!$reporte) {
         return response()->json([
             'success' => false,
             'message' => 'Registro no encontrado'
-        ],404);
+        ], 404);
     }
 
-    if (!Storage::disk('public')->exists($reporte->ruta_archivo)) {
+    $disk = Storage::disk('public');
+
+    if (!$disk->exists($reporte->ruta_archivo)) {
         return response()->json([
             'success' => false,
             'message' => 'Archivo no encontrado'
-        ],404);
+        ], 404);
     }
 
-    // Leer archivo
-    $contenido = Storage::disk('public')
-        ->get($reporte->ruta_archivo);
+    $extension = strtolower(
+        pathinfo($reporte->ruta_archivo, PATHINFO_EXTENSION)
+    );
 
-    // Eliminar BOM UTF-8 si existe
+    $contenido = $disk->get($reporte->ruta_archivo);
+
+    // Eliminar BOM UTF-8
     $contenido = preg_replace(
         '/^\xEF\xBB\xBF/',
         '',
         $contenido
     );
 
-    // Decodificar JSON
-    $json = json_decode($contenido, true);
+    switch ($extension) {
 
-    // Verificar errores
-    if (json_last_error() !== JSON_ERROR_NONE) {
+        case 'json':
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Error al interpretar JSON',
-            'error' => json_last_error_msg(),
-            'contenido' => $contenido // solo para depurar
-        ],500);
+            $json = json_decode($contenido, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al interpretar JSON',
+                    'error' => json_last_error_msg()
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'tipo' => 'json',
+                'data' => $json
+            ]);
+
+        case 'xml':
+
+            libxml_use_internal_errors(true);
+
+            $xml = simplexml_load_string($contenido);
+
+            if ($xml === false) {
+
+                $errores = [];
+
+                foreach (libxml_get_errors() as $error) {
+                    $errores[] = trim($error->message);
+                }
+
+                libxml_clear_errors();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al interpretar XML',
+                    'errors' => $errores
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'tipo' => 'xml',
+                'data' => $contenido
+            ]);
+
+        default:
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Tipo de archivo no soportado',
+                'extension' => $extension
+            ], 415);
     }
-
-    return response()->json([
-        'success' => true,
-        'data' => $json
-    ]);
-    }
+}
 
     /**
      * Show the form for editing the specified resource.
@@ -274,16 +318,80 @@ public function descargarExcel($id)
 {
     $reporte = ReporteVolumen::findOrFail($id);
 
-    if (!$reporte->ruta_plantilla || !Storage::disk('public')->exists($reporte->ruta_plantilla)) {
+    if (
+        !$reporte->ruta_plantilla ||
+        !Storage::disk('public')->exists($reporte->ruta_plantilla)
+    ) {
         return response()->json([
             'success' => false,
             'message' => 'El archivo Excel no existe en el servidor.'
         ], 404);
     }
 
-    $nombreDescarga = pathinfo($reporte->ruta_plantilla, PATHINFO_BASENAME);
-    $rutaAbsoluta = Storage::disk('public')->path($reporte->ruta_plantilla);
+    // Extensiones permitidas para archivos Excel
+    $extensionesExcel = [
+        'xls',
+        'xlsx',
+        'xlsm',
+        'xlt',
+        'xltx',
+        'xltm',
+        'csv'
+    ];
 
-    return response()->download($rutaAbsoluta, $nombreDescarga);
+    $extension = strtolower(
+        pathinfo($reporte->ruta_plantilla, PATHINFO_EXTENSION)
+    );
+
+    if (!in_array($extension, $extensionesExcel, true)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'El archivo especificado no es un archivo Excel válido.',
+            'extension' => $extension
+        ], 415);
+    }
+
+    $nombreDescarga = pathinfo(
+        $reporte->ruta_plantilla,
+        PATHINFO_BASENAME
+    );
+
+    $rutaAbsoluta = Storage::disk('public')
+        ->path($reporte->ruta_plantilla);
+
+    return response()->download(
+        $rutaAbsoluta,
+        $nombreDescarga
+    );
+}
+
+public function descargar($id)
+{
+    $reporte = ReporteVolumen::findOrFail($id);
+
+    if (!$reporte->ruta_archivo) {
+        return response()->json([
+            'success' => false,
+            'message' => 'El reporte no tiene un archivo asociado.'
+        ], 404);
+    }
+
+    $disk = Storage::disk('public');
+
+    if (!$disk->exists($reporte->ruta_archivo)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'El archivo no existe en el servidor.'
+        ], 404);
+    }
+
+    $ruta = $disk->path($reporte->ruta_archivo);
+
+    $nombre = pathinfo(
+        $reporte->ruta_archivo,
+        PATHINFO_BASENAME
+    );
+
+    return response()->download($ruta, $nombre);
 }
 }
