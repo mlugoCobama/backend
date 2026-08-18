@@ -69,4 +69,32 @@ class VolumetricosImport implements WithMultipleSheets
         }
         return $consolidado;
     }
+
+    /**
+     * Retorna la cantidad de documentos procesados por cada hoja de Recepción.
+     */
+    public function getTotalPorHojaRecepciones(): array
+    {
+        return [
+            'Recpciones Nacionales Mismo Mes' => count($this->recepcionImports[1]->data),
+            'Recepciones Costo $0.0'          => count($this->recepcionImports[2]->data),
+            'Recpciones Extranjero Mismo Mes' => count($this->recepcionImports[3]->data),
+            'Recepcs Compra Anticpada +1 mes' => count($this->recepcionImports[4]->data),
+            'Recepcs Compra Crédito +1 mes'   => count($this->recepcionImports[5]->data),
+        ];
+    }
+
+    /**
+     * Retorna la cantidad de documentos procesados por cada hoja de Entrega.
+     */
+    public function getTotalPorHojaEntregas(): array
+    {
+        return [
+            'Entregas Mismo Mes CDFI Indvdl'  => count($this->entregaImports[1]->data),
+            'Entregas Mismo Mes CFDI Global'  => count($this->entregaImports[2]->data),
+            'Entregas Costo $0.0'             => count($this->entregaImports[3]->data),
+            'Entregas Crédito +1 mes'         => count($this->entregaImports[4]->data),
+            'Entregas Compra Antcipda +1 mes' => count($this->entregaImports[5]->data),
+        ];
+    }
 }

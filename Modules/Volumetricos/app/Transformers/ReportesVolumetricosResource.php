@@ -42,6 +42,7 @@ class ReportesVolumetricosResource extends JsonResource
         if (isset(self::$empresasCache[$intercompania])) {
             return self::$empresasCache[$intercompania];
         }
+
         $empresas = DB::connection('intranet')->select('CALL SP_GetEmpresas()');
 
         foreach ($empresas as $empresa) {

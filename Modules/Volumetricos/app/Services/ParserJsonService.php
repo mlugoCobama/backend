@@ -21,6 +21,9 @@ class ParserJsonService
             $recepcionesConsolidadas = $import->getTodasLasRecepciones();
             $entregasConsolidadas   = $import->getTodasLasEntregas();
 
+            // $totalDocsEntregas = $import->getTotalPorHojaEntregas();
+            // $totalDocsRecepciones = $import->getTotalPorHojaRecepciones();
+
             $existencias = $controlGeneral['ExistenciasMesInmediatoAnterior'];
             $nodoProducto = $this->buildProductoNode($permisos['ClaveProducto'], $existencias , $permisos['FechaYHoraReporteMes'], $recepcionesConsolidadas, $entregasConsolidadas,  $permisos['ComposDePropanoEnGasLP'],$permisos['ComposDeButanoEnGasLP'] );
             $bitacoraMensual = $this->buildBitacoraMensual(
@@ -44,7 +47,10 @@ class ParserJsonService
                 "NumeroDispensarios"                   => $permisos['NumeroDispensarios'] ?? 0,
                 "FechaYHoraReporteMes"                 => $permisos['FechaYHoraReporteMes'] ?? now()->toIso8601String(),
                 "Producto"                             => [$nodoProducto],
-                "BitacoraMensual"                      => $bitacoraMensual
+                "BitacoraMensual"                      => $bitacoraMensual,
+
+                // "docsEntregas"                         =>$totalDocsEntregas,
+                // "docsRecepciones"                      =>$totalDocsRecepciones,
 
             //    "RawDATA"                               => [
             //        "recepciones" => $recepcionesConsolidadas,
@@ -92,6 +98,10 @@ class ParserJsonService
             return self::buildComplementoItem($item, $unidadMedida);
         })->values()->toArray();
 
+        $totalDocsRecepciones = $colRecepciones->filter(function ($item) {
+            return !empty(trim((string)($item['CFDI'] ?? '')));
+        })->count();
+
         $nodeRecepciones = [
             'TotalRecepcionesMes'     => $colRecepciones->count(),
             'SumaVolumenRecepcionMes' => [
@@ -99,7 +109,7 @@ class ParserJsonService
                 'UnidadDeMedida' => $unidadMedida,
             ],
             // 'TotalDocumentosMes'             => $colRecepciones->pluck('CFDI')->filter()->count(),
-            'TotalDocumentosMes' => $colRecepciones->count(),
+            'TotalDocumentosMes' => $totalDocsRecepciones,
             'ImporteTotalRecepcionesMensual' => round($colRecepciones->sum(fn($i) => (float)($i['PrecioVentaOCompraOContrap'] ?? 0)), 4),
             'Complemento'                     => $complementosRecepciones,
         ];
@@ -110,6 +120,10 @@ class ParserJsonService
             return self::buildComplementoItem($item, $unidadMedida);
         })->values()->toArray();
 
+        $totalDocsEntregas = $colEntregas->filter(function ($item) {
+            return !empty(trim((string)($item['CFDI'] ?? '')));
+        })->count();
+
         $nodeEntregas = [
             'TotalEntregasMes'       => $colEntregas->count(),
             'SumaVolumenEntregadoMes' => [
@@ -117,7 +131,7 @@ class ParserJsonService
                 'UnidadDeMedida' => $unidadMedida,
             ],
             // 'TotalDocumentosMes'          => $colEntregas->pluck('CFDI')->filter()->count(),
-            'TotalDocumentosMes' => $colEntregas->count(),
+            'TotalDocumentosMes' => $totalDocsEntregas,
             'ImporteTotalEntregasMes' => round($colEntregas->sum(fn($i) => (float)($i['PrecioVentaOCompraOContrap'] ?? 0)), 4),
             'Complemento'                 => $complementosEntregas,
         ];

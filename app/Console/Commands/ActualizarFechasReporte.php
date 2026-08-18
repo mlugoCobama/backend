@@ -41,6 +41,7 @@ class ActualizarFechasReporte extends Command
             $rutaJson = $reporte->ruta_archivo;
 
             if (!Storage::disk('public')->exists($rutaJson)) {
+                $this->info("Archivo no encontrado: {$rutaJson} (ID: {$reporte->id})");
                 $errores++;
                 $bar->advance();
                 continue;
@@ -70,10 +71,13 @@ class ActualizarFechasReporte extends Command
                     ]);
 
                     $actualizados++;
+                    $this->info("Éxito: Archivo {$rutaJson} procesado correctamente. Fecha asignada: {$fechaIso}");
                 } catch (\Exception $e) {
                     $errores++;
+                    $this->info("Error procesando {$rutaJson} (ID: {$reporte->id}): " . $e->getMessage());
                 }
             } else {
+                $this->info("No se encontró ninguna fecha válida dentro del JSON en: {$rutaJson} (ID: {$reporte->id})");
                 $errores++;
             }
 

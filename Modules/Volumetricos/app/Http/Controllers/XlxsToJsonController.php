@@ -13,6 +13,7 @@ use Maatwebsite\Excel\Concerns\ToArray;
 use Modules\Volumetricos\Services\ParserJsonService;
 use Modules\Volumetricos\Services\ParserXmlService;
 use SimpleXMLElement;
+use Illuminate\Support\Str;
 
 class XlxsToJsonController extends Controller
 {
@@ -54,6 +55,7 @@ class XlxsToJsonController extends Controller
             'file' => 'required|mimes:xlsx,xls|max:20480',
         ]);
         $file  = $request->file('file');
+        $uuid = (string) Str::uuid();
 
 
         $jsonStructure = $this->parserJson->generateJson($file);
@@ -61,9 +63,13 @@ class XlxsToJsonController extends Controller
         // $data = $this->utf8ize($data);
 
         if ($request->wantsJson()) {
-            return response()->json($jsonStructure, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
+                    return response()->json(
+                    $jsonStructure,
+                    200,
+                    ['X-Report-UUID' => $uuid],
+                    JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION
+                );
         }
-
 
 
         $fileName = 'Reporte_Volumetrico_' . date('Y-m-d_H-i-s') . '.json';
@@ -71,28 +77,10 @@ class XlxsToJsonController extends Controller
             echo json_encode($jsonStructure, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
         }, $fileName, [
             'Content-Type' => 'application/json',
+            'X-Report-UUID' => $uuid,
         ]);
+
     }
-
-    /**
- * Helper recursivo para transformar un Array PHP a XML
- */
-private function arrayToXml(array $data, SimpleXMLElement &$xmlData)
-{
-    foreach ($data as $key => $value) {
-        if (is_numeric($key)) {
-            $key = 'Elemento' . $key;
-        }
-        if (is_array($value)) {
-            $subnode = $xmlData->addChild($key);
-            $this->arrayToXml($value, $subnode);
-        } else {
-            $xmlData->addChild("$key", htmlspecialchars("$value"));
-        }
-    }
-}
-
-
 
     /**
      * Show the specified resource.

@@ -99,7 +99,7 @@ class VolumetricosController extends Controller
         'ruta_archivo' => $rutaJson,
         'ruta_plantilla' => $rutaOriginal,
         'tipo' => $request->tipo,
-        'uuid_plantilla' => null,
+        'uuid_plantilla' => $request->uuid_plantilla ?? null,
         'descripcion' => $request->descripcion,
         'fecha_reporte' => $request->fecha_reporte,
         'comentarios' => $request->comentarios ?? null
