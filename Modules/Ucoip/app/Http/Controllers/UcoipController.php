@@ -39,8 +39,8 @@ class UcoipController extends Controller
         $user = DB::connection('intranet')
                 ->table('glpi_users')
                 ->join('glpi_entities', 'glpi_users.intercompania', '=', 'glpi_entities.intercompania')
-                ->join('glpi_directorio_puestos', 'glpi_users.id_puesto_directorio', '=', 'glpi_directorio_puestos.id_glpi_directorio_puestos')
-                ->join('glpi_directorio_area', 'glpi_users.id_areas_directorio', '=', 'glpi_directorio_area.id_glpi_directorio_area')
+                ->leftjoin('glpi_directorio_puestos', 'glpi_users.id_puesto_directorio', '=', 'glpi_directorio_puestos.id_glpi_directorio_puestos')
+                ->leftjoin('glpi_directorio_area', 'glpi_users.id_areas_directorio', '=', 'glpi_directorio_area.id_glpi_directorio_area')
                 ->select('glpi_users.id',
                         'glpi_users.name',
                         'glpi_users.realname',
@@ -50,6 +50,9 @@ class UcoipController extends Controller
                         'glpi_directorio_puestos.nombre as puesto',
                         'glpi_directorio_area.nombre as area')
                 ->where('glpi_users.is_active', '1')
+                ->where('glpi_users.id', '<>', 344)
+                ->where('glpi_users.id', '<>', 29)
+                ->where('glpi_users.id', '<>', 22)
                 ->get();
 
         // $user =  $this->queryPuestosUsuarios();
@@ -61,7 +64,7 @@ class UcoipController extends Controller
             'data' => $user
         ]);
 
-    
+
     }
 
     /**
@@ -89,13 +92,13 @@ class UcoipController extends Controller
         if(!empty($data['password'])){
             $ucoip->contrasenia = $this->cifradoService->encrypt($data['password']);
         }
-        $ucoip->user_id =  $data['id']; 
+        $ucoip->user_id =  $data['id'];
         $ucoip->ucoip_cat_puestos =  $data['puesto_id'];
         $ucoip->cat_empresa_id =  $this->matchEmpresa($data['intercompania'])->id ?? 15;
         $ucoip->save();
 
         $this->glpiService->updateGlpiUser($data['id'], $data['nombre'], $data['apellidos'], $data['password'], $data['area_id'],$data['departamento_id'],$data['puesto_id'] );
-        
+
         $ultimoTitular = TitularesUcoip::where('ucoip_ucoip_id', $ucoip->id)->latest('id')->first();
 
             $nuevoNombre = trim($data['nombre'].' '.$data['apellidos']);
@@ -110,7 +113,7 @@ class UcoipController extends Controller
                 $this->storeTitular($ucoip->id, $data);
             }
 
-        
+
         return response()->json([
             'status' => 'success',
             'data' => [],
@@ -180,12 +183,12 @@ class UcoipController extends Controller
         $data =[
            'areas' => CatAreas::with(['departamentos.puestos'])->get(),
            'sistemas' => CatSistemas::get(),
-           'recursos' => CatRecursos::get(), 
+           'recursos' => CatRecursos::get(),
         ];
-        
+
         return response()->json([
         'status'  => 'success',
-        'data'    => $data,    
+        'data'    => $data,
         'message' => 'Catalogos recuperados Correctamente'
         ]);
     }
@@ -196,7 +199,7 @@ class UcoipController extends Controller
     }
 
     public function queryUsuariosRenault(){
-    
+
         $data=  DB::connection('intranet')->select("SELECT id, name, realname, firstname, intercompania  FROM SOPORTEZM.glpi_users where  intercompania in (7051,712,710) and is_active = 1;");
         return $data;
     }
