@@ -19,10 +19,17 @@ use Modules\Renault\Models\RenDetalleTrabajoSolicitado;
 use Modules\Renault\Models\RenEntradaVehiculo;
 use Modules\Renault\Models\RenInventarioVehiculo;
 use Modules\Renault\Models\RenTestigosFotograficos;
+use Modules\Renault\Services\CitaServicioService;
 use Modules\Renault\Transformers\DatosEntradaResource;
 
 class VisorCitasController extends Controller
 {
+    protected $citasService;
+    public function __construct(
+        CitaServicioService $citasService,
+    ){
+        $this->citasService = $citasService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -135,11 +142,9 @@ class VisorCitasController extends Controller
      */
     public function store(Request $request)
     {
-
         DB::beginTransaction();
         try {
-            // 2. Guardar o actualizar la Cita/Servicio
-
+            $evento = $this->citasService->generarEvento($request->input('citas_servicio_id'), 1);
             $entrada  = $this->storeEntrada($request->input('folio'), $request->input('num_entrada'), $request->input('citas_servicio_id'));
 
             $inventario = $this->storeInventario(
@@ -153,7 +158,6 @@ class VisorCitasController extends Controller
             $request->input('nivel_gasolina')
             );
 
-
             if($request->has('trabajos') && !empty($request->input('trabajos'))){
             foreach ($request->input('trabajos') as $trabajo) {
                 RenDetalleTrabajoSolicitado::create([
@@ -163,7 +167,6 @@ class VisorCitasController extends Controller
                 ]);
             }
             }
-
 
             if($request->has('garantias') && !empty($request->input('garantias'))){
                foreach ($request->input('garantias') as $garantia) {
@@ -175,9 +178,6 @@ class VisorCitasController extends Controller
             }
             }
 
-
-
-
             // 3. Procesar y guardar cada foto enviada
             if ($request->has('fotos')) {
                 foreach ($request->input('fotos') as $index => $fotoData) {
@@ -187,7 +187,6 @@ class VisorCitasController extends Controller
                         $extension = $archivo->getClientOriginalExtension();
                         $nombreArchivo = $request->input('folio') . '_' .$fotoData['categoria'].'_'. $index . '.' . $extension;
                         $path = $archivo->storeAs('renault/citas_servicio', $nombreArchivo, 'local');
-
                         // Crear registro en la tabla de fotos
                         RenTestigosFotograficos::create([
                             'folio'            => $request->input('folio'),
@@ -206,11 +205,14 @@ class VisorCitasController extends Controller
             $image = str_replace(' ', '+', $image);
             Storage::disk('local')->put("renault/citas_servicio/".$request->input('folio')."_firma.png", base64_decode($image));
 
+
             RenCitasServicio::where('id', $request->input('citas_servicio_id'))->update([
                 'estatus' => 'AT',
                 'email' =>$request->input('correo'),
                 'telefono' =>$request->input('telefono'),
                 ]);
+
+            $this->citasService->finalizarEvento($evento->id);
 
             DB::commit();
 
@@ -327,7 +329,63 @@ class VisorCitasController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+       DB::beginTransaction();
+            try {
+                // 1. Obtener la entrada del vehículo existente
+                $entrada = RenEntradaVehiculo::findOrFail($id);
+                $folio = $request->input('folio', $entrada->folio);
+
+                // 2. INHABILITAR TESTIGOS RETIRADOS
+                // Recibimos un arreglo con las IDs de las fotos que el usuario DECIDIÓ CONSERVAR
+                $fotosConservadasIds = $request->input('fotos_existentes_ids', []);
+
+                // Inhabilitamos todos los testigos de esta entrada que NO estén en la lista conservada
+                RenTestigosFotograficos::where('ren_entrada_vehiculo_id', $entrada->id)
+                    ->whereNotIn('id', $fotosConservadasIds)
+                    ->update([
+                        'activo' => 0 // O $table->boolean('activo')->default(false)
+                    ]);
+
+                // 3. PROCESAR Y AGREGAR NUEVOS TESTIGOS FOTOGRÁFICOS
+                if ($request->has('nuevas_fotos')) {
+                    foreach ($request->input('nuevas_fotos') as $index => $fotoData) {
+                        if ($request->hasFile("nuevas_fotos.{$index}.file")) {
+                            $archivo = $request->file("nuevas_fotos.{$index}.file");
+
+                            $extension = $archivo->getClientOriginalExtension();
+                            // Usamos time() o microtime() para evitar colisión de nombres en actualizaciones repetidas
+                            $nombreArchivo = $folio . '_' . $fotoData['categoria'] . '_' . time() . '_' . $index . '.' . $extension;
+                            $path = $archivo->storeAs('renault/citas_servicio', $nombreArchivo, 'local');
+
+                            // Crear registro en la base de datos
+                            RenTestigosFotograficos::create([
+                                'folio'                   => $folio,
+                                'nombre'                  => $nombreArchivo,
+                                'ruta'                    => 'renault/citas_servicio/',
+                                'ren_entrada_vehiculo_id' => $entrada->id,
+                                'categoria'               => $fotoData['categoria'],
+                                'media_type'              => $fotoData['mediaType'],
+                                'descripcion'             => $fotoData['descripcion'] ?? null,
+                                'activo'                 => 1
+                            ]);
+                        }
+                    }
+                }
+
+                DB::commit();
+
+                return response()->json([
+                    'status'  => true,
+                    'message' => 'Testigos fotográficos actualizados correctamente.'
+                ], 200);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json([
+                    'status' => false,
+                    'error'  => 'Error al actualizar los testigos: ' . $e->getMessage()
+                ], 500);
+            }
     }
 
     /**
@@ -368,7 +426,7 @@ class VisorCitasController extends Controller
     }
 
     private function getDatosOrdenServicio($idCita){
-        return RenCitasServicio::with('Datos.Inventario','Datos.TestigosFotograficos', 'Datos.trabajosSolicitados', 'Datos.garantias')->where('id', $idCita)->first();
+        return RenCitasServicio::with('Datos.Inventario','Datos.TestigosFotograficos', 'Datos.trabajosSolicitados', 'Datos.garantias', 'eventosCita')->where('id', $idCita)->first();
     }
 
     private function getAps($empleadoNombre, $idAgencia){

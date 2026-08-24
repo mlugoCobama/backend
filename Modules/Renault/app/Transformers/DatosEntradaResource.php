@@ -43,7 +43,8 @@ class DatosEntradaResource extends JsonResource
             'nivel_gasolina' => $this->Datos->inventario->nivel_gasolina,
             'testigos_fotograficos' => TestigosFotograficosResource::collection($this->Datos->TestigosFotograficos),
             'trabajos' => $this->Datos->trabajosSolicitados,
-            'garantias' => $this->Datos->garantias
+            'garantias' => $this->Datos->garantias,
+            'eventosCita' => $this->eventosCita
 
         ];
     }

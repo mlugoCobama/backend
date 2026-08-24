@@ -10,6 +10,7 @@ use Modules\Nissan\Http\Controllers\FinanciamientoController;
 use Modules\Nissan\Http\Controllers\OtrosController;
 use Modules\Nissan\Http\Controllers\SegurosController;
 use Modules\Nissan\Http\Controllers\TomaUnidadController;
+use Modules\Renault\Http\Controllers\EventosCitaController;
 
 /*
  *--------------------------------------------------------------------------
@@ -25,6 +26,7 @@ use Modules\Nissan\Http\Controllers\TomaUnidadController;
 //Route::middleware(['auth:sanctum'])->prefix('renault')->group(function () {
 Route::prefix('renault')->group(function () {
     Route::apiResource('visor-citas', VisorCitasController::class)->names('visor-citas');
+    Route::apiResource('eventos-citas', EventosCitaController::class)->names('eventos-citas');
     Route::apiResource('financiamiento', FinanciamientoController::class)->names('nrfinance');
     Route::apiResource('toma-unidad', TomaUnidadController::class)->names('toma-unida');
     Route::apiResource('seguro', SegurosController::class)->names('seguro');
@@ -37,7 +39,7 @@ Route::prefix('renault')->group(function () {
     Route::get('visor-citas/orden-servicio/{id}', [ VisorCitasController::class, 'descargarPdfOrdenServicio'])->name('visor-citas.descargarOrdenServicio');
     Route::get('visor-citas/{intercompania}/{apv}/{fechaInicial}/{fechaFinal}', [ VisorCitasController::class, 'datosFiltrados'])->name('visor-citas.datosFiltrados');
     Route::get('aps/{idAgencia}', [ VisorCitasController::class, 'getApsByAgencia'])->name('visor-citas.getApsByAgencia');
-    
+
     Route::get('financiamiento/datos-venta/{factura}', [ FinanciamientoController::class, 'getDataVenta'])->name('financiamineto.getDataVentaFin');
     Route::get('financiamiento/{estatus}/{agencia}/{fechaInicio}/{fechaFin}/{vendedor}', [FinanciamientoController::class, 'getFinanciaminetos'])->name('financiamineto.getFinanciaminetos');
     Route::get('financiamiento/avanzarEstatus/{id}', [FinanciamientoController::class, 'avanzarEstatus'])->name('financiamineto.avanzarEstatus');

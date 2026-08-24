@@ -58,4 +58,8 @@ class RenCitasServicio extends Model
     public function Datos(): HasOne {
         return $this->hasOne(RenEntradaVehiculo::class);
     }
+
+    public function eventosCita(){
+        return $this->hasMany(RenEventosCita::class, 'ren_citas_servicio_id', 'id' );
+    }
 }

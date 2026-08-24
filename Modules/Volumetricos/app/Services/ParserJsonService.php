@@ -192,11 +192,11 @@ class ParserJsonService
                             [
                                 'Cfdi' => $cfdi,
                                 'TipoCfdi' => (string)($item['TipoCFDI'] ?? 'Ingreso'),
-                                'PrecioVentaOCompraOContrap' => (float)($item['PrecioVentaOCompraOContrap'] ?? 0),
+
+                                'PrecioVentaOCompraOContrap' => (float)( self::formatVolumen($item['PrecioVentaOCompraOContrap'] ?? 0)),
                                 'FechaYHoraTransaccion' => (string)($item['FechaYHoraTransaccion'] ?? ''),
                                 'VolumenDocumentado' => [
                                     'ValorNumerico' => (float) round($item['VolumenDocumentado'] ?? 0, 4),
-                                    // 'ValorNumerico' => (float) $item['VolumenDocumentado'] ?? 0,
                                     'UnidadDeMedida' => $unidadMedida,
                                 ],
                             ]

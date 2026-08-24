@@ -20,7 +20,8 @@ class RenTestigosFotograficos extends Model
         'ren_entrada_vehiculo_id',
         'descripcion',
         'media_type',
-        'categoria'
+        'categoria',
+        'activo'
 
     ];
      /**
