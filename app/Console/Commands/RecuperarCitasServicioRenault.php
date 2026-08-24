@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Modules\Renault\Http\Controllers\VisorCitasController;
+use Modules\Renault\Services\CitaServicioService;
 
 class RecuperarCitasServicioRenault extends Command
 {
@@ -24,10 +24,9 @@ class RecuperarCitasServicioRenault extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(CitaServicioService $citasService)
     {
-        $controlador =  new VisorCitasController();
-        $controlador->index();
+       $citasService->obtenerOProcesarCitas();
 
         $this->info('La función se ejecutó correctamente.');
 
