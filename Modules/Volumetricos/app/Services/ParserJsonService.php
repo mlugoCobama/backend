@@ -159,10 +159,7 @@ class ParserJsonService
             "ComposDeButanoEnGasLP" => $butano,
         ];
     }
-    private static function buildComplementoItem(
-        array $item,
-        string $unidadMedida
-    ): array {
+    private static function buildComplementoItem( array $item, string $unidadMedida): array {
 
         $claveInstalacion = $item['ClaveInstalacion'] ?? '';
         $prefijo = strtoupper(trim(strstr($claveInstalacion, '-', true) ?: $claveInstalacion));
@@ -229,116 +226,117 @@ class ParserJsonService
 
     private static function formatVolumen($valor): string
     {
-        return rtrim(
-            rtrim(number_format((float)$valor, 4, '.', ''), '0'),
-            '.'
-        );
+        return rtrim(rtrim(number_format((float)$valor, 4, '.', ''), '0'),'.');
     }
 
     private function buildBitacoraMensual(string $fechaReporte): array
-{
-    $fecha = Carbon::parse($fechaReporte);
+    {
+        $fecha = Carbon::parse($fechaReporte);
 
-    $cantidadEventos = rand(15, 27);
+        $cantidadEventos = rand(15, 27);
 
-    $eventos = [
-        [
-            'TipoEvento' => 1,
-            'DescripcionEvento' => 'system startup',
-        ],
-        [
-            'TipoEvento' => 1,
-            'DescripcionEvento' => 'system reboot',
-        ],
-        [
-            'TipoEvento' => 2,
-            'DescripcionEvento' => 'cpu thermal check',
-        ],
-        [
-            'TipoEvento' => 2,
-            'DescripcionEvento' => 'cpu idle time',
-        ],
-        [
-            'TipoEvento' => 3,
-            'DescripcionEvento' => 'application data check',
-        ],
-        [
-            'TipoEvento' => 3,
-            'DescripcionEvento' => 'application error event, no impact',
-        ],
-        [
-            'TipoEvento' => 4,
-            'DescripcionEvento' => 'device discovery',
-        ],
-        [
-            'TipoEvento' => 4,
-            'DescripcionEvento' => 'connection stablished',
-        ],
-        [
-            'TipoEvento' => 4,
-            'DescripcionEvento' => 'commnication check',
-        ],
-        [
-            'TipoEvento' => 4,
-            'DescripcionEvento' => 'latency error, no impact',
-        ],
-        [
-            'TipoEvento' => 4,
-            'DescripcionEvento' => 'encryption channel stablished',
-        ],
-        [
-            'TipoEvento' => 5,
-            'DescripcionEvento' => 'network monitoring',
-        ],
-        [
-            'TipoEvento' => 5,
-            'DescripcionEvento' => 'performance monitoring',
-        ],
-    ];
-
-    $bitacora = [];
-
-    $diasDisponibles = $fecha->daysInMonth;
-
-    $dias = range(1, $diasDisponibles);
-    shuffle($dias);
-
-    for ($i = 0; $i < $cantidadEventos; $i++) {
-
-        $evento = $eventos[array_rand($eventos)];
-
-        $dia = $dias[$i];
-
-        $fechaEvento = $fecha->copy()
-            ->startOfMonth()
-            ->day($dia)
-            ->setTime(
-                rand(1, 12),
-                rand(0, 59),
-                rand(0, 59)
-            );
-
-        $bitacora[] = [
-            'NumeroRegistro' => $i + 1,
-            'FechaYHoraEvento' => $fechaEvento->format('Y-m-d\TH:i:sP'),
-            'UsuarioResponsable' => 'admin',
-            'TipoEvento' => $evento['TipoEvento'],
-            'DescripcionEvento' => $evento['DescripcionEvento'],
+        $eventos = [
+            [
+                'TipoEvento' => 1,
+                'DescripcionEvento' => 'system startup',
+            ],
+            [
+                'TipoEvento' => 1,
+                'DescripcionEvento' => 'system reboot',
+            ],
+            [
+                'TipoEvento' => 2,
+                'DescripcionEvento' => 'cpu thermal check',
+            ],
+            [
+                'TipoEvento' => 2,
+                'DescripcionEvento' => 'cpu idle time',
+            ],
+            [
+                'TipoEvento' => 3,
+                'DescripcionEvento' => 'application data check',
+            ],
+            [
+                'TipoEvento' => 3,
+                'DescripcionEvento' => 'application error event, no impact',
+            ],
+            [
+                'TipoEvento' => 4,
+                'DescripcionEvento' => 'device discovery',
+            ],
+            [
+                'TipoEvento' => 4,
+                'DescripcionEvento' => 'connection stablished',
+            ],
+            [
+                'TipoEvento' => 4,
+                'DescripcionEvento' => 'commnication check',
+            ],
+            [
+                'TipoEvento' => 4,
+                'DescripcionEvento' => 'latency error, no impact',
+            ],
+            [
+                'TipoEvento' => 4,
+                'DescripcionEvento' => 'encryption channel stablished',
+            ],
+            [
+                'TipoEvento' => 5,
+                'DescripcionEvento' => 'network monitoring',
+            ],
+            [
+                'TipoEvento' => 5,
+                'DescripcionEvento' => 'performance monitoring',
+            ],
         ];
+
+        $bitacora = [];
+
+        $diasDisponibles = $fecha->daysInMonth;
+
+        $dias = range(1, $diasDisponibles);
+        shuffle($dias);
+
+        for ($i = 0; $i < $cantidadEventos; $i++) {
+
+            $evento = $eventos[array_rand($eventos)];
+
+            $dia = $dias[$i];
+
+            $fechaEvento = $fecha->copy()
+                ->startOfMonth()
+                ->day($dia)
+                ->setTime(
+                    rand(1, 12),
+                    rand(0, 59),
+                    rand(0, 59)
+                );
+
+            $bitacora[] = [
+                'NumeroRegistro' => $i + 1,
+                'FechaYHoraEvento' => $fechaEvento->format('Y-m-d\TH:i:sP'),
+                'UsuarioResponsable' => 'admin',
+                'TipoEvento' => $evento['TipoEvento'],
+                'DescripcionEvento' => $evento['DescripcionEvento'],
+            ];
+        }
+
+        usort(
+            $bitacora,
+            fn($a, $b) => strcmp(
+                $a['FechaYHoraEvento'],
+                $b['FechaYHoraEvento']
+            )
+        );
+
+        foreach ($bitacora as $index => &$evento) {
+            $evento['NumeroRegistro'] = $index + 1;
+        }
+
+        return $bitacora;
     }
 
-    usort(
-        $bitacora,
-        fn($a, $b) => strcmp(
-            $a['FechaYHoraEvento'],
-            $b['FechaYHoraEvento']
-        )
-    );
+    public function setTipoComplemento($tipoComplemento){
 
-    foreach ($bitacora as $index => &$evento) {
-        $evento['NumeroRegistro'] = $index + 1;
     }
-
-    return $bitacora;
-}
 }

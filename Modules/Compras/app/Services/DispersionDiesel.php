@@ -131,7 +131,7 @@ class DispersionDiesel
         }
 
 
-        public function storeExibicion($numero, $saldo, $montoDispersado, $estatus, $idRecarga, $guardada, $notificada, $fecha_dipsersion){
+        public function storeExibicion($numero, $saldo, $montoDispersado, $estatus, $idRecarga, $guardada, $notificada, $fecha_dipsersion, $porcentaje = null){
             $dispersion = new ExhibicionesRecargas();
             $dispersion->numero_exhibicion = $numero;
             $dispersion->saldo_actual_previo = $saldo;
@@ -141,6 +141,7 @@ class DispersionDiesel
             $dispersion->guardada = $guardada;
             $dispersion->notificada = $notificada;
             $dispersion->fecha_dispersion =  $fecha_dipsersion;
+            $dispersion->porcentaje =  $porcentaje;
             $dispersion->save();
             return $dispersion;
         }

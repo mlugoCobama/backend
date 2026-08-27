@@ -14,10 +14,10 @@ class DatosVehiculoResource extends JsonResource
     {
         return [
             'eco' => "ECO: $this->nro_economico",
-            // 'nombre' => $this->nombre,
-            // 'capacidad' => $this->capacidad,
-            // 'tipo_combustible' => $this->tipo_combustible,
-            // Agrega los campos que necesites
+            'marca' => $this->marca,
+            'submarca' =>  $this->submarca,
+            'modelo' => $this->modelo,
+            'no_serie' => $this->no_serie
         ];
 
     }

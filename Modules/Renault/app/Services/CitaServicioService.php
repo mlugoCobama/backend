@@ -80,13 +80,11 @@ class CitaServicioService
                         $empleadoClave = $cita->citas_empl_clave;
                         $empleadoNombre = $cita->empl_nombre;
 
-                        // Si no está en cache, lo consultamos y lo guardamos
                         if (!isset($empleadosCache[$empleadoClave])) {
                             $empleadoId = $this->getAps($empleadoNombre, $j);
                             $empleadosCache[$empleadoClave] = $empleadoId ??  null;
                         }
 
-                        // Ahora ya puedes usar $empleadosCache[$empleadoClave] sin repetir consulta
                         $cita->empleado_id_intranet = $empleadosCache[$empleadoClave];
                     }
 

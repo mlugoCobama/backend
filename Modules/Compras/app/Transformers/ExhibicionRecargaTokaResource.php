@@ -45,6 +45,7 @@ class ExhibicionRecargaTokaResource extends JsonResource
         'guardada'   => (bool) $this->guardada ?? false,
         'notificada' => (bool) $this->notificada ?? false,
         'dispersada' => (bool) $this->dispersada ?? false,
+        'porcentaje' => $this->porcentaje ?? 100
     ];
     }
 }

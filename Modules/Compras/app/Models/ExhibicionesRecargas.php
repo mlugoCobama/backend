@@ -23,6 +23,7 @@ class ExhibicionesRecargas extends Model
         'guardada',
         'notificada',
         'dispersada',
+        'porcentaje'
     ];
 
     protected $table = 'com_exhibiciones_recargas';

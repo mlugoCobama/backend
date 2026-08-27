@@ -2,22 +2,22 @@
 
 namespace Modules\Compras\Services;
 
+use App\Models\Sucursales;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Modules\Compras\Models\DatosTanque;
 use Modules\Compras\Models\DatosVehiculo;
 use Modules\Macro\Models\SeguroVehiculo;
 use Modules\Compras\Integrations\TecnoGpsApi;
+use Modules\Compras\Models\ObservacionVehiculo;
+use Modules\Compras\Models\Tags;
+use Modules\Compras\Models\TarjetasToka;
+use Modules\Compras\Models\VehiculosTags;
+use Modules\Compras\Models\VehiculosToka;
 
 class ParqueVehicularService{
 
     protected $gpsApi;
-
-    public function __construct(TecnoGpsApi $gpsApi)
-    {
-        $this->gpsApi = $gpsApi;
-    }
-
     protected $status = [
         "ACTIVA" => 1,
         "EN TALLER" => 2,
@@ -31,6 +31,278 @@ class ParqueVehicularService{
         "VENDIDA  COMO CHATARRA" => 9,
         "BAJA" => 10
     ];
+
+    public function __construct(TecnoGpsApi $gpsApi)
+    {
+        $this->gpsApi = $gpsApi;
+    }
+
+        /**
+     * Almacena los datos del vehículo y retorna el id
+     *
+     * @param array $data
+     * @param array $intercompania
+     * @return $dataVehiculo->id
+     */
+    public function storeVehiculo($data, $intercompania, $userId)
+    {
+
+        $datosVehiculos =  $data;
+
+        $dataVehiculo = new DatosVehiculo();
+
+        $dataVehiculo->marca = $datosVehiculos['marca'];
+        $dataVehiculo->id_sucursal = $this->getIdSucursal($intercompania);
+        $dataVehiculo->submarca = $datosVehiculos['submarca'];
+        $dataVehiculo->modelo = $datosVehiculos['modelo'];
+        $dataVehiculo->no_serie = $datosVehiculos['no_serie'];
+        $dataVehiculo->placas = $datosVehiculos['placas'];
+        $dataVehiculo->nro_economico = $datosVehiculos['nro_economico'];
+        $dataVehiculo->id_cre = $datosVehiculos['id_cre'];
+        $dataVehiculo->tipo_combustible = $datosVehiculos['tipo_combustible'];
+        $dataVehiculo->tipo = $datosVehiculos['tipo_vehiculo'];
+        $dataVehiculo->num_tarjeta_toka = $datosVehiculos['num_tarjeta_toka'];
+        $dataVehiculo->num_tag = $datosVehiculos['num_tag'];
+        $dataVehiculo->limite = $datosVehiculos['limite'];
+        $dataVehiculo->estatus = $datosVehiculos['estatus'];
+        $dataVehiculo->categoria = $datosVehiculos['categoria'];
+        $dataVehiculo->gps = $datosVehiculos['gps'];
+        $dataVehiculo->capacidad_combustible = $datosVehiculos['tanque_combustible'];
+        $dataVehiculo->rendimiento_x_litro = $datosVehiculos['rendimiento'];
+        $dataVehiculo->activo = 2;
+
+        $dataVehiculo->save();
+
+        if (isset($datosVehiculos['observacion']) && !empty($datosVehiculos['observacion'])) {
+            $this->saveObservacionVehiculo($datosVehiculos['observacion'], $dataVehiculo->id, $userId);
+        }
+
+        return $dataVehiculo->id;
+    }
+
+    public function updateVehiculo($data, $id, $userId)
+    {
+        $vehiculo = DatosVehiculo::find($id);
+        if (!$vehiculo) {
+            throw new \Exception("Vehiculo no encontrado");
+        }
+
+        $vehiculo->update([
+            'marca' => $data['marca'],
+            'submarca' => $data['submarca'],
+            'modelo' => $data['modelo'],
+            'no_serie' => $data['no_serie'],
+            'placas' => $data['placas'],
+            'tipo' => $data['tipo_vehiculo'],
+            'nro_economico' => $data['nro_economico'],
+            'id_cre' => $data['id_cre'],
+            'tipo_combustible' => $data['tipo_combustible'],
+            'estatus' => $data['estatus'],
+            'categoria' => $data['categoria'],
+            'gps' => $data['gps'],
+            'num_tarjeta_toka' => $data['num_tarjeta_toka'],
+            'num_tag' => $data['num_tag'],
+            'limite' => $data['limite'],
+            'capacidad_combustible' => $data['tanque_combustible'],
+            'rendimiento_x_litro' => $data['rendimiento'],
+        ]);
+
+        if (isset($data['observacion']) && !empty($data['observacion'])) {
+            $this->saveObservacionVehiculo($data['observacion'], $id, $userId);
+        }
+    }
+
+        /**
+     * Almacena los datos del tanque
+     *
+     * @param array $id
+     * @param array $data
+     * @param array $intercompania
+     */
+    public function storeTanque($id, $data, $intercompania)
+    {
+
+        $datosTanque =  $data;
+
+        $dataTanque = new DatosTanque();
+
+        $dataTanque->com_datos_vehiculo_id = $id;
+        $dataTanque->marca = $datosTanque['marca_tanque'];
+        $dataTanque->id_sucursal = $this->getIdSucursal($intercompania);
+        $dataTanque->anio_fabricacion = $datosTanque['anio_fabricacion'];
+        $dataTanque->capacidad = $datosTanque['capacidad'];
+        $dataTanque->serie = $datosTanque['serie'];
+        $dataTanque->tipo_medidor = $datosTanque['tipo_medidor'];
+
+        $dataTanque->save();
+    }
+
+    public function updateTanque($data, $id, $numIntercompania, $id_vehiculo)
+    {
+
+        $tanque = DatosTanque::find($id);
+
+        if (!$tanque || empty($id)) {
+            $this->storeTanque($id_vehiculo, $data, $numIntercompania);
+        } else {
+            $tanque->update([
+                'marca' => $data['marca_tanque'],
+                'anio_fabricacion' => $data['anio_fabricacion'],
+                'capacidad' => $data['capacidad'],
+                'serie' => $data['serie'],
+                'tipo_medidor' => $data['tipo_medidor']
+            ]);
+        }
+    }
+
+    public function updateDatosPoliza($data, $id_vehiculo, $idPoliza)
+    {
+        $poliza = SeguroVehiculo::find($idPoliza);
+
+
+        if (!$poliza || empty($poliza)) {
+            $this->storeDatosPoliza($data, $id_vehiculo);
+        } else {
+            $poliza->update([
+
+                'aseguradora' => $data['aseguradora'],
+                'inciso_vehiculo' => $data['inciso_vehiculo'],
+                'cobertura' => $data['cobertura'],
+                'inicio_vigencia' => $data['inicio_vigencia'],
+                'fin_vigencia' => $data['fin_vigencia'],
+                'flotilla' => $data['flotilla'],
+                'inciso_foltilla' => $data['inciso_foltilla'],
+
+            ]);
+        }
+    }
+
+        public function storeDatosPoliza($data, $idVehiculo)
+    {
+        $datosPoliza =  $data;
+
+        $ultimoSeguro = SeguroVehiculo::where('id_com_datos_vehiculo', $idVehiculo)
+                                  ->latest('id')
+                                  ->first();
+
+        $nuevo = [
+            'aseguradora'       => $datosPoliza['aseguradora'],
+            'cobertura'         => $datosPoliza['cobertura'],
+            'fecha_renovacion'  => $datosPoliza['fecha_emision'],
+            'inicio_vigencia'   => $datosPoliza['inicio_vigencia'],
+            'fin_vigencia'      => $datosPoliza['fin_vigencia'],
+            'flotilla'          => $datosPoliza['numero_poliza'],
+            'inciso_foltilla'   => $datosPoliza['inciso'],
+            'ramo'              => $datosPoliza['ramo'],
+            'sub_ramo'          => $datosPoliza['subramo'],
+            'prima_total'       => $datosPoliza['prima_total'],
+            'tipo_movimiento'   => $datosPoliza['tipo_movimiento'],
+            'periodicidad_pago' => $datosPoliza['periodicidad_pago'],
+        ];
+
+
+        if ($ultimoSeguro) {
+            $existente = $ultimoSeguro->only(array_keys($nuevo));
+
+            $diferencias = array_diff_assoc($nuevo, $existente);
+
+            if (empty($diferencias)) {
+                return;
+            }
+        }
+
+        $dataPoliza = new SeguroVehiculo($nuevo);
+        $dataPoliza->id_com_datos_vehiculo = $idVehiculo;
+        $dataPoliza->save();
+    }
+
+    public function getIdSucursal($intercompania)
+    {
+        $sucursal = Sucursales::where('num_intercompania', $intercompania)->first();
+        return $sucursal->id;
+    }
+
+    public function saveObservacionVehiculo($comentario, $id_vehiculo, $userId)
+    {
+        $dataObservacion = new ObservacionVehiculo();
+        $dataObservacion->observaciones = $comentario;
+        $dataObservacion->datos_vehiculo_id = $id_vehiculo;
+        $dataObservacion->user_id = $userId;
+        $dataObservacion->save();
+    }
+
+    public function asignarToka( $idToka, $idVehiculo)
+    {
+        DB::transaction(function () use ($idToka, $idVehiculo) {
+            $asignacionActual = VehiculosToka::where('com_id_datos_vehiculos', $idVehiculo)->whereNull('fecha_fin')->first();
+
+            if (is_null($idToka)) {
+                if ($asignacionActual) {
+                    $asignacionActual->update(['fecha_fin' => now()]);
+                    TarjetasToka::where('id', $asignacionActual->com_id_tarjetas_toka)->update(['estatus' => '0']);
+                }
+                return;
+            }
+            $tarjetaAsignada = VehiculosToka::where('com_id_tarjetas_toka',$idToka)->whereNull('fecha_fin')->first();
+
+            if ($tarjetaAsignada &&$tarjetaAsignada->com_id_datos_vehiculos != $idVehiculo) {
+                throw new \Exception('La tarjeta ya se encuentra asignada a otro vehículo.');
+            }
+            if ($asignacionActual) {
+                if ($asignacionActual->com_id_tarjetas_toka == $idToka) {
+                    return;
+                }
+
+                $asignacionActual->update(['fecha_fin' => now()]);
+                TarjetasToka::where('id',$asignacionActual->com_id_tarjetas_toka)->update(['estatus' => '0']);
+            }
+            VehiculosToka::create([
+                'com_id_datos_vehiculos' => $idVehiculo,
+                'com_id_tarjetas_toka' => $idToka,
+                'fecha_inicio' => now(),
+            ]);
+            TarjetasToka::where('id', $idToka)->update(['estatus' => '1']);
+        });
+    }
+
+
+    public function asignarTag( $idTag, $idVehiculo)
+    {
+        DB::transaction(function () use ($idTag, $idVehiculo) {
+            $asignacionActual = VehiculosTags::where('com_id_datos_vehiculos', $idVehiculo)->whereNull('fecha_fin')->first();
+            if (is_null($idTag)) {
+                if ($asignacionActual) {
+                    $asignacionActual->update(['fecha_fin' => now()]);
+                    Tags::where('id', $asignacionActual->com_id_tags)->update(['estatus' => '0']);
+                }
+                return;
+            }
+
+            $tarjetaAsignada = VehiculosTags::where('com_id_tags',$idTag)->whereNull('fecha_fin')->first();
+
+            if ($tarjetaAsignada &&$tarjetaAsignada->com_id_datos_vehiculos != $idVehiculo) {
+                throw new \Exception(
+                    'La tarjeta ya se encuentra asignada a otro vehículo.'
+                );
+            }
+            if ($asignacionActual) {
+                if ($asignacionActual->com_id_tags == $idTag) {
+                    return;
+                }
+
+                $asignacionActual->update(['fecha_fin' => now()]);
+                Tags::where('id', $asignacionActual->com_id_tags)->update(['estatus' => '0']);
+            }
+            VehiculosTags::create([
+                'com_id_datos_vehiculos' => $idVehiculo,
+                'com_id_tags' => $idTag,
+                'fecha_inicio' => now(),
+            ]);
+            Tags::where('id', $idTag)->update(['estatus' => '1']);
+        });
+    }
+
+
 
     public function queryVehiculosForToka($idSucursal)
     {
@@ -69,7 +341,7 @@ class ParqueVehicularService{
 
 
             if (isset($datos['numero_serie_v']) && !empty($datos['numero_serie_v'])) {
-                
+
                 $vehiculo = DatosVehiculo::where('no_serie', $datos['numero_serie_v'])->first();
 
                 $gps = null;
@@ -94,10 +366,10 @@ class ParqueVehicularService{
                         // "tipo" => strtolower($datos['uso_vehiculo']),
                         // "estatus" => $status[$datos['status']] ?? 1,
                         // "propietario" => $datos['propietario'],
-                        "gps" => $gps,  
+                        "gps" => $gps,
 
                     ]);
-                } 
+                }
                 // else {
                 //     if (!empty($datos['numero_serie_v'])) {
                 //         // Crear nuevo vehículo
@@ -197,7 +469,7 @@ class ParqueVehicularService{
 
 
     /**
-     * convierte el intercompania entrante a uno legible para la base datos 
+     * convierte el intercompania entrante a uno legible para la base datos
      */
     public function intercompaniaConverter($intercompania){
 
@@ -241,7 +513,7 @@ class ParqueVehicularService{
         $rawData = $this->gpsApi->obtenerVehiculosEmpresa();
         $data = $rawData['data']['units'];
 
-        $noAsignados = []; 
+        $noAsignados = [];
         $asignados = []; //
         foreach ($data as $item) {
             if(!empty($item['vin'])){
@@ -254,7 +526,7 @@ class ParqueVehicularService{
                     $noAsignados[] = $item;
                 }
             }
-            
+
         }
         return  [
             'totalGps' => count($data),
@@ -269,16 +541,10 @@ class ParqueVehicularService{
      * Recupera el recorrido de unidades del dia anterior
      */
     public function calcularRecorridoUnidad($idUnidad){
-        // Inicio del dia anterior
-        $fechaInicio = Carbon::yesterday('America/Mexico_City')
-            ->startOfDay()
-            ->utc()
-            ->format('Y-m-d\TH:i:s\Z');
-        // Fin del dia anterior
-        $fechaFin = Carbon::yesterday('America/Mexico_City')
-            ->endOfDay()
-            ->utc()
-            ->format('Y-m-d\TH:i:s\Z');
+        $fechaInicio = Carbon::yesterday('America/Mexico_City')->startOfDay()
+            ->utc()->format('Y-m-d\TH:i:s\Z');
+        $fechaFin = Carbon::yesterday('America/Mexico_City')->endOfDay()
+            ->utc()->format('Y-m-d\TH:i:s\Z');
         $data = [];
         $unidad = DatosVehiculo::find($idUnidad);
         if($unidad && !empty($unidad->unit_id_gps)){
@@ -307,7 +573,6 @@ class ParqueVehicularService{
 
         foreach ($routes as $route) {
 
-            // calcular tiempos manejando o recorrido
             if ($route['type'] === 'route') {
                 $resumen['distancia_total_metros'] += $route['distance'] ?? 0;
                 $inicio = Carbon::parse($route['start']['time']);
@@ -316,7 +581,6 @@ class ParqueVehicularService{
                     $inicio->diffInSeconds($fin);
             }
 
-            // Cuando está detenido
             if ($route['type'] === 'stop') {
                 $resumen['veces_detenido']++;
                 $inicio =Carbon::parse($route['start']['time']);
@@ -326,12 +590,8 @@ class ParqueVehicularService{
             }
         }
 
-        // Convertir metros a km
         $resumen['distancia_total_km'] = round($resumen['distancia_total_metros'] / 1000,2);
-
-        // Formatear tiempos
         $resumen['tiempo_manejando'] =gmdate('H:i:s',$resumen['tiempo_manejando_segundos']);
-
         $resumen['tiempo_detenido'] =gmdate('H:i:s',$resumen['tiempo_detenido_segundos']);
 
         return $resumen;

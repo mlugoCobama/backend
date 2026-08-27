@@ -6,14 +6,12 @@ use App\Exports\EasyGasExport;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 // use Maatwebsite\Excel\Excel;
 use Maatwebsite\Excel\Facades\Excel;
 use Modules\Compras\Models\SolcitudDiesel;
 use Modules\Compras\Services\DispersionDiesel;
 use Modules\Compras\Transformers\ExhibicionRecargaTokaResource;
-use Modules\Compras\Transformers\RecargaTokaResource;
 
 class DispersionesDieselController extends Controller
 {
@@ -56,26 +54,6 @@ class DispersionesDieselController extends Controller
     /**
      * Show the specified resource.
      */
-    public function show2($id)
-    {
-
-        // $resultado = [];
-        // $dispersion = SolcitudDiesel::find($id);
-        // for ($i=0; $i < $dispersion->exibiciones; $i++) {
-        //     $data = DB::connection('dashboard')->select('CALL SP_GetDispersionDiesel(?, ?)', [$id, ($i+1)]);
-        //     $resultado[$i] = RecargaTokaResource::collection($data);
-        // }
-        // $data = DB::connection('dashboard')->select('CALL SP_GetDispersionDiesel(?, ?)', [$id, 1]);
-        // return response()->json([
-        //     'status' => 'success',
-        //     'data' => RecargaTokaResource::collection($data),
-        //     // 'data' =>  $resultado,
-        //     'message' => 'Datos recuperados correctamente'
-        // ]);
-
-
-    }
-
     public function show($id)
         {
             $solicitud = SolcitudDiesel::findOrFail($id);

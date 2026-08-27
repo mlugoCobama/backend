@@ -31,7 +31,7 @@ class OrdenCompraPdfController extends Controller
 
             $pdf = new Fpdi();
             $pdf->AddPage('P', 'Letter');
-            
+
             //Plantilla PDF: Formato interno de compra
             // $pdf->setSourceFile(__DIR__ . "/../../../../../storage/app/modules/compras/orden_compra/formato_compras_v1.pdf");
             $pdf->setSourceFile(__DIR__ . "/../../../resources/assets/orden_compra_v3.pdf");
@@ -56,7 +56,7 @@ class OrdenCompraPdfController extends Controller
             $areaSolicita = $data['solicita'][0]->area;
             $pdf->SetXY(23, 21.1);
             $pdf->Write(0, utf8_decode(' (' . $areaSolicita . ')'));
-        
+
             $pdf->SetFont('Arial', 'B', 6);
 
             $pdf->SetXY(65, 21.1);
@@ -93,7 +93,7 @@ class OrdenCompraPdfController extends Controller
                 $pdf->SetXY(57, 42.6);
                 $pdf->Write(0, '---------------------------------');
             }
-            
+
 
 
             $pdf->SetXY(57, 44.8);
@@ -152,7 +152,7 @@ class OrdenCompraPdfController extends Controller
             $pdf->Write(0, $dataFacturacion['TELS.']);
 
             /*-----------------------------------------------------
-            * Datos de entrega                                    
+            * Datos de entrega
             -----------------------------------------------------*/
             $pdf->SetXY(130.5, 75);
             $pdf->Write(0, $dataEntrega['RAZON SOCIAL']);
@@ -172,7 +172,7 @@ class OrdenCompraPdfController extends Controller
             $pdf->Write(0, $dataEntrega['TELS. ENTREGA']);
 
             /*-----------------------------------------------------
-            * Fila de la tabla  de detalles                                    
+            * Fila de la tabla  de detalles
             -----------------------------------------------------*/
             $pdf->SetFont('Arial', 'B', 5.5);
 
@@ -200,27 +200,27 @@ class OrdenCompraPdfController extends Controller
                 $pdf->Cell(12, 4.5, $cantidad, 0, 0, 'C');
                 $pdf->Cell(16, 4.5, utf8_decode($tipo), 0, 0, 'C');
 
-                
+
                 $x = $pdf->GetX();
                 $yBefore = $pdf->GetY();
 
                 // Multicel: Se utiliza para campos con textos largos
-                //* $pdf->MultiCell(101, 5, utf8_decode($descripcion), 0, 'C'); 
-                $pdf->MultiCell(57, 4.5, utf8_decode($descripcion), 0, 'C'); 
-                
+                //* $pdf->MultiCell(101, 5, utf8_decode($descripcion), 0, 'C');
+                $pdf->MultiCell(57, 4.5, utf8_decode($descripcion), 0, 'C');
+
                 // Ancho y alto de línea
                 $descLineHeight = $pdf->GetY() - $yBefore;
 
                 // Posición siguiente celda
-                $pdf->SetXY($x + 57, $yBefore); 
+                $pdf->SetXY($x + 57, $yBefore);
                 $pdf->MultiCell(44, 4.5, utf8_decode($observaciones), 0, 'C');
-                
+
                 //Posición siguiente celda
-                $pdf->SetXY($x + 101.5, $yBefore); 
+                $pdf->SetXY($x + 101.5, $yBefore);
                 $pdf->MultiCell(10, 4.5, utf8_decode($eco), 0,'C');
 
                 $obsLineHeight = $pdf->GetY() - $yBefore;
-                
+
                 //Alto de las siguiente celdas
                 $lineHeight = max($descLineHeight, $obsLineHeight);
 
@@ -236,12 +236,12 @@ class OrdenCompraPdfController extends Controller
                 $pdf->SetLineWidth(0.2);
                 $pdf->Line(16.7, $y, 197, $y);
 
-                $pdf->SetY($y); 
+                $pdf->SetY($y);
                 $totalImporte += $importe;
             }
 
             /*-----------------------------------------------------
-            * Tabla de tipo de cambio                                    
+            * Tabla de tipo de cambio
             -----------------------------------------------------*/
             $tipoCambio = 1.00;
             $pdf->SetXY(63, 225.7);
@@ -250,7 +250,7 @@ class OrdenCompraPdfController extends Controller
             $pdf->Write(0, $tipoCambio);
 
             /*-----------------------------------------------------
-            * Fila totales importe                                  
+            * Fila totales importe
             -----------------------------------------------------*/
             $pdf->SetXY(141.5, 221.5);
             $pdf->Cell(14, 2.5,  "$ " . number_format($totalImporte, 2), 0, '0', $align = 'R');
@@ -260,7 +260,7 @@ class OrdenCompraPdfController extends Controller
             $pdf->Cell(26, 2.5,  "$ " . number_format($totalImporte, 2), 0, '0', $align = 'R');
 
             /*-----------------------------------------------------
-            * Fila totales tipo cambio                                
+            * Fila totales tipo cambio
             -----------------------------------------------------*/
             $pdf->SetXY(141.5, 224.5);
             $pdf->Cell(14, 2.5,  $tipoCambio, 0, '0', $align = 'R');
@@ -272,7 +272,7 @@ class OrdenCompraPdfController extends Controller
             $subtotal = $totalImporte * $tipoCambio;
 
             /*-----------------------------------------------------
-            * Fila totales subtotal                               
+            * Fila totales subtotal
             -----------------------------------------------------*/
             $pdf->SetXY(141.5, 226.9);
             $pdf->Cell(14, 2.5,  "$ " . number_format($subtotal, 2), 0, '0', $align = 'R');
@@ -284,7 +284,7 @@ class OrdenCompraPdfController extends Controller
             $iva = $subtotal * 0.16;
 
             /*-----------------------------------------------------
-            * Fila totales %IVA                               
+            * Fila totales %IVA
             -----------------------------------------------------*/
             $pdf->SetXY(141.5, 229.4);
             $pdf->Cell(14, 2.5,  " ", 0, '0', $align = 'R');
@@ -296,7 +296,7 @@ class OrdenCompraPdfController extends Controller
             $total = $subtotal + $iva;
 
             /*-----------------------------------------------------
-            * Fila totales IVA                               
+            * Fila totales IVA
             -----------------------------------------------------*/
             $pdf->SetXY(141.5, 231.8);
             $pdf->Cell(14, 2.5,  "$ " . number_format($iva, 2), 0, '0', $align = 'R');
@@ -306,7 +306,7 @@ class OrdenCompraPdfController extends Controller
             $pdf->Cell(26, 2.5,  "$ " . number_format($iva, 2), 0, '0', $align = 'R');
 
             /*-----------------------------------------------------
-            * Fila totales TOTAL                  +6              
+            * Fila totales TOTAL                  +6
             -----------------------------------------------------*/
             $pdf->SetXY(141.5, 234.2);
             $pdf->Cell(14, 2.5,  "$ " . number_format($total, 2), 0, '0', $align = 'R');
@@ -338,37 +338,37 @@ class OrdenCompraPdfController extends Controller
             // Límites de la tabla
             $yInicioTabla = 103;
             $limiteInferior = 210;
-            
+
             // Calcular alturas de todas las filas y número de páginas necesarias
             $alturasFilas = [];
             $totalPaginas = 1;
             $ySimulado = $yInicioTabla;
-            
+
             foreach ($data['detallesCotizacion'] as $detalle) {
                 $descripcion = $detalle->detalle_solicitud->descripcion;
                 $observaciones = $detalle->detalle_solicitud->observaciones;
-                
+
                 // Calcular altura aproximada basada en longitud de texto
                 $lineasDescripcion = max(1, ceil(strlen($descripcion) / 40)); // ~45 caracteres por línea
                 $lineasObservaciones = max(1, ceil(strlen($observaciones) / 42)); // ~35 caracteres por línea
-                
+
                 $alturaFila = (max($lineasDescripcion, $lineasObservaciones)) * 4.4;
                 // $alturaFila = $lineasDescripcion * 4.5;
 
                 $alturasFilas[] = $alturaFila;
-                
+
                 // Verificar si necesitamos nueva página
                 if ($ySimulado + $alturaFila > $limiteInferior) {
                     $totalPaginas++;
                     $ySimulado = $yInicioTabla;
                 }
-                
+
                 $ySimulado += $alturaFila;
             }
-            
+
             // Generar el PDF con las páginas calculadas
             $pdf = new Fpdi();
-            
+
             $paginaActual = 1;
             $totalImporte = 0;
             $y = $yInicioTabla;
@@ -412,8 +412,10 @@ class OrdenCompraPdfController extends Controller
                 $eco = '';
 
                 $detalleAutotanque = $detalle->detalle_solicitud->DetalleAutotanque;
+
                 if (!empty($detalleAutotanque)) {
-                    $eco = "ECO: " . $detalle->detalle_solicitud->DetalleAutotanque->DatosVehiculo->nro_economico;
+                    $vehciulo = $detalle->detalle_solicitud->DetalleAutotanque->DatosVehiculo;
+                    $eco = "ECO: " . $vehciulo->nro_economico . ' '. $vehciulo->marca .' '. $vehciulo->no_serie ;
                 }
 
                 $importe = $cantidad * $precio_unitario;
@@ -440,18 +442,18 @@ class OrdenCompraPdfController extends Controller
                 $pdf->SetXY($x + 85, $yBefore);
                 $pdf->MultiCell(44, 4.5, utf8_decode($observaciones), 0, 'C');
                 $obsLineHeight = $pdf->GetY() - $yBefore;
-
+                $pdf->SetFont('Arial', 'B', 3.8);
                 // ECO
                 $pdf->SetXY($x + 129, $yBefore);
-                $pdf->MultiCell(10, 4.5, utf8_decode($eco), 0, 'C');
+                $pdf->MultiCell(14.5, 4.5, utf8_decode($eco), 0, 'L');
                 $ecoLineHeight = $pdf->GetY() - $yBefore;
-
+                $pdf->SetFont('Arial', 'B', 5.5);
                 // Altura máxima de la fila
                 $lineHeight = max($descLineHeight, $obsLineHeight, $ecoLineHeight);
 
                 // Precio unitario
-                $pdf->SetXY($x + 139, $yBefore);
-                $pdf->Cell(17, $lineHeight, "$ " . number_format($precio_unitario, 2), 0, 0, 'R');
+                $pdf->SetXY($x + 142, $yBefore);
+                $pdf->Cell(14, $lineHeight, "$ " . number_format($precio_unitario, 2), 0, 0, 'R');
 
                 // Importe
                 $pdf->Cell(25.5, $lineHeight, "$ " . number_format($importe, 2), 0, 0, 'R');
@@ -492,7 +494,7 @@ class OrdenCompraPdfController extends Controller
             $folioOC = $data['ordenCompra']['folio_oc'];
             $pdf->SetXY(172, 12.5);
             $pdf->Write(0, $folioOC);
-            
+
             $pdf->SetFont('Arial', 'B', 5);
 
             $pdf->SetFillColor(255, 255, 255);
@@ -503,7 +505,7 @@ class OrdenCompraPdfController extends Controller
             $areaSolicita = $data['solicita'][0]->area;
             $pdf->SetXY(23, 21.1);
             $pdf->Write(0, utf8_decode(' (' . $areaSolicita . ')'));
-        
+
             $pdf->SetFont('Arial', 'B', 6);
             $usuarioSolicita = utf8_decode('' . $data['solicita'][0]->firstname . ' ' . $data['solicita'][0]->realname . '');
             $pdf->SetXY(80, 21.1);
@@ -550,7 +552,7 @@ class OrdenCompraPdfController extends Controller
             // $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['datosPago'])));
             $pdf->SetXY(56.5, 66.1);
             // $pdf->Write(0, strtoupper(utf8_decode($data['proveedor']['condiciones'])));
-            
+
             $fechaE = 'Dato No Disponible';
             $modoPago = $data['proveedor']['condiciones'];
 
@@ -609,7 +611,7 @@ class OrdenCompraPdfController extends Controller
             $pdf->Write(0, $dataEntrega['CONTACTO ENTREGA']);
             $pdf->SetXY(130.5, 92.5);
             $pdf->Write(0, $dataEntrega['TELS. ENTREGA']);
-            
+
             // Paginación al final de la página
             $pdf->SetFont('Arial', '', 7);
             $pdf->SetXY(170, 255);
@@ -621,8 +623,8 @@ class OrdenCompraPdfController extends Controller
             //     $pdf->Write(0, 'Datos de pago: ');
             //     $datosPago = $data['proveedor']['datosPago'];
             //     $incio = 245;
-                
-            //     for ($i=0; $i < count($datosPago) ; $i++) { 
+
+            //     for ($i=0; $i < count($datosPago) ; $i++) {
             //        $texto = 'Banco: '.$datosPago[$i]['banco'].
             //                 ' No. Cuenta: '.$datosPago[$i]['no_cuenta'].
             //                 ' CLABE: '.$datosPago[$i]['clave_interbancaria'].
@@ -762,7 +764,7 @@ class OrdenCompraPdfController extends Controller
         {
             $empresasCache = [];
             $empresas = DB::connection('intranet')->select('CALL SP_GetEmpresas()');
-            
+
             foreach ($empresas as $empresa) {
                 $empresasCache[$empresa->intercompania] = $empresa->name;
             }
