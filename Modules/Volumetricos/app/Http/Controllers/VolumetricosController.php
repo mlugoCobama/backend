@@ -34,7 +34,10 @@ class VolumetricosController extends Controller
      */
     public function index()
     {
-        $data =  ReporteVolumen::active()->latest()->get();
+        $data = ReporteVolumen::active()
+        // ->with('acuses')
+        ->latest()
+        ->get();
 
         return response()->json([
             'data' => ReportesVolumetricosResource::collection($data),
@@ -124,7 +127,7 @@ class VolumetricosController extends Controller
  */
 public function show($id)
 {
-    $reporte = ReporteVolumen::find($id);
+    $reporte = ReporteVolumen::with('acuses')->find($id);
 
     if (!$reporte) {
         return response()->json([
@@ -172,6 +175,7 @@ public function show($id)
             return response()->json([
                 'success' => true,
                 'tipo' => 'json',
+                'reporte' => $reporte,
                 'data' => $json
             ]);
 
@@ -201,6 +205,7 @@ public function show($id)
             return response()->json([
                 'success' => true,
                 'tipo' => 'xml',
+                'reporte' => $reporte,
                 'data' => $contenido
             ]);
 
@@ -285,7 +290,8 @@ public function show($id)
                 'tipo' => $request->tipo,
                 'descripcion' => $request->descripcion,
                 'fecha_reporte' => $request->fecha_reporte,
-                'comentarios' => $request->comentarios ?? null
+                'comentarios' => $request->comentarios ?? null,
+                'estatus' => 1
             ]);
 
             return response()->json([

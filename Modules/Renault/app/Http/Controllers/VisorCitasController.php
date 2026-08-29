@@ -245,29 +245,15 @@ class VisorCitasController extends Controller
     {
        DB::beginTransaction();
             try {
-                // 1. Obtener la entrada del vehículo existente
                 $entrada = RenEntradaVehiculo::findOrFail($id);
                 $folio = $request->input('folio', $entrada->folio);
 
-                // 2. INHABILITAR TESTIGOS RETIRADOS
-                // Recibimos un arreglo con las IDs de las fotos que el usuario DECIDIÓ CONSERVAR
-                $fotosConservadasIds = $request->input('fotos_existentes_ids', []);
-
-                // Inhabilitamos todos los testigos de esta entrada que NO estén en la lista conservada
-                RenTestigosFotograficos::where('ren_entrada_vehiculo_id', $entrada->id)
-                    ->whereNotIn('id', $fotosConservadasIds)
-                    ->update([
-                        'activo' => 0 // O $table->boolean('activo')->default(false)
-                    ]);
-
-                // 3. PROCESAR Y AGREGAR NUEVOS TESTIGOS FOTOGRÁFICOS
                 if ($request->has('nuevas_fotos')) {
                     foreach ($request->input('nuevas_fotos') as $index => $fotoData) {
                         if ($request->hasFile("nuevas_fotos.{$index}.file")) {
                             $archivo = $request->file("nuevas_fotos.{$index}.file");
 
                             $extension = $archivo->getClientOriginalExtension();
-                            // Usamos time() o microtime() para evitar colisión de nombres en actualizaciones repetidas
                             $nombreArchivo = $folio . '_' . $fotoData['categoria'] . '_' . time() . '_' . $index . '.' . $extension;
                             $path = $archivo->storeAs('renault/citas_servicio', $nombreArchivo, 'local');
 

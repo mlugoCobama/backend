@@ -19,6 +19,7 @@ class ReportesVolumetricosResource extends JsonResource
 
         $nombreEmpresa = $this->setEmpresaName($this->empresa);
         $fechaReporte = $this->parserFecha( $this->fecha_reporte);
+        $estatusTxt = $this->setEstatusText($this->estatus);
         return [
             'id' => $this->id,
             'empresa' => $this->empresa,
@@ -32,6 +33,8 @@ class ReportesVolumetricosResource extends JsonResource
             'fecha_reporte' => $this->fechaReporte,
             'fecha_reporte_txt' => mb_strtoupper($fechaReporte),
             'descripcion' => $this->descripcion,
+            'estatus' => $this->estatus,
+            'estatus_txt' => $estatusTxt,
             'comentarios' => $this->comentarios,
             'created_at' => $this->created_at,
         ];
@@ -52,13 +55,16 @@ class ReportesVolumetricosResource extends JsonResource
         return self::$empresasCache[$intercompania] ?? 'No disponible';
     }
 
-    // private function parserFecha($fechaIso){
-    //     $fecha = new DateTime($fechaIso);
-    //     $fechaFormateada = $fecha->format('d/m/Y');
 
-    //     return $fechaFormateada;
-    // }
-
+    private function setEstatusText($estatus){
+        return match ($estatus) {
+            1 => 'GENERADO',
+            2 => 'ENVIADO' ,
+            3 => 'RECHAZADO',
+            4 => 'ACEPTADO',
+            default => 'Desconocido'
+        };
+    }
 
 
     private function parserFecha($fechaIso)

@@ -25,6 +25,7 @@ class ReporteVolumen extends Model
         'fecha_reporte',
         'descripcion',
         'comentarios',
+        'activo',
         'created_at',
         'updated_at',
     ];
@@ -41,5 +42,9 @@ class ReporteVolumen extends Model
      */
     public function scopeActive ($query) {
         return $query->where('activo', 1);
+    }
+
+    public function acuses(){
+      return  $this->hasMany(AcusesReporte::class, 'vol_reporte_volumenes_id', 'id');
     }
 }

@@ -163,7 +163,7 @@ class ParserJsonService
 
         $claveInstalacion = $item['ClaveInstalacion'] ?? '';
         $prefijo = strtoupper(trim(strstr($claveInstalacion, '-', true) ?: $claveInstalacion));
-        $tipoComplemento = ($prefijo === 'EXO') ? 'Expendio' : 'Distribucion';
+        $tipoComplemento = self::setTipoComplemento($prefijo);
 
         $cfdi = trim((string)($item['CFDI'] ?? ''));
         $aclaracion = trim((string)($item['Aclaracion'] ?? ''));
@@ -336,7 +336,12 @@ class ParserJsonService
         return $bitacora;
     }
 
-    public function setTipoComplemento($tipoComplemento){
-
+    private static function setTipoComplemento($tipoComplemento){
+        return match ($tipoComplemento) {
+            'EXO' => 'Expendio',
+            'PDD' => 'Distribucion',
+            'CMN' => 'Comercializacion',
+            default  => 'Distribucion'
+        };
     }
 }

@@ -149,3 +149,11 @@ Se actualiza el sp para obtener comisiones
 Se agrengan nuevos valores, como un nombre de empresa legibe y fecha de periodo reportado
 Se integra ctualizacion de registros y archivos ademas de borrado fisico
 
+---
+### Volumetricos
+*Fecha de liberación: 29 de Agosto, 2026*
+* **Validación de Plantilla:** Verificación automática para asegurar que la plantilla pertenezca a la empresa correspondiente.
+* **Soporte para Comercializadoras:** Incorporación del perfil y lógica para empresas comercializadoras.
+* **Gestión de Estatus:** Flujo de seguimiento con los estados: `Generado` ➔ `Enviado` ➔ `Aceptado`.
+* **Carga de Acuses:** Soporte para subir y adjuntar acuses de **Envío** y de **Aceptación** (rechazado o aceptado).
+* **Filtros Avanzados:** Consultas por **Empresa**, **Periodo** y **Tipo de Instalación**.
