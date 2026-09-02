@@ -10,6 +10,7 @@ use Modules\Nissan\Http\Controllers\FinanciamientoController;
 use Modules\Nissan\Http\Controllers\OtrosController;
 use Modules\Nissan\Http\Controllers\SegurosController;
 use Modules\Nissan\Http\Controllers\TomaUnidadController;
+use Modules\Renault\Http\Controllers\EncuestaCitaController;
 use Modules\Renault\Http\Controllers\EventosCitaController;
 
 /*
@@ -25,8 +26,12 @@ use Modules\Renault\Http\Controllers\EventosCitaController;
 
 //Route::middleware(['auth:sanctum'])->prefix('renault')->group(function () {
 Route::prefix('renault')->group(function () {
+
     Route::apiResource('visor-citas', VisorCitasController::class)->names('visor-citas');
     Route::apiResource('eventos-citas', EventosCitaController::class)->names('eventos-citas');
+    Route::apiResource('encuestas', EncuestaCitaController::class)->names('encuestas-citas');
+
+
     Route::apiResource('financiamiento', FinanciamientoController::class)->names('nrfinance');
     Route::apiResource('toma-unidad', TomaUnidadController::class)->names('toma-unida');
     Route::apiResource('seguro', SegurosController::class)->names('seguro');
@@ -35,8 +40,10 @@ Route::prefix('renault')->group(function () {
     Route::apiResource('otros', OtrosController::class)->names('otros');
 
     Route::get('visor-citas/datos-ingreso/{id}', [ VisorCitasController::class, 'getDatosIngreso'])->name('visor-citas.getDatosEntrada');
+    Route::get('visor-citas/datos-cita/{id}', [ VisorCitasController::class, 'getDatosCita'])->name('visor-citas.getDatosCita');
     Route::post('auth/login', [LoginController::class, 'loginMobile']);
     Route::get('visor-citas/orden-servicio/{id}', [ VisorCitasController::class, 'descargarPdfOrdenServicio'])->name('visor-citas.descargarOrdenServicio');
+    Route::get('visor-citas/encuesta-satisfaccion/{id}', [ EncuestaCitaController::class, 'descargarPdfEncuesta'])->name('visor-citas.descargarPdfEncuesta');
     Route::get('visor-citas/{intercompania}/{apv}/{fechaInicial}/{fechaFinal}', [ VisorCitasController::class, 'datosFiltrados'])->name('visor-citas.datosFiltrados');
     Route::get('aps/{idAgencia}', [ VisorCitasController::class, 'getApsByAgencia'])->name('visor-citas.getApsByAgencia');
 

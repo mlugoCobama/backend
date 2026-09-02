@@ -44,7 +44,8 @@ class DatosEntradaResource extends JsonResource
             'testigos_fotograficos' => TestigosFotograficosResource::collection($this->Datos->TestigosFotograficos),
             'trabajos' => $this->Datos->trabajosSolicitados,
             'garantias' => $this->Datos->garantias,
-            'eventosCita' => $this->eventosCita
+            'eventosCita' => $this->eventosCita,
+            'encuesta' => $this->encuesta,
 
         ];
     }

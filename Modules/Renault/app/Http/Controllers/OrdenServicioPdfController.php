@@ -74,8 +74,6 @@ class OrdenServicioPdfController extends Controller
         $pdf = new Fpdi();
         $pdf->AddPage('P', 'Letter');
 
-        //Plantilla PDF: Formato interno de compra
-        // $pdf->setSourceFile(__DIR__ . "/../../../../../storage/app/modules/compras/orden_compra/formato_compras_v1.pdf");
         $pdf->setSourceFile(__DIR__ . "/../../../resources/assets/formato_orden_servicio.pdf");
         $template = $pdf->importPage(1);
         $pdf->useImportedPage($template);
@@ -84,6 +82,7 @@ class OrdenServicioPdfController extends Controller
         $datosInventario = $cita->Datos->Inventario;
         $trabajosSolicitados = $cita->Datos->trabajosSolicitados;
         $garantias = $cita->Datos->garantias;
+        $firma = storage_path( 'app/renault/citas_servicio/'.$cita->folio.'_firma.png');
 
         // Fuente
 
@@ -264,13 +263,17 @@ class OrdenServicioPdfController extends Controller
                 $pdf->SetY($y);
             }
 
+            $pdf->Image($firma, 180, 237, 25);
 
-        // Página 2
+
+        // Página 2 - Contrato de prestacion de servicios
         $pdf->AddPage();
         $template = $pdf->importPage(2);
         $pdf->useImportedPage($template, 0, 0);
 
-        // Página 3
+        $pdf->Image($firma, 137, 234, 50);
+
+        // Página 3 - Aviso de privacidad
         $pdf->AddPage();
         $template = $pdf->importPage(3);
         $pdf->useImportedPage($template, 0, 0);
@@ -298,9 +301,7 @@ class OrdenServicioPdfController extends Controller
 
         foreach ($imagenes as $obj) {
 
-            $rutaOriginal = storage_path(
-                "app/renault/citas_servicio/$obj->nombre"
-            );
+            $rutaOriginal = storage_path( "app/renault/citas_servicio/$obj->nombre");
 
             if (!file_exists($rutaOriginal)) {
                 continue;
@@ -489,13 +490,8 @@ class OrdenServicioPdfController extends Controller
 
     private function dividirFecha($fechaCompleta){
         $carbon = Carbon::parse($fechaCompleta);
-        // $soloFecha = $carbon->toDateString();
-        // $soloHora = $carbon->toTimeString();
-        // También puedes formatear
-        $fechaFormateada = $carbon->format('d/m/Y'); // "19/10/2024"
+        $fechaFormateada = $carbon->format('d/m/Y');
         $horaFormateada = $carbon->format('H:i:s A');
-
         return ['fecha' => $fechaFormateada, 'hora' => $horaFormateada];
-
     }
 }

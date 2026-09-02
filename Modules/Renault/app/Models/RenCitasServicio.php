@@ -62,4 +62,7 @@ class RenCitasServicio extends Model
     public function eventosCita(){
         return $this->hasMany(RenEventosCita::class, 'ren_citas_servicio_id', 'id' );
     }
+    public function encuesta(){
+        return $this->hasOne(RenEncuestaCita::class, 'ren_citas_servicio_id', 'id');
+    }
 }

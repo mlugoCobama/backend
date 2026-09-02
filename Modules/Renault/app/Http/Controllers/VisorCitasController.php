@@ -202,6 +202,26 @@ class VisorCitasController extends Controller
 
     }
 
+
+     public function getDatosCita($id){
+        $cita =RenCitasServicio::find($id);
+        if($cita){
+            return response()->json([
+                'status' => 'success',
+                'message' => '',
+                'data' =>  new CitasServicioResource($cita)
+            ]);
+
+        }else{
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos de entrada no encontrados',
+                'data' =>  []
+            ]);
+        }
+
+    }
+
     public function descargarPdfOrdenServicio($id){
         $cita = $this->getDatosOrdenServicio($id);
         if($cita){
@@ -326,7 +346,7 @@ class VisorCitasController extends Controller
     }
 
     private function getDatosOrdenServicio($idCita){
-        return RenCitasServicio::with('Datos.Inventario','Datos.TestigosFotograficos', 'Datos.trabajosSolicitados', 'Datos.garantias', 'eventosCita')->where('id', $idCita)->first();
+        return RenCitasServicio::with('Datos.Inventario','Datos.TestigosFotograficos', 'Datos.trabajosSolicitados', 'Datos.garantias', 'eventosCita', 'encuesta.repuestas.pregunta')->where('id', $idCita)->first();
     }
 
 
