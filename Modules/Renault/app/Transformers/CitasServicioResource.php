@@ -35,7 +35,8 @@ class CitasServicioResource extends JsonResource
             'anio' => $this->anio,
             'estatus' => $this->estatus,
             'tipoCita' => $this->tipo_cita,
-            'agencia' => 'RENAULT '.$this->setNameAgencia($this->agencia_id)
+            'agencia' => 'RENAULT '.$this->setNameAgencia($this->agencia_id),
+            'tiene_encuesta' => $this->encuesta ?? false
         ];
     }
 

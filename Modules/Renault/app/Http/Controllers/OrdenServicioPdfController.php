@@ -74,7 +74,11 @@ class OrdenServicioPdfController extends Controller
         $pdf = new Fpdi();
         $pdf->AddPage('P', 'Letter');
 
-        $pdf->setSourceFile(__DIR__ . "/../../../resources/assets/formato_orden_servicio.pdf");
+        $pathPdf1 = base_path('Modules/Renault/resources/assets/orden_reparacion.pdf');
+        $pathPdf2 = base_path('Modules/Renault/resources/assets/formato_orden_servicio.pdf');
+        // $pathPdf2 = storage_path(__DIR__ . "/../../../resources/assets/formato_orden_servicio.pdf");
+
+        $paginaUno = $pdf->setSourceFile($pathPdf1);
         $template = $pdf->importPage(1);
         $pdf->useImportedPage($template);
 
@@ -91,136 +95,136 @@ class OrdenServicioPdfController extends Controller
         /**
          * Encabezado de entrada
          */
-        $pdf->SetXY(33, 31);
+        $pdf->SetXY(45, 31);
         $pdf->Write(0, date("d/m/Y", strtotime($datosEntrada->fecha)));
 
-        $pdf->SetXY(184, 33);
+        $pdf->SetXY(168, 31);
         $pdf->SetFont('Arial', 'B', 15);
         $pdf->Write(0, $datosEntrada->num_entrada);
 
         /**
          * Datos de la agencia
          */
-        $pdf->SetFont('Arial', 'B', 7);
-        $pdf->SetXY(56, 43);
+        $pdf->SetFont('Arial', '', 6);
+        $pdf->SetXY(63.5, 41.5);
         $pdf->Write(0, 'AGENCIA RENAULT MEX');
-        $pdf->SetXY(33, 47);
+        $pdf->SetXY(44, 45.7);
         $pdf->Write(0, 'Domicilio Conocido C.P. 00000 MEX');
-        $pdf->SetXY(30, 51);
+        $pdf->SetXY(41, 49.7);
         $pdf->Write(0, '000000000');
-        $pdf->SetXY(33, 55);
+        $pdf->SetXY(44, 53.7);
         $pdf->Write(0, '(55) 5555 5555');
-        $pdf->SetXY(45, 59.5);
+        $pdf->SetXY(54, 58.1);
         $pdf->Write(0, 'Lun. a Dom. 9 AM a 6PM');
-        $pdf->SetXY(33, 63.5);
+        $pdf->SetXY(42, 62.3);
         $pdf->Write(0, 'correo@ejemplo.com');
 
         /**
          * Datos del cliente
          */
         $pdf->SetFont('Arial', 'B', 7);
-        $pdf->SetXY(138, 43);
+        $pdf->SetXY(130, 41.7);
         $pdf->Write(0, ($cita->nombre . ' ' . $cita->apellido_paterno . ' ' . $cita->apellido_paterno));
-        $pdf->SetXY(138, 48);
+        $pdf->SetXY(130, 46);
         $pdf->Write(0, ($cita->domicilio));
-        $pdf->SetXY(138, 52);
+        $pdf->SetXY(130, 50);
         $pdf->Write(0, ($cita->rfc));
-        $pdf->SetXY(138, 56);
+        $pdf->SetXY(130, 54);
         $pdf->Write(0, ($cita->telefono));
-        $pdf->SetXY(138, 60);
+        $pdf->SetXY(130, 58);
         $pdf->Write(0, ($cita->email));
 
         /**
          * Datos del Vehiculo
          */
         $pdf->SetFont('Arial', 'B', 9);
-        $pdf->SetXY(26.6, 76);
+        $pdf->SetXY(40.3, 73);
 
         $vin = $cita->vin;
 
         // Recorremos cada carácter y lo imprimimos con un ancho fijo
         foreach (str_split($vin) as $char) {
-            $pdf->Cell(3.8, 0, $char, 0, 0);
+            $pdf->Cell(2.98, 0, $char, 0, 0);
         }
 
         $pdf->SetFont('Arial', 'B', 7);
-        $pdf->SetXY(31, 80);
+        $pdf->SetXY(43, 78);
         $pdf->Write(0, ($cita->placas));
-        $pdf->SetXY(31, 84);
+        $pdf->SetXY(43, 82);
         $pdf->Write(0, ($cita->modelo));
-        $pdf->SetXY(31, 88);
+        $pdf->SetXY(43, 86);
         $pdf->Write(0, ($cita->tipo));
 
-        $pdf->SetXY(71, 80);
+        $pdf->SetXY(76, 78);
         $pdf->Write(0, ($cita->color));
-        $pdf->SetXY(71, 84);
+        $pdf->SetXY(76, 82);
         $pdf->Write(0, ($cita->anio));
-        $pdf->SetXY(71, 88);
+        $pdf->SetXY(76, 86);
         $pdf->Write(0, ($cita->kilometraje));
 
         /**
          * Datos del Inventario
          */
         $pdf->SetFont('Arial', 'B', 10);
-        $pdf->SetXY(120, 88);
+        $pdf->SetXY(115, 88);
         $pdf->Write(0, ($datosInventario->nivel_gasolina  ?? 0).'%' );
         $pdf->SetFont('Arial', 'B', 7);
-        $pdf->SetXY($this->calXCheck($datosInventario->antena, 43, 48), 104.5);
+        $pdf->SetXY($this->calXCheck($datosInventario->antena, 52.4, 55.4), 101.5);
         $pdf->Write(0, 'X');
-        $pdf->SetXY($this->calXCheck($datosInventario->espejo, 43, 48), 107.5);
+        $pdf->SetXY($this->calXCheck($datosInventario->espejo,  52.4, 55.4), 106);
         $pdf->Write(0, 'X');
-        $pdf->SetXY($this->calXCheck($datosInventario->tapones, 43, 48), 111.5);
+        $pdf->SetXY($this->calXCheck($datosInventario->tapones,  52.4, 55.4), 110);
         $pdf->Write(0, 'X');
-        $pdf->SetXY($this->calXCheck($datosInventario->rines, 43, 48), 114.5);
+        $pdf->SetXY($this->calXCheck($datosInventario->rines,  52.4, 55.4), 114);
         $pdf->Write(0, 'X');
-        $pdf->SetXY($this->calXCheck($datosInventario->tapon_gasolina, 43, 48), 118.5);
+        $pdf->SetXY($this->calXCheck($datosInventario->tapon_gasolina,  52.4, 55.4), 118.5);
         $pdf->Write(0, 'X');
-        $pdf->SetXY($this->calXCheck($datosInventario->radio, 43, 48), 122.5);
-        $pdf->Write(0, 'X');
-
-
-        $pdf->SetXY($this->calXCheck($datosInventario->antena, 79, 84), 104.5);
-        $pdf->Write(0, 'X');
-        $pdf->SetXY($this->calXCheck($datosInventario->espejo, 79, 84), 107.5);
-        $pdf->Write(0, 'X');
-        $pdf->SetXY($this->calXCheck($datosInventario->tapones, 79, 84), 111.5);
-        $pdf->Write(0, 'X');
-        $pdf->SetXY($this->calXCheck($datosInventario->rines, 79, 84), 114.5);
-        $pdf->Write(0, 'X');
-        $pdf->SetXY($this->calXCheck($datosInventario->tapon_gasolina, 79, 84), 118.5);
-        $pdf->Write(0, 'X');
-        $pdf->SetXY($this->calXCheck($datosInventario->radio, 79, 84), 122.5);
+        $pdf->SetXY($this->calXCheck($datosInventario->radio,  52.4, 55.4), 122.5);
         $pdf->Write(0, 'X');
 
-        $pdf->SetXY($this->calXCheck($datosInventario->cables_corriente, 119, 124), 104.5);
+
+        $pdf->SetXY($this->calXCheck($datosInventario->encendedor, 82.5, 85.5), 101.5);
         $pdf->Write(0, 'X');
-        $pdf->SetXY($this->calXCheck($datosInventario->gato, 119, 124), 107.5);
+        $pdf->SetXY($this->calXCheck($datosInventario->tapetes, 82.5, 85.5), 106);
         $pdf->Write(0, 'X');
-        $pdf->SetXY($this->calXCheck($datosInventario->objetos_valor, 119, 124), 111.5);
+        $pdf->SetXY($this->calXCheck($datosInventario->llanta_refaccion, 82.5, 85.5), 110);
+        $pdf->Write(0, 'X');
+        $pdf->SetXY($this->calXCheck($datosInventario->herramientas, 82.5, 85.5), 114);
+        $pdf->Write(0, 'X');
+        $pdf->SetXY($this->calXCheck($datosInventario->reflejantes, 82.5, 85.5), 118.5);
+        $pdf->Write(0, 'X');
+        $pdf->SetXY($this->calXCheck($datosInventario->extinguidor, 82.5, 85.5), 122.5);
         $pdf->Write(0, 'X');
 
-        $pdf->SetXY(103, 114.5);
+        $pdf->SetXY($this->calXCheck($datosInventario->cables_corriente, 115.5, 118.5), 101.5);
+        $pdf->Write(0, 'X');
+        $pdf->SetXY($this->calXCheck($datosInventario->gato, 115.5, 118.5), 106);
+        $pdf->Write(0, 'X');
+        $pdf->SetXY($this->calXCheck($datosInventario->objetos_valor, 115.5, 118.5), 110);
+        $pdf->Write(0, 'X');
+
+        $pdf->SetXY(101, 114.5);
         $pdf->Write(0, $datosInventario->otros);
-        $pdf->SetXY(110, 118);
+        $pdf->SetXY(106, 118.5);
         $pdf->Write(0, $datosInventario->vestiduras);
-        $pdf->SetXY(107, 121);
+        $pdf->SetXY(104, 122.5);
         $pdf->Write(0, $datosInventario->cristales);
         /**
          * Datos de seguimiento
          */
 
 
-        $pdf->SetXY(162, 104.3);
+        $pdf->SetXY(155, 98);
         $pdf->Write(0, $cita->empleado_id);
-        $pdf->SetXY(175, 107.5);
+        $pdf->SetXY(165, 102);
         $fechaFormateada = $this->dividirFecha($cita->fecha);
         $pdf->Write(0, $fechaFormateada['fecha']);
-        $pdf->SetXY(175, 111.3);
+        $pdf->SetXY(165, 106.2);
         $pdf->Write(0, $fechaFormateada['hora']);
 
-        $pdf->SetXY(175, 114.5);
+        $pdf->SetXY(165, 110);
         $pdf->Write(0, 'PENDIENTE');
-        $pdf->SetXY(175, 118);
+        $pdf->SetXY(165.2, 114);
         $pdf->Write(0, 'PENDIENTE');
 
 
@@ -229,18 +233,18 @@ class OrdenServicioPdfController extends Controller
             -----------------------------------------------------*/
             $pdf->SetFont('Arial', 'B', 5.5);
 
-            $y = 133;
+            $y = 134;
 
             //Manejo de tabla detalles con multi lineas para textos largos
             foreach ($trabajosSolicitados as $trabajo) {
                 $descripcionTrabajo = $trabajo->descripcion;
-                $partes = $trabajo->descripcion;
+                $partes = $trabajo->partes;
 
                 // Guardar la posición actual
-                $pdf->SetXY(20, $y);
-                $pdf->Cell(90, 4.5, $descripcionTrabajo, 0, 0, 'C');
-                $pdf->Cell(35, 4.5, $partes, 0, 0, 'C');
-                $y += 5;
+                $pdf->SetXY(37, $y);
+                $pdf->Cell(71, 4, $descripcionTrabajo, 0, 0, 'C');
+                $pdf->Cell(33, 4, $partes, 0, 0, 'C');
+                $y += 4;
                 $pdf->SetY($y);
             }
 
@@ -249,23 +253,24 @@ class OrdenServicioPdfController extends Controller
             -----------------------------------------------------*/
             $pdf->SetFont('Arial', 'B', 5.5);
 
-            $y = 198;
+            $y = 201;
 
             //Manejo de tabla detalles con multi lineas para textos largos
             foreach ($garantias as $garantia) {
                 $descripcionGarantia = $garantia->descripcion;
-                $partes = $garantia->descripcion;
+                $partes = $garantia->tiempo;
                 // Guardar la posición actual
-                $pdf->SetXY(20, $y);
-                $pdf->Cell(90, 4.5, $descripcionGarantia, 0, 0, 'C');
-                $pdf->Cell(25, 4.5, $partes, 0, 0, 'C');
-                $y += 5;
+                $pdf->SetXY(37, $y);
+                $pdf->Cell(71.5, 4, $descripcionGarantia,0, 0, 'C');
+                $pdf->Cell(20.5, 4, $partes,0, 0, 'C');
+                $y += 4;
                 $pdf->SetY($y);
             }
 
-            $pdf->Image($firma, 180, 237, 25);
+            $pdf->Image($firma, 165, 239, 25);
 
 
+        $paginas23 = $pdf->setSourceFile($pathPdf2);
         // Página 2 - Contrato de prestacion de servicios
         $pdf->AddPage();
         $template = $pdf->importPage(2);
@@ -281,13 +286,13 @@ class OrdenServicioPdfController extends Controller
         // Página 4 (ANEXOS)
         $imagenes = $cita->Datos->TestigosFotograficos;
 
-        $cols       = 2;
-        $rows       = 3;
+        $cols       = 1;
+        $rows       = 2;
 
-        $maxWidth   = 90;
-        $maxHeight  = 62; // Altura máxima de la imagen
+        $maxWidth   = 200;
+        $maxHeight  = 100;
 
-        $descHeight = 10; // Espacio para descripción
+        $descHeight = 10;
 
         $marginX    = 10;
         $marginY    = 30;

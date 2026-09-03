@@ -32,6 +32,8 @@ class DatosEntradaResource extends JsonResource
             'encendedor' => $this->Datos->inventario->encendedor,
             'tapetes' => $this->Datos->inventario->tapetes,
             'llanta_refaccion' => $this->Datos->inventario->llanta_refaccion,
+
+            'cables_corriente' => $this->Datos->inventario->cables_corriente,
             'herramientas' => $this->Datos->inventario->herramientas,
             'reflejantes' => $this->Datos->inventario->reflejantes,
             'extinguidor' => $this->Datos->inventario->extinguidor,

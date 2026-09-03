@@ -58,6 +58,20 @@ class VisorCitasController extends Controller
     {
         DB::beginTransaction();
         try {
+
+        $citaId = $request->input('citas_servicio_id');
+
+        $entradaExistente = RenEntradaVehiculo::where('ren_citas_servicio_id', $citaId)
+            ->first();
+
+        if ($entradaExistente) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Esta cita ya tiene una entrada registrada.'
+            ], 409);
+        }
+
             $evento = $this->citasService->generarEvento($request->input('citas_servicio_id'), 1);
             $entrada  = $this->storeEntrada($request->input('folio'), $request->input('num_entrada'), $request->input('citas_servicio_id'));
 
@@ -335,6 +349,7 @@ class VisorCitasController extends Controller
 
 
         return RenCitasServicio::query()
+            ->withExists('encuesta')
             ->when($agencia && $agencia != 333, fn($q) => $q->where('agencia_id', $agencia))
             ->when($empleadoId, fn($q) => $q->where('id_intranet', $empleadoId))
             ->when($fechaInicio && $fechaFin, fn($q) => $q->whereBetween('fecha', [$fechaInicio, $fechaFin]))
