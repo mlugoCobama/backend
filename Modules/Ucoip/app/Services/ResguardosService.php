@@ -131,7 +131,7 @@ class ResguardosService
      * @param string $estado Nuevo estado del hardware
      */
     public function updateEstatusHardware($id, $estado){
-        $hardware =  HardwarePcModel::find($id);
+        $hardware =  HardwarePcModel::findOrFail($id);
         if($hardware){
             $hardware->estado = $estado;
         }

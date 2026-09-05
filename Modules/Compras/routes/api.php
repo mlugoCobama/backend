@@ -182,6 +182,11 @@ Route::prefix('compras')->group(function(){
 
 
     Route::get('/reportes/workflow/concentrado/{tipo}', [ReportesComprasController::class, 'getReporteEstatus']);
+
+    Route::get(
+        'proveedores/export-excel',
+        [ProveedoresController::class, 'exportExcel']
+    );
 });
 
 Route::post('/all-permisos', [UsuariosController::class, 'getAllPermission'])->name('consultas.permisos');

@@ -12,7 +12,7 @@ class ParserJsonService
     public function generateJson($file){
             $import = new VolumetricosImport();
             Excel::import($import, $file);
-
+            $uuidInvalidos = [];
             // 1. Extraemos los datos base
             $general = $import->generalImport->data;
             $permisos =  $import->permisosImport->data;
@@ -25,7 +25,7 @@ class ParserJsonService
             // $totalDocsRecepciones = $import->getTotalPorHojaRecepciones();
 
             $existencias = $controlGeneral['ExistenciasMesInmediatoAnterior'];
-            $nodoProducto = $this->buildProductoNode($permisos['ClaveProducto'], $existencias , $permisos['FechaYHoraReporteMes'], $recepcionesConsolidadas, $entregasConsolidadas,  $permisos['ComposDePropanoEnGasLP'],$permisos['ComposDeButanoEnGasLP'] );
+            $nodoProducto = $this->buildProductoNode($permisos['ClaveProducto'], $existencias , $permisos['FechaYHoraReporteMes'], $recepcionesConsolidadas, $entregasConsolidadas,  $permisos['ComposDePropanoEnGasLP'],$permisos['ComposDeButanoEnGasLP'], $uuidInvalidos );
             $bitacoraMensual = $this->buildBitacoraMensual(
                     $permisos['FechaYHoraReporteMes'] ?? now()->toIso8601String()
                 );
@@ -59,7 +59,10 @@ class ParserJsonService
             //    ]
             ];
 
-            return $this->utf8ize($jsonStructure);
+            return [
+                'json' => $this->utf8ize($jsonStructure),
+                'uuidInvalidos' => $uuidInvalidos,
+            ];
     }
 
     /**
@@ -72,7 +75,6 @@ class ParserJsonService
                 $mixed[$key] = $this->utf8ize($value);
             }
         } elseif (is_string($mixed)) {
-            // Convierte secuencias mal formadas a UTF-8 válido
             return mb_convert_encoding($mixed, 'UTF-8', 'UTF-8');
         }
         return $mixed;
@@ -89,13 +91,14 @@ class ParserJsonService
         array $filasEntregasExcel = [],
         float $propano,
         float $butano,
-        string $unidadMedida = 'UM03'
+        array &$uuidInvalidos,
+        string $unidadMedida = 'UM03',
     ): array {
 
         $colRecepciones = collect($filasRecepcionesExcel);
 
-        $complementosRecepciones = $colRecepciones->map(function ($item) use ($unidadMedida) {
-            return self::buildComplementoItem($item, $unidadMedida);
+        $complementosRecepciones = $colRecepciones->map(function ($item) use ($unidadMedida, &$uuidInvalidos) {
+            return self::buildComplementoItem($item, $unidadMedida, $uuidInvalidos);
         })->values()->toArray();
 
         $totalDocsRecepciones = $colRecepciones->filter(function ($item) {
@@ -111,13 +114,16 @@ class ParserJsonService
             // 'TotalDocumentosMes'             => $colRecepciones->pluck('CFDI')->filter()->count(),
             'TotalDocumentosMes' => $totalDocsRecepciones,
             'ImporteTotalRecepcionesMensual' => round($colRecepciones->sum(fn($i) => (float)($i['PrecioVentaOCompraOContrap'] ?? 0)), 4),
-            'Complemento'                     => $complementosRecepciones,
         ];
+
+        if(count($complementosRecepciones) > 0){
+            $nodeRecepciones['Complemento'] = $complementosRecepciones;
+        }
 
         $colEntregas = collect($filasEntregasExcel);
 
-        $complementosEntregas = $colEntregas->map(function ($item) use ($unidadMedida) {
-            return self::buildComplementoItem($item, $unidadMedida);
+        $complementosEntregas = $colEntregas->map(function ($item) use ($unidadMedida, &$uuidInvalidos) {
+            return self::buildComplementoItem($item, $unidadMedida, $uuidInvalidos);
         })->values()->toArray();
 
         $totalDocsEntregas = $colEntregas->filter(function ($item) {
@@ -133,8 +139,13 @@ class ParserJsonService
             // 'TotalDocumentosMes'          => $colEntregas->pluck('CFDI')->filter()->count(),
             'TotalDocumentosMes' => $totalDocsEntregas,
             'ImporteTotalEntregasMes' => round($colEntregas->sum(fn($i) => (float)($i['PrecioVentaOCompraOContrap'] ?? 0)), 4),
-            'Complemento'                 => $complementosEntregas,
+
         ];
+
+        if(count($complementosEntregas ) > 0){
+            $nodeEntregas['Complemento'] = $complementosEntregas;
+        }
+
 
 
         $entregas = $nodeEntregas['SumaVolumenEntregadoMes']['ValorNumerico'] ?? 0;
@@ -159,7 +170,7 @@ class ParserJsonService
             "ComposDeButanoEnGasLP" => $butano,
         ];
     }
-    private static function buildComplementoItem( array $item, string $unidadMedida): array {
+    private static function buildComplementoItem( array $item, string $unidadMedida,  array &$uuidInvalidos): array {
 
         $claveInstalacion = $item['ClaveInstalacion'] ?? '';
         $prefijo = strtoupper(trim(strstr($claveInstalacion, '-', true) ?: $claveInstalacion));
@@ -167,6 +178,10 @@ class ParserJsonService
 
         $cfdi = trim((string)($item['CFDI'] ?? ''));
         $aclaracion = trim((string)($item['Aclaracion'] ?? ''));
+
+        if ($cfdi !== '' && !self::esUuidValido($cfdi)) {
+            $uuidInvalidos[] = $cfdi;
+        }
 
         if ($cfdi !== '') {
             $nombre = trim(
@@ -233,7 +248,7 @@ class ParserJsonService
     {
         $fecha = Carbon::parse($fechaReporte);
 
-        $cantidadEventos = rand(15, 27);
+        $cantidadEventos = rand(15, 20);
 
         $eventos = [
             [
@@ -343,5 +358,17 @@ class ParserJsonService
             'CMN' => 'Comercializacion',
             default  => 'Distribucion'
         };
+    }
+
+    private static function esUuidValido(?string $uuid): bool
+    {
+        if (!$uuid) {
+            return false;
+        }
+
+        return preg_match(
+            '/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i',
+            $uuid
+        ) === 1;
     }
 }

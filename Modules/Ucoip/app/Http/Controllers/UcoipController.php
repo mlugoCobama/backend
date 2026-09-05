@@ -181,9 +181,9 @@ class UcoipController extends Controller
 
     public function getCatalogosUcoip(){
         $data =[
-           'areas' => CatAreas::with(['departamentos.puestos'])->get(),
-           'sistemas' => CatSistemas::get(),
-           'recursos' => CatRecursos::get(),
+           'areas' => CatAreas::orderBy('nombre', 'asc')->with(['departamentos.puestos'])->get(),
+           'sistemas' => CatSistemas::orderBy('nombre', 'asc')->get(),
+           'recursos' => CatRecursos::orderBy('nombre', 'asc')->get(),
         ];
 
         return response()->json([

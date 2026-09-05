@@ -54,32 +54,37 @@ class XlxsToJsonController extends Controller
         $request->validate([
             'file' => 'required|mimes:xlsx,xls|max:20480',
         ]);
-        $file  = $request->file('file');
+
+        $file = $request->file('file');
         $uuid = (string) Str::uuid();
 
-
-        $jsonStructure = $this->parserJson->generateJson($file);
-
-        // $data = $this->utf8ize($data);
+        $resultado = $this->parserJson->generateJson($file);
 
         if ($request->wantsJson()) {
-                    return response()->json(
-                    $jsonStructure,
-                    200,
-                    ['X-Report-UUID' => $uuid],
-                    JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION
-                );
+
+            return response()->json([
+                'json' => $resultado['json'],
+                'uuidInvalidos' => $resultado['uuidInvalidos'],
+            ], 200, [
+                'X-Report-UUID' => $uuid,
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
         }
 
-
         $fileName = 'Reporte_Volumetrico_' . date('Y-m-d_H-i-s') . '.json';
-        return response()->streamDownload(function () use ($jsonStructure) {
-            echo json_encode($jsonStructure, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
+
+        return response()->streamDownload(function () use ($resultado) {
+
+            echo json_encode(
+                $resultado['json'],
+                JSON_PRETTY_PRINT |
+                JSON_UNESCAPED_UNICODE |
+                JSON_PRESERVE_ZERO_FRACTION
+            );
+
         }, $fileName, [
             'Content-Type' => 'application/json',
             'X-Report-UUID' => $uuid,
         ]);
-
     }
 
     /**

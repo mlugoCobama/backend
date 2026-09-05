@@ -25,4 +25,6 @@ Route::middleware(['auth:sanctum'])->prefix('volumetricos')->group(function () {
 Route::get('/reportes/{id}/descargar-excel', [VolumetricosController::class, 'descargarExcel']);
 Route::get('/reportes/{id}/descargar-reporte', [VolumetricosController::class, 'descargar']);
 Route::get('/reportes/{id}/descargar-acuse', [AcusesReporteController::class, 'descargar']);
+Route::get('/reportes/{id}/descargar-reporte-pdf', [VolumetricosController::class, 'descargarPdf']);
+Route::post('/reportes/imprimir-reporte-pdf', [VolumetricosController::class, 'imprimirReporte']);
 Route::post('/volumetricos/generacion-xml', [XlxsToJsonController::class, 'descargarXml']);

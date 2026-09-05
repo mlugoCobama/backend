@@ -2,19 +2,21 @@
 
 namespace Modules\Compras\Http\Controllers;
 
+use App\Exports\ProveedoresExport;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-//Models 
+//Models
 use Modules\Compras\Models\ExpedientesProveedores;
 use Modules\Compras\Models\Proveedores;
 //Transformers
 use Modules\Compras\Transformers\ProveedoresResource;
 use Modules\Compras\Http\Requests\ProveedoresRequest;
-//Utilities 
+//Utilities
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use Modules\Compras\Http\Requests\UpdateProveedoresRequest;
 use Modules\Compras\Models\Categorias;
 use Modules\Compras\Models\DatosPagoProveedor;
@@ -24,21 +26,21 @@ use Modules\Compras\Models\ProveedorZona;
 
 class ProveedoresController extends Controller
 {
-    /** 
+    /**
      * Recupera todos los datos de proveedores
     */
     public function index()
     {
         return ProveedoresResource::collection((Proveedores::with([
-            'datosPago', 
-            'contactos', 
-            'productos', 
-            'Expediente', 
+            'datosPago',
+            'contactos',
+            'productos',
+            'Expediente',
             'contactos.zona'
              ])->active()->get()));
     }
 
-    /** 
+    /**
      * Crea un nuevo proveedor con toda su información relacionada
      * @param $request Datos validados del proveedor, contactos y archivos
      */
@@ -88,9 +90,9 @@ class ProveedoresController extends Controller
     }
 
 
-    /** 
+    /**
      * Recupera información del expediente de un proveedor específico
-     * 
+     *
      * @param int $id ID del proveedor
      */
     public function show($id)
@@ -113,9 +115,9 @@ class ProveedoresController extends Controller
         ]);
     }
 
-    /** 
+    /**
      * Actualiza la información de un proveedor existente
-     * 
+     *
      * @param $request Datos validados para actualizar
      * @param $id ID del proveedor a actualizar
      */
@@ -172,7 +174,7 @@ class ProveedoresController extends Controller
         }
     }
 
-    /** 
+    /**
      * Actualiza el estatus del proveedor a inactivo
      * @param int $id ID del proveedor a desactivar
      */
@@ -202,7 +204,7 @@ class ProveedoresController extends Controller
 //  ***************************************************************************
 //  ***************************************************************************
 //  ***************************************************************************
-    /** 
+    /**
      * Valida qué archivos del expediente están disponibles
      */
     public function validarExpediente($rutas, $archivos)
@@ -216,9 +218,9 @@ class ProveedoresController extends Controller
         return $archivosDisponibles;
     }
 
-    /** 
+    /**
      * Recupera una lista simplificada de proveedores para elementos select/dropdown
-     * 
+     *
      * Retorna únicamente ID y nombre de los proveedores activos,
      * optimizado para su uso en formularios y listas desplegables
      */
@@ -234,13 +236,13 @@ class ProveedoresController extends Controller
         ]);
     }
 
-    /** 
+    /**
      * Almacena un nuevo proveedor en la base de datos
-     * 
+     *
      * Verifica si ya existe un proveedor con el mismo RFC:
      * - Si existe: retorna el ID del proveedor existente
      * - Si no existe: crea un nuevo registro con todos los datos
-     * 
+     *
      * @param $proveedor Datos del proveedor a almacenar
      *                         Incluye: nombre, rfc, contacto, teléfono, localidad, etc.
      * @return ['id' => int, 'isNew' => bool]
@@ -271,12 +273,12 @@ class ProveedoresController extends Controller
         }
     }
 
-   /** 
+   /**
      * Almacena los archivos del expediente en el servidor y registra las rutas en BD
-     * 
+     *
      * @param $data Petición con los archivos adjuntos
      * @param $idProveedor ID del proveedor al que pertenece el expediente
-     * @return 
+     * @return
      */
     private function storeExpedienteProveedor($data, $idProveedor)
     {
@@ -298,12 +300,12 @@ class ProveedoresController extends Controller
         $expedienteSolicitud->save();
     }
 
-    /** 
+    /**
      * Actualiza únicamente los datos básicos del proveedor
-     * 
+     *
      * @param mixed $data Datos actualizados del proveedor
      * @param mixed $id ID del proveedor a actualizar
-     * @return 
+     * @return
      */
     private function updateProveedor($data, $id)
     {
@@ -327,12 +329,12 @@ class ProveedoresController extends Controller
 
         ]);
     }
-    /** 
+    /**
      * Actualiza los archivos del expediente del proveedor
-     * 
+     *
      * @param $data Petición con los archivos a actualizar
      * @param $idProveedor ID del proveedor
-     * @return 
+     * @return
      */
     private function updateExpedienteProveedor($data, $idProveedor)
     {
@@ -394,11 +396,11 @@ class ProveedoresController extends Controller
             $contactoProveedor->telefono = $contacto['telefono'];
             $contactoProveedor->notas = $contacto['notas'];
             $contactoProveedor->save();
-            $this->storeZona($contactoProveedor->id, $contacto); 
+            $this->storeZona($contactoProveedor->id, $contacto);
         }
-        }   
-        
-        
+        }
+
+
     }
 
     /**
@@ -418,9 +420,9 @@ class ProveedoresController extends Controller
     }
 
     /**
-     * Formatea el contenido de 
-     * @param $productos productos separados por comas 
-     * @return $productosFormateados 
+     * Formatea el contenido de
+     * @param $productos productos separados por comas
+     * @return $productosFormateados
      */
     private function productosFormateados($productos)
     {
@@ -500,7 +502,7 @@ class ProveedoresController extends Controller
             $datosPagoProveedor->beneficiario = $datoPago['beneficiario'];
             $datosPagoProveedor->save();
         }
-        }   
+        }
     }
 
     public function deleteDatosPago($idProveedor)
@@ -513,5 +515,13 @@ class ProveedoresController extends Controller
                 $datoPago->delete();
             }
         }
+    }
+
+    public function exportExcel()
+    {
+        return Excel::download(
+            new ProveedoresExport(),
+            'proveedores.xlsx'
+        );
     }
 }

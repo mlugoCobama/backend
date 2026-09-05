@@ -13,20 +13,24 @@ use Illuminate\Support\Facades\Storage;
 use Modules\Volumetricos\Models\ReporteVolumen;
 use Modules\Volumetricos\Services\FileService;
 use Modules\Volumetricos\Services\ParserJsonService;
+use Modules\Volumetricos\Services\ReporteJsonPdfService;
 use Modules\Volumetricos\Transformers\ReportesVolumetricosResource;
 
 class VolumetricosController extends Controller
 {
     protected $fileService;
     protected $jsonService;
+    protected $reporteVolumetricoPdfService;
 
     // Inyección de dependencias en el constructor
     public function __construct(
         FileService $fileService,
         ParserJsonService $jsonService,
+        ReporteJsonPdfService $reporteVolumetricoPdfService,
     ) {
         $this->fileService = $fileService;
-         $this->jsonService = $jsonService;
+        $this->jsonService = $jsonService;
+        $this->reporteVolumetricoPdfService = $reporteVolumetricoPdfService;
     }
 
     /**
@@ -400,4 +404,80 @@ public function descargar($id)
 
     return response()->download($ruta, $nombre);
 }
+
+
+public function descargarPdf($id)
+{
+    $reporte = ReporteVolumen::findOrFail($id);
+
+    if (!$reporte->ruta_archivo) {
+        return response()->json([
+            'success' => false,
+            'message' => 'El reporte no tiene un archivo asociado.'
+        ], 404);
+    }
+
+    $disk = Storage::disk('public');
+
+    if (!$disk->exists($reporte->ruta_archivo)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'El archivo no existe en el servidor.'
+        ], 404);
+    }
+
+    $contenido = $disk->get($reporte->ruta_archivo);
+
+    $data = json_decode($contenido, true);
+    // $jsonTexto = is_string($contenido) ? $contenido : json_encode($contenido, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return response()->json([
+            'success' => false,
+            'message' => 'El archivo JSON no tiene un formato válido.'
+        ], 422);
+    }
+
+    // return response()->json([
+    //         'success' => false,
+    //         'data' => $data,
+    //         'message' => 'Error'
+    //     ]);
+
+
+    $pdf = $this->reporteVolumetricoPdfService
+        ->generarReportePdfFromJson($data);
+
+    return $pdf->download(
+        'reporte-volumetrico-' . $id . '.pdf'
+    );
+}
+
+    public function imprimirReporte(Request $data){
+
+    //  $data = json_decode($contenido, true);
+    // $jsonTexto = is_string($contenido) ? $contenido : json_encode($contenido, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return response()->json([
+            'success' => false,
+            'message' => 'El archivo JSON no tiene un formato válido.'
+        ], 422);
+    }
+
+    // return response()->json([
+    //         'success' => false,
+    //         'data' => $data,
+    //         'message' => 'Error'
+    //     ]);
+
+
+    $pdf = $this->reporteVolumetricoPdfService
+        ->generarReportePdfFromJson($data);
+
+    return $pdf->download(
+        'reporte-volumetrico' . '.pdf'
+    );
+
+    }
 }

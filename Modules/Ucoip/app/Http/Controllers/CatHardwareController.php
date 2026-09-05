@@ -51,7 +51,7 @@ class CatHardwareController extends Controller
      */
     public function index()
     {
-        $data = $this->catHardware->usuarios()->get();
+        $data = $this->catHardware->usuarios()->orderBy('tipo', 'asc')->get();
 
 
 
@@ -124,7 +124,7 @@ class CatHardwareController extends Controller
     }
 
     public function getCatInfra(){
-        $data = $this->catHardware->infraestructura()->get();
+        $data = $this->catHardware->infraestructura()->orderBy('tipo', 'asc')->get();
         return response()->json([
             'success' => true,
             'message' => '',

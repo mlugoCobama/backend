@@ -22,7 +22,7 @@ class ResguardosController extends Controller
     private $resguardoService;
     private $hwService;
 
-    public function __construct(  
+    public function __construct(
         PdfResguardoService $resguardoPdfService,
         ResguardosService $resguardoService,
         HardwareService $hwService) {
@@ -41,7 +41,7 @@ class ResguardosController extends Controller
         $nombreUsuario = $usuario ? $usuario[0]->firstname.' '.$usuario[0]->realname : 'Dato No Disponible ';
         $email = $usuario ? $usuario[0]->name .' - '. $usuario[0]->area : 'Dato No Disponible ' ;
         $empresa = $usuario ? $usuario[0]->empresa : 'Dato No Disponible ';
-        
+
         $file = $this->resguardoPDFService->generarPdfResguardo($resguardo, $nombreUsuario, $email, $empresa);
 
         $fileName = 'Resguardo'.'.pdf';
@@ -71,7 +71,7 @@ class ResguardosController extends Controller
         $data = $request->all();
 
         $this->resguardoService->asignarRecurso($data['hardware'], null, $data['id']);
-        $this->hwService->updateEstatusHardware($data['hardware'], 2 );
+        // $this->hwService->updateEstatusHardware($data['hardware'], 2 );
 
 
         return response()->json([
@@ -114,12 +114,12 @@ class ResguardosController extends Controller
 // $resguardo = Resguardo::with(['empresa', 'detalles.hardware.tipoHardware'])->where('id',40)->first();
         $detalles = HardwareUcoip::with(['hardware.tipoHardware'])->whereIn('id', $data['idSleccionados'])->get();
 
-        
+
         $usuario = DB::connection('intranet')->select('CALL SP_GetUsuarioId(?)', [$id]);
         $nombreUsuario = $usuario ? $usuario[0]->firstname.' '.$usuario[0]->realname : 'Dato No Disponible ';
         $email = $usuario ? $usuario[0]->name .' - '. $usuario[0]->area : 'Dato No Disponible ' ;
         $empresa = $usuario ? $usuario[0]->empresa : 'Dato No Disponible ';
-        
+
         $file = $this->resguardoPDFService->generarPdfResguardo($detalles, $nombreUsuario, $email, $empresa);
 
         $fileName = 'Resguardo'.'.pdf';

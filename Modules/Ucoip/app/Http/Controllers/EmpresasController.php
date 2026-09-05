@@ -15,7 +15,7 @@ class EmpresasController extends Controller
      */
     public function index()
     {
-        $data = CatEmpresas::get();
+        $data = CatEmpresas::orderBy('nombre', 'asc')->get();
 
         return response()->json([
             'status' => 'success',
