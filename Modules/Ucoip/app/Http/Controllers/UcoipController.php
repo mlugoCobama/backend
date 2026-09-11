@@ -103,13 +103,10 @@ class UcoipController extends Controller
 
             $nuevoNombre = trim($data['nombre'].' '.$data['apellidos']);
             if (!$ultimoTitular) {
-                // Es la primera asignación
                 $this->storeTitular($ucoip->id, $data);
             } elseif ($ultimoTitular->nombre_titular != $nuevoNombre) {
-                // Finalizar el registro anterior
                 $ultimoTitular->fecha_fin = now();
                 $ultimoTitular->save();
-                // Crear el nuevo titular
                 $this->storeTitular($ucoip->id, $data);
             }
 
@@ -182,7 +179,7 @@ class UcoipController extends Controller
     public function getCatalogosUcoip(){
         $data =[
            'areas' => CatAreas::orderBy('nombre', 'asc')->with(['departamentos.puestos'])->get(),
-           'sistemas' => CatSistemas::orderBy('nombre', 'asc')->get(),
+           'sistemas' => CatSistemas::active()->orderBy('nombre', 'asc')->get(),
            'recursos' => CatRecursos::orderBy('nombre', 'asc')->get(),
         ];
 

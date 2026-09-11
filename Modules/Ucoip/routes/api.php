@@ -5,6 +5,7 @@ use Modules\Ucoip\Http\Controllers\AsignacionRecursoController;
 use Modules\Ucoip\Http\Controllers\AsignacionSistemaController;
 use Modules\Ucoip\Http\Controllers\AsignacionSoftwareController;
 use Modules\Ucoip\Http\Controllers\AsignacionTokensController;
+use Modules\Ucoip\Http\Controllers\AuditController;
 use Modules\Ucoip\Http\Controllers\CatAreasController;
 use Modules\Ucoip\Http\Controllers\CatHardwareController;
 use Modules\Ucoip\Http\Controllers\CatServicioController;
@@ -50,6 +51,7 @@ Route::middleware(['auth:sanctum'])->prefix('ucoip')->group(function () {
     Route::apiResource('sistema-ucoip', AsignacionSistemaController::class)->names('sistemas-ucoip');
     Route::apiResource('recurso-ucoip', AsignacionRecursoController::class)->names('recurso-ucoip');
     Route::apiResource('software-ucoip', AsignacionSoftwareController::class)->names('software-ucoip');
+    Route::apiResource('auditoria-ucoip', AuditController::class)->names('auditoria-ucoip');
 
 
     Route::get('/hardware/catalogo/disponible/{idEmpresa}',[CatHardwareController::class, 'getCatalogoDisponible'])->name('cat-hardware.disponible');
@@ -63,4 +65,11 @@ Route::middleware(['auth:sanctum'])->prefix('ucoip')->group(function () {
     Route::get ('/catalogos/mantenimiento', [CatHardwareController::class, 'getCatalogoMantenimientos'])->name('ucoip.catalogo-mantenimientos');
     Route::get ('/cat/hardware/infra', [CatHardwareController::class, 'getCatInfra'])->name('cat-hardware.getCatInfra');
 
+    route::get('auditoria-ucoip/{id}/descargarpdf', [AuditController::class, 'imprimirAuditoria'])->name('auditoria-ucoip.imprimir');
+    route::get('auditoria-ucoip/{id}/allUcoip', [AuditController::class, 'getAllUcoip'])->name('auditoria-ucoip.getAllUcoip');
+
 });
+
+// Route::prefix('ucoip')->group(function () {
+
+// });

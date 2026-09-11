@@ -9,6 +9,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Modules\Ucoip\Models\HardwareUcoip;
 use Modules\Ucoip\Models\Resguardo;
+use Modules\Ucoip\Models\Ucoip;
 use Modules\Ucoip\Services\HardwareService;
 use Modules\Ucoip\Services\PdfResguardoService;
 use Modules\Ucoip\Services\ResguardosService;
@@ -36,22 +37,22 @@ class ResguardosController extends Controller
      */
     public function index()
     {
-        $resguardo = Resguardo::with(['empresa', 'detalles.hardware.tipoHardware'])->where('id',40)->first();
-        $usuario = DB::connection('intranet')->select('CALL SP_GetUsuarioId(?)', [$resguardo->id_usuario_asignado]);
-        $nombreUsuario = $usuario ? $usuario[0]->firstname.' '.$usuario[0]->realname : 'Dato No Disponible ';
-        $email = $usuario ? $usuario[0]->name .' - '. $usuario[0]->area : 'Dato No Disponible ' ;
-        $empresa = $usuario ? $usuario[0]->empresa : 'Dato No Disponible ';
+         $resguardo = Resguardo::with(['empresa', 'detalles.hardware.tipoHardware'])->where('id',40)->first();
+         $usuario = DB::connection('intranet')->select('CALL SP_GetUsuarioId(?)', [$resguardo->id_usuario_asignado]);
+         $nombreUsuario = $usuario ? $usuario[0]->firstname.' '.$usuario[0]->realname : 'Dato No Disponible ';
+         $email = $usuario ? $usuario[0]->name .' - '. $usuario[0]->area : 'Dato No Disponible ' ;
+         $empresa = $usuario ? $usuario[0]->empresa : 'Dato No Disponible ';
 
-        $file = $this->resguardoPDFService->generarPdfResguardo($resguardo, $nombreUsuario, $email, $empresa);
+         $file = $this->resguardoPDFService->generarPdfResguardo($resguardo, $nombreUsuario, $email, $empresa);
 
-        $fileName = 'Resguardo'.'.pdf';
-        return response($file, 200)
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="' . $fileName . '"')
-            ->header('Cache-Control', 'no-cache, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('X-Filename', $fileName)
-            ->header('Access-Control-Expose-Headers', 'X-Filename');
+         $fileName = 'Resguardo'.'.pdf';
+         return response($file, 200)
+             ->header('Content-Type', 'application/pdf')
+             ->header('Content-Disposition', 'inline; filename="' . $fileName . '"')
+             ->header('Cache-Control', 'no-cache, must-revalidate')
+             ->header('Pragma', 'no-cache')
+             ->header('X-Filename', $fileName)
+             ->header('Access-Control-Expose-Headers', 'X-Filename');
 
     }
 

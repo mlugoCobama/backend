@@ -22,16 +22,20 @@ class Ucoip extends Model
         'extension',
         'movil',
         'activo',
-        'user_id', 
+        'user_id',
         'ucoip_cat_puestos',
         'cat_empresa_id'
         ];
-    
+
         protected $table = 'ucoip_ucoip';
 
     protected static function newFactory(): UcoipFactory
     {
         //return UcoipFactory::new();
+    }
+
+    public function userGlpi(){
+       return $this->belongsTo(GlpiUser::class, 'user_id',  'id')->select('id', 'firstname', 'realname',  'name');
     }
 
     public function puesto(){
@@ -43,9 +47,36 @@ class Ucoip extends Model
         return $this->hasMany(RecursosRedUcoip::class,'ucoip_ucoip_id', 'id' )->where('ucoip_cat_recursos_id', '4');
     }
 
+    public function activos(){
+        return $this->hasMany(HardwareUcoip::class,'ucoip_ucoip_id', 'id')->whereNull('fecha_fin');
+    }
+
+    public function sistemas(){
+        return $this->hasMany(SistemasUcoip::class,'ucoip_ucoip_id', 'id')->whereNull('fecha_fin');
+    }
+
     public function recursosRed()
     {
-        return $this->belongsTo(RecursosRedUcoip::class,'ucoip_ucoip_id', 'id' );
+        return $this->hasMany(RecursosRedUcoip::class,'ucoip_ucoip_id', 'id' )->whereNull('fecha_retiro');
+    }
+
+    public function licenciamientos()
+    {
+        return $this->hasMany(SoftwareUcoip::class,'ucoip_ucoip_id', 'id' )->whereNull('fecha_retiro');
+    }
+
+    public function tokens()
+    {
+        return $this->hasMany(TokensUcoip::class,'ucoip_ucoip_id', 'id' )->whereNull('fecha_retiro');
+    }
+
+    public function empresa(){
+        return $this->belongsTo(CatEmpresas::class,'cat_empresa_id', 'id' );
+    }
+
+    public function auditorias()
+    {
+        return $this->hasMany(Auditoria::class,'ucoip_ucoip_id', 'id');
     }
 
     /**Un hgardware tien una asignacion actual */
@@ -54,5 +85,9 @@ class Ucoip extends Model
         return $this->hasOne(TitularesUcoip::class, 'ucoip_ucoip_id', 'id')
                     ->whereNull('fecha_fin')
                     ->latestOfMany();
+    }
+
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
     }
 }
