@@ -25,10 +25,10 @@ class GlpiService{
         if(!empty($password)){
             $userGlpi->password = $this->hashPassword($password);
         }
-        $userGlpi->password_last_update = now();
-        $userGlpi->id_areas_directorio = $idArea; 
-        $userGlpi->id_departamentos_directorio = $idDepartamento;
-        $userGlpi->id_puesto_directorio = $idPuestos; 
+        // $userGlpi->password_last_update = now();
+        // $userGlpi->id_areas_directorio = $idArea;
+        // $userGlpi->id_departamentos_directorio = $idDepartamento;
+        // $userGlpi->id_puesto_directorio = $idPuestos;
 
         $userGlpi->save();
     }

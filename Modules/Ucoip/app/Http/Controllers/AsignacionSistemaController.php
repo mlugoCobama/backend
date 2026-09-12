@@ -9,17 +9,23 @@ use Illuminate\Http\Response;
 use Modules\Ucoip\Models\SistemasUcoip;
 use Modules\Ucoip\Services\CifradoService;
 use App\Enums\EstatusAsignaciones;
+use Modules\Ucoip\Models\Ucoip;
+use Modules\Ucoip\Services\PdfResponsivaService;
 
 class AsignacionSistemaController extends Controller
 {
 
     protected $cifradoService;
+    protected $pdfResponsivaService;
     public function __construct(
         CifradoService $cifradoService,
+        PdfResponsivaService $pdfResponsivaService
+
     ){
         $this->cifradoService = $cifradoService;
+        $this->pdfResponsivaService = $pdfResponsivaService;
     }
-    
+
     /**
      * Display a listing of the resource.
      */
@@ -54,7 +60,7 @@ class AsignacionSistemaController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Sistema asignado correctamente',    
+            'message' => 'Sistema asignado correctamente',
             'data' => []
         ]);
     }
@@ -68,8 +74,8 @@ class AsignacionSistemaController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => $accesos, 
-            'message' => 'Datos recuperados correctamente', 
+            'data' => $accesos,
+            'message' => 'Datos recuperados correctamente',
         ]);
     }
 
@@ -119,5 +125,23 @@ class AsignacionSistemaController extends Controller
             'data' => $password,
             'message' => 'Dato recuperado correctamente'
         ]);
+    }
+
+    public function getSistemasResponsiva($idUcoip){
+        $datosUcoip = Ucoip::with('userGlpi','empresa','sistemas.sistema' )->where('id', $idUcoip)->first();
+
+
+         $file = $this->pdfResponsivaService->generarPdfResponsiva($datosUcoip);
+
+        $fileName = 'Responsiva'.'.pdf';
+        return response($file, 200)
+             ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="' . $fileName . '"')
+            ->header('Cache-Control', 'no-cache, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('X-Filename', $fileName)
+            ->header('Access-Control-Expose-Headers', 'X-Filename');
+
+        return response()->json(['data' => $datosUcoip]);
     }
 }

@@ -49,6 +49,8 @@ class UcoipController extends Controller
                         'glpi_entities.name as empresa',
                         'glpi_directorio_puestos.nombre as puesto',
                         'glpi_directorio_area.nombre as area')
+                ->where('glpi_entities.intercompania', '>', 0)
+                ->where('glpi_entities.intercompania', '<>', null)
                 ->where('glpi_users.is_active', '1')
                 ->where('glpi_users.id', '<>', 344)
                 ->where('glpi_users.id', '<>', 29)

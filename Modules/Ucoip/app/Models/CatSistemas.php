@@ -14,7 +14,9 @@ class CatSistemas extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'nombre'
+        'nombre',
+        'activo',
+        'division'
     ];
 
     protected $table = 'ucoip_cat_sistemas';
@@ -22,5 +24,9 @@ class CatSistemas extends Model
     protected static function newFactory(): CatSistemasFactory
     {
         //return CatSistemasFactory::new();
+    }
+
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
     }
 }
