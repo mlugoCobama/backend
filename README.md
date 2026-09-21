@@ -157,3 +157,10 @@ Se integra ctualizacion de registros y archivos ademas de borrado fisico
 * **Gestión de Estatus:** Flujo de seguimiento con los estados: `Generado` ➔ `Enviado` ➔ `Aceptado`.
 * **Carga de Acuses:** Soporte para subir y adjuntar acuses de **Envío** y de **Aceptación** (rechazado o aceptado).
 * **Filtros Avanzados:** Consultas por **Empresa**, **Periodo** y **Tipo de Instalación**.
+---
+### Ucoip- PLD
+*Fecha de liberación: 15 de Septiembre, 2026*
+* **Responsiva de sistemas:** Se agrega soporte para la impresion de responsivas de asignacion de sistemas
+* **Demo PLD:** Se integra el modulo de PLD para agencias con procesamiento de documentos como demo para evaluar funcinamiento 
+* **Instalar dependecias para gemini** composer require google-gemini-php/laravel
+agregar variables de entorno: 'GEMINI_API_KEY','GEMINI_REQUEST_TIMEOUT','GEMNI_CURRENT_MODEL'

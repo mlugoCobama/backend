@@ -71,5 +71,5 @@ Route::middleware(['auth:sanctum'])->prefix('ucoip')->group(function () {
 });
 
  Route::prefix('ucoip')->group(function () {
-Route::get('/sistema-ucoip/responsiva/{id}',[AsignacionSistemaController::class, 'getSistemasResponsiva'])->name('sistemas-ucoip.getSistemasResponsiva');
+    Route::put('/sistema-ucoip/responsiva/{id}',[AsignacionSistemaController::class, 'getSistemasResponsiva'])->name('sistemas-ucoip.getSistemasResponsiva');
  });

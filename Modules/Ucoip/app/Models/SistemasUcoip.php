@@ -21,7 +21,10 @@ class SistemasUcoip extends Model
         'fecha_fin',
         'activo',
         'ucoip_cat_sistemas_id',
-        'ucoip_ucoip_id'
+        'ucoip_ucoip_id',
+        'rol',
+        'area_aplicacion',
+        'motivo'
     ];
 
     protected $table =  'ucoip_sitemas_ucoip';

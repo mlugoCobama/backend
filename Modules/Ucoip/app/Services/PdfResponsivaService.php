@@ -54,18 +54,11 @@ class PdfResponsivaService{
                     $pdf->SetXY(43.6, $y);
                     $pdf->Cell(34.5, 4, $detalle->username, 1, 0, 'C');
                     $pdf->SetXY(79.1, $y);
-                    $pdf->Cell(49.3, 4, '', 1, 0, 'C');
+                    $pdf->Cell(49.3, 4,  ($detalle->rol ?? '') , 1, 0, 'C');
                     $pdf->SetXY(129.4, $y);
-                    $pdf->Cell(35.1, 4, '', 1, 0, 'C');
+                    $pdf->Cell(35.1, 4,  ($detalle->area_aplicacion ?? 0), 1, 0, 'C');
                     $pdf->SetXY(165.6, $y);
-                    $pdf->Cell(39, 4, '', 1, 0, 'C');
-                    // $pdf->Cell(29, 3, $this->formatearTexto($hardware->modelo), 1, 0, 'C');
-                    //  $pdf->Cell(37, 3, $this->formatearTexto($hardware->no_serie), 1, 0, 'C');
-                    //  $pdf->Cell(16, 3, $this->formatearTexto($hardware->no_inventario), 1, 0, 'C');
-                    //      $pdf->Cell(29, 3, $this->formatearTexto($hardware->caracteristicas), 1, 0, 'C');
-                    //  $pdf->Cell(29, 3, $this->formatearTexto($hardware->tipoHardware->tipo), 1, 0, 'C');
-                    //  $pdf->Cell(39, 3, $this->formatearTexto($hardware->observaciones), 1, 0, 'C');
-                    // $pdf->Line(14, $y + 4, 205, $y + 4);
+                    $pdf->Cell(39, 4,  ($detalle->motivo ?? ''), 1, 0, 'C');
                      $y = $y + 4;
                  }
                 $pdf->SetFont('Arial', 'B', 10);

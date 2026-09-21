@@ -7,5 +7,6 @@
     "Macro": true,
     "Capacitaciones": true,
     "TarjetaClientes": true,
-    "Volumetricos": true
+    "Volumetricos": true,
+    "Pld": true
 }

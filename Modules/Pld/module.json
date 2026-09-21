@@ -1,0 +1,11 @@
+{
+    "name": "Pld",
+    "alias": "pld",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Pld\\Providers\\PldServiceProvider"
+    ],
+    "files": []
+}

@@ -54,6 +54,11 @@ class AsignacionSistemaController extends Controller
         $asignacion->password =  $this->cifradoService->encrypt($data['password']);
         $asignacion->ucoip_cat_sistemas_id = $data['sistema'];
         $asignacion->ucoip_ucoip_id =  $data['idUcoip'];
+
+        $asignacion->rol =  $data['rol'];
+        $asignacion->area_aplicacion =  $data['area_aplicacion'];
+        $asignacion->motivo =  $data['motivo'];
+
         $asignacion->observaciones =  $data['observaciones'];
         $asignacion->fecha_asignacion =  now();
         $asignacion->save();
@@ -127,8 +132,22 @@ class AsignacionSistemaController extends Controller
         ]);
     }
 
-    public function getSistemasResponsiva($idUcoip){
-        $datosUcoip = Ucoip::with('userGlpi','empresa','sistemas.sistema' )->where('id', $idUcoip)->first();
+    public function getSistemasResponsiva(Request $request, $idUcoip){
+        $idsSistemas = $request;
+        // $datosUcoip = Ucoip::with('userGlpi','empresa','sistemas.sistema' )->where('id', $idUcoip)->first();
+
+        $datosUcoip = Ucoip::with([
+            'userGlpi',
+            'empresa',
+            'sistemas' => function ($query) use ($idsSistemas) {
+                // Filtra los registros de la relación intermedia para que solo traiga
+                // los que estén vinculados con los IDs del catálogo especificados
+                $query->whereIn('ucoip_cat_sistemas_id', $idsSistemas);
+            },
+            'sistemas.sistema' // Carga el modelo del catálogo 'sistema'
+        ])
+        ->where('id', $idUcoip)
+        ->first();
 
 
          $file = $this->pdfResponsivaService->generarPdfResponsiva($datosUcoip);
