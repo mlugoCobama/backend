@@ -64,38 +64,57 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
 
 
     Route::get('/Solicitudes/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
-    Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
-    Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores'])->name('Proveedores.getProveedores');
+    Route::post('/enviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'enviarSolicitudCotizacion'])->name('SolicitudesCompra.enviarSolicitudCotizacion');
+    Route::post('/reenviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'reenviarCorreo'])->name('SolicitudesCompra.reenviarCorreo');
     Route::get('/SolicitudCompra/{id}',[SolicitudesCompraController::class, 'getSolicitud'])->name('SolicitudesCompras.getSolicitud');
     Route::post('/devolver-solicitud-revision', [SolicitudesCompraController::class, 'devolverSolicitudEstatusAnterior'])->name('SolicitudesCompras.devolverSolicitudRevision');
     Route::post('/SolicitudesCompras/actualiza-solicitud', [SolicitudesCompraController::class, 'actualizarSolicitudCompra'])->name('SolicitudesCompras.actualizarSolicitudCompra');
-    Route::post('/SolicitudesCompras/Macro/actualiza-solicitud', [SolicitudesMacroController::class, 'actualizarSolicitudCompra'])->name('SolicitudesCompras.actualizarSolicitudCompraMacro');
-    Route::post('/Proveedores/{id}', [ProveedoresController::class, 'update'])->name('Proveedores.actualizar');
-    Route::get('/Cotizaciones/volver-a-cotizar/{id}', [CotizacionesController::class, 'recotizar'])->name('Cotizaciones.recotizar');
-
-    //*Ruta para enviar un email de prueba, no funciona pero va funcionar
-    Route::post('/enviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'enviarSolicitudCotizacion'])->name('SolicitudesCompra.enviarSolicitudCotizacion');
-    Route::post('/reenviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'reenviarCorreo'])->name('SolicitudesCompra.reenviarCorreo');
-    Route::post('/autorizar-orden-compra', [OrdenesComprasController::class, 'autorizarOrden'])->name('OrdenesCompras.autorizarOrden');
-    Route::post('/autorizar-apago-orden-compra', [OrdenesComprasController::class, 'autorizarOrdenPago'])->name('OrdenesCompras.autorizarOrdenPago');
-
-    //Route::get('/autorizacion-solicitud-gerencia/{id}', [SolicitudesCompraController::class, 'autorizeFromEmail']);
     Route::get('/autorizacion-solicitud-gerencia/{campo}/{necesarias}/{id}', [SolicitudesCompraController::class, 'autorizeFromEmail'])->name('confirm.accion')->middleware('signed');
-    //*Ruta para generar pdf
-    Route::get('/consulta-datos-pdf/{id}',[OrdenesComprasController::class, 'descargarOrdenCompra'])->name('OrdenesCompras.consultaDatosPDF');
-    Route::get('/preview-orden-compra-pdf/{id}',[OrdenesComprasController::class, 'previewOrdenCompra'])->name('OrdenesCompras.previewOrdenCompra');
+    //Route::get('/autorizacion-solicitud-gerencia/{id}', [SolicitudesCompraController::class, 'autorizeFromEmail']);
+    Route::get('/get-seguimiento-solicitud/{idSolicitud}', [SolicitudesCompraController::class, 'getSeguimientoSolicitud'])->name('SolicitudesCompras.getSeguimientoSolicitud');
+    Route::post('/cancelar-solicitud', [SolicitudesCompraController::class, 'cancelarSolicitud'])->name('SolicitudesCompras.cancelarSolicitud');
+
+
+    Route::post('/SolicitudesCompras/Macro/actualiza-solicitud', [SolicitudesMacroController::class, 'actualizarSolicitudCompra'])->name('SolicitudesCompras.actualizarSolicitudCompraMacro');
+    Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
+
+
+    Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores'])->name('Proveedores.getProveedores');
+    Route::post('/Proveedores/{id}', [ProveedoresController::class, 'update'])->name('Proveedores.actualizar');
+    Route::get('/getCatProveedores/{tipo}',[ProveedoresController::class, 'getCatalogoProveedores'])->name('Proveedores.getCatalogoProveedores');
+
+
+    Route::get('/Cotizaciones/volver-a-cotizar/{id}', [CotizacionesController::class, 'recotizar'])->name('Cotizaciones.recotizar');
     Route::put('/autorizar-cotizacion/{id}',[CotizacionesController::class, 'autorizarCotizacion'])->name('Cotizaciones.autorizarCotizacion');
     Route::get('/solicitar-autorizacion/{id}',[CotizacionesController::class, 'limpiarAutorizaciones'])->name('Cotizaciones.solicitaAutorizacion');
 
+
+    Route::post('/autorizar-orden-compra', [OrdenesComprasController::class, 'autorizarOrden'])->name('OrdenesCompras.autorizarOrden');
+    Route::post('/autorizar-apago-orden-compra', [OrdenesComprasController::class, 'autorizarOrdenPago'])->name('OrdenesCompras.autorizarOrdenPago');
+    //*Ruta para generar pdf
+    Route::get('/consulta-datos-pdf/{id}',[OrdenesComprasController::class, 'descargarOrdenCompra'])->name('OrdenesCompras.consultaDatosPDF');
+    Route::get('/preview-orden-compra-pdf/{id}',[OrdenesComprasController::class, 'previewOrdenCompra'])->name('OrdenesCompras.previewOrdenCompra');
     //*Ruta para leer el XML
     Route::get('/leer-xml/{id}',[OrdenesComprasController::class, 'leerXML'])->name('OrdenesCompras.leerXML');
+    Route::post('/solictar-surtido-orden-compra', [OrdenesComprasController::class, 'solicitarSurtido'])->name('OrdenesCompra.solicitarSurtido');
+    Route::post('/cambiar-proveedor-seleccionado', [OrdenesComprasController::class, 'cambiarProveedorSeleccionado'])->name('OrdenesCompra.cambiarProveedorSeleccionado');
+    Route::get('/marcar-como-finalizada/{idOrdenCompra}', [OrdenesComprasController::class, 'markAsFinalizada'])->name('OrdenesCompra.markAsFinalizada');
+    Route::post('/rechazar-orden-compra', [OrdenesComprasController::class, 'rechazarOrdenCompra'])->name('OrdenesCompra.rechazarOrdenCompra');
+
+
     Route::get('/get-data-xml/{id}', [DocumentosOrdenesComprasController::class, 'leerYProcesarXML'])->name('OrdenesCompras.leerYProcesarXML');
+    // Ruta test
+    Route::post('/save-files-factura', [DocumentosOrdenesComprasController::class, 'subirDocumento'])->name('DocumentosOrdenesCompras.saveFilesFactura');
+
 
     Route::get('/getUserByEmail/{correo}', [UsuariosController::class, 'getDataUsuario'])->name('Usuarios.getDataUsuario');
     Route::get('/getUserById/{correo}', [UsuariosController::class, 'showById'])->name('Usuarios.showById');
     Route::get('/getTecnicos', [UsuariosController::class, 'getTecnicos'])->name('Usuarios.getTecnicos');
+
+
     Route::get('/getExsitencias/{tipo}', [AlmacenComprasConrollerController::class, 'getAlmacenDisponible'])->name('Almacen.getAlmacenDisponible');
     Route::get('/getMovimientos', [AlmacenComprasConrollerController::class, 'getSalidas'])->name('Almacen.getSalidas');
+
 
     //*Rutas para el catalogo de vehiculos
     Route::post('/importar-datos-seguro', [CatUnidadesController::class, 'importarDatosSeguro']);
@@ -105,34 +124,21 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::get('/recuperar-comentarios-vehiculo/{id}', [CatUnidadesController::class, 'getObservaciones']);
     Route::get('/recuperar-polizas-vehiculo/{id}', [CatUnidadesController::class, 'getDatosPoliza']);
     Route::post('/autorizar-alta-vehiculo', [CatUnidadesController::class, 'autorizarVehiculo']);
-
-    // Ruta test
-    Route::post('/save-files-factura', [DocumentosOrdenesComprasController::class, 'subirDocumento'])->name('DocumentosOrdenesCompras.saveFilesFactura');
-    Route::get('/get-seguimiento-solicitud/{idSolicitud}', [SolicitudesCompraController::class, 'getSeguimientoSolicitud'])->name('SolicitudesCompras.getSeguimientoSolicitud');
-
-    Route::post('/cancelar-solicitud', [SolicitudesCompraController::class, 'cancelarSolicitud'])->name('SolicitudesCompras.cancelarSolicitud');
-    Route::post('/rechazar-orden-compra', [OrdenesComprasController::class, 'rechazarOrdenCompra'])->name('OrdenesCompra.rechazarOrdenCompra');
-    Route::post('/solictar-surtido-orden-compra', [OrdenesComprasController::class, 'solicitarSurtido'])->name('OrdenesCompra.solicitarSurtido');
-    Route::post('/cambiar-proveedor-seleccionado', [OrdenesComprasController::class, 'cambiarProveedorSeleccionado'])->name('OrdenesCompra.cambiarProveedorSeleccionado');
-    Route::get('/marcar-como-finalizada/{idOrdenCompra}', [OrdenesComprasController::class, 'markAsFinalizada'])->name('OrdenesCompra.markAsFinalizada');
+    Route::post('/CatalogoUnidades/SolicitaToka', [CatUnidadesController::class, 'saveSolicitudRecargaToka']);
+    Route::post('/CatalogoUnidades/DispersaToka', [CatUnidadesController::class, 'saveRecargaToka']);
+    Route::post('/CatalogoUnidades/NotificarDispersion', [CatUnidadesController::class, 'notificarDispersion']);
+    Route::get('/CatalogoUnidades/ParqueVehicularToka/{id}', [CatUnidadesController::class, 'getParqueWithToka']);
+    Route::get('/CatalogoUnidades/{id}/{tipo}', [CatUnidadesController::class, 'show'])->name('CatUnidades.unidadesxtipo');
 
     Route::get('/toka/clientes', [TokaController::class, 'getClientesToka'])->name('Toka.getClientes');
 
-    Route::post('/CatalogoUnidades/SolicitaToka', [CatUnidadesController::class, 'saveSolicitudRecargaToka']);
-    Route::post('/CatalogoUnidades/DispersaToka', [CatUnidadesController::class, 'saveRecargaToka']);
-     Route::post('/CatalogoUnidades/NotificarDispersion', [CatUnidadesController::class, 'notificarDispersion']);
-    Route::get('/CatalogoUnidades/ParqueVehicularToka/{id}', [CatUnidadesController::class, 'getParqueWithToka']);
-
     Route::get('/DispersionesDiesel/Plantilla/{id}/{noDipsersion}', [DispersionesDieselController::class, 'descargarDispersion']);
 
-    Route::get('/CatalogoUnidades/{id}/{tipo}', [CatUnidadesController::class, 'show'])->name('CatUnidades.unidadesxtipo');
 });
 
 Route::prefix('compras')->group(function(){
     Route::resource('SyncFacturas', SyncController::class);
-
     Route::post('/confirmacion-sincronizacion', [SyncController::class, 'confirmar']);
-
     Route::get('/documentos/{id}/archivos',[SyncController::class, 'obtenerArchivos']);
 
     Route::post('/importar-autotanques', [CatUnidadesController::class, 'actualizarDatosPV']);
@@ -163,30 +169,22 @@ Route::prefix('compras')->group(function(){
     Route::get('/ReportesCompras/ComprasMacro/Concentrado', [ReportesComprasController::class, 'descargarConcentradoMacroGlobal'])->name('descargarConcentradoMacroGlobal');
     Route::get('/ReportesCompras/ComprasGenerales/Concentrado', [ReportesComprasController::class, 'descargarConcentradoGeneralesGlobal'])->name('descargarConcentradoGeneralGlobal');
     Route::get('/ReportesCompras/ComprasGeneralesTi/Concentrado', [ReportesComprasController::class, 'descargarConcentradoGeneralesTiGlobal'])->name('descargarConcentradoGeneralTiGlobal');
-// Exportar solo una empresa
+    // Exportar solo una empresa
     Route::get('/gasto-empresa/{empresa}/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'exportEmpresa']);
     // Exportar concentrado
     Route::get('/gastos-concentrado/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'exportConcentrado']);
     // Exportar multireporte
     Route::get('/gastos-mensuales/{fechaInicial}/{fechaFinal}/{tipo}', [ReportesComprasController::class, 'exportMulti']);
-
-
     // Multi-hoja
     Route::get('/reportes/gastos/concentrado', [ReportesComprasController::class, 'descargarConcentrado']);
-
     // Individual por empresa
     Route::get('/reportes/gastos/detalle/{intercompania}', [ReportesComprasController::class, 'descargarDetalleEmpresa']);
-
-    Route::post('/asignar-permisos-kanban', [UsuariosController::class, 'asignar']);
-
-
-
     Route::get('/reportes/workflow/concentrado/{tipo}', [ReportesComprasController::class, 'getReporteEstatus']);
 
-    Route::get(
-        'proveedores/export-excel',
-        [ProveedoresController::class, 'exportExcel']
-    );
+    Route::post('/asignar-permisos-kanban', [UsuariosController::class, 'asignar']);
+    
+
+    Route::get('proveedores/export-excel',[ProveedoresController::class, 'exportExcel']);
 });
 
 Route::post('/all-permisos', [UsuariosController::class, 'getAllPermission'])->name('consultas.permisos');

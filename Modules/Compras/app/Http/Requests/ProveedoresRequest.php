@@ -22,6 +22,7 @@ class ProveedoresRequest extends FormRequest
             'proveedor.horario_atencion' => 'nullable|string',
             'proveedor.localidad' => 'nullable|string',
             'proveedor.productos' => 'nullable|string',
+            'proveedor.tipo' => 'nullable|string',
             // Validar contactos (si vienen)
             'contactos.contactos' => 'array',
             'contactos.contactos.*.nombre' => 'required_with:contactos.contactos|string',

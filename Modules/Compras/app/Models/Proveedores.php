@@ -31,13 +31,14 @@ class Proveedores extends Model
         'tiempo_entrega',
         'ti',
         'activo',
+        'tipo'
 
     ];
     /**
      * Nombre de la tabla
      */
     protected $table = 'com_proveedores';
-    
+
     public function scopeActive ($query) {
         return $query->where('activo', 1);
     }
@@ -45,10 +46,19 @@ class Proveedores extends Model
     public function scopeIsTI ($query) {
         return $query->where('ti', 1);
     }
-    
+
+    public function scopeTipoCompras ($query) {
+        return $query->where('tipo', 1);
+    }
+
+    public function scopeTipoCorporativo ($query) {
+        return $query->where('tipo', 2);
+    }
+
+
     /*Función para obtener los datos activos
      */
-    
+
     /*
      |--------------------------------------------------------------------------
      | RELACIONES DE BASE DE DATOS

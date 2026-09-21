@@ -31,7 +31,7 @@ class ProveedoresController extends Controller
     */
     public function index()
     {
-        return ProveedoresResource::collection((Proveedores::with([
+        return ProveedoresResource::collection((Proveedores::tipoCompras()->with([
             'datosPago',
             'contactos',
             'productos',
@@ -226,7 +226,7 @@ class ProveedoresController extends Controller
      */
     public function getProveedores()
     {
-        $data = (Proveedores::active()->with('contactos')
+        $data = (Proveedores::active()->tipoCompras()->with('contactos')
             ->get(['id', 'nombre', 'servicios']));
 
         return response()->json([
@@ -266,6 +266,7 @@ class ProveedoresController extends Controller
             $dataProveedor->dias_credito = $proveedor["condiciones"] == "Contado" ? 0 : $proveedor["dias_credito"];
             $dataProveedor->horario_atencion = $proveedor["horario_atencion"];
             $dataProveedor->tiempo_entrega = $proveedor["tiempo_entrega"];
+            $dataProveedor->tipo = $proveedor["tipo"] == 'compras' ? 1 : 2 ;
             $dataProveedor->save();
             return ['id' => $dataProveedor->id, 'isNew' => true];
         } else {
@@ -523,5 +524,28 @@ class ProveedoresController extends Controller
             new ProveedoresExport(),
             'proveedores.xlsx'
         );
+    }
+
+    public function getCatalogoProveedores($tipo){
+
+    $numeroTipo = match($tipo){
+        'compras' => 1,
+        'corporativo' => 2,
+        default => 1
+    };
+
+    $query = Proveedores::active()->where('tipo', $numeroTipo)->with([
+            'datosPago',
+            'contactos',
+            'productos',
+            'Expediente',
+            'contactos.zona'
+             ])->get();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Datos recuperados correctamente',
+            'data' => ProveedoresResource::collection($query)
+        ]);
     }
 }
