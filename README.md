@@ -163,4 +163,9 @@ Se integra ctualizacion de registros y archivos ademas de borrado fisico
 * **Responsiva de sistemas:** Se agrega soporte para la impresion de responsivas de asignacion de sistemas
 * **Demo PLD:** Se integra el modulo de PLD para agencias con procesamiento de documentos como demo para evaluar funcinamiento 
 * **Instalar dependecias para gemini** composer require google-gemini-php/laravel
-agregar variables de entorno: 'GEMINI_API_KEY','GEMINI_REQUEST_TIMEOUT','GEMNI_CURRENT_MODEL'
+agregar variables de entorno: 'GEMINI_API_KEY','GEMINI_REQUEST_TIMEOUT=60','GEMNI_CURRENT_MODEL='gemini-3.5-flash-lite''
+### Compras
+*Fecha de liberación: 28 de Septiembre, 2026*
+* **Autorizacion macro:** Se agrega soporte para deshabilitar la autorizacion de macrotaller en empresas especificas 
+Aggregar variable de entorno 'EXCEPCIONES_MACRO'
+

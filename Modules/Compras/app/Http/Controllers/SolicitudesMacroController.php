@@ -40,16 +40,16 @@ class SolicitudesMacroController extends Controller
      */
     public function index(int $intercompania, ?int $id = null)
     {
-        $usuariosCompra = explode(',', env('USERS_MACRO_COMPRAS')); 
+        $usuariosCompra = explode(',', env('USERS_MACRO_COMPRAS'));
         $isCompras = in_array($id, $usuariosCompra );
 
-        $usuariosMacro = explode(',', env('USERS_MACRO_MACRO')); 
+        $usuariosMacro = explode(',', env('USERS_MACRO_MACRO'));
         $isMacro = in_array($id, $usuariosMacro );
 
         $usuariosAdminz = explode(',', env('USERS_COMPRAS_ADMINZ'));
         $isAdminz = in_array($id, $usuariosAdminz );
-        
-        $usuariosAdmin = explode(',', env('USERS_MACRO_ADMIN')); 
+
+        $usuariosAdmin = explode(',', env('USERS_MACRO_ADMIN'));
         $isAdmin = in_array($id, $usuariosAdmin );
 
         if( $isCompras){
@@ -86,7 +86,7 @@ class SolicitudesMacroController extends Controller
             $data = SolicitudesMacroResource::collection( $query );
             $tipo = 'gasera';
         }
-        
+
         // $data = SolicitudesMacroResource::collection((SolicitudesCompra::macrotaller()->active()->orderBy('fecha', 'desc')->get()));
         return response()->json([
             'tipo' => $tipo,
@@ -125,7 +125,7 @@ class SolicitudesMacroController extends Controller
             // $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
             $this->storeDetalleSolicitudCompra($data['detalles'], $solicitud['id'], $files, (int)$solicitud['destino'] );
 
-            
+
             $this->storeOrdenTrabajo($solicitud['id'], $data, $files["file_orden"] );
 
             if(isset($files["file_cotizacion"]) && !empty($files["file_cotizacion"])){
@@ -236,8 +236,8 @@ class SolicitudesMacroController extends Controller
 
     /**
    * Genera un folio para cada solicitud de macrotaller
-   * 
-   * @param string $codigoEntidad 
+   *
+   * @param string $codigoEntidad
    *                    intercompania (000) || abreviatura (ABC)
    * @return string $nuevoFolio: folio de tipo MC-IDE-0000X
    */
@@ -245,7 +245,7 @@ class SolicitudesMacroController extends Controller
     {
     // Ejemplo: $codigoEntidad = 'GGA'
 
-        $interExcepciones = explode(',', env('INTER_EXECPCIONES')); 
+        $interExcepciones = explode(',', env('INTER_EXECPCIONES'));
         $isExcepcion = in_array($codigoEntidad, $interExcepciones );
 
         if($isExcepcion){
@@ -275,12 +275,15 @@ class SolicitudesMacroController extends Controller
   /**
    * Almacena los datos de solicitud de compra
    * @param array  $data Datos del request debe contener:
-   * 'empresa (num_intercompania)', 'usuario_solicita (id_usuario)',  
+   * 'empresa (num_intercompania)', 'usuario_solicita (id_usuario)',
    * 'usuario_destino (id_autotanque)', 'motivo'.
    * @return int : id de la solicitud guardada
    */
     private function storeSolicitudCompra($data)
     {
+        $catNoAutoMacro = explode(',', env('EXCEPCIONES_MACRO'));
+        $noAutoMacro = in_array($data["empresa"], $catNoAutoMacro );
+
         $dataSolicitud = new SolicitudesCompra();
         $dataSolicitud->folio = $this->generarFolioMc($data["empresa"]);
         $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
@@ -291,7 +294,7 @@ class SolicitudesMacroController extends Controller
         $dataSolicitud->c_c = $data["c_c"];
         $dataSolicitud->tipo = 2;
         $dataSolicitud->com_cat_sistemas_auto_id = $data['sistema'];
-        if($data['sistema'] == 24){
+        if($data['sistema'] == 24 || $noAutoMacro){
             $dataSolicitud->auto_macro = 1;
         }
         $dataSolicitud->requiere_anticipo =  ($data["requiere_anticipo"] === "true") ? 1 : 0 ;
@@ -308,8 +311,8 @@ class SolicitudesMacroController extends Controller
 
     /**
    * Almacena la orden de trabajo  en la base de datos
-   * 
-   * @param array $data debe contener 
+   *
+   * @param array $data debe contener
    *                     "orden_trabajo":string, "usuario_destino":int
    * @param int $idSolicitud de la solicitud de compra
    */
@@ -345,11 +348,11 @@ class SolicitudesMacroController extends Controller
 
     public function storeCotizacionProveedor($idCotizacion){
         $proveedor = Proveedores::where('nombre', 'Proveedor Planta Gasera')->first();
-        
+
          $datacotProv = new CotizacionesProveedores();
          $datacotProv->proveedores_id = $proveedor['id'];
          $datacotProv->cotizaciones_id = $idCotizacion;
-         
+
          $datacotProv->save();
 
          return $datacotProv->id;
@@ -419,7 +422,7 @@ class SolicitudesMacroController extends Controller
         $detalleAuto->com_datos_vehiculos_id = $idVehiculo;
         $detalleAuto->save();
 
-    } 
+    }
 
     /**
      * Recupera un archivo relacionado con una orden de compra desde el servidor.
@@ -471,11 +474,11 @@ class SolicitudesMacroController extends Controller
         /**
  * Actualiza una solicitud de compra existente
  */
-private function updateSolicitudCompra($data, $idSolicitud) 
+private function updateSolicitudCompra($data, $idSolicitud)
 {
 
     $dataSolicitud = SolicitudesCompra::findOrFail($idSolicitud);
-    
+
     // Actualizar campos
     $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
     $dataSolicitud->empresa = $data["empresa"];
@@ -492,7 +495,7 @@ private function updateSolicitudCompra($data, $idSolicitud)
     $dataSolicitud->folio_requisicion = $data['folio_requisicion'];
     $dataSolicitud->motivo_revision = null;
     $dataSolicitud->save();
-    
+
     return [
         'id' => $dataSolicitud->id,
         'destino' => $data["usuario_destino"]
@@ -503,7 +506,7 @@ private function updateSolicitudCompra($data, $idSolicitud)
  * Actualiza los detalles de la solicitud de compra
  * Elimina los que no vienen en el request y actualiza/crea los demás
  */
-private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $destino) 
+private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $destino)
 {
     $detallesIds = collect($detalles)
         ->filter(function($detalle) {
@@ -511,7 +514,7 @@ private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $
         })
         ->pluck('id')
         ->toArray();
-    
+
     if (!empty($detallesIds)) {
         DetalleSolicitud::where('solicitudes_compra_id', $idSolicitud)
             ->whereNotIn('id', $detallesIds)
@@ -536,15 +539,15 @@ private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $
                 $detalle->delete();
             });
     }
-    
+
     foreach ($detalles as $index => $detalle) {
         if (isset($detalle['id']) && !empty($detalle['id'])) {
             $detalleSolicitud = DetalleSolicitud::find($detalle['id']);
-            
+
             if (!$detalleSolicitud) {
                 throw new \Exception("Detalle con ID {$detalle['id']} no encontrado");
             }
-            
+
             if ($detalleSolicitud->solicitudes_compra_id != $idSolicitud) {
                 throw new \Exception("El detalle {$detalle['id']} no pertenece a esta solicitud");
             }
@@ -552,32 +555,32 @@ private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $
             $detalleSolicitud = new DetalleSolicitud();
             $detalleSolicitud->solicitudes_compra_id = $idSolicitud;
         }
-        
+
 
         $detalleSolicitud->cantidad = $detalle["cantidad"];
         $detalleSolicitud->descripcion = $this->sanitizeMeasurementText($detalle["descripcion"]);
         $detalleSolicitud->observaciones = $this->sanitizeMeasurementText($detalle["observaciones"]);
         $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
         $detalleSolicitud->recuperable = $detalle["recuperar_costo"] ?? $detalle["recuperable"] ?? 0;
-        
+
         if (isset($detalle["confirmado"])) {
             $detalleSolicitud->confirmado = $detalle["confirmado"];
         }
-        
+
         $fileKey = "img_referencia_" . $index;
         if (isset($files[$fileKey]) && $files[$fileKey]->isValid()) {
             if (in_array($files[$fileKey]->extension(), ['jpg','jpeg','png'])) {
                 if ($detalleSolicitud->img_referencia && Storage::disk('public')->exists($detalleSolicitud->img_referencia)) {
                     Storage::disk('public')->delete($detalleSolicitud->img_referencia);
                 }
-                
+
                 $path = $files[$fileKey]->store('referencias', 'public');
                 $detalleSolicitud->img_referencia = $path;
             } else {
                 throw new \Exception("El archivo debe ser una imagen JPG o PNG");
             }
         }
-        
+
         $detalleSolicitud->save();
     }
 }
@@ -591,16 +594,16 @@ function sanitizeMeasurementText($text) {
     }
 
     $replacements = [
-        "″" => '"', 
+        "″" => '"',
         "”" => '"',
         "“" => '"',
-        "′" => "'",  
+        "′" => "'",
         "’" => "'",
         "‘" => "'",
-        "–" => "-",   
+        "–" => "-",
         "—" => "-",
-        "×" => "x",   
-        "⁄" => "/",   
+        "×" => "x",
+        "⁄" => "/",
     ];
 
     $text = strtr($text, $replacements);

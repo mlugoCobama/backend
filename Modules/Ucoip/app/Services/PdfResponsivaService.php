@@ -13,7 +13,7 @@ class PdfResponsivaService{
         public function generarPdfResponsiva($data)
         {
             $pdf = new Fpdi();
-                $pdf->setSourceFile(base_path('Modules/Ucoip/resources/assets/Formatos/responsiva_de_accesos.pdf'));
+                $pdf->setSourceFile(base_path('Modules/Ucoip/resources/assets/Formatos/responsiva_acceso_sitemas_v2_1.pdf'));
 
                 $template = $pdf->importPage(1);
                 $template1 = $pdf->importPage(2);
@@ -23,47 +23,90 @@ class PdfResponsivaService{
                 $pdf->AddPage('P', 'Letter');
                 $pdf->useImportedPage($template);
                 $pdf->SetTextColor(0, 0, 0);
-                $pdf->SetFont('Arial', 'B', 10);
+                $pdf->SetFont('Arial', 'B', 9);
 
 
-                $nombreUsuario = $data->userGlpi->firstname.' '.$data->userGlpi->realname;
-                $empresa = $data->empresa->nombre;
+                $nombreUsuario = $this->formatearTexto($data->userGlpi->firstname.' '.$data->userGlpi->realname) ;
+                $empresa = $this->formatearTexto($data->empresa->nombre);
+                $area =$this->formatearTexto($data->userGlpi->area ?? '') ;
+                $puesto =$this->formatearTexto($data->userGlpi->puesto ?? '') ;
 
                 $fecha = $this->obtenerPartesFecha(now());
 
 
-                $pdf->SetXY(120, 31.7);
+                $pdf->SetXY(121, 31.7);
                 $pdf->Cell(73,4, $nombreUsuario , 0, 1 ,'L');
                 $pdf->SetXY(93, 35.7);
                 $pdf->Cell(80,4, $empresa , 0, 1 ,'L');
 
+                $pdf->SetXY(72, 63.8);
+                $pdf->Cell(80,4, $puesto , 0, 1 ,'L');
+
+                $pdf->SetXY(99, 67.8);
+                $pdf->Cell(80,4, $area , 0, 1 ,'L');
 
             /**
              * Sistemas
              */
-                 $detalles = $data->sistemas;
-                 $pdf->SetFont('Arial', '', 6);
-                $pdf->SetDrawColor(210, 210, 210);
-                $pdf->SetLineWidth(0.3);
+                $detalles = $data->sistemas;
+                $pdf->SetFont('Arial', 'B', 8);
+                // $pdf->SetDrawColor(210, 210, 210);
+                $pdf->SetLineWidth(0.2);
+                $y = 161;
+                $lineHeight = 4; // Altura de cada línea de texto dentro de la celda
 
-                $y = 172.6;
-                 foreach ($detalles as $detalle) {
-                     $pdf->SetXY(13.6, $y);
-                    //  $hardware = $detalle->hardware;
-                    $pdf->Cell(29, 4, $detalle->sistema->nombre, 1, 0, 'C');
-                    $pdf->SetXY(43.6, $y);
-                    $pdf->Cell(34.5, 4, $detalle->username, 1, 0, 'C');
-                    $pdf->SetXY(79.1, $y);
-                    $pdf->Cell(49.3, 4,  ($detalle->rol ?? '') , 1, 0, 'C');
-                    $pdf->SetXY(129.4, $y);
-                    $pdf->Cell(35.1, 4,  ($detalle->area_aplicacion ?? 0), 1, 0, 'C');
-                    $pdf->SetXY(165.6, $y);
-                    $pdf->Cell(39, 4,  ($detalle->motivo ?? ''), 1, 0, 'C');
-                     $y = $y + 4;
-                 }
-                $pdf->SetFont('Arial', 'B', 10);
+                foreach ($detalles as $detalle) {
+                    // Definimos el contenido de cada columna
+                    $col1 = $detalle->sistema->nombre ?? '';
+                    $col2 = $detalle->username ?? '';
+                    $col3 = $detalle->rol ?? '';
+                    $col4 = $detalle->area_aplicacion ?? '';
 
-                $pdf->SetXY(147.5, 228.5);
+                    // Anchos de cada columna (suman 186.9 mm)
+                    $w1 = 35;
+                    $w2 = 55;
+                    $w3 = 56;
+                    $w4 = 45;
+
+                    // Calculo de lineas por celda
+                    $nb1 = $pdf->GetStringWidth($col1) > 0 ? (($pdf->GetStringWidth($col1)+2)/ $w1) : 1;
+                    $nb2 = $pdf->GetStringWidth($col2) > 0 ? (($pdf->GetStringWidth($col2)+2) / $w2) : 1;
+                    $nb3 = $pdf->GetStringWidth($col3) > 0 ? ($pdf->GetStringWidth($col3) / $w3) : 1;
+                    $nb4 = $pdf->GetStringWidth($col4) > 0 ? ($pdf->GetStringWidth($col4) / $w4) : 1;
+
+                    $maxLines = max(ceil($nb1), ceil($nb2), ceil($nb3), ceil($nb4), 1);
+                    $rowHeight = $maxLines * $lineHeight;
+
+                    // Columna 1: Sistema
+                    $pdf->SetXY(13.5, $y);
+                    $pdf->MultiCell($w1, $lineHeight, $col1, 0, 'L');
+
+                    // Columna 2: Username
+                    $pdf->SetXY(48, $y);
+                    $pdf->MultiCell($w2, $lineHeight, $col2, 0, 'L');
+
+                    // Columna 3: Rol
+                    $pdf->SetXY(106, $y);
+                    $pdf->MultiCell($w3, $lineHeight, $col3, 0, 'L');
+
+                    // Columna 4: Área / Aplicación
+                    $pdf->SetXY(158, $y);
+                    $pdf->MultiCell($w4, $lineHeight, $col4, 0, 'L');
+
+                    $y += $rowHeight;
+                    $pdf->Line(13, $y, 203, $y);
+                }
+
+                $pdf->Line(12.8, 160.5, 12.8, $y);
+                $pdf->Line(47.75, 160.5, 47.75, $y);
+                $pdf->Line(105.2, 160.5, 105.2, $y);
+                $pdf->Line(158.2, 160.5, 158.2, $y);
+                $pdf->Line(203.15, 160.5, 203.15, $y);
+
+                $pdf->SetFont('Arial', 'B', 9);
+
+                $pdf->SetXY(148.8, 224);
+                // $pdf->SetXY(148.8, 203);
                 $pdf->Cell(80,4, 'X' , 0, 1 ,'L');
 
                 $pdf->AddPage('P', 'Letter');
@@ -76,71 +119,22 @@ class PdfResponsivaService{
                 $pdf->SetXY(113, 180.5);
                 $pdf->Cell(5,4, $fecha['anio']  , 0, 1 ,'C');
 
-                $pdf->SetXY(28, 210);
+                $pdf->SetXY(27, (211.5));
                 $pdf->Cell(73,4, $nombreUsuario , 0, 1 ,'L');
+                $pdf->SetXY(26, (220));
+                $pdf->Cell(80,4, $puesto , 0, 1 ,'L');
+
+
+                // $pdf->SetXY(83, (231.5));
+                // $pdf->Cell(73,4,$this->formatearTexto('Ángel Enrique Moreno Pineda') , 0, 1 ,'L');
+                // $pdf->SetXY(95, (239));
+                // $pdf->Cell(80,4, $this->formatearTexto('Auxiliar de Sistemas') , 0, 1 ,'L');
 
                 $pdf->AddPage('P', 'Letter');
                 $pdf->useImportedPage($template2);
 
                 // $pdf->SetXY(28, 230);
                 // $pdf->Cell(73,4, $nombreUsuario , 1, 1 ,'L');
-
-
-            // Fuente
-
-
-            // $folioResguardo = $data->folio;
-            // // y = -2.5
-
-            // $pdf->SetFont('Arial', 'B', 9);
-            // $fechaInicio = $this->fechaFormateada($data->fecha_inicio);
-            // $fechaInicio = $this->fechaFormateada(now());
-            // $fechaFin = $this->fechaFormateada($data->fecha_fin);
-            // $pdf->SetXY(169, 37);
-            // $pdf->Cell(37, 7, $fechaInicio , 0, 1 ,'C');
-            // $pdf->SetXY(169, 44);
-            // $pdf->Cell(37, 7, $fechaFin , 0, 1 ,'C');
-
-
-            // $pdf->SetFont('Arial', 'B', 7);
-            // $pdf->SetXY(40, 61);
-            // $pdf->Cell(165, 7, $this->formatearTexto($empresa) , 0, 1 ,'C');
-
-            // $pdf->SetXY(40, 72);
-            // $pdf->Cell(165, 7, $this->formatearTexto($nombreUsuario) , 0, 1 ,'C');
-            // $pdf->SetXY(40, 83);
-            // $pdf->Cell(165, 7, $this->formatearTexto($email) , 0, 1 ,'C');
-
-            // /**
-            //  * Detalles del resguardo
-            //  */
-            // $detalles = $data;
-            // $pdf->SetFont('Arial', 'B', 6);
-
-            // $y = 132.1;
-
-            // foreach ($detalles as $detalle) {
-            //     $pdf->SetXY(28.6, $y);
-            //     $hardware = $detalle->hardware;
-            //     $pdf->Cell(7, 3, '#', 0, 0, 'L');
-            //     $pdf->Cell(21, 3, $this->formatearTexto($hardware->marca), 0, 0, 'C');
-            //     $pdf->Cell(29, 3, $this->formatearTexto($hardware->modelo), 0, 0, 'C');
-            //     $pdf->Cell(37, 3, $this->formatearTexto($hardware->no_serie), 0, 0, 'C');
-            //     $pdf->Cell(16, 3, $this->formatearTexto($hardware->no_inventario), 0, 0, 'C');
-            //     // $pdf->Cell(29, 3, $this->formatearTexto($hardware->caracteristicas), 0, 0, 'C');
-            //     $pdf->Cell(29, 3, $this->formatearTexto($hardware->tipoHardware->tipo), 0, 0, 'C');
-            //     $pdf->Cell(39, 3, $this->formatearTexto($hardware->observaciones), 0, 0, 'C');
-            //     $y = $y + 3.7;
-            // }
-
-            // $pdf->SetFont('Arial', 'B', 7);
-            // $pdf->SetXY(126, 229);
-
-            // // Establecer color de fondo blanco
-            // $pdf->SetFillColor(255, 255, 255);
-            // $pdf->Cell(
-            //     80,6,$this->formatearTexto($nombreUsuario),0,0,'C',true
-            // );
 
             return $pdf->Output('S');
             // $pdf->Output();
@@ -184,5 +178,135 @@ class PdfResponsivaService{
                 'anio' => $carbonFecha->format('y'),            // "2026"
             ];
         }
+
+        public function procesarCsvYGuardarPdfs($pathCsv, $agencia, $pathDestino = null)
+    {
+        if (!File::exists($pathCsv)) {
+            throw new \Exception("El archivo CSV no existe en la ruta: {$pathCsv}");
+        }
+
+        // $agencia = 'Azcapotzalco';
+
+        // Definir carpeta de salida por defecto en storage/app/responsivas
+        if (!$pathDestino) {
+            $pathDestino = storage_path('app/responsivas/'.$agencia);
+        }
+
+        if (!File::isDirectory($pathDestino)) {
+            File::makeDirectory($pathDestino, 0755, true);
+        }
+
+        $generados = [];
+        $handle = fopen($pathCsv, 'r');
+
+        // Leer cabecera para mapear por nombres de columna o usar índices
+        $headers = fgetcsv($handle, 1000, ',');
+
+        // Limpiar BOM o espacios en la cabecera si los hubiera
+        if ($headers && isset($headers[0])) {
+            $headers[0] = preg_replace('/\x{EF}\x{BB}\x{BF}/', '', $headers[0]);
+        }
+
+        while (($fila = fgetcsv($handle, 1000, ',')) !== false) {
+            if (empty(array_filter($fila))) {
+                continue; // Saltar filas vacías
+            }
+
+            // Mapeo dinámico fila -> campos del CSV según la imagen
+            $row = array_combine($headers, $fila);
+
+            // Construir el objeto estandarizado de datos esperado por generarPdfResponsiva
+            $data = $this->mapearFilaCsvAObjeto($row, $agencia );
+
+            // Generar el contenido del PDF en binario
+            $pdfContent = $this->generarPdfResponsiva($data);
+
+            // Nombre único para el archivo basado en el Titular
+            $nombreLimpio = $row['Ucoip'];
+            $nombreArchivo = "responsiva_$nombreLimpio".'_'.time() . ".pdf";
+            $rutaCompleta = $pathDestino . DIRECTORY_SEPARATOR . $nombreArchivo;
+
+            // Guardar el PDF en el servidor
+            File::put($rutaCompleta, $pdfContent);
+
+            $generados[] = [
+                'titular' => $row['Titular'] ?? 'N/A',
+                'archivo' => $nombreArchivo,
+                'ruta' => $rutaCompleta
+            ];
+        }
+
+        fclose($handle);
+
+        return $generados;
+    }
+
+    /**
+     * Mapea un arreglo asociativo con las columnas del CSV
+     */
+    private function mapearFilaCsvAObjeto(array $row, $agencia)
+    {
+        $data = new \stdClass();
+        $data->userGlpi = (object) [
+            'firstname' => $row['Titular'] ?? '',
+            'realname'  => '',
+            'puesto' => $row['Puesto'] ?? '',
+            'area' => $row['Área'] ?? '',
+        ];
+
+        $data->empresa = (object) [
+            'nombre' => 'Agencia Nissan '.$agencia
+        ];
+
+
+        $sistemasCsv = [
+            // 'Ucoip'            => $row['Ucoip'] ?? null,
+            'Acceso al equipo' => $row['Acceso al equipo'] ?? null,
+            'Autosystem'       => $row['Autosystem'] ?? null,
+            'Winsys'           => $row['Winsys'] ?? null,
+            'Intranet'         => $row['Intranet'] ?? null,
+            'Correo'           => $row['Correo'] ?? null,
+        ];
+
+        $data->sistemas = [];
+
+        foreach ($sistemasCsv as $nombreSistema => $valorAcceso) {
+            // Si tiene algún valor asignado en la celda del CSV, lo agregamos a los sistemas
+            if (!empty($valorAcceso)) {
+                $detalle = new \stdClass();
+                $detalle->sistema = (object) ['nombre' => $nombreSistema];
+                $detalle->username = $valorAcceso;
+                $detalle->rol =  $this->getRol($nombreSistema);
+                $detalle->area_aplicacion =  $this->getAreaAplicacion($nombreSistema, 'Agencia Nissan '.$agencia);
+                $detalle->motivo = '';
+
+                $data->sistemas[] = $detalle;
+            }
+        }
+
+        return $data;
+    }
+
+    private function getRol($sistema){
+        return match ($sistema){
+            'Acceso al equipo' => 'Administrador',
+            'Autosystem'       => 'Operador',
+            'Winsys'           => 'Consulta',
+            'Intranet'         => 'Operador',
+            'Correo'           => 'Operador',
+            default => 'N/A'
+        };
+    }
+
+    private function getAreaAplicacion($sistema, $agencia){
+        return match ($sistema){
+            'Acceso al equipo' =>   'No aplica',
+            'Autosystem'       => $agencia,
+            'Winsys'           => $agencia,
+            'Intranet'         => $agencia,
+            'Correo'           => $agencia,
+            default => 'N/A'
+        };
+    }
 
 }
