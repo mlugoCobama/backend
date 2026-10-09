@@ -64,7 +64,7 @@ class SolicitudesCompraController extends Controller
      **************************************************************/
     public function index(int $intercompania, ?int $id = null)
     {
-        $usuariosCompra = explode(',', env('USERS_COMPRAS_COMPRAS')); 
+        $usuariosCompra = explode(',', env('USERS_COMPRAS_COMPRAS'));
         $isCompras = in_array($id, $usuariosCompra );
 
         $usuariosAdmin = explode(',', env('USERS_COMPRAS_ADMIN'));
@@ -72,7 +72,7 @@ class SolicitudesCompraController extends Controller
 
         $usuariosAdminz = explode(',', env('USERS_COMPRAS_ADMINZ'));
         $isAdminz = in_array($id, $usuariosAdminz );
-        
+
         $usuariosRT = explode(',', env('USERS_COMPRAS_RT'));
         $isRT = in_array($id, $usuariosRT );
 
@@ -82,9 +82,9 @@ class SolicitudesCompraController extends Controller
         $usuariosTG = explode(',', env('USERS_COMPRAS_TG'));
         $isTG = in_array($id, $usuariosTG );
 
-        $usuariosAutosExcepcion = explode(',', env('EXCEPCIONES_AUTOS')); 
+        $usuariosAutosExcepcion = explode(',', env('EXCEPCIONES_AUTOS'));
         $isExepcion = in_array($id, $usuariosAutosExcepcion);
-        
+
         if($isRT){
             if(!in_array($id, [2395])){
                 $query = $this->getSolicitudesCompras(null,0,0,3,$id,'rt');
@@ -124,12 +124,12 @@ class SolicitudesCompraController extends Controller
             $data = SolicitudesComprasResource::collection( $query);
             $tipo = 'empresa';
         }
-        
+
         if(!$isRT && !$isCompras && !$isAdmin  && !$isTG && !$isAdminz && !$isComprasAutos){
             if(!$isExepcion){
                 $query = $this->getSolicitudesCompras($intercompania , 0, 0, null, null, 'empresa');
             }else{
-               $query = $this->getSolicitudesCompras($intercompania , 0, 0, null, $id, 'empresa'); 
+               $query = $this->getSolicitudesCompras($intercompania , 0, 0, null, $id, 'empresa');
             }
 
             $data = SolicitudesComprasResource::collection(
@@ -137,7 +137,7 @@ class SolicitudesCompraController extends Controller
             );
             $tipo = 'empresa';
         }
-        
+
         return response()->json([
             'tipo' => $tipo,
             'status' => 'success',
@@ -181,7 +181,7 @@ class SolicitudesCompraController extends Controller
         }
     }
 
-    
+
     /** *******************************************************************
      * Recupera los detalles de la solicitud
      *********************************************************************/
@@ -204,7 +204,7 @@ class SolicitudesCompraController extends Controller
         $solicitud->save();
 
         $this->validarCotizacion($id);
-        
+
         return response()->json([
             'status' => 'success',
             'message' => 'Se ha actualizado correctamente',
@@ -266,7 +266,7 @@ class SolicitudesCompraController extends Controller
                 $ordenCompra->razon_cancelacion = $data['razonCancelacion'] ?? null;
                 $ordenCompra->save();
             }
-        }   
+        }
 
         NotificationHelper::sendNotificationEstatusChange($solicitudCompra->id, 'Cancelada: Razón - '. $solicitudCompra->razon_cancelacion);
 
@@ -277,7 +277,7 @@ class SolicitudesCompraController extends Controller
         ]);
     }
 
-    /** *********************************************************** 
+    /** ***********************************************************
      * Genera un nuevo folio consecutivo en base al ultimo folio
      *************************************************************/
     public function generarFolioSc($tipo)
@@ -415,7 +415,7 @@ class SolicitudesCompraController extends Controller
 
 
     /** ******************************************************************
-     * Envía la solicitud de cotización a los proveedores y almacena la 
+     * Envía la solicitud de cotización a los proveedores y almacena la
      * relación en la BD
      ********************************************************************/
     public function enviarSolicitudCotizacion(SendSolicitudCotizacionRequest $request)
@@ -443,7 +443,7 @@ class SolicitudesCompraController extends Controller
 
             $cotizacion = Cotizaciones::where('solicitudes_compra_id', $data['solicitudes_compra_id'])->first();
             if($cotizacion){
-                $idCotizacion = $cotizacion->id;   
+                $idCotizacion = $cotizacion->id;
             }else{
                 $idCotizacion = $this->cotizacionesService->storeCotizacion($data);
                 $solicitud = SolicitudesCompra::find($idSolicitudC);
@@ -471,9 +471,9 @@ class SolicitudesCompraController extends Controller
     }
 
     /**
-     * Recupera las autorizaciones por medio del correo 
+     * Recupera las autorizaciones por medio del correo
      * Valida el numero de autorizaciones necesarias
-     * Modifica los campos necesarios en la base de datos 
+     * Modifica los campos necesarios en la base de datos
      */
     public function autorizeFromEmail($campo, $necesarias, $id)
     {
@@ -492,8 +492,8 @@ class SolicitudesCompraController extends Controller
         return view('compras::confirmacion');
     }
 
-    /** 
-     * Verifica si ya esta autorizado por gerencias 
+    /**
+     * Verifica si ya esta autorizado por gerencias
      * y actualiza el estatus a siguiente
      */
     public function validarAutorizacion($id)
@@ -505,7 +505,7 @@ class SolicitudesCompraController extends Controller
             $solicitud->save();
         }
 
-        if ($solicitud->auto_admin === 1 && $solicitud->auto_gg 
+        if ($solicitud->auto_admin === 1 && $solicitud->auto_gg
             && $solicitud->auto_macro === 1 && $solicitud->tipo === 2) {
             $solicitud->estatus = EstatusSolicitud::SOLICITADO;
             NotificationHelper::sendNotificationEstatusChange($solicitud->id, 'Solicitado');
@@ -566,7 +566,7 @@ class SolicitudesCompraController extends Controller
                 $detalleCotizacion = new DetallesCotizacion();
                 $detalleCotizacion->detalle_solicitud_id = $detalle['id'];
                 $detalleCotizacion->cotizaciones_proveedores_proveedores_id = $idDataCotProv;
-                //$detalleCotizacion->precio_unitario = $detalle['precio_unitario'] ?? 0; 
+                //$detalleCotizacion->precio_unitario = $detalle['precio_unitario'] ?? 0;
                 $detalleCotizacion->save();
             }
         }
@@ -590,8 +590,8 @@ class SolicitudesCompraController extends Controller
     }
 
     /**
-     * Recupera los datos de los gerente de las empresas en base a 
-     * su numero de intercompania 
+     * Recupera los datos de los gerente de las empresas en base a
+     * su numero de intercompania
      */
     private function getGerente($intercompania)
     {
@@ -623,7 +623,7 @@ class SolicitudesCompraController extends Controller
 
     /**
      * Recupera las solicitudes de compra con el folio y total de la orden de compra
-     * 
+     *
      * @param mixed $intercompania Numero de intercompania de la empresa
      * @param mixed $autoga Autorizacion de gerencia administrativa (0 o 1)
      * @param mixed $autogg Autorizacion de gerencia (0 o 1)
@@ -727,25 +727,25 @@ public function actualizarSolicitudCompra(Request $request){
     /**
  * Actualiza una solicitud de compra existente
  */
-private function updateSolicitudCompra($data, $idSolicitud) 
+private function updateSolicitudCompra($data, $idSolicitud)
 {
     $usuariosRT = explode(',', env('USERS_COMPRAS_RT'));
     $isInfra = in_array($data["usuario_solicita"], $usuariosRT);
     $usuariosSopGas = explode(',', env('USERS_SOP_GAS'));
     $isSopGas = in_array($data["usuario_solicita"], $usuariosSopGas);
 
-    
+
 
     $dataSolicitud = SolicitudesCompra::findOrFail($idSolicitud);
-    
+
     // Actualizar campos
-    $dataSolicitud->usuario_solicita = $data["usuario_solicita"];
-    $dataSolicitud->empresa = $data["empresa"];
+    $dataSolicitud->usuario_solicita = $data["usuario_solicita"] ?? $dataSolicitud->usuario_solicita;
+    $dataSolicitud->empresa = $data["empresa"] ?? $dataSolicitud->empresa;
     $dataSolicitud->usuario_destino = $data["usuario_destino"];
     $dataSolicitud->motivo = $data["motivo"];
     $dataSolicitud->c_c = $data["c_c"];
     $dataSolicitud->requiere_anticipo = ($data["requiere_anticipo"] === "true") ? 1 : 0;
-    
+
     if($isInfra){
         $dataSolicitud->tipo = 3;
         $dataSolicitud->auto_admin = $isSopGas ? 0 : 1;
@@ -757,7 +757,7 @@ private function updateSolicitudCompra($data, $idSolicitud)
     }
     $dataSolicitud->motivo_revision = null;
     $dataSolicitud->save();
-    
+
     return [
         'id' => $dataSolicitud->id,
         'destino' => $data["usuario_destino"]
@@ -768,7 +768,7 @@ private function updateSolicitudCompra($data, $idSolicitud)
  * Actualiza los detalles de la solicitud de compra
  * Elimina los que no vienen en el request y actualiza/crea los demás
  */
-private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $destino) 
+private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $destino)
 {
     $detallesIds = collect($detalles)
         ->filter(function($detalle) {
@@ -776,7 +776,7 @@ private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $
         })
         ->pluck('id')
         ->toArray();
-    
+
     if (!empty($detallesIds)) {
         DetalleSolicitud::where('solicitudes_compra_id', $idSolicitud)
             ->whereNotIn('id', $detallesIds)
@@ -797,15 +797,15 @@ private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $
                 $detalle->delete();
             });
     }
-    
+
     foreach ($detalles as $index => $detalle) {
         if (isset($detalle['id']) && !empty($detalle['id'])) {
             $detalleSolicitud = DetalleSolicitud::find($detalle['id']);
-            
+
             if (!$detalleSolicitud) {
                 throw new \Exception("Detalle con ID {$detalle['id']} no encontrado");
             }
-            
+
             if ($detalleSolicitud->solicitudes_compra_id != $idSolicitud) {
                 throw new \Exception("El detalle {$detalle['id']} no pertenece a esta solicitud");
             }
@@ -813,24 +813,24 @@ private function updateDetalleSolicitudCompra($detalles, $idSolicitud, $files, $
             $detalleSolicitud = new DetalleSolicitud();
             $detalleSolicitud->solicitudes_compra_id = $idSolicitud;
         }
-        
+
         $detalleSolicitud->cantidad = $detalle["cantidad"];
         $detalleSolicitud->descripcion = $this->sanitizeMeasurementText($detalle["descripcion"]);
         $detalleSolicitud->observaciones = $this->sanitizeMeasurementText($detalle["observaciones"]);
         $detalleSolicitud->cat_unidades_medida_id = $detalle["cat_unidades_medida_id"];
         $detalleSolicitud->recuperable = $detalle["recuperar_costo"] ?? $detalle["recuperable"] ?? 0;
-        
+
         if (isset($detalle["confirmado"])) {
             $detalleSolicitud->confirmado = $detalle["confirmado"];
         }
-        
+
         $fileKey = "img_referencia_" . $index;
         if (isset($files[$fileKey]) && $files[$fileKey]->isValid()) {
             if (in_array($files[$fileKey]->extension(), ['jpg','jpeg','png'])) {
                 if ($detalleSolicitud->img_referencia && Storage::disk('public')->exists($detalleSolicitud->img_referencia)) {
                     Storage::disk('public')->delete($detalleSolicitud->img_referencia);
                 }
-                
+
                 $path = $files[$fileKey]->store('referencias', 'public');
                 $detalleSolicitud->img_referencia = $path;
             } else {
@@ -849,16 +849,16 @@ function sanitizeMeasurementText($text) {
     }
 
     $replacements = [
-        "″" => '"', 
+        "″" => '"',
         "”" => '"',
         "“" => '"',
-        "′" => "'",  
+        "′" => "'",
         "’" => "'",
         "‘" => "'",
-        "–" => "-",   
+        "–" => "-",
         "—" => "-",
-        "×" => "x",   
-        "⁄" => "/",   
+        "×" => "x",
+        "⁄" => "/",
     ];
 
     $text = strtr($text, $replacements);

@@ -39,7 +39,7 @@ class DatosVehiculo extends Model
         'limite', // limite del tag
         'num_tarjeta_toka',
         'num_tag',
-        'unit_id_gps', 
+        'unit_id_gps',
         'capacidad_combustible',
         'rendimiento_x_litro'
     ];

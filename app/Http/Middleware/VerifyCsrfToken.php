@@ -14,6 +14,7 @@ class VerifyCsrfToken extends Middleware
     protected $except = [
         //
         'api/cpp/*',
-        'api/renault/*'
+        'api/renault/*',
+        'api/parque-vehicular/*'
     ];
 }

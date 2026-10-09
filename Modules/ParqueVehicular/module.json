@@ -1,0 +1,11 @@
+{
+    "name": "ParqueVehicular",
+    "alias": "parquevehicular",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ParqueVehicular\\Providers\\ParqueVehicularServiceProvider"
+    ],
+    "files": []
+}

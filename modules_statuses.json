@@ -8,5 +8,6 @@
     "Capacitaciones": true,
     "TarjetaClientes": true,
     "Volumetricos": true,
-    "Pld": true
+    "Pld": true,
+    "ParqueVehicular": true
 }

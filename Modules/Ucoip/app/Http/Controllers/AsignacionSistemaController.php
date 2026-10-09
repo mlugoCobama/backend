@@ -160,7 +160,24 @@ class AsignacionSistemaController extends Controller
             ->header('Pragma', 'no-cache')
             ->header('X-Filename', $fileName)
             ->header('Access-Control-Expose-Headers', 'X-Filename');
+    }
 
-        return response()->json(['data' => $datosUcoip]);
+        public function procesarCsv(Request $request)
+    {
+        $request->validate([
+            'archivo_csv' => 'required|file|mimes:csv,txt',
+            'agencia' => 'required|string',
+        ]);
+
+        $path = $request->file('archivo_csv')->getRealPath();
+
+        // Ejecuta el proceso masivo
+        $resultados = $this->pdfResponsivaService->procesarCsvYGuardarPdfs($path, $request->agencia);
+
+        return response()->json([
+            'status' => 'success',
+            'total_generados' => count($resultados),
+            'detalles' => $resultados
+        ]);
     }
 }

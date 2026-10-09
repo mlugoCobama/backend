@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/parquevehicular",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\ParqueVehicular\\": "app/",
+            "Modules\\ParqueVehicular\\Database\\Factories\\": "database/factories/",
+            "Modules\\ParqueVehicular\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\ParqueVehicular\\Tests\\": "tests/"
+        }
+    }
+}
