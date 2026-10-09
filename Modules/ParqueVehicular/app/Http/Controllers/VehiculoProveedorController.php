@@ -27,25 +27,26 @@ class VehiculoProveedorController extends Controller
     public function index(Request $request)
     {
     $filtros = [
-        'fecha_inicio'       => $request->input('fechaInicio'),
-        'fecha_fin'          => $request->input('fechaFin'),
+        'fecha_inicio'       => $request->input('fechaInicio') ?? $request->input('fecha_inicio') ?? '',
+        'fecha_fin'          => $request->input('fechaFin')?? $request->input('fecha_fin') ?? '',
         'intercompania'      => $request->input('intercompania'), // ID o clave de la empresa
         'com_proveedores_id' => $request->input('proveedor'),
     ];
 
     //Si el usuario autenticado es un Proveedor, forzamos su ID de proveedor
-    if ($request->user()?->hasRole('proveedor')) {
-        $filtros['com_proveedores_id'] = $request->user()->com_proveedores_id;
-    }
+    // if ($request->user()?->hasRole('proveedor')) {
+    //     $filtros['com_proveedores_id'] = $request->user()->com_proveedores_id;
+    // }
 
     // Si el usuario autenticado pertenece a una Empresa específica
-    if ($request->user()?->hasRole('empresa')) {
-        $filtros['intercompania'] = $request->user()->intercompania;
-    }
+    // if ($request->user()?->hasRole('empresa')) {
+    //     $filtros['intercompania'] = $request->user()->intercompania;
+    // }
 
     $query = OrdenServicio::active()
         ->filtrar($filtros)
         ->with(['proveedorAsignado.proveedor', 'vehiculo'])
+        ->orderBy('fecha_inicio', 'DESC')
         ->get();
 
     return response()->json([

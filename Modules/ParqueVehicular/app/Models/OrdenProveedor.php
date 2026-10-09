@@ -20,7 +20,8 @@ class OrdenProveedor extends Model
         'pv_orden_servicio_id',
         'fecha_asignacion',
         'autorizada',
-        'diagnostico'
+        'diagnostico',
+        'cotizacion'
     ];
 
     protected $table = 'pv_ordenes_proveedores';

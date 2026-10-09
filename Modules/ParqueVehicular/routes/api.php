@@ -31,3 +31,8 @@ prefix('parque-vehicular')->group(function () {
     Route::post('vehiculos-proveedores/finalizar', [VehiculoProveedorController::class, 'finalizarOrden'])->name('vehiculos-proveedores.finalizarOrden');
 
 });
+
+Route::prefix('parque-vehicular')->group(function () {
+    Route::get('cobama_os/evidencias/{id}/cotizacion/{archivo}', [TrabajosController::class, 'getFile'])->where('archivo', '.*');
+});
+

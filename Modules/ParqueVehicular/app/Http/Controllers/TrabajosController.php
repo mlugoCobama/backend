@@ -16,7 +16,7 @@ use Modules\ParqueVehicular\Models\PartesTrabajo;
 use Modules\ParqueVehicular\Models\Trabajos;
 use Modules\ParqueVehicular\Services\EventosOsService;
 use Modules\ParqueVehicular\Services\OrdenServicioCobService;
-
+use Illuminate\Support\Facades\File;
 class TrabajosController extends Controller
 {
 
@@ -59,6 +59,7 @@ class TrabajosController extends Controller
         'fotos_meta'                       => 'nullable|array',
         'fotos_meta.*.categoria'           => 'nullable|string',
         'fotos_meta.*.comentario'          => 'nullable|string',
+        'cotizacion'                       => 'nullable|file|mimes:pdf',
     ]);
 
     $rutasGuardadas = [];
@@ -68,7 +69,21 @@ class TrabajosController extends Controller
             //Finalizar el ultimo evento en este caso El diagnostico
             $this->eventosService->finalizarUltimoEvento($data['orden_proveedor_id']);
 
+
+
             $orden = OrdenProveedor::findOrFail( $data['orden_proveedor_id']);
+
+            if ($request->hasFile('cotizacion') && $request->file('cotizacion')->isValid()) {
+                $pdfFile = $request->file('cotizacion');
+                $mark = time();
+                $pdfName = "cotizacion_{$orden->id}_{$mark}.pdf";
+
+                $rutaPdf = $pdfFile->storeAs("cobama_os/evidencias/{$data['orden_proveedor_id']}/cotizacion",$pdfName,'public');
+                $rutasGuardadas[] = $rutaPdf;
+                $orden->cotizacion = $rutaPdf;
+
+            }
+
             $orden->diagnostico = $data['descripcion'];
             $orden->save();
 
@@ -172,5 +187,20 @@ class TrabajosController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+
+    public function getFile($id, $file)
+    {
+        $archivoLimpio = basename($file);
+        $path = storage_path("app/public/cobama_os/evidencias/{$id}/cotizacion/{$file}");
+
+        if (!File::exists($path)) {
+            abort(404, 'El archivo solicitado no existe.');
+        }
+
+        return response()->download($path, $archivoLimpio, [
+            'Content-Type' => File::mimeType($path),
+        ]);
     }
 }

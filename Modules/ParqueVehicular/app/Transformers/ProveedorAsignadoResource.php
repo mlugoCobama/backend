@@ -22,6 +22,8 @@ class ProveedorAsignadoResource extends JsonResource
             'evidencias' => EvidenciaResource::collection($this->whenLoaded('evidencias')) ??  null,
             'eventos' => $this->whenLoaded('eventos') ??  null,
             'autorizado' => $this->autorizado,
+            'cotizacion' => $this->cotizacion ? url($this->cotizacion) :  null,
+            'ruta_cotizacion' =>$this->cotizacion ?  $this->cotizacion : null,
         ];
     }
 }
