@@ -27,7 +27,7 @@ class DatosVentaController extends Controller
         $hoy = new DateTime();
         $ayer = new DateTime();
         $ayer->modify('-1 day');
-        
+
         $fechaInicio = $ayer->format('Y-m-d');
         $fechaFin    = $hoy->format('Y-m-d');
 
@@ -75,7 +75,14 @@ class DatosVentaController extends Controller
      */
     public function show($id)
     {
-        return view('nissan::show');
+
+        $data = DatosVenta::with('financiamiento', 'seguro', 'accesorios.detalles')->find($id);
+
+        return response()->json([
+            'data' => $data,
+            'status' => 'success',
+            'message' => 'datos recuperados correctamente'
+        ]);
     }
 
     /**
@@ -107,8 +114,8 @@ class DatosVentaController extends Controller
                     break;
                 case 5:
                     $datosVenta->pagado = 0;
-                    break;    
-                
+                    break;
+
                 default:
                     break;
             }
@@ -185,7 +192,7 @@ class DatosVentaController extends Controller
             }
 
         return response()->json([
-            'status' => 'success',       
+            'status' => 'success',
             'message' => "Partida modificada correctamente",
             'data' => [],
 
@@ -198,16 +205,16 @@ class DatosVentaController extends Controller
     public function updatePartidaBDC(Request $request){
     $data =  $request->all();
     foreach ($data as $item ) {
-        
+
         $partida =  DatosVenta::find($item['id']);
             if($partida && !empty($partida)){
                 $partida->bdc =  1;
                 $partida->save();
             }
     }
-        
+
         return response()->json([
-            'status' => 'success',       
+            'status' => 'success',
             'message' => "Partida modificada correctamente",
             'data' => [],
 
@@ -217,16 +224,16 @@ class DatosVentaController extends Controller
     public function updatePartidaValidacionBDC(Request $request){
     $data =  $request->all();
         foreach ($data as $item ) {
-            
+
             $partida =  DatosVenta::find($item['id']);
                 if($partida && !empty($partida)){
                     $partida->v_bdc =  1;
                     $partida->save();
                 }
         }
-            
+
             return response()->json([
-                'status' => 'success',       
+                'status' => 'success',
                 'message' => "Partida modificada correctamente",
                 'data' => [],
 
@@ -247,11 +254,11 @@ class DatosVentaController extends Controller
                         FROM [SISTEMAS].[dbo].[Vt_SalidaAutos]
                         WHERE CAST(saau_fecha AS DATE) BETWEEN ? AND ?
                     )
-                    SELECT  
+                    SELECT
                         CAST(fa.faau_fecha AS DATE) AS fecha_factura,
                         CAST(fa.faau_fechacancelacion AS DATE) AS fecha_cancelacion,
                         fa.faau_vend_clave,
-                        fa.faau_nofactura, 
+                        fa.faau_nofactura,
                         fa.faau_razonfactura,
                         fa.faau_idagencia AS id_agencia,
                         vi.vehi_clas_clave,
@@ -281,18 +288,18 @@ class DatosVentaController extends Controller
                         ON bo.prim_documento = fa.faau_nofactura
                     WHERE sa.rn = 1
                     AND fa.faau_fechacancelacion IS NULL
-                    ORDER BY fa.faau_fecha, fa.faau_vend_clave", 
+                    ORDER BY fa.faau_fecha, fa.faau_vend_clave",
                     [$fechaInicio, $fechaFin]
             );
 
         foreach ($libroVentas as $dato) {
             $existe = DatosVenta::where('no_factura', $dato->faau_nofactura)->exists();
             $agencia = match ($conexion) {
-                    'renault'               => $dato->id_agencia,   // usar valor que viene de la base 
+                    'renault'               => $dato->id_agencia,   // usar valor que viene de la base
                     'nissan_universidad'    => 710,                 // intercompania
                     'nissan_campestre'      => 714,                 // intercompania
                     'nissan_azcapotzalco'  => 730,                 // intercompania
-                    default                 => $dato->id_agencia,   // usar valor que viene de la base 
+                    default                 => $dato->id_agencia,   // usar valor que viene de la base
                 };
 
             $vendedorId = null;
@@ -307,10 +314,10 @@ class DatosVentaController extends Controller
                     'nro_vendedor_as' => $dato->faau_vend_clave,
                     'agencia' => $agencia,
                 ]);
-                $vendedorId = $vendedor->id;    
+                $vendedorId = $vendedor->id;
             } else {
-                $vendedorId = $vendedorExiste->id; 
-            }      
+                $vendedorId = $vendedorExiste->id;
+            }
 
             $tipoVenta = TipoVenta::where('nombre', $dato->faau_form_TipoVenta)->first();
 
@@ -329,7 +336,7 @@ class DatosVentaController extends Controller
                     'bonificaciones'    => $dato->bonificacion,
                     'utilidad_inicial'  => $dato->Utilidad,
                     'tipo_venta_id'     => $tipoVenta->id ?? 2,
-                    'tipo_venta'        => $dato->faau_form_TipoVenta,   
+                    'tipo_venta'        => $dato->faau_form_TipoVenta,
                     'clave_producto'    => $dato->vehi_clas_clave,
                     'modelo_producto'   => $dato->mode_clave,
                     'anio_vehiculo'     => $dato->vehi_anio ?? null,
@@ -341,5 +348,5 @@ class DatosVentaController extends Controller
         return $libroVentas;
     }
 
-    
+
 }

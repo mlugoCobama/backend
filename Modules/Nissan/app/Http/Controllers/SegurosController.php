@@ -68,6 +68,7 @@ class SegurosController extends Controller
 
         // Relaciones
         $comision->com_vendedores_id = $data['com_vendedores_id'];
+        $comision->com_datos_venta_id = $data['id_venta'] ?? null;
         $comision->agencia = $data['agencia'];
         // Básicos
         $comision->folio = $data['folio'];
@@ -149,7 +150,7 @@ class SegurosController extends Controller
         if($registro){
             $registro->activo = 0;
             $registro->save();
-           
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Registro eliminado correctamente',
@@ -208,7 +209,7 @@ class SegurosController extends Controller
      * @param mixed $vendedor id de vendedor
      */
     public function getTomaUnidad($estatus = null, $agencia =null, $tipoVenta = null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
-    
+
 
     $data = $this->queryFinanciamientos(
                                         $estatus        == '12345' ? null : $estatus,
@@ -260,11 +261,11 @@ class SegurosController extends Controller
 
         private function calcularVS($prima)
         {
-            return ($prima ?? 0) * 0.2; 
+            return ($prima ?? 0) * 0.2;
         }
 
         private function calcularEncargadoSeg($prima)
         {
-            return ($prima ?? 0) * 0.01; 
+            return ($prima ?? 0) * 0.01;
         }
 }

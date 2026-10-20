@@ -73,6 +73,12 @@ class GatosDetalleEmpresaDetalladoExport implements FromArray, WithHeadings, Wit
             $row['IVA'],
             $row['Total'],
             $row['Destino'],
+
+            $row['Marca'],
+            $row['Submarca'],
+            $row['Modelo'],
+            $row['Serie'],
+
             $row['tipoMantenimiento'],
             $row['sistemaMantenieminto'],
         ];
@@ -87,7 +93,7 @@ class GatosDetalleEmpresaDetalladoExport implements FromArray, WithHeadings, Wit
 
     // Fila de totales
     $data[] = [
-        '', '', '', '', '', '', '', '', 
+        '', '', '', '', '', '', '', '',
         'TOTAL GENERAL',
         $subTotalGeneral,
         $totalIva,
@@ -117,13 +123,13 @@ class GatosDetalleEmpresaDetalladoExport implements FromArray, WithHeadings, Wit
         return [
             'F' => 70,
             'G' => 70,
-            'H' => 70 
+            'H' => 70
         ];
     }
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('L')->getFont()->setBold(true); 
+        $sheet->getStyle('L')->getFont()->setBold(true);
 
         return [];
     }

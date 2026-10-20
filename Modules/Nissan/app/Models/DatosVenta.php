@@ -19,7 +19,7 @@ class DatosVenta extends Model
         'fecha_as_salida',
         'no_factura',
         'razon_social',
-        'descripcion', 
+        'descripcion',
         'no_inventario',
         'id_vendedor',
         'serie',
@@ -48,24 +48,64 @@ class DatosVenta extends Model
     protected $connection = 'autos';
 
 
-    // Relación con vendedor
+    /**
+     * ------------------------------------------------------
+     * Relaciones
+     * ------------------------------------------------------
+     */
+
+    /**
+     * Una venta tiene un vendedor
+     */
     public function vendedor()
     {
         return $this->belongsTo(Vendedor::class, 'id_vendedor', 'id');
     }
 
-    // Relación con tipo de venta
+    /**
+     * Una venta tiene un tipo de venta
+     */
     public function tipoVenta()
     {
         return $this->belongsTo(TipoVenta::class, 'tipo_venta_id', 'id');
     }
 
-    // Relación con gastos de venta
+    /**
+     * Una venta tiene gastos
+     */
     public function gatosVenta()
     {
         return $this->hasOne(GastosVenta::class, 'id_datos_venta', 'id');
     }
 
+    /**
+     *  Una venta tiene un seguro
+     */
+    public function seguro(){
+        return $this->hasOne(ComSeguro::class,'com_datos_venta_id', 'id' );
+    }
+
+    /**
+     *  Una venta tiene un financiamiento
+     */
+    public function financiamiento(){
+        return $this->hasOne(ComFinanciamiento::class,'com_datos_venta_id', 'id' );
+    }
+
+    /**
+     *  Una venta tiene varios accesorios
+     */
+    public function accesorios(){
+        return $this->hasMany(ComAccesorios::class,'com_datos_venta_id', 'id' );
+    }
+
+
+
+    /**
+     * --------------------------------------------
+     * Scopes
+     * --------------------------------------------
+     */
     public function scopeEntregados($query){
         return $query->where('entrgado', '1');
     }

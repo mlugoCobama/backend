@@ -14,16 +14,17 @@ class ComSeguro extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'com_vendedores_id', 
+        'com_vendedores_id',
         'folio',
-        'poliza', 
-        'fecha_emision', 
-        'prima_neta', 
-        'comision_apv_pesos', 
-        'observaciones', 
-        'comentario', 
-        'activo', 
-        'estatus'
+        'poliza',
+        'fecha_emision',
+        'prima_neta',
+        'comision_apv_pesos',
+        'observaciones',
+        'comentario',
+        'activo',
+        'estatus',
+        'com_datos_venta_id'
     ];
 
     protected $table = 'com_seguro';

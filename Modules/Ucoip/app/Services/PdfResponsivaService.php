@@ -13,7 +13,7 @@ class PdfResponsivaService{
         public function generarPdfResponsiva($data)
         {
             $pdf = new Fpdi();
-                $pdf->setSourceFile(base_path('Modules/Ucoip/resources/assets/Formatos/responsiva_acceso_sitemas_v2_1.pdf'));
+                $pdf->setSourceFile(base_path('Modules/Ucoip/resources/assets/Formatos/responsiva_acceso_sitemas_v2_2.pdf'));
 
                 $template = $pdf->importPage(1);
                 $template1 = $pdf->importPage(2);
@@ -105,30 +105,36 @@ class PdfResponsivaService{
 
                 $pdf->SetFont('Arial', 'B', 9);
 
-                $pdf->SetXY(148.8, 224);
-                // $pdf->SetXY(148.8, 203);
+                // $pdf->SetXY(148.8, 224);
+                $pdf->SetXY(148.8, 203);
                 $pdf->Cell(80,4, 'X' , 0, 1 ,'L');
 
                 $pdf->AddPage('P', 'Letter');
                 $pdf->useImportedPage($template1);
 
-                $pdf->SetXY(32, 180.5);
-                $pdf->Cell(9,4, $fecha['dia'] , 0, 1 ,'C');
-                $pdf->SetXY(58, 180.5);
-                $pdf->Cell(40,4, $fecha['mes']  , 0, 1 ,'C');
-                $pdf->SetXY(113, 180.5);
-                $pdf->Cell(5,4, $fecha['anio']  , 0, 1 ,'C');
+                // $pdf->SetXY(32, 180.5);
+                // $pdf->Cell(9,4, $fecha['dia'] , 0, 1 ,'C');
+                // $pdf->SetXY(58, 180.5);
+                // $pdf->Cell(40,4, $fecha['mes']  , 0, 1 ,'C');
+                // $pdf->SetXY(113, 180.5);
+                // $pdf->Cell(5,4, $fecha['anio']  , 0, 1 ,'C');
 
-                $pdf->SetXY(27, (211.5));
+                $pdf->SetXY(27, (211.5-20));
                 $pdf->Cell(73,4, $nombreUsuario , 0, 1 ,'L');
-                $pdf->SetXY(26, (220));
+                $pdf->SetXY(26, (220-20));
                 $pdf->Cell(80,4, $puesto , 0, 1 ,'L');
 
 
-                // $pdf->SetXY(83, (231.5));
-                // $pdf->Cell(73,4,$this->formatearTexto('Ángel Enrique Moreno Pineda') , 0, 1 ,'L');
-                // $pdf->SetXY(95, (239));
-                // $pdf->Cell(80,4, $this->formatearTexto('Auxiliar de Sistemas') , 0, 1 ,'L');
+                $pdf->SetXY(127, (211.5-20));
+                $pdf->Cell(73,4, $this->formatearTexto('Alfredo Loredo Medina')  , 0, 1 ,'L');
+                $pdf->SetXY(126, (220-20));
+                $pdf->Cell(80,4, $this->formatearTexto('Gerente General') , 0, 1 ,'L');
+
+
+                $pdf->SetXY(83, (231.5));
+                $pdf->Cell(73,4,$this->formatearTexto('Ángel Enrique Moreno Pineda') , 0, 1 ,'L');
+                $pdf->SetXY(95, (239));
+                $pdf->Cell(80,4, $this->formatearTexto('Auxiliar de Sistemas') , 0, 1 ,'L');
 
                 $pdf->AddPage('P', 'Letter');
                 $pdf->useImportedPage($template2);
@@ -255,7 +261,7 @@ class PdfResponsivaService{
         ];
 
         $data->empresa = (object) [
-            'nombre' => 'Agencia Nissan '.$agencia
+            'nombre' => $agencia
         ];
 
 
@@ -277,7 +283,7 @@ class PdfResponsivaService{
                 $detalle->sistema = (object) ['nombre' => $nombreSistema];
                 $detalle->username = $valorAcceso;
                 $detalle->rol =  $this->getRol($nombreSistema);
-                $detalle->area_aplicacion =  $this->getAreaAplicacion($nombreSistema, 'Agencia Nissan '.$agencia);
+                $detalle->area_aplicacion =  $this->getAreaAplicacion($nombreSistema, $agencia);
                 $detalle->motivo = '';
 
                 $data->sistemas[] = $detalle;

@@ -29,13 +29,13 @@ class DatosVentaResource extends JsonResource
                 'vendedor_agencia' => $this->vendedor->agencia,
                 'porcentaje_vendedor' => $this->vendedor->porcentaje_apv,
                 'clave_vendedor' => $this->vendedor->nro_vendedor_as.' - '.$this->vendedor->clave,
-                
+
                 "serie"=> $this->serie,
                 "total_venta"=> $this->total_venta,
                 "costos"=>$this->costos,
                 "bonificaciones"=>$this->bonificaciones,
                 "utilidad_inicial"=> $this->utilidad_inicial,
-                
+
                 "estatus"=>$this->estatus,
                 "entregado"=>$this->entregado == 0 ? false : true,
                 "bdc"=>$this->bdc == 0 ? false : true,

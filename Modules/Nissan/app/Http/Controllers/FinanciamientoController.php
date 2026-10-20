@@ -15,17 +15,22 @@ use Modules\Nissan\Models\DatosVenta;
 use Modules\Nissan\Models\Gasto;
 use Modules\Nissan\Models\GastosVenta;
 use Modules\Nissan\Services\ComisionesService;
+use Modules\Nissan\Services\IaService;
 use Modules\Nissan\Transformers\ComFinanciamientosResource;
 
 class FinanciamientoController extends Controller
 {
 
     protected $comService;
-    public function __construct(ComisionesService $comService)
+    protected $iaService;
+    protected $promtService;
+
+    public function __construct(ComisionesService $comService, IaService $iaService)
     {
         $this->comService = $comService;
+        $this->iaService = $iaService;
     }
-    
+
     /**
      * Display a listing of the resource.
      */
@@ -197,7 +202,7 @@ class FinanciamientoController extends Controller
         if($registro){
             $registro->activo = 0;
             $registro->save();
-           
+
             return response()->json([
             'status' => 'success',
             'message' => 'Registro eliminado correctamente',
@@ -209,12 +214,12 @@ class FinanciamientoController extends Controller
             'message' => 'No se encontró el registro que desea eliminar',
             'data' => []
         ]);
-        
+
     }
 
     public function getDataVenta($noFactura){
         $isNoSerie = strlen($noFactura) === 17 ;
-        $query =  !$isNoSerie ? 
+        $query =  !$isNoSerie ?
             $this->comService->getVentaByParam('no_factura', $noFactura) :
             $this->comService->getVentaByParam('serie', $noFactura);
         // $query = $this->comService->getVentaByParam('no_factura', $noFactura);
@@ -262,7 +267,7 @@ class FinanciamientoController extends Controller
      * @param mixed $vendedor id de vendedor
      */
     public function getFinanciaminetos($estatus = null, $agencia =null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
-    
+
 
     $data = $this->queryFinanciamientos(
                                         $estatus        == '12345' ? null : $estatus,
@@ -304,6 +309,22 @@ class FinanciamientoController extends Controller
             return response()->json(['error' => 'Archivo no encontrado'], 404);
         }
         return response()->file(storage_path('app/public/' . $comision->ruta_archivo));
+    }
+
+    public function extractData(Request $request)
+    {
+        // 1. Validar que el archivo PDF esté presente
+        $request->validate([
+            'pdf' => 'required|file|mimes:pdf|max:10240', // Máximo 10MB
+        ]);
+
+            $file = $request->file('pdf');
+
+            // 2. Llamar a tu servicio encargado de enviar el archivo y el prompt a Gemini
+            $resultJson = $this->iaService->procesarDocumentoConGemini($file, 'solicitud_desembolso');
+
+            // 3. Retornar la respuesta en formato JSON hacia Angular
+            return response()->json($resultJson, 200);
     }
 
 

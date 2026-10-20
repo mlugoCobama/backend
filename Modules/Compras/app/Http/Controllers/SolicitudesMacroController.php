@@ -282,7 +282,7 @@ class SolicitudesMacroController extends Controller
     private function storeSolicitudCompra($data)
     {
         $catNoAutoMacro = explode(',', env('EXCEPCIONES_MACRO'));
-        $noAutoMacro = in_array($data["empresa"], $catNoAutoMacro );
+        $noAutoMacro = in_array($data["empresa"], $catNoAutoMacro);
 
         $dataSolicitud = new SolicitudesCompra();
         $dataSolicitud->folio = $this->generarFolioMc($data["empresa"]);

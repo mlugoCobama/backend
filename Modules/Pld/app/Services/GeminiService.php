@@ -30,7 +30,7 @@ class GeminiService
             data: base64_encode(file_get_contents($file->getRealPath()))
         );
 
-        // 4. Llamar a la API con reintentos automáticos
+        //
         // retry(NúmeroDeIntentos, Callback, MilisegundosDeEspera, CallbackDeFiltroDeExcepcion)
         $response = retry(3, function () use ($prompt, $fileBlob) {
 
@@ -38,8 +38,6 @@ class GeminiService
                 ->generateContent([$prompt, $fileBlob]);
 
         }, 5000, function (\Exception $exception) {
-            // Opcional: Solo reintentar si el error es de timeout (cURL error 28) o error 5xx de servidor
-            // Si devuelve true, ejecutará el reintento.
             return
                 str_contains($exception->getMessage(), 'high demand')
                 ||str_contains($exception->getMessage(), 'cURL error 28')
@@ -49,7 +47,7 @@ class GeminiService
 
         $textoRespuesta = $response->text();
 
-        // 5. Limpiar formato Markdown (```json ... ```)
+        // 5. Limpiar formato Markdown
         $jsonLimpio = preg_replace('/^```(?:json)?\s*|\s*```$/i', '', trim($textoRespuesta));
 
         $datos = json_decode($jsonLimpio, true);

@@ -16,7 +16,7 @@ class EvidenciaResource extends JsonResource
             'id' => $this->id,
             'folio' => $this->folio ?? 'SF-000000',
             'ruta' => $this->ruta,
-            'imagen' => url($this->ruta),
+            'imagen' => url('storage/' . $this->ruta),
             'nombre' => $this->nombre,
             'pv_orden_proveedor_id' => $this->pv_orden_proveedor_id,
             'media_type' => $this->media_type,

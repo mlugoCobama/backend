@@ -15,6 +15,7 @@ class StoreSeguroRequest extends FormRequest
             // identificadores
             'seguros'  => 'required|array|min:1',
             'seguros.*.id' => ['nullable', 'integer'],
+            'seguros.*.id_venta' => ['nullable', 'integer'],
             'seguros.*.agencia' => ['nullable'],
             'seguros.*.com_vendedores_id' => ['required', 'integer'],
             // básicos
@@ -24,7 +25,7 @@ class StoreSeguroRequest extends FormRequest
             'seguros.*.nombre' => ['required', 'string', 'max:150'],
             'seguros.*.unidad' => ['required', 'string', 'max:150'],
             'seguros.*.serie' => ['required', 'string', 'max:100'],
-            'seguros.*.archivo' => 'nullable',    
+            'seguros.*.archivo' => 'nullable',
             // fechas
             'seguros.*.fecha_emision' => ['required', 'date'],
             // info adicional

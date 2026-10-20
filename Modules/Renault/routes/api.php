@@ -50,6 +50,8 @@ Route::prefix('renault')->group(function () {
     Route::get('financiamiento/datos-venta/{factura}', [ FinanciamientoController::class, 'getDataVenta'])->name('financiamineto.getDataVentaFin');
     Route::get('financiamiento/{estatus}/{agencia}/{fechaInicio}/{fechaFin}/{vendedor}', [FinanciamientoController::class, 'getFinanciaminetos'])->name('financiamineto.getFinanciaminetos');
     Route::get('financiamiento/avanzarEstatus/{id}', [FinanciamientoController::class, 'avanzarEstatus'])->name('financiamineto.avanzarEstatus');
+    Route::post('financiamiento/procesar-pdf-desembolso', [FinanciamientoController::class, 'extractData'])->name('financiamineto.extractData');
+
 
     Route::get('toma-unidad/datos-venta/{factura}', [ TomaUnidadController::class, 'getDataVenta'])->name('toma-unidad.getDataVentaFin');
     Route::get('toma-unidad/{estatus}/{agencia}/{fechaInicio}/{fechaFin}/{vendedor}', [TomaUnidadController::class, 'getTomaUnidad'])->name('toma-unidad.getTomaUnidad');
@@ -62,6 +64,7 @@ Route::prefix('renault')->group(function () {
     Route::get('accesorios/datos-venta/{factura}', [ AccesorioController::class, 'getDataVenta'])->name('accesorios.getDataVentaFin');
     Route::get('accesorios/{estatus}/{agencia}/{fechaInicio}/{fechaFin}/{vendedor}', [AccesorioController::class, 'getTomaUnidad'])->name('accesorios.getTomaUnidad');
     Route::get('accesorios/avanzarEstatus/{id}', [AccesorioController::class, 'avanzarEstatus'])->name('accesorios.avanzarEstatus');
+    Route::post('accesorios/asiganar-venta', [AccesorioController::class, 'relacionarAccesorios'])->name('accesorios.relacionarAccesorios');
 
     Route::get('concentrado-comisiones/detalle/{idVendedor}/{rubro}', [ConcentradoComisionesController::class, 'viewDetallesVendedorRubro'])->name('concentrado-comisiones.viewDetallesVendedorRubro');
     Route::put('concentrado-comisiones/devolver/{id}', [ConcentradoComisionesController::class, 'devolverPendiente'])->name('concentrado-comisiones.devolverPendiente');

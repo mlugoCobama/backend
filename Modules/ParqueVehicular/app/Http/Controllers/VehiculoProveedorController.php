@@ -29,8 +29,9 @@ class VehiculoProveedorController extends Controller
     $filtros = [
         'fecha_inicio'       => $request->input('fechaInicio') ?? $request->input('fecha_inicio') ?? '',
         'fecha_fin'          => $request->input('fechaFin')?? $request->input('fecha_fin') ?? '',
-        'intercompania'      => $request->input('intercompania'), // ID o clave de la empresa
+        'intercompania'      => $request->input('intercompania'),
         'com_proveedores_id' => $request->input('proveedor'),
+        'estatus' => $request->input('estatus') ? explode(",", $request->input('estatus')) : '',
     ];
 
     //Si el usuario autenticado es un Proveedor, forzamos su ID de proveedor
@@ -76,6 +77,8 @@ class VehiculoProveedorController extends Controller
         $vehiculoProveedor->intercompania = $request->empresaId;
         $vehiculoProveedor->observaciones = $request->observaciones;
         $vehiculoProveedor->descripcion_falla = $request->descripcion_falla;
+        $vehiculoProveedor->tipo_mantenimiento = $request->tipoMantenimiento;
+        $vehiculoProveedor->sistema_auto = $request->sistema;
         $vehiculoProveedor->fecha_inicio = now();
         $vehiculoProveedor->save();
 
@@ -91,7 +94,12 @@ class VehiculoProveedorController extends Controller
      */
     public function show($id)
     {
-        $query = OrdenServicio::active()->with('proveedorAsignado.proveedor', 'proveedorAsignado.eventos', 'proveedorAsignado.trabajos.partesTrabajo', 'vehiculo', 'proveedorAsignado.evidencias')->find($id);
+        $query = OrdenServicio::active()->with(
+            'proveedorAsignado.proveedor',
+            'proveedorAsignado.eventos',
+            'proveedorAsignado.trabajos.partesTrabajo',
+            'vehiculo',
+            'proveedorAsignado.evidencias')->find($id);
         return response()->json(
             [   'status' => 'success',
                 'data' => new OrdenServicioResource($query),

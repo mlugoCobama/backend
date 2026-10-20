@@ -8,7 +8,7 @@ class GastosMultiHojaExport implements WithMultipleSheets
 {
     protected $concentrado;
     protected $detalle;
-    
+
     public function __construct($concentrado, $detalle)
     {
         $this->concentrado = $concentrado;
@@ -31,5 +31,5 @@ class GastosMultiHojaExport implements WithMultipleSheets
         return $sheets;
     }
 
-    
+
 }

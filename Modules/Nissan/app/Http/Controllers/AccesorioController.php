@@ -34,7 +34,7 @@ class AccesorioController extends Controller
         $query = $this->queryFacturasDetallesAccesorios('2026-01-01', '2026-04-01' );
         // $query = $this->queryFacturasAccesorios('2026-01-01', '2026-04-01' );
         $connectionDestino = DB::connection('autos');
-        
+
         if ($query->isEmpty()) {
             return;
         }
@@ -115,7 +115,7 @@ class AccesorioController extends Controller
        $comision->no_factura         = $request->no_factura;
        $comision->sub_total_factura  = $request->subtotal_factura;
        $comision->comision_apv_pesos = $request->subtotal_factura * 0.1;
-       
+
        $comision->agencia         = $request->agencia;
        $comision->observaciones      = $request->observaciones;
 
@@ -157,7 +157,11 @@ class AccesorioController extends Controller
      */
     public function show($id)
     {
-        return view('nissan::show');
+        $data = ComAccesorios::with('detalles')->where('no_factura',$id)->first();
+        return response()->json(
+            ['data' => $data,
+            'message' => 'Datos recuperados exitosamente',
+            'status' => 'success']);
     }
 
     /**
@@ -197,7 +201,7 @@ class AccesorioController extends Controller
         if($registro){
             $registro->activo = 0;
             $registro->save();
-           
+
             return response()->json([
             'status' => 'success',
             'message' => 'Registro eliminado correctamente',
@@ -238,7 +242,7 @@ class AccesorioController extends Controller
 
     public function getDataVenta($noFactura){
         $query = $this->comService->getVentaByParam('no_factura', $noFactura);
-        
+
         return response()->json([
             'status' =>  'success',
             'data' => $query,
@@ -288,7 +292,7 @@ class AccesorioController extends Controller
      * @param mixed $vendedor id de vendedor
      */
     public function getTomaUnidad($estatus = null, $agencia =null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
-    
+
 
     $data = $this->queryFinanciamientos(
                                         $estatus        == '12345' ? null : $estatus,
@@ -320,5 +324,59 @@ class AccesorioController extends Controller
             'data' => [],
             'message' => 'El estatus cambio a '. $this->comService->getLabelStatus($datosVenta->estatus)
         ]);
+    }
+
+
+    public function relacionarAccesorios(Request $request)
+    {
+        $idVenta = $request->venta_id;
+        $facturas = $request->facturas;
+        $facRelacionadas = 0;
+
+        if (!is_array($facturas) || empty($facturas)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No se proporcionaron facturas válidas.',
+                'data' => []
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            foreach ($facturas as $factura) {
+
+                $facturaId = is_array($factura) ? ($factura['id'] ?? null) : (is_object($factura) ? $factura->id : $factura);
+                if (!$facturaId) {
+                    continue;
+                }
+
+                $facAccesorio = ComAccesorios::find($facturaId);
+                if (!$facAccesorio) {
+                    continue;
+                }
+
+                $facAccesorio->com_datos_venta_id = $idVenta;
+                $facAccesorio->save();
+                $facRelacionadas++;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "Se han relacionado $facRelacionadas facturas",
+                'data' => []
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ocurrió un error al relacionar las facturas: ' . $e->getMessage(),
+                'data' => []
+            ], 500);
+        }
     }
 }

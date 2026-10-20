@@ -15,7 +15,7 @@ class ReportesService{
             210 => 'REYES GAS', 155 => 'GASAMEX', 135 => 'SEGAS', 110 => 'GARZA GAS',
             111 => 'GARZA SUR', 250 => 'GAS FLAMAZUL', 240 => 'SERVIGAS DEL VALLE', 132 => 'GAS PREMIO',
             200 => 'TANQUES SONI', 119 => 'TANQUES GARZA GAS', 190 => 'ZUGAS',
-            133 => 'GASERA MULTIREGIONAL', 353 => 'GAS URBANO', 
+            133 => 'GASERA MULTIREGIONAL', 353 => 'GAS URBANO',
             191 => 'BARAGAS', 354 => 'IZTAGAS Y ENERGIA', 353111 => 'GAS URBANO - GARZA SUR', 251250 => 'FLAMAMEX - FLAMAZUL',
 
             710 => 'NISSAN UNIVERSIDAD',
@@ -55,7 +55,7 @@ class ReportesService{
                     $query->where('auto_admin', 1)->where('auto_gg', 1);
             })->get()
             ->flatMap(function ($solicitud) use ($empresas, $labels) {
-                
+
                 $detalles = $solicitud->DetallesSolicitud;
                 $label = $labels[$solicitud->estatus] ?? 'DESCONOCIDO';
 
@@ -79,7 +79,7 @@ class ReportesService{
                     ];
                 });
             });
-        
+
         return $solicitudes;
     }
 
@@ -162,9 +162,9 @@ class ReportesService{
                         $cot->CotizacionesProveedores &&
                         $cot->CotizacionesProveedores->seleccionado == 1
                     );
-    
+
                 $precio = (float) ($cotSel->importe_unitario ?? 0);
-    
+
                 $rows[] = [
                     'Folio'         => '',
                     'Folio_OC'      => $folioOC,
@@ -187,7 +187,7 @@ class ReportesService{
 
             return $solicitudes;
     }
-    
+
     /**
      * Version optimizada para recuperar un reporte general de compras por empresa
      * Esta query pude ser utilizada para compras de generales, recursos tecnológicos y autos
@@ -214,7 +214,7 @@ class ReportesService{
 
                 $rows = [];
 
-                // Precalcular datos de solicitud 
+                // Precalcular datos de solicitud
                 $label = $labels[$solicitud->estatus] ?? 'DESCONOCIDO';
 
                 $cotizacionOC = $solicitud->cotizaciones->firstWhere('orden_compra', '!=', null);
@@ -330,7 +330,7 @@ class ReportesService{
             $cotizacionOC = $solicitud->cotizaciones->firstWhere('orden_compra', '!=', null);
             $folioOC = $cotizacionOC->orden_compra->folio_oc ?? '';
 
-            
+
             $label = $labels[$solicitud->estatus] ?? 'DESCONOCIDO';
 
             $rows = [];
@@ -389,14 +389,14 @@ class ReportesService{
                         $cot->CotizacionesProveedores &&
                         $cot->CotizacionesProveedores->seleccionado == 1
                     );
-    
+
                 $precio = (float) ($cotSel->importe_unitario ?? 0);
 
                 $ecoDetalle = $detalle->DetalleAutotanque->DatosVehiculo->nro_economico ?? null;
                 $ecoDetalleFormat = ($solicitud->tipo == 2 && $ecoDetalle)
                     ? "ECO: $ecoDetalle"
                     : 'N/A';
-                
+
                 $rows[] = [
                     'Folio'         => '',
                     'Folio_OC'      => $folioOC,
@@ -457,7 +457,7 @@ class ReportesService{
             //   OBTENER LA COTIZACIÓN QUE TIENE UNA ORDEN DE COMPRA
             $cotizacionOC = $solicitud->cotizaciones->firstWhere('orden_compra', '!=', null);
             $folioOC = $cotizacionOC->orden_compra->folio_oc ?? 'N/D';
-            
+
             $label = $labels[$solicitud->estatus] ?? 'DESCONOCIDO';
             $rows = [];
             $subtotal = 0;
@@ -499,7 +499,7 @@ class ReportesService{
                 'Proveedor'     => $proveedor,
                 'tipoMantenimiento'         => $tipoMantenimiento ?? 'N/A',
                 'sistemaMantenieminto'         => $sistemaMantenimiento ?? 'N/A',
-                'Destino'       => $destinoFormat, 
+                'Destino'       => $destinoFormat,
             ];
 
             //   FILAS DETALLE DE LA SOLICITUD
@@ -507,12 +507,12 @@ class ReportesService{
 
                 $cotSel = $detalle->DetallesCotizacion
                 ->firstWhere(fn($cot) => $cot->CotizacionesProveedores && $cot->CotizacionesProveedores->seleccionado == 1);
-    
+
                 $precio = (float) ($cotSel->importe_unitario ?? 0);
 
                 $ecoDetalle = $detalle->DetalleAutotanque->DatosVehiculo->nro_economico ?? null;
                 $ecoDetalleFormat = ($solicitud->tipo == 2 && $ecoDetalle) ? "ECO: $ecoDetalle" : 'N/A';
-                
+
                 $rows[] = [
                     'Folio'         => '',
                     'Folio_OC'      => '',
@@ -613,7 +613,7 @@ class ReportesService{
                 'Folio_OC'      => $folioOC,
                 'Fecha'         => date('d/m/Y H:i', strtotime($solicitud->fecha)),
                 'Empresa'       => $empresas[$solicitud->empresa] ?? 'N/A',
-                'Destino'       => $destinoFormat, 
+                'Destino'       => $destinoFormat,
                 'Estado'        => $label,
                 'Cantidad'      => '',
                 'Descripcion'   => 'TOTALES DE LA SOLICITUD',
@@ -636,14 +636,14 @@ class ReportesService{
                         $cot->CotizacionesProveedores &&
                         $cot->CotizacionesProveedores->seleccionado == 1
                     );
-    
+
                 $precio = (float) ($cotSel->importe_unitario ?? 0);
 
                 $ecoDetalle = $detalle->DetalleAutotanque->DatosVehiculo->nro_economico ?? null;
                 $ecoDetalleFormat = ($solicitud->tipo == 2 && $ecoDetalle)
                     ? "ECO: $ecoDetalle"
                     : 'N/A';
-                
+
                 $rows[] = [
                     'Folio'         => '',
                     'Folio_OC'      => $folioOC,
@@ -769,8 +769,8 @@ public function queryComprasDocumentos($empresa, $tipo = null)
 
                 $tieneAcuseEntrega = $ordenCompra?->acusesEntrega?->isNotEmpty() ? '1' : '0';
 
-                $fechaEntregaInsumos = $ordenCompra?->acusesEntrega?->isNotEmpty() 
-                ? date('d/m/Y H:i', strtotime($ordenCompra?->acusesEntrega[0]->fecha)) 
+                $fechaEntregaInsumos = $ordenCompra?->acusesEntrega?->isNotEmpty()
+                ? date('d/m/Y H:i', strtotime($ordenCompra?->acusesEntrega[0]->fecha))
                 : '-';
 
                 // Proveedor seleccionado

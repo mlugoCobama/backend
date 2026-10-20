@@ -53,7 +53,7 @@ class ComisionesController extends Controller
 
             if(isset($item['id_venta']) && !empty($item['id_venta'])){
                 $partida =  DatosVenta::find($item['id_venta']);
-                $partida->estatus = 3;  
+                $partida->estatus = 3;
                 $partida->save();
             }
         }
@@ -62,7 +62,7 @@ class ComisionesController extends Controller
             'status' => 'success',
             'message' => 'Datos Actualizados correctamente',
             'data' => $data
-        ]);   
+        ]);
 
     }
 
@@ -124,7 +124,7 @@ class ComisionesController extends Controller
      * @param mixed $vendedor id de vendedor
      */
     public function getDatosVentas($estatus = null, $agencia =null, $tipoVenta = null, $fechaInicio  = null , $fechaFin  = null, $vendedor = null ){
-    
+
 
     $data = $this->queryDatosVentas(
                                         $estatus        == '12345' ? null : $estatus,
@@ -164,7 +164,7 @@ class ComisionesController extends Controller
      */
     public function queryDatosVentas($estatus, $agencia, $vendedor, $tipoVenta, $fechaInicio, $fechaFin ){
                 // intercompanias => Azcapo   Campestre  Universidad    Agencia ingresada
-        $agencia = match($agencia){ '7051' => '730', '712' => '714', '710' => '710', '333' => null, default => $agencia}; 
+        $agencia = match($agencia){ '7051' => '730', '712' => '714', '710' => '710', '333' => null, default => $agencia};
 
         $mezclarFlotillas = match($agencia){
             '7051' => false,
@@ -176,16 +176,16 @@ class ComisionesController extends Controller
             default => true
         };
 
-         $ventas2 = DatosVenta::
-            with(['vendedor', 'tipoVenta', 'gatosVenta'])
-            ->when($agencia, fn($q) => $q->where('agencia', $agencia))
-            ->when($vendedor, fn($q) => $q->where('id_vendedor', $vendedor))
-            ->when($estatus, fn($q) => $q->where('estatus', $estatus))
-            ->when($tipoVenta && $tipoVenta != 'flotilla', fn($q) => $q->where('clave_producto', $tipoVenta))
-            ->when(!$mezclarFlotillas && $tipoVenta != 'flotilla', fn($q) => $q->where('tipo_venta' ,'!=', 'FLOTILLA'))
-            ->when($tipoVenta && $tipoVenta == 'flotilla', fn($q) => $q->where('tipo_venta', 'FLOTILLA'))
-            ->when($fechaInicio && $fechaFin , fn($q) => $q->whereBetween('fecha_factura', [$fechaInicio, $fechaFin]))
-            ->get();
+        //  $ventas2 = DatosVenta::
+        //     with(['vendedor', 'tipoVenta', 'gatosVenta'])
+        //     ->when($agencia, fn($q) => $q->where('agencia', $agencia))
+        //     ->when($vendedor, fn($q) => $q->where('id_vendedor', $vendedor))
+        //     ->when($estatus, fn($q) => $q->where('estatus', $estatus))
+        //     ->when($tipoVenta && $tipoVenta != 'flotilla', fn($q) => $q->where('clave_producto', $tipoVenta))
+        //     ->when(!$mezclarFlotillas && $tipoVenta != 'flotilla', fn($q) => $q->where('tipo_venta' ,'!=', 'FLOTILLA'))
+        //     ->when($tipoVenta && $tipoVenta == 'flotilla', fn($q) => $q->where('tipo_venta', 'FLOTILLA'))
+        //     ->when($fechaInicio && $fechaFin , fn($q) => $q->whereBetween('fecha_factura', [$fechaInicio, $fechaFin]))
+        //     ->get();
 
         $ventas = DatosVenta::with(['vendedor', 'tipoVenta', 'gatosVenta'])
             ->when($agencia, fn($q) => $q->where('agencia', $agencia))
@@ -355,11 +355,11 @@ class ComisionesController extends Controller
                                     FROM [SISTEMAS].[dbo].[Vt_SalidaAutos]
                                     WHERE CAST(saau_fecha AS DATE) BETWEEN ? AND ?
                                 )
-                                SELECT 
+                                SELECT
                                     CAST(fa.faau_fecha AS DATE) AS fecha_factura,
                                     CAST(fa.faau_fechacancelacion AS DATE) AS fecha_cancelacion,
                                     fa.faau_vend_clave,
-                                    fa.faau_nofactura, 
+                                    fa.faau_nofactura,
                                     fa.faau_razonfactura,
                                     vi.vehi_clas_clave,
                                     vi.vehi_anio,
@@ -391,5 +391,5 @@ class ComisionesController extends Controller
                                 ORDER BY fa.faau_fecha, fa.faau_vend_clave
                                 ", [$fechaInicial, $fechaFinal]);
     }
-    
+
 }

@@ -20,7 +20,7 @@ class OrdenServicioResource extends JsonResource
             'descripcion_falla' => $this->descripcion_falla,
             'fecha_inicio' => $this->fecha_inicio,
             'observaciones' => $this->observaciones,
-            'cotizacion' => $this->cotizacion ? url($this->cotizacion) : null,
+            'cotizacion' => $this->cotizacion ? url('storage/' . $this->cotizacion) : null,
             'ruta_cotizacion' => $this->cotizacion ? $this->cotizacion : null,
             'proveedor_asignado' => new ProveedorAsignadoResource($this->whenLoaded('proveedorAsignado')),
             'vehiculo' => $this->whenLoaded('vehiculo'),
