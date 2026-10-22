@@ -14,11 +14,19 @@ use Maatwebsite\Excel\Facades\Excel;
 use Modules\Nissan\Models\DatosVenta;
 use Modules\Nissan\Models\Gasto;
 use Modules\Nissan\Models\GastosVenta;
+use Modules\Nissan\Services\ReglasService;
 use Modules\Nissan\Transformers\ComisionResource;
 use Modules\Nissan\Transformers\DatosVentaResource;
 
 class ComisionesController extends Controller
 {
+
+    protected $reglasService;
+
+    public function __construct(ReglasService $reglasService)
+    {
+        $this->reglasService = $reglasService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -142,11 +150,15 @@ class ComisionesController extends Controller
                                         $fechaInicio    == 'todos' ? null : $fechaInicio,
                                         $fechaFin       == 'todos' ? null : $fechaFin
                                     );
+
+        $reglas = $this->reglasService->obtenerReglasPorAgencia($agencia);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Datos recuperados correctamente',
             'data' => DatosVentaResource::collection($data),
             'realizados' => DatosVentaResource::collection($data2),
+            'reglas' => $reglas,
             'estado' => $estatus
         ]);
 
