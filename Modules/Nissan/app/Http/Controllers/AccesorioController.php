@@ -14,6 +14,7 @@ use Modules\Nissan\Models\DatosVenta;
 use Modules\Nissan\Transformers\ComAccesoriosResource;
 
 use App\Enums\EstatusComisionesAutos;
+use Modules\Nissan\Models\GastosVenta;
 use Modules\Nissan\Services\ComisionesService;
 
 class AccesorioController extends Controller
@@ -125,25 +126,6 @@ class AccesorioController extends Controller
        $comision->save();
        $esNuevo = $comision->wasRecentlyCreated;
 
-    // if ($request->has('detalles')) {
-    //     $detalles = json_decode($request->detalles);
-
-    //     $idsExistentes = $comision->detalles()->pluck('id')->toArray();
-    //     $idsEnviados   = collect($detalles)->pluck('id')->filter()->toArray();
-
-    //     $aEliminar = array_diff($idsExistentes, $idsEnviados);
-    //     ComDetalleAccesorio::destroy($aEliminar);
-
-    //     foreach ($detalles as $detalle) {
-    //         if (isset($detalle->id)) {
-    //             $this->updateDetalle($detalle->id, $detalle, $comision->id);
-    //             // $comision->detalles()->where('id', $detalle['id'])->update($detalle);
-    //         } else {
-    //             // $comision->detalles()->create($detalle);
-    //             $this->createDetalle($detalle, $comision->id);
-    //         }
-    //     }
-    // }
 
     return response()->json([
         'status'  => 'success',
@@ -332,6 +314,8 @@ class AccesorioController extends Controller
         $idVenta = $request->venta_id;
         $facturas = $request->facturas;
         $facRelacionadas = 0;
+        $totalFacturas = 0;
+
 
         if (!is_array($facturas) || empty($facturas)) {
             return response()->json([
@@ -346,19 +330,49 @@ class AccesorioController extends Controller
         try {
             foreach ($facturas as $factura) {
 
-                $facturaId = is_array($factura) ? ($factura['id'] ?? null) : (is_object($factura) ? $factura->id : $factura);
+                if (is_array($factura)) {
+                $facturaId = $factura['id'] ?? null;
+                    $subTotal = (float) ($factura['sub_total_factura'] ?? 0);
+                    $idVenta = (float) ($factura['com_datos_venta_id'] ?? 0);
+                    $iva = (float) ($factura['iva'] ?? 0);
+                } elseif (is_object($factura)) {
+                    $facturaId = $factura->id ?? null;
+                    $subTotal = (float) ($factura->sub_total_factura ?? 0);
+                    $idVenta = (float) ($factura->com_datos_venta_id ?? 0);
+                    $iva = (float) ($factura->iva ?? 0);
+                } else {
+                    $facturaId = $factura;
+                }
+
                 if (!$facturaId) {
                     continue;
                 }
 
                 $facAccesorio = ComAccesorios::find($facturaId);
-                if (!$facAccesorio) {
+
+                if (!$facAccesorio || !empty($idVenta)) {
                     continue;
                 }
 
                 $facAccesorio->com_datos_venta_id = $idVenta;
                 $facAccesorio->save();
+
                 $facRelacionadas++;
+                $totalFacturas += (($subTotal ?? 0)  + ($iva ?? 0));
+            }
+
+
+            if($totalFacturas > 0){
+                $gastosVenta =  GastosVenta::where('id_datos_venta', $idVenta)->first();
+                if($gastosVenta){
+                    $gastosVenta->accesorios = $totalFacturas;
+                    $gastosVenta->save();
+                }else{
+                    $gastosVenta = new GastosVenta();
+                    $gastosVenta->id_datos_venta = $idVenta;
+                    $gastosVenta->accesorios = $totalFacturas;
+                    $gastosVenta->save();
+                }
             }
 
             DB::commit();

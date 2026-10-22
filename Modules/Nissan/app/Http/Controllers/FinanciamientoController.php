@@ -313,17 +313,13 @@ class FinanciamientoController extends Controller
 
     public function extractData(Request $request)
     {
-        // 1. Validar que el archivo PDF esté presente
         $request->validate([
-            'pdf' => 'required|file|mimes:pdf|max:10240', // Máximo 10MB
+            'pdf' => 'required|file|mimes:pdf|max:10240',
         ]);
 
             $file = $request->file('pdf');
-
-            // 2. Llamar a tu servicio encargado de enviar el archivo y el prompt a Gemini
             $resultJson = $this->iaService->procesarDocumentoConGemini($file, 'solicitud_desembolso');
 
-            // 3. Retornar la respuesta en formato JSON hacia Angular
             return response()->json($resultJson, 200);
     }
 
