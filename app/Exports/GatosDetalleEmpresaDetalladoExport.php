@@ -61,6 +61,12 @@ class GatosDetalleEmpresaDetalladoExport implements Export, FromArray, WithHeadi
     // Convertimos la colección a array
     $data = array_map(function ($row) {
 
+    $toFloat = function ($value) {
+            if (is_null($value)) return 0.0;
+            $clean = preg_replace('/[^\d.-]/', '', (string)$value);
+            return (float)$clean;
+        };
+
         return [
             $row['Folio'],
             $row['Folio_OC'],
@@ -70,16 +76,16 @@ class GatosDetalleEmpresaDetalladoExport implements Export, FromArray, WithHeadi
             $row['Descripcion'],
             $row['Observaciones'],
             $row['Proveedor'],
-            $row['Precio'],
-            $row['Subtotal'],
-            $row['IVA'],
-            $row['Total'],
+            $toFloat($row['Precio']),
+            $toFloat($row['Subtotal']),
+            $toFloat($row['IVA']),
+            $toFloat($row['Total']),
             $row['Destino'],
 
-            $row['Marca'],
-            $row['Submarca'],
-            $row['Modelo'],
-            $row['Serie'],
+            // $row['Marca'],
+            // $row['Submarca'],
+            // $row['Modelo'],
+            // $row['Serie'],
 
             $row['tipoMantenimiento'],
             $row['sistemaMantenieminto'],
