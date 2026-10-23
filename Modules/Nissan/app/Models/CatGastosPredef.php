@@ -25,4 +25,8 @@ class CatGastosPredef extends Model
     {
         //return CatGastosPredefFactory::new();
     }
+
+    public function scopeActive ($query) {
+        return $query->where('activo', 1);
+    }
 }

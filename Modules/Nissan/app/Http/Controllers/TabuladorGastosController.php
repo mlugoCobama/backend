@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Modules\Nissan\Models\CatGastosPredef;
+use Modules\Nissan\Transformers\CatGastosPredefinidosResource;
 
 class TabuladorGastosController extends Controller
 {
@@ -14,9 +16,15 @@ class TabuladorGastosController extends Controller
      */
     public function index()
     {
-        return view('nissan::index');
-    }
 
+        $gastos = CatGastosPredefinidosResource::collection(CatGastosPredef::active()->get());
+
+        return response()->json([
+            'status' =>'success',
+            'data' => $gastos,
+            'message' => 'Datos recuperados correctamente'
+        ]);
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -28,9 +36,27 @@ class TabuladorGastosController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        //
+        if(!empty($request->id)){
+            $gasto = CatGastosPredef::find($request->id);
+        }
+        else{
+            $gasto = new CatGastosPredef();
+        }
+
+        $gasto->clave_gasto = $request->clave_gasto;
+        $gasto->importe = $request->importe;
+        $gasto->agencia = $request->agencia;
+        $gasto->tipo_vehiculo = $request->tipo_vehiculo;
+
+        $gasto->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => ' Datso recuperados correctamente',
+            'data' => []
+        ]);
     }
 
     /**
@@ -62,6 +88,23 @@ class TabuladorGastosController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $gasto = CatGastosPredef::find($id);
+
+        if($gasto){
+            $gasto->activo = 0;
+            $gasto->save();
+
+            return response()->json([
+                'data' => [],
+                'message' => 'Dato borrado correctamente',
+                'status' => 'success'
+            ]);
+        }
+
+        return response()->json([
+                'data' => [],
+                'message' => 'El recurso que intentas borrar no existe',
+                'status' => 'error'
+            ]);
     }
 }
