@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -10,7 +11,7 @@ use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 
-class GastosDetalleEmpresaExport implements FromArray, WithHeadings, WithTitle, ShouldAutoSize, WithColumnFormatting
+class GastosDetalleEmpresaExport implements Export, FromArray, WithHeadings, WithTitle, ShouldAutoSize, WithColumnFormatting
 
 {
     protected $detalle;

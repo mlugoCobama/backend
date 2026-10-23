@@ -7,7 +7,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithEvents;
-
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Events\AfterSheet;
 
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -20,7 +20,8 @@ class ComprasDocumentosDetalleExport implements
     ShouldAutoSize,
     WithTitle,
     WithEvents,
-    WithColumnWidths
+    WithColumnWidths,
+    Export
 {
     protected $datos;
     protected $empresa;
@@ -51,7 +52,7 @@ class ComprasDocumentosDetalleExport implements
                 'Facturado'             => $row['TieneFacturas'],
                 'Pagado'                => $row['TieneComprobantes'],
                 'Complemento Pago'      => $row['TieneComplementos'],
-                
+
             ];
         }, $this->datos->toArray());
     }
@@ -74,7 +75,7 @@ class ComprasDocumentosDetalleExport implements
             'Facturado',
             'Pagado',
             'Complemento Pago',
-            
+
         ];
     }
 

@@ -17,7 +17,7 @@ class ReporteSemanalCambiosCompras implements FromArray, WithHeadings, WithTitle
 
     protected $detalle;
     protected $empresa;
-    
+
     public function __construct($detalle, $empresa)
     {
         $this->detalle = $detalle;
@@ -44,7 +44,7 @@ class ReporteSemanalCambiosCompras implements FromArray, WithHeadings, WithTitle
             'Proveedor',            // O-13
             'AT',                   // P-16
             'Tipo Mantenimiento',   // Q-14
-            'Sistema',              // R-15           
+            'Sistema',              // R-15
         ];
     }
 
@@ -71,7 +71,7 @@ class ReporteSemanalCambiosCompras implements FromArray, WithHeadings, WithTitle
             $row['Destino'],
             $row['tipoMantenimiento'],
             $row['sistemaMantenieminto'],
-            
+
         ];
 
     }, $this->detalle->toArray());
@@ -99,14 +99,14 @@ class ReporteSemanalCambiosCompras implements FromArray, WithHeadings, WithTitle
         return [
             'H' => 70,
             'I' => 70,
-            'N' => 70 
+            'N' => 70
         ];
     }
 
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet): array
     {
-        $sheet->getStyle('D')->getFont()->setBold(true); 
-        $sheet->getStyle('M')->getFont()->setBold(true); 
+        $sheet->getStyle('D')->getFont()->setBold(true);
+        $sheet->getStyle('M')->getFont()->setBold(true);
         return [];
     }
 }

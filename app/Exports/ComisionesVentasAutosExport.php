@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
@@ -11,7 +12,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -20,7 +21,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 
 
-class ComisionesVentasAutosExport implements FromCollection, WithMapping, WithTitle, WithHeadings,ShouldAutoSize, WithColumnFormatting, WithStyles
+class ComisionesVentasAutosExport implements Export ,FromCollection, WithMapping, WithTitle, WithHeadings,ShouldAutoSize, WithColumnFormatting, WithStyles
 {
     /**
     * @return \Illuminate\Support\Collection
@@ -29,7 +30,7 @@ class ComisionesVentasAutosExport implements FromCollection, WithMapping, WithTi
     protected $estatus;
 
     protected array $baseHeadings = [
-            "Fecha de factura", 
+            "Fecha de factura",
             "No. factura",
             "Razón Social",
             "Clave Inventario",
@@ -40,7 +41,7 @@ class ComisionesVentasAutosExport implements FromCollection, WithMapping, WithTi
             "Costos",               //numerico-pesos-alineacion_izquierda
             "Bonificación Extra" ,  //numerico-pesos-alineacion_izquierda
             "Utilidad",             //numerico-pesos-negritas-alineacion_izquierda
-            "Tipo de venta",        
+            "Tipo de venta",
             "% Tipo de venta",      //numerico-porcentaje
             'Otros',                //numerico-pesos-alineacion_izquierda
             'Gasolina',             //numerico-pesos-alineacion_izquierda
@@ -64,7 +65,7 @@ class ComisionesVentasAutosExport implements FromCollection, WithMapping, WithTi
         $this->estatus = $estatus;
     }
 
-    public function collection()
+    public function collection(): Collection
     {
         return collect($this->data);
     }
@@ -81,7 +82,11 @@ class ComisionesVentasAutosExport implements FromCollection, WithMapping, WithTi
         return $this->setHeadersByTipo((string)$this->estatus);
     }
 
-    public function map($item): array
+    /**
+     * @param array|mixed $item
+     * @return array
+     */
+    public function map($item):array
     {
         return [
             $item['fecha_factura'],
@@ -115,33 +120,35 @@ class ComisionesVentasAutosExport implements FromCollection, WithMapping, WithTi
         ];
     }
 
+
+
     public function columnFormats(): array
     {
         return [
-            'H' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Precio de Venta
-            'I' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Costos
-            'J' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Bonificación Extra
-            'K' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Utilidad
-            'L' => NumberFormat::FORMAT_TEXT,                // Tipo de venta
-            'M' => NumberFormat::FORMAT_PERCENTAGE_00,       // % Tipo de venta
-            'N' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Otros
-            'O' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Gasolina
-            'P' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Previa
-            'Q' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Descuentos
-            'R' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Traslados
-            'S' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Descuento Impulso
-            'T' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Descuento Gasto
-            'U' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Cortesía
-            'V' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Accesorios
-            'W' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Total de gastos
-            'X' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Total de gastos
+            'H' => '$#,##0.00', // Precio de Venta
+            'I' => '$#,##0.00', // Costos
+            'J' => '$#,##0.00', // Bonificación Extra
+            'K' => '$#,##0.00', // Utilidad
+            'L' => NumberFormat::FORMAT_TEXT,                // Tipo de venta (este sí existe)
+            'M' => NumberFormat::FORMAT_PERCENTAGE_00,       // % Tipo de venta (este sí existe)
+            'N' => '$#,##0.00', // Otros
+            'O' => '$#,##0.00', // Gasolina
+            'P' => '$#,##0.00', // Previa
+            'Q' => '$#,##0.00', // Descuentos
+            'R' => '$#,##0.00', // Traslados
+            'S' => '$#,##0.00', // Descuento Impulso
+            'T' => '$#,##0.00', // Descuento Gasto
+            'U' => '$#,##0.00', // Cortesía
+            'V' => '$#,##0.00', // Accesorios
+            'W' => '$#,##0.00', // Total de gastos
+            'X' => '$#,##0.00', // Total de gastos
             'Y' => NumberFormat::FORMAT_PERCENTAGE_00,       // % BDC
-            'Z' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Comisión APV
-            'AA' => NumberFormat::FORMAT_CURRENCY_USD_SIMPLE, // Comisión BDC
+            'Z' => '$#,##0.00', // Comisión APV
+            'AA' => '$#,##0.00', // Comisión BDC
         ];
     }
 
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet):array
     {
         return [
             1 => ['font' => ['bold' => true]], // Encabezados en negritas

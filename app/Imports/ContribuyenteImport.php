@@ -6,8 +6,9 @@ use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithLimit;
+use Maatwebsite\Excel\Concerns\Import;
 
-class ContribuyenteImport implements ToCollection, WithHeadingRow, WithLimit
+class ContribuyenteImport implements Import, ToCollection, WithHeadingRow, WithLimit
 {
     public array $data = [];
 
@@ -16,7 +17,7 @@ class ContribuyenteImport implements ToCollection, WithHeadingRow, WithLimit
         return 1;
     }
 
-    public function collection(Collection $rows)
+    public function collection(Collection $rows):void
     {
         $row = $rows->first();
         if ($row) {

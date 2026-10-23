@@ -3,14 +3,15 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Maatwebsite\Excel\Concerns\Export;
 
-class ReporteConcentradoComprasMultihojaExport implements WithMultipleSheets
+class ReporteConcentradoComprasMultihojaExport implements Export, WithMultipleSheets
 {
     protected $detalle;
     public function __construct( $detalle)
     {
         $this->detalle = $detalle;
-        
+
     }
 
     public function sheets(): array

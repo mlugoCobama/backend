@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -10,7 +11,7 @@ use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 
-class GastosConcentradoExport implements FromArray, WithHeadings, WithTitle,  ShouldAutoSize, WithColumnFormatting
+class GastosConcentradoExport implements Export, FromArray, WithHeadings, WithTitle,  ShouldAutoSize, WithColumnFormatting
 {
     protected $concentrado;
 
@@ -41,7 +42,7 @@ class GastosConcentradoExport implements FromArray, WithHeadings, WithTitle,  Sh
             ];
         }, $this->concentrado);
 
-        $totalGeneral = array_sum(array_column($data, 2)); 
+        $totalGeneral = array_sum(array_column($data, 2));
 
         $data[] = [
             // '', Intercompañía

@@ -5,9 +5,10 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-class EasyGasExport implements FromCollection, WithHeadings, WithTitle
+class EasyGasExport implements Export, FromCollection, WithHeadings, WithTitle
 {
     protected $data;
 
@@ -16,7 +17,7 @@ class EasyGasExport implements FromCollection, WithHeadings, WithTitle
         $this->data = $data;
     }
 
-    public function collection()
+    public function collection(): Collection
     {
         return collect($this->data)->map(function ($item) {
             return [

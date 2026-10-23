@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -14,6 +15,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class GastosVehiculoExport implements
+    Export,
     FromCollection,
     WithHeadings,
     WithMapping,
@@ -27,7 +29,7 @@ class GastosVehiculoExport implements
         $this->data = collect($data);
     }
 
-    public function collection()
+    public function collection(): Collection
     {
         return $this->data;
     }
@@ -71,7 +73,7 @@ class GastosVehiculoExport implements
     /**
      * Estilos
      */
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet) :array
     {
         // Encabezados
         $sheet->getStyle('A1:I1')->applyFromArray([

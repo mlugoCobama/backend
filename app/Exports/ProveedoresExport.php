@@ -4,14 +4,16 @@ namespace App\Exports;
 
 use DateInterval;
 use DateTime;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Modules\Compras\Models\Proveedores;
 
-class ProveedoresExport implements FromCollection, WithHeadings, WithMapping
+class ProveedoresExport implements Export, FromCollection, WithHeadings, WithMapping
 {
-    public function collection()
+    public function collection(): Collection
     {
         return Proveedores::with([
             'datosPago',

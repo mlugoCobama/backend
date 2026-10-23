@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -29,7 +30,7 @@ class SolicitudesExport implements FromCollection, WithHeadings, WithTitle, Shou
         $this->solicitudes = $solicitudes;
     }
 
-    public function collection()
+    public function collection(): Collection
     {
         return collect($this->solicitudes);
     }
@@ -58,7 +59,7 @@ class SolicitudesExport implements FromCollection, WithHeadings, WithTitle, Shou
             'Unidad',           //F-5
             'Descripción',      //G-6
             'Observaciones',    //H-7
-            
+
             'Proveedor',        //I-8
             'Tipo de mantenimiento',        //I-8
             'Sistema',        //I-8
@@ -71,8 +72,8 @@ class SolicitudesExport implements FromCollection, WithHeadings, WithTitle, Shou
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('A')->getFont()->setBold(true); 
-        $sheet->getStyle('C')->getFont()->setBold(true); 
+        $sheet->getStyle('A')->getFont()->setBold(true);
+        $sheet->getStyle('C')->getFont()->setBold(true);
 
         return [];
     }

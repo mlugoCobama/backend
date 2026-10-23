@@ -10,7 +10,7 @@ class ReporteUnidadeMultihojaMacroExport implements WithMultipleSheets
     public function __construct( $detalle)
     {
         $this->detalle = $detalle;
-        
+
     }
 
     public function sheets(): array

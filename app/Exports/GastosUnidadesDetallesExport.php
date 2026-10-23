@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -10,7 +11,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class GastosUnidadesDetallesExport implements FromArray, WithHeadings, WithTitle, ShouldAutoSize, WithColumnFormatting
+class GastosUnidadesDetallesExport implements Export, FromArray, WithHeadings, WithTitle, ShouldAutoSize, WithColumnFormatting
 {
 
     protected $detalle;
@@ -71,8 +72,8 @@ class GastosUnidadesDetallesExport implements FromArray, WithHeadings, WithTitle
             $row['SubMarca'],
             $row['Modelo'],
             $row['Serie'],
-            
-            
+
+
         ];
 
     }, $this->detalle->toArray());
@@ -85,7 +86,7 @@ class GastosUnidadesDetallesExport implements FromArray, WithHeadings, WithTitle
 
     // // Fila de totales
     // $data[] = [
-    //     '', '', '', '', '', '', '', '', 
+    //     '', '', '', '', '', '', '', '',
     //     'TOTAL GENERAL',
     //     $subTotalGeneral,
     //     $totalIva,
@@ -112,13 +113,13 @@ class GastosUnidadesDetallesExport implements FromArray, WithHeadings, WithTitle
     //     return [
     //         'F' => 70,
     //         'G' => 70,
-    //         'H' => 70 
+    //         'H' => 70
     //     ];
     // }
 
     // public function styles(Worksheet $sheet)
     // {
-    //     $sheet->getStyle('L')->getFont()->setBold(true); 
+    //     $sheet->getStyle('L')->getFont()->setBold(true);
 
     //     return [];
     // }

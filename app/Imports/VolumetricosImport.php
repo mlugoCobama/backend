@@ -3,8 +3,9 @@
 namespace App\Imports;
 
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Maatwebsite\Excel\Concerns\Import;
 
-class VolumetricosImport implements WithMultipleSheets
+class VolumetricosImport implements Import, WithMultipleSheets
 {
     public ContribuyenteImport $generalImport;
     public PermisosImport $permisosImport;

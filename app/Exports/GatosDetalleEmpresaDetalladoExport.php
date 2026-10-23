@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -10,9 +11,10 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Calculation\MathTrig\Arabic;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class GatosDetalleEmpresaDetalladoExport implements FromArray, WithHeadings, WithTitle, ShouldAutoSize, WithColumnFormatting,  WithColumnWidths, WithStyles
+class GatosDetalleEmpresaDetalladoExport implements Export, FromArray, WithHeadings, WithTitle, ShouldAutoSize, WithColumnFormatting,  WithColumnWidths, WithStyles
 {
 
     protected $detalle;
@@ -127,7 +129,7 @@ class GatosDetalleEmpresaDetalladoExport implements FromArray, WithHeadings, Wit
         ];
     }
 
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet) :array
     {
         $sheet->getStyle('L')->getFont()->setBold(true);
 

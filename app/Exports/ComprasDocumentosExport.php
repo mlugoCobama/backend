@@ -8,12 +8,14 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\Export;
 
 class ComprasDocumentosExport implements
     FromCollection,
     WithHeadings,
     ShouldAutoSize,
-    WithStyles
+    WithStyles,
+    Export
 {
     protected $datos;
 
@@ -22,7 +24,7 @@ class ComprasDocumentosExport implements
         $this->datos = $datos;
     }
 
-    public function collection()
+    public function collection():Collection
     {
         return $this->datos->map(function ($row) {
 
@@ -81,7 +83,7 @@ class ComprasDocumentosExport implements
         ];
     }
 
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet) : array
     {
         return [
 

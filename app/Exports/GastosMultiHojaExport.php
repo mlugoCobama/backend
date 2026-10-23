@@ -2,9 +2,10 @@
 
 namespace App\Exports;
 
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class GastosMultiHojaExport implements WithMultipleSheets
+class GastosMultiHojaExport implements Export, WithMultipleSheets
 {
     protected $concentrado;
     protected $detalle;

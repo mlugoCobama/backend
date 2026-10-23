@@ -3,8 +3,9 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Maatwebsite\Excel\Concerns\Export;
 
-class ComprasDocumentosMultihojaExport implements WithMultipleSheets
+class ComprasDocumentosMultihojaExport implements Export, WithMultipleSheets
 {
     protected $detalle;
 

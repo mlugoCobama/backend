@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
@@ -11,10 +12,10 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 
-class WorkflowExport implements 
-    FromCollection, 
-    WithHeadings, 
-    WithStyles, 
+class WorkflowExport implements
+    FromCollection,
+    WithHeadings,
+    WithStyles,
     ShouldAutoSize,
     WithEvents,
     WithColumnWidths
@@ -26,7 +27,7 @@ class WorkflowExport implements
         $this->data = collect($data);
     }
 
-    public function collection()
+    public function collection(): Collection
     {
         return $this->data;
     }
@@ -59,11 +60,11 @@ class WorkflowExport implements
             'Tiempo hasta cancelacion',
             'Entrega',
             'Tiempo de entrega',
-            
+
         ];
     }
 
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet): array
     {
         return [
             1 => [
@@ -143,7 +144,7 @@ class WorkflowExport implements
                 ],
                 'fill' => [
                     'fillType' => 'solid',
-                    'startColor' => ['rgb' => '404040'], 
+                    'startColor' => ['rgb' => '404040'],
                 ],
                 'alignment' => [
                     'horizontal' => 'center',
@@ -209,10 +210,10 @@ class WorkflowExport implements
     public function columnWidths(): array
 {
     return [
-        'A' => 20, 
-        'B' => 25, 
+        'A' => 20,
+        'B' => 25,
         'C' => 22,
-        'D' => 20, 
+        'D' => 20,
         'E' => 20,
         'F' => 20,
         'G' => 20,

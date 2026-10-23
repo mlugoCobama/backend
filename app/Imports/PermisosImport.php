@@ -3,11 +3,12 @@
 namespace App\Imports;
 
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\Import;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 use Maatwebsite\Excel\Concerns\WithLimit;
 
-class PermisosImport implements ToCollection, WithStartRow, WithLimit
+class PermisosImport implements Import, ToCollection, WithStartRow, WithLimit
 {
     public array $data = [];
 
@@ -24,7 +25,7 @@ class PermisosImport implements ToCollection, WithStartRow, WithLimit
         return 1;
     }
 
-    public function collection(Collection $rows)
+    public function collection(Collection $rows):void
     {
         $row = $rows->first();
         if ($row) {
