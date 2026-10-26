@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ReporteConcentradoComprasDetalleExport implements FromArray, WithHeadings, WithTitle,WithColumnWidths, WithColumnFormatting
+class ReporteConcentradoComprasDetalleExport implements Export, FromArray, WithHeadings, WithTitle,WithColumnWidths, WithColumnFormatting
 {
 
     protected $detalle;
@@ -27,7 +27,7 @@ class ReporteConcentradoComprasDetalleExport implements FromArray, WithHeadings,
     {
         return [
             'Folio',            // A-0
-            'Estatus',          // B-0    
+            'Estatus',          // B-0
             'Folio OC',         // C-1
             'Fecha',            // D-2
             'Cantidad',         // E-3
@@ -79,7 +79,7 @@ class ReporteConcentradoComprasDetalleExport implements FromArray, WithHeadings,
 
     // // Fila de totales
     // $data[] = [
-    //     '', '', '', '', '', '', '', '', 
+    //     '', '', '', '', '', '', '', '',
     //     'TOTAL GENERAL',
     //     $subTotalGeneral,
     //     $totalIva,
@@ -108,8 +108,8 @@ class ReporteConcentradoComprasDetalleExport implements FromArray, WithHeadings,
             'D' => 30,
             'F' => 30,
             'G' => 70,
-            'H' => 70, 
-            'I' => 10, 
+            'H' => 70,
+            'I' => 10,
             'J' => 70,
             'K' => 70,
             'L' => 70,
@@ -119,7 +119,7 @@ class ReporteConcentradoComprasDetalleExport implements FromArray, WithHeadings,
 
     // public function styles(Worksheet $sheet)
     // {
-    //     $sheet->getStyle('L')->getFont()->setBold(true); 
+    //     $sheet->getStyle('L')->getFont()->setBold(true);
 
     //     return [];
     // }

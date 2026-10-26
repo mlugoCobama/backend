@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -18,7 +19,7 @@ use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 use Maatwebsite\Excel\Excel;
 use PhpOffice\PhpSpreadsheet\Calculation\MathTrig\Subtotal;
 
-class SolicitudesExport implements FromCollection, WithHeadings, WithTitle, ShouldAutoSize, WithColumnWidths, WithStyles
+class SolicitudesExport implements Export, FromCollection, WithHeadings, WithTitle, ShouldAutoSize, WithColumnWidths, WithStyles
 {
     /**
     * @return \Illuminate\Support\Collection

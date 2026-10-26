@@ -112,29 +112,29 @@ class PdfResponsivaService{
                 $pdf->AddPage('P', 'Letter');
                 $pdf->useImportedPage($template1);
 
-                // $pdf->SetXY(32, 180.5);
-                // $pdf->Cell(9,4, $fecha['dia'] , 0, 1 ,'C');
-                // $pdf->SetXY(58, 180.5);
-                // $pdf->Cell(40,4, $fecha['mes']  , 0, 1 ,'C');
-                // $pdf->SetXY(113, 180.5);
-                // $pdf->Cell(5,4, $fecha['anio']  , 0, 1 ,'C');
+                 $pdf->SetXY(32, 180.5);
+                 $pdf->Cell(9,4, $fecha['dia'] , 0, 1 ,'C');
+                 $pdf->SetXY(58, 180.5);
+                 $pdf->Cell(40,4, $fecha['mes']  , 0, 1 ,'C');
+                 $pdf->SetXY(113, 180.5);
+                 $pdf->Cell(5,4, $fecha['anio']  , 0, 1 ,'C');
 
-                $pdf->SetXY(27, (211.5-20));
+                $pdf->SetXY(27, (211.5));
                 $pdf->Cell(73,4, $nombreUsuario , 0, 1 ,'L');
-                $pdf->SetXY(26, (220-20));
+                $pdf->SetXY(26, (220));
                 $pdf->Cell(80,4, $puesto , 0, 1 ,'L');
 
 
-                $pdf->SetXY(127, (211.5-20));
-                $pdf->Cell(73,4, $this->formatearTexto('Alfredo Loredo Medina')  , 0, 1 ,'L');
-                $pdf->SetXY(126, (220-20));
-                $pdf->Cell(80,4, $this->formatearTexto('Gerente General') , 0, 1 ,'L');
+                // $pdf->SetXY(127, (211.5-20));
+                // $pdf->Cell(73,4, $this->formatearTexto('Dulce Consuelo Rojas Monroy')  , 0, 1 ,'L');
+                // $pdf->SetXY(126, (220-20));
+                // $pdf->Cell(80,4, $this->formatearTexto('Director de Marca Renault') , 0, 1 ,'L');
 
 
-                $pdf->SetXY(83, (231.5));
-                $pdf->Cell(73,4,$this->formatearTexto('Ángel Enrique Moreno Pineda') , 0, 1 ,'L');
-                $pdf->SetXY(95, (239));
-                $pdf->Cell(80,4, $this->formatearTexto('Auxiliar de Sistemas') , 0, 1 ,'L');
+                // $pdf->SetXY(83, (231.5));
+                // $pdf->Cell(73,4,$this->formatearTexto('Ángel Enrique Moreno Pineda') , 0, 1 ,'L');
+                // $pdf->SetXY(95, (239));
+                // $pdf->Cell(80,4, $this->formatearTexto('Auxiliar de Sistemas') , 0, 1 ,'L');
 
                 $pdf->AddPage('P', 'Letter');
                 $pdf->useImportedPage($template2);

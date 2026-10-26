@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -12,7 +13,7 @@ use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ReporteSemanalCambiosCompras implements FromArray, WithHeadings, WithTitle, ShouldAutoSize, WithColumnFormatting,  WithColumnWidths, WithStyles
+class ReporteSemanalCambiosCompras implements Export, FromArray, WithHeadings, WithTitle, ShouldAutoSize, WithColumnFormatting,  WithColumnWidths, WithStyles
 {
 
     protected $detalle;
