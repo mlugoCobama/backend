@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithStyles;
+
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ReporteSemanalCambiosCompras implements Export, FromArray, WithHeadings, WithTitle, ShouldAutoSize, WithColumnFormatting,  WithColumnWidths, WithStyles

@@ -71,7 +71,7 @@ class SolicitudesExport implements Export, FromCollection, WithHeadings, WithTit
         ];
     }
 
-    public function styles(Worksheet $sheet)
+    public function styles(Worksheet $sheet): array
     {
         $sheet->getStyle('A')->getFont()->setBold(true);
         $sheet->getStyle('C')->getFont()->setBold(true);
