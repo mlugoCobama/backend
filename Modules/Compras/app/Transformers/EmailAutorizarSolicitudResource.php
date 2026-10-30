@@ -40,7 +40,7 @@ class EmailAutorizarSolicitudResource extends JsonResource
      */
     private function getNombreUsuario($usuarioId)
     {
-        $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')');
+        $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$usuarioId]);
         if (count($usuario) > 0) {
             return [
                 'nombre_completo' => trim($usuario[0]->firstname . ' ' . $usuario[0]->realname),
@@ -61,5 +61,5 @@ class EmailAutorizarSolicitudResource extends JsonResource
         return $dataCC;
     }
 
-    
+
 }

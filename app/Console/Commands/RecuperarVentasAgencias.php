@@ -78,12 +78,20 @@ class RecuperarVentasAgencias extends Command
                     ) AS rn
                 FROM [SISTEMAS].[dbo].[Vt_SalidaAutos]
                 WHERE CAST(saau_fecha AS DATE) BETWEEN ? AND ?
+            ),
+            BonificacionesAgrupadas AS (
+                -- Sumamos todas las bonificaciones por cada documento (factura) antes del JOIN
+                SELECT
+                    prim_documento,
+                    SUM(prim_importe) AS total_prim_importe
+                FROM [SISTEMAS].[dbo].[vt_PrimBonif]
+                GROUP BY prim_documento
             )
-            SELECT  
+            SELECT
                 CAST(fa.faau_fecha AS DATE) AS fecha_factura,
                 CAST(fa.faau_fechacancelacion AS DATE) AS fecha_cancelacion,
                 fa.faau_vend_clave,
-                fa.faau_nofactura, 
+                fa.faau_nofactura,
                 fa.faau_razonfactura,
                 fa.faau_idagencia AS id_agencia,
                 vi.vehi_clas_clave,
@@ -98,10 +106,11 @@ class RecuperarVentasAgencias extends Command
                 sa.saau_vehi_vehiculoid,
                 fa.faau_iva,
                 fa.faau_total,
-                (fa.faau_total - (fa.faau_iva + fa.faau_isan)) as Venta,
+                (fa.faau_total - (fa.faau_iva + fa.faau_isan)) AS Venta,
                 (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos) AS Costo,
-                (bo.prim_importe / 1.16) AS bonificacion,
-                (((fa.faau_total - (fa.faau_iva + fa.faau_isan)) ) - (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos )) + (bo.prim_importe / 1.16) as Utilidad
+                -- Usamos ISNULL por si alguna factura no tiene bonificación
+                (ISNULL(bo.total_prim_importe, 0) / 1.16) AS bonificacion,
+                (((fa.faau_total - (fa.faau_iva + fa.faau_isan))) - (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos)) + (ISNULL(bo.total_prim_importe, 0) / 1.16) AS Utilidad
             FROM [SISTEMAS].[dbo].[Vt_FacturaAutos] fa
             JOIN RegistrosOrdenados sa
                 ON fa.faau_vehi_vehiculoid = sa.saau_vehi_vehiculoid
@@ -109,11 +118,12 @@ class RecuperarVentasAgencias extends Command
                 ON fa.faau_vehi_vehiculoid = vi.vehi_vehiculoid
             JOIN [SISTEMAS].[dbo].[Vt_Modelos] mo
                 ON mo.mode_modeloid = vi.vehi_mode_modeloid
-            JOIN [SISTEMAS].[dbo].[vt_PrimBonif] bo
+            -- Cambiamos el JOIN hacia la nueva CTE agrupada
+            LEFT JOIN BonificacionesAgrupadas bo
                 ON bo.prim_documento = fa.faau_nofactura
             WHERE sa.rn = 1
             AND fa.faau_fechacancelacion IS NULL
-            ORDER BY fa.faau_fecha, fa.faau_vend_clave", 
+            ORDER BY fa.faau_fecha, fa.faau_vend_clave",
             [$fechaInicio, $fechaFin]
         );
 
@@ -122,7 +132,7 @@ class RecuperarVentasAgencias extends Command
             $existe = !empty($dato->faau_nofactura) ? DatosVenta::where('no_factura', $dato->faau_nofactura)->first() : true;
 
             $agenciaId = match ($conexion) {
-                            'renault'               => $dato->id_agencia,   // usar valor que viene de la base 
+                            'renault'               => $dato->id_agencia,   // usar valor que viene de la base
                             'nissan_universidad'    => 710,                 // intercompania
                             'nissan_campestre'      => 714,                 // intercompania
                             'nissan_azcapotzalco'   => 730,                 // intercompania
@@ -141,10 +151,10 @@ class RecuperarVentasAgencias extends Command
                     'nro_vendedor_as' => $dato->faau_vend_clave,
                     'agencia' => $agenciaId,
                 ]);
-                $vendedorId = $vendedor->id;    
+                $vendedorId = $vendedor->id;
             } else {
-                $vendedorId = $vendedorExiste->id; 
-            }      
+                $vendedorId = $vendedorExiste->id;
+            }
 
             $tipoVenta = TipoVenta::where('nombre', $dato->faau_form_TipoVenta)->first();
             if (!$existe && !empty($vendedorId)) {
@@ -162,7 +172,7 @@ class RecuperarVentasAgencias extends Command
                     'bonificaciones'    => $dato->bonificacion,
                     'utilidad_inicial'  => $dato->Utilidad,
                     'tipo_venta_id'     => $tipoVenta->id ?? 2,
-                    'tipo_venta'        => $dato->faau_form_TipoVenta,   
+                    'tipo_venta'        => $dato->faau_form_TipoVenta,
                     'clave_producto'    => $dato->vehi_clas_clave,
                     'modelo_producto'   => $dato->mode_clave,
                     'anio_vehiculo'     => $dato->vehi_anio ?? null,

@@ -54,7 +54,7 @@ class DispersionDiesel
 
         public function notificarDispersion($tipo, $idDispersion){
             $data = $this->recuperarSolicitudDiesel($idDispersion);
-            $usuarioSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $data->usuario_solicita . ')');
+            $usuarioSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$data->usuario_solicita]);
 
             $nombre = $usuarioSolicita[0]->firstname.' '.$usuarioSolicita[0]->realname ?? 'No disponible';
             $area = $usuarioSolicita[0]->area ?? 'No disponible';
@@ -62,7 +62,7 @@ class DispersionDiesel
             $intercompania = $data->empresa ?? null;
 
             if($intercompania){
-                $gerencias = DB::connection('intranet')->select('call SOPORTEZM.SP_GetGereneciaEmpresasMacro(' . $intercompania . ')');
+                $gerencias = DB::connection('intranet')->select('call SOPORTEZM.SP_GetGereneciaEmpresasMacro(?)', [$intercompania]);
                 foreach ($gerencias as $gerencia) {
                     $destinatario = $gerencia->name;
                     Mail::to($destinatario)->send(new RequisicionDieselMail($data, $nombre, $empresa, $area, $tipo));

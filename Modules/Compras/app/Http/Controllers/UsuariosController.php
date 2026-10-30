@@ -14,7 +14,7 @@ class UsuariosController extends Controller
      *******************************************************************/
     public function index()
     {
- 
+
         $data = DB::connection('intranet')->select('CALL SP_GetEmpresas()');
 
         return response()->json([
@@ -56,17 +56,17 @@ class UsuariosController extends Controller
     public function show($id)
     {
 
-        $interExcepciones = explode(',', env('INTER_EXECPCIONES')); 
+        $interExcepciones = explode(',', env('INTER_EXECPCIONES'));
         $isExcepcion = in_array($id, $interExcepciones );
 
         // if($isExcepcion){
-        //     $idUser = auth()->id(); 
+        //     $idUser = auth()->id();
         //     $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $idUser . ')');
         //     $id = $data[0]->intercompania;
         // }
 
-        $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetDataUsuarios(' . $id . ')');
-        
+        $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetDataUsuarios(?)', [$id]);
+
         return response()->json([
             'status' => 'success',
             'data' =>  $data,
@@ -79,7 +79,7 @@ class UsuariosController extends Controller
      ************************************************************/
     public function showById($id)
     {
-        $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $id . ')');
+        $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$id]);
         return response()->json([
             'status' => 'success',
             'data' => UsersResource::collection($data),
@@ -92,9 +92,9 @@ class UsuariosController extends Controller
      ************************************************************/
     public function getDataUsuario($correo)
     {
-        $data = DB::connection('intranet')->select("call SOPORTEZM.SP_GetUsuarioEmail('$correo')");
+        $data = DB::connection('intranet')->select("call SOPORTEZM.SP_GetUsuarioEmail(?)", [$correo]);
         // $data = DB::connection('intranet')->table('glpi_users')->select('*')->where('name', $correo)->first();
-        
+
         if(empty($data)){
              return response()->json([
                  'status' => 'error',
@@ -144,7 +144,7 @@ class UsuariosController extends Controller
             if(!$existe){
                 $data[] = [
                 'permission_id' => $permisoId,
-                'model_type'    => 'App\\Models\\User', 
+                'model_type'    => 'App\\Models\\User',
                 'model_id'      => $id,
             ];
             }
@@ -233,7 +233,7 @@ class UsuariosController extends Controller
             'data' => $data
         ]);
 
-        
+
     }
 
     public function saveOrUpdatePermissions(Request $request)
@@ -269,7 +269,7 @@ class UsuariosController extends Controller
         $dataInsert = collect($agregar)->map(function ($permisoId) use ($usuarioId) {
             return [
                 'permission_id' => $permisoId,
-                'model_type' => 'App\\Models\\User', 
+                'model_type' => 'App\\Models\\User',
                 'model_id' => $usuarioId,
             ];
         })->toArray();
@@ -287,7 +287,7 @@ class UsuariosController extends Controller
 
     public function getTecnicos(){
         $data = DB::connection('intranet')->select("call SOPORTEZM.SP_GetTecnicosTi()");
-        
+
         if(empty($data)){
              return response()->json([
                  'status' => 'error',

@@ -19,8 +19,8 @@ class EnergeticosGasolinerasController extends Controller
 {
 
     private $meses = array(
-            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril', 
-            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto', 
+            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
+            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
             9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
         );
     /**
@@ -28,7 +28,7 @@ class EnergeticosGasolinerasController extends Controller
      */
     public function index(string $sub_division, $mes, $anio)
     {
-        
+
         /**
          * Cuando el mes es diciembre (12 + 1)
          * Simulamos enero del año siguiente
@@ -48,7 +48,7 @@ class EnergeticosGasolinerasController extends Controller
          */
         do {
             $fechaMes = new DateTime("$anio-$mes-01");
-            $fechaMes->modify('-1 month'); 
+            $fechaMes->modify('-1 month');
             $mes = $fechaMes->format('m');
             $anio = $fechaMes->format('Y'); //Fecha ingresada - 1 mes
 
@@ -58,8 +58,8 @@ class EnergeticosGasolinerasController extends Controller
             $mesA = $fechaMesA->format('m');
             $anioA = $fechaMesA->format('Y'); // Año anterior = año ingresado -1
 
-            $dataMes =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(' . $mes . ',' . $anio . ')'));
-           
+            $dataMes =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(?,?)', [$mes,$anio]));
+
             $intento++;
 
             if (count($dataMes) > 1 && $intento == 1) {
@@ -97,11 +97,11 @@ class EnergeticosGasolinerasController extends Controller
      */
     private function conjuntoDatos($mes, $anio, $mesA, $anioA, $anioAnt, $sub_division,  $dataMes){
 
-        $dataMesAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(' . $mesA . ',' . $anioA . ')'));
-        $dataAnioAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(' . $mes . ',' . $anioAnt . ')'));
-        $totalAnio = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anio . ',' . $sub_division . ')'));
-        $totalAnioAnt = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anioAnt . ',' . $sub_division . ')'));
-        $totalAnioAnt2 = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . ($anioAnt - 1) . ',' . $sub_division . ')'));
+        $dataMesAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(?,?)', [$mesA,$anioA]));
+        $dataAnioAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(?,?)', [$mes,$anioAnt]));
+        $totalAnio = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(?,?)', [$anio, $sub_division]));
+        $totalAnioAnt = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(?,?)', [$anioAnt,$sub_division]));
+        $totalAnioAnt2 = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(?,?)', [($anioAnt - 1),$sub_division ]));
             $data = [
                 'mes' => $dataMes,
                 'mesAnt' => $dataMesAnt,
@@ -110,14 +110,14 @@ class EnergeticosGasolinerasController extends Controller
                 'totalAnioAnt' => $totalAnioAnt,
                 'totalAnioAnt2' => $totalAnioAnt2,
             ];
-                
+
         return $data;
     }
 
     public function index1(string $sub_division, $mes, $anio){
 
         // $periodoBuscado = new DateTime("$anio-$mes-01");
-        
+
         /**
          * Cuando el mes es diciembre (12 + 1)
          * Simulamos enero del año siguiente
@@ -130,14 +130,14 @@ class EnergeticosGasolinerasController extends Controller
         $fmes = $date->format('m');
         $newPeriodo = "$fanio-$fmes-01";
         do{
-            $dataAnio = DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anio . ',' . $sub_division . ')');
+            $dataAnio = DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(?,?)',[$anio,$sub_division ] );
             (array)$arrDatos = $dataAnio;
             $arr_mesesDatos = array_map(function($registro) { return $registro->fecha; }, $arrDatos);
 
             $arr_mesesDatos1 = array_flip($arr_mesesDatos);
 
-            $periodoExiste = isset($arr_mesesDatos1[$newPeriodo]); 
-            
+            $periodoExiste = isset($arr_mesesDatos1[$newPeriodo]);
+
             if($periodoExiste === false){
                 $anio = $anio - 1;
             }
@@ -153,7 +153,7 @@ class EnergeticosGasolinerasController extends Controller
             $nombreMes = $this->meses[intval($mes)];
 
             return response()->json(
-                
+
                 [
                     'success' => true,
                     'message' => "No hay datos de este periodo en su lugar se muestran los de $nombreMes $anio",
@@ -163,7 +163,7 @@ class EnergeticosGasolinerasController extends Controller
             );
         }else{
             $fecha = $periodoBuscado;
-            
+
             $data = $this->conjuntoDatos1($fecha , $sub_division,  $dataAnio);
             $nombreMes = $this->meses[intval($mes)];
             return response()->json(
@@ -186,12 +186,12 @@ class EnergeticosGasolinerasController extends Controller
         $mesA = $fechaMesA->format('m');
         $anioA = $fechaMesA->format('Y');
 
-            $dataMes =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(' . $mes . ',' . $anio . ')'));   
-            $dataMesAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(' . $mesA . ',' . $anioA . ')'));
-            $dataAnioAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(' . $mes . ',' . $anioAnt . ')'));
+            $dataMes =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(?,?)', [$mes,$anio]));
+            $dataMesAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(?,?)', [$mesA,$anioA]));
+            $dataAnioAnt =  GasolineriaMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(?,?)', [$mes,$anioAnt]));
             $totalAnio =  DataAnualResource::collection($dataAnio);
-            $totalAnioAnt = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anioAnt . ',' . $sub_division . ')'));
-            $totalAnioAnt2 = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . ($anioAnt - 1 ) . ',' . $sub_division . ')'));
+            $totalAnioAnt = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(?,?)', [$anioAnt, $sub_division]));
+            $totalAnioAnt2 = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(?,?)', [($anioAnt - 1 ), $sub_division]));
                 $data = [
                     'mes' => $dataMes,
                     'mesAnt' => $dataMesAnt,
@@ -200,11 +200,11 @@ class EnergeticosGasolinerasController extends Controller
                     'totalAnio' => $totalAnio,
                     'totalAnioAnt' => $totalAnioAnt,
                     ];
-                        
+
         return $data;
 
     }
-    
+
 
     public function create()
     {
@@ -241,7 +241,7 @@ class EnergeticosGasolinerasController extends Controller
      */
     public function showGasolinerias($mes, $anio)
     {
-        $data =  EnergeticosMensualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(' . $mes . ',' . $anio . ')'));
+        $data =  EnergeticosMensualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGasolinerias(?,?)', [$mes,$anio] ));
 
         return response()->json([
             'success' => true,

@@ -259,7 +259,7 @@ class CatUnidadesController extends Controller
      */
     public function getAutotanques($intercompania)
     {
-        $data = DB::select("call SistemaTickets.SP_GetAutotanquesSucursal($intercompania)");
+        $data = DB::select("call SistemaTickets.SP_GetAutotanquesSucursal(?)", [$intercompania]);
 
         return response()->json([
             "status" => "Success",
@@ -290,7 +290,7 @@ class CatUnidadesController extends Controller
     public function getGastoUnidad($idVehiculo)
     {
 
-        $data = DB::select("call SistemaTickets.SP_GetGastosUnidad($idVehiculo)");
+        $data = DB::select("call SistemaTickets.SP_GetGastosUnidad(?)", [$idVehiculo]);
 
         return response()->json([
             "status" => "Success",
@@ -300,7 +300,7 @@ class CatUnidadesController extends Controller
     }
 
     public function descargarGastosUnidad($idVehiculo){
-        $data = DB::select("call SistemaTickets.SP_GetGastosUnidad($idVehiculo)");
+        $data = DB::select("call SistemaTickets.SP_GetGastosUnidad(?)", [$idVehiculo]);
         $filename = 'Gastos_vehiculo_'.$idVehiculo.'.xlsx';
 
          return Excel::download( new GastosVehiculoExport($data), $filename,

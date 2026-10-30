@@ -18,8 +18,8 @@ use App\Enums\EstatusOrdenCompra;
 use App\Enums\EstatusSolicitud;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
 use Modules\Compras\Models\DetalleSolicitud;
+use Modules\Compras\Services\OrdenCompraService;
 use Modules\Ucoip\Services\HardwareService;
 use Modules\Ucoip\Services\ResguardosService;
 
@@ -28,18 +28,21 @@ class AcuseEntregaController extends Controller
 
 protected $hardwareService;
 protected $resguardoService;
+protected $ocService;
     public function __construct(
         HardwareService $hardwareService,
-        ResguardosService $resguardoService
+        ResguardosService $resguardoService,
+        OrdenCompraService $ocService,
     ){
         $this->hardwareService = $hardwareService;
         $this->resguardoService = $resguardoService;
+        $this->ocService =  $ocService;
     }
     /**
      * Display a listing of the resource.
      */
     public function index()
-    {   
+    {
         $data = [];
 
         $solicitudesCompras =  SolicitudesCompra::get();
@@ -52,7 +55,7 @@ protected $resguardoService;
             $data["solicitud $solicitud->folio"]['detalles'] =  $detalles;
             $data["solicitud $solicitud->folio"]['cotización'] = $cotizaciones;
         }
-        
+
         return response()->json([
             'data' => $data
         ]);
@@ -70,56 +73,6 @@ protected $resguardoService;
     /**
      * Store a newly created resource in storage.
      */
-    public function store1(Request $request)
-    {
-        try {
-            DB::beginTransaction();
-
-            $userId = $request->user()->id;
-
-            $validated = $request->validate([
-                'archivo' => 'required|file|mimes:pdf',
-                'observaciones' => 'nullable|string',
-                'orden_compra_id' => 'required|integer',
-                'detalles_entrada' => 'nullable',
-            ]);
-
-            $ordenCompraId = $validated['orden_compra_id'];
-            $file = $request->file('archivo');
-
-            $this->storeAcuse($ordenCompraId, $file, $validated);
-            $this->ingresarAlmacen($validated['detalles_entrada'], $userId);
-
-            $esEntregaCompleta = $this->esEntregaCompleta($ordenCompraId); 
-
-            $this->actStatusOrdenSolicitud(
-                $ordenCompraId,
-                EstatusOrdenCompra::ENTREGADA,
-                EstatusSolicitud::ENTREGADA,
-                $esEntregaCompleta
-            );
-
-
-
-            DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Acuse de entrega creado correctamente',
-                'data' => []
-            ], 201);
-
-        } catch (\Throwable $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error al crear el acuse de entrega',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
 public function store(Request $request)
 {
     try {
@@ -158,10 +111,11 @@ public function store(Request $request)
             $this->guardarInventario($inventario, $validated['intercompania']);
         }
 
-        $esEntregaCompleta = $this->esEntregaCompleta($ordenCompraId);
+        $esEntregaCompleta = $this->ocService->esEntregaCompleta($ordenCompraId);
 
 
-        $this->actStatusOrdenSolicitud($ordenCompraId,EstatusOrdenCompra::ENTREGADA,EstatusSolicitud::ENTREGADA,$esEntregaCompleta);
+         $this->ocService->actStatusOrdenSolicitud($ordenCompraId,EstatusOrdenCompra::ENTREGADA,EstatusSolicitud::ENTREGADA,$esEntregaCompleta);
+
         DB::commit();
 
         return response()->json([
@@ -201,7 +155,7 @@ public function store(Request $request)
         $todasEnCero = $detalles->every(function ($detalle) {
             //existencia registrada en la tabla almacen
             $existencias = $detalle->almacenCompras->existencia ?? 0;
-            //material que ya fue entregado y que fue usado 
+            //material que ya fue entregado y que fue usado
             $salidasDetalle = $detalle->almacenCompras?->salidas ? $detalle->almacenCompras->salidas->sum('cantidad') : 0;
             $materialEntregado = $existencias + $salidasDetalle;
 
@@ -209,8 +163,8 @@ public function store(Request $request)
 
             return ($detalle->cantidad - $materialEntregado) <= 0;
         });
-        
-                
+
+
         return response()->json([
             'status' => 'success',
             'data' => $detalles,
@@ -243,108 +197,6 @@ public function store(Request $request)
         //
     }
 
-    public function esEntregaCompleta(int $ordenCompraId): bool
-    {
-        $orden = OrdenCompra::with('cotizacion')->find($ordenCompraId);
-
-        if (!$orden || !$orden->cotizacion) {
-            return false;
-        }
-
-        $solicitudId = $orden->cotizacion->solicitudes_compra_id;
-
-        $detalles = DetalleSolicitud::where('solicitudes_compra_id',$solicitudId)
-        ->with('almacenCompras')
-        ->confirmadas()
-        ->get();
-
-        if ($detalles->isEmpty()) {
-            return false;
-        }
-
-        return $detalles->every(function ($detalle) {
-            $existencia = optional( $detalle->almacenCompras)->existencia ?? 0;
-            return $existencia >= $detalle->cantidad;
-        });
-    }
-
-    public function actStatusOrdenSolicitud(int $idOrdenCompra,int $statusOrdenCompra,int $statusSolicitud,bool $esEntregaCompleta){
-    $orden = OrdenCompra::with(['documentos','cotizacion'])->find($idOrdenCompra);
-
-    if(!$orden || !$orden->cotizacion){
-        return;
-    }
-
-    $solicitud = SolicitudesCompra::find($orden->cotizacion->solicitudes_compra_id);
-
-    if(!$solicitud){
-        return;
-    }
-
-    $faltanFacturas = $orden->documentos()->count() == 0;
-
-    $estatusOrdenFinal = $statusOrdenCompra;
-    $estatusSolicitudFinal = $statusSolicitud;
-
-    // 
-    // COMPRAS A CRÉDITO
-    // 
-    if($orden->modo_pago == 2){
-        // Crédito pendiente de pago
-        if($orden->pagado != 1){
-            if($faltanFacturas){
-                $estatusOrdenFinal =EstatusOrdenCompra::FACTURADO;
-                $estatusSolicitudFinal =EstatusSolicitud::FACTURADO;
-            }else{
-                $estatusOrdenFinal =EstatusOrdenCompra::SOLICITADO_PAGO;
-                $estatusSolicitudFinal =EstatusSolicitud::SOLICITADO_PAGO;
-            }
-        }
-        else{
-            // Ya pagado
-            if($esEntregaCompleta){
-                $estatusOrdenFinal =EstatusOrdenCompra::FINALIZADA;
-                $estatusSolicitudFinal =EstatusSolicitud::FINALIZADA;
-            }else{
-                $estatusOrdenFinal = $statusOrdenCompra;
-                $estatusSolicitudFinal = $statusSolicitud;
-            }
-        }
-    }
-
-    // COMPRAS DE CONTADO
-    else{
-        if($orden->pagado != 1){
-            if($faltanFacturas){
-                $estatusOrdenFinal =EstatusOrdenCompra::FACTURADO;
-                $estatusSolicitudFinal =EstatusSolicitud::FACTURADO;
-            }else{
-                $estatusOrdenFinal =EstatusOrdenCompra::SOLICITADO_PAGO;
-                $estatusSolicitudFinal =EstatusSolicitud::SOLICITADO_PAGO;
-            }
-        }
-        else{
-            if($esEntregaCompleta){
-                if($faltanFacturas){
-                    $estatusOrdenFinal =EstatusOrdenCompra::FACTURADO;
-                    $estatusSolicitudFinal =EstatusSolicitud::FACTURADO;
-                }else{
-                    $estatusOrdenFinal = EstatusOrdenCompra::FINALIZADA;
-                    $estatusSolicitudFinal = EstatusSolicitud::FINALIZADA;
-                }
-            }else{
-                $estatusOrdenFinal = $statusOrdenCompra;
-                $estatusSolicitudFinal = $statusSolicitud;
-            }
-        }
-    }
-
-    $orden->estatus = $estatusOrdenFinal;
-    $orden->save();
-
-    $solicitud->estatus = $estatusSolicitudFinal;
-    $solicitud->save();
-}
 
     /**
      * Recupera un archivo relacionado con una orden de compra desde el servidor.
@@ -365,7 +217,7 @@ public function store(Request $request)
     }
 
     public function storeAcuse($ordenCompraId, $file, $validated){
-        $fechaSubida = now()->format('Y-m-d'); 
+        $fechaSubida = now()->format('Y-m-d');
         $nombreArchivo = "entrega_orden_{$ordenCompraId}_{$fechaSubida}." . $file->getClientOriginalExtension();
 
         $carpeta = 'acuses/' . $ordenCompraId;
@@ -395,7 +247,7 @@ public function store(Request $request)
             $itemAlmacen->save();
             if($itemAlmacen->existencia == $itemAlmacen->cantidad){
                 $this->updateStatusAlmacen($dato['id'], 1);
-            } 
+            }
         }
 
     }
@@ -405,7 +257,7 @@ public function store(Request $request)
         if($itemAlmacen){
             $existencia = $itemAlmacen->existencia + ($valorEntrante * $tipo);
         }else{
-            $existencia = ($valorEntrante * $tipo);   
+            $existencia = ($valorEntrante * $tipo);
         }
         return $existencia;
     }
@@ -454,18 +306,6 @@ public function store(Request $request)
 
                     }
                 }
-                 
-
-            //   $resguardo = $this->resguardoService->storeResguardo([
-            //     'id_usuario' => $activo['usuario_asignar'],
-            //     'id_empresa' =>  $intercompania,
-            //     'admin_rt' => 2395
-            //    ]);
-            //    $this->resguardoService->storeDetalle($hardware->id, [], $resguardo->id);
-                    //  ->asignarEquipo(
-                    //     $hardware->id,
-                    //   $activo['usuario_asignar']
-            // );
             }
         }
     }

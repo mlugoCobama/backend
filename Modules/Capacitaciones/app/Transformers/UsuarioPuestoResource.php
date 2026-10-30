@@ -23,17 +23,17 @@ class UsuarioPuestoResource extends JsonResource
             'puesto' => $this->puesto->nombre,
             'empresa' => $usuario['empresa'],
             'intercompania' => $usuario['intercompania'],
-            
+
 
         ];
     }
-    
+
     /**
      *  Recupera los datos del usuario para asignarlos a la consulta
      */
     private function getNombreUsuario($usuarioId)
     {
-        $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')');
+        $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$usuarioId]);
         if (count($usuario) > 0) {
             return [
                 'nombre_completo' => trim($usuario[0]->firstname . ' ' . $usuario[0]->realname),

@@ -7,25 +7,25 @@ namespace App\Enums;
  */
 class EstatusSolicitud
 {
-    public const ESP_AUT_PLANTA = 1;
+    public const ESP_AUT_PLANTA = 1;        //En espera de autorización
 
-    public const SOLICITADO = 2;
-    public const EN_COTIZACION = 3;
+    public const SOLICITADO = 2;            //Solicitado
+    public const EN_COTIZACION = 3;         //Solicitado
 
-    public const CANCELADA = 4;
-    public const EN_ORDEN_COMPRA = 5;
-    
-    public const AUTORIZADA = 6;
+    public const CANCELADA = 4;             //En cotización
+    public const EN_ORDEN_COMPRA = 5;       //Orden de compra
+
+    public const AUTORIZADA = 6;            //Autorizado
     //No mover ningún estado hasta aquí
-    public const AUTORIZADO_A_PAGO = 7;
-    public const EN_SURTIDO = 8;
-    public const ENTREGADA = 9;
-    public const FACTURADO = 10;
-    public const SOLICITADO_PAGO = 11;
-    public const PAGADA = 12;
+    public const AUTORIZADO_A_PAGO = 7;     //Autorizado a pago
+    public const EN_SURTIDO = 8;            //En surtido
+    public const ENTREGADA = 9;             //Entregada Parcialmente
+    public const FACTURADO = 10;            //Por facturar
+    public const SOLICITADO_PAGO = 11;      //Pago Solicitado
+    public const PAGADA = 12;               //Pagada
 
-    public const CARGA_COMPLEMENTO = 13;
-    public const FINALIZADA = 14;
+    public const CARGA_COMPLEMENTO = 13;    //Cargar complemento
+    public const FINALIZADA = 14;           //Finalizada
 
 
     /**
@@ -75,7 +75,7 @@ class EstatusSolicitud
             self::CARGA_COMPLEMENTO => 'badge-soft-indigo',
             self::FINALIZADA => 'bg-teal',
 
-            
+
 
 
         ];

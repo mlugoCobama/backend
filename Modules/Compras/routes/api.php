@@ -62,7 +62,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::resource('Tags', TagController::class);
     Route::resource('Compras', ComprasController::class);
 
-
+    Route::get( '/almacen/analisis-historial',[AlmacenComprasConrollerController::class, 'pruebaHomologador']);
     Route::get('/Solicitudes/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
     Route::post('/enviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'enviarSolicitudCotizacion'])->name('SolicitudesCompra.enviarSolicitudCotizacion');
     Route::post('/reenviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'reenviarCorreo'])->name('SolicitudesCompra.reenviarCorreo');
@@ -182,7 +182,7 @@ Route::prefix('compras')->group(function(){
     Route::get('/reportes/workflow/concentrado/{tipo}', [ReportesComprasController::class, 'getReporteEstatus']);
 
     Route::post('/asignar-permisos-kanban', [UsuariosController::class, 'asignar']);
-    
+
 
     Route::get('proveedores/export-excel',[ProveedoresController::class, 'exportExcel']);
 });

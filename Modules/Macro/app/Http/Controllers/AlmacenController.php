@@ -17,7 +17,7 @@ use Modules\Macro\Transformers\DetalleAlmacenResource;
 class AlmacenController extends Controller
 {
     /**
-     * Recupera un listado general del almacén (virtual) de macrotaller 
+     * Recupera un listado general del almacén (virtual) de macrotaller
      */
     public function index()
     {
@@ -152,7 +152,7 @@ class AlmacenController extends Controller
     public function getCompra($intercompania)
     {
         // $tipo_dato
-        $datos = (DB::connection('dashboard')->select('call SistemaTickets.SP_GetComprasMacroRecibidas(' . $intercompania . ')'));
+        $datos = (DB::connection('dashboard')->select('call SistemaTickets.SP_GetComprasMacroRecibidas(?)', [$intercompania]));
 
         return response()->json([
             'status' => 'success',
@@ -167,7 +167,7 @@ class AlmacenController extends Controller
      */
     public function getComprasMacroAlmacenadas($intercompania)
     {
-        $datos = (DB::connection('dashboard')->select('call SistemaTickets.SP_GetComprasMacroAlmacenadas(' . $intercompania . ')'));
+        $datos = (DB::connection('dashboard')->select('call SistemaTickets.SP_GetComprasMacroAlmacenadas(?)', [$intercompania]));
 
         return response()->json([
             'status' => 'success',
@@ -184,9 +184,9 @@ class AlmacenController extends Controller
     public function showDetallesOrdenTrabajo($tipo, $idSolicitud)
     {
         if ($tipo == "nro_economico") {
-            $datos =  DetalleAlmacenResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetExistenciaAutotanque(' . $idSolicitud . ')'));
+            $datos =  DetalleAlmacenResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetExistenciaAutotanque(?)', [$idSolicitud]));
         } else {
-            $datos =  DetalleAlmacenResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetExistenciaSolicitudCompra(' . $idSolicitud . ')'));
+            $datos =  DetalleAlmacenResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetExistenciaSolicitudCompra(?)', [$idSolicitud]));
         }
 
         return response()->json([
@@ -198,7 +198,7 @@ class AlmacenController extends Controller
 
     /**
      * Almacena los detalles en el almacén
-     * @param $data almacena los detalles en almacén 
+     * @param $data almacena los detalles en almacén
      */
     public function storeDetalleAlmacen($data)
     {
@@ -257,8 +257,8 @@ class AlmacenController extends Controller
 
     /**
      * Actualiza la existencia de los datos detalles de almacén
-     * @param int $idAlmacen id de detalle de almacen 
-     * @param $existencia 
+     * @param int $idAlmacen id de detalle de almacen
+     * @param $existencia
      * @param $cantSalida id de detalle de solicitud
      * @param $id_ds id de detalle de solicitud
      */

@@ -20,7 +20,7 @@ class SolicitudesMacroResource extends JsonResource
      * Transform the resource into an array.
      */
     public function toArray(Request $request): array
-    
+
     {
         $usuarioSolicita =  $this->getNombreUsuario($this->usuario_solicita);
         $estadoInfo = $this->asignarEstado($this->estatus, $this->auto_admin, $this->auto_gg, $this->auto_macro);
@@ -87,7 +87,7 @@ class SolicitudesMacroResource extends JsonResource
             return self::$usuariosCache[$usuarioId];
         }
 
-        $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')');
+        $usuario = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$usuarioId]);
 
         if (count($usuario) > 0) {
             $resultado = [

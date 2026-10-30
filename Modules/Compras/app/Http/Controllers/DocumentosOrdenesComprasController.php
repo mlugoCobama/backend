@@ -43,7 +43,7 @@ class DocumentosOrdenesComprasController extends Controller
         protected OrdenCompraService $ordenCompraService
         ) {}
 
-    /** 
+    /**
      * Almacena los archivos de orden compra
      */
     public function store(UploadDocsOCRequest $request)
@@ -71,7 +71,6 @@ class DocumentosOrdenesComprasController extends Controller
 
             $orden = OrdenCompra::find($data["orden_compra_id"]);
             if($orden){
-                $mPago = $orden->modo_pago;
                 if($data->hasFile('comprobante_pago')){
                     $this->eventosComprobantePago($orden->id, $orden, $docsOrdenCompra->comprobante_pago);
                 }
@@ -114,7 +113,7 @@ class DocumentosOrdenesComprasController extends Controller
 
         // return $carpetaOrdenCompra;
     }
-    /** 
+    /**
      * Recupera los documentos de orden de compra
      * en base al id de orden de compra
      */
@@ -130,7 +129,7 @@ class DocumentosOrdenesComprasController extends Controller
     }
 
 
-    /** 
+    /**
      * Guarda los documentos de orden de compra
      * Facturas XML, Facturas PDF, Comprobantes de pago
      */
@@ -174,7 +173,7 @@ class DocumentosOrdenesComprasController extends Controller
                 if($data->hasFile('factura_xml')){
                     $this->eventosFacturaXml($orden->id, $orden);
                     $factura = $this->cfdiService->parsear($request->file('factura_xml'));
-                    
+
                     $docsOrdenCompra->serie = $factura['serie'] ?? null;
                     $docsOrdenCompra->folio = $factura['folio'] ?? null;
                     $docsOrdenCompra->subtotal = $factura['subtotal'] ?? null;
@@ -183,13 +182,13 @@ class DocumentosOrdenesComprasController extends Controller
                     $docsOrdenCompra->save();
                     $conceptosFacturaCargada = $this->cfdiService->extraerConceptosUploadFile($request->file('factura_xml'));
                     $conceptosFacturados = $this->cfdiService->isEntregaTotal($orden->cotizacion->solicitudes_compra_id, $conceptosFacturaCargada) ?? false;
-                    
+
                     $facturadoTotal = $this->validarFacturadoTotalCompra($data['total_compra'], $factura['total'], $data['suma_facturas']);
                     if(!$facturadoTotal){
                          $orden->pagado = 2;
                          $orden->save();
                     }
-                    
+
                 }
             }
 
@@ -275,7 +274,7 @@ class DocumentosOrdenesComprasController extends Controller
         $rutas = DocumentosOrdenesCompra::where('orden_compra_id', $id)->get(['id', 'fecha', 'ruta_xml_factura as xml', 'ruta_pdf_factura as representacion_impresa']);
         $rutaIds = $rutas->pluck('id')->toArray();
         $docsFactura = DocumentosFactura::whereIn('com_documentos_ordenes_compra_id', $rutaIds)->get(['id', 'fecha', 'tipo_documento', 'xml', 'representacion_impresa']);
-        
+
         $docs = $rutas->concat($docsFactura);
 
 
@@ -416,8 +415,8 @@ class DocumentosOrdenesComprasController extends Controller
                             'metodoPagoDesc' => $jsonMP[(string) $comprobante['MetodoPago']]['descripcion'] ?? null,
                             ];
                         }
-                        
-                        
+
+
                     }
 
                     // Datos de complementos de pagos
@@ -511,17 +510,17 @@ class DocumentosOrdenesComprasController extends Controller
                         'representacion_impresa' => $ruta['representacion_impresa'] ?? null,
                     ];
                 }
-                
+
             }
         }
         return $factura;
     }
 
     /**
-    * Descarga un archivo directamente del servidor 
+    * Descarga un archivo directamente del servidor
     * @param string $folder -> nombre del folder del tipo de documento en el storage ej: docsOrdenCompra
-    * @param int $id -> id con el que se nombra la subcarpeta ej:  id_orden_compra: 2 
-    * @param int $file -> archivo junto con su extension: factura_xml9820251754754870.xml 
+    * @param int $id -> id con el que se nombra la subcarpeta ej:  id_orden_compra: 2
+    * @param int $file -> archivo junto con su extension: factura_xml9820251754754870.xml
     */
     public function downloadXML($folder, $id, $file)
     {
@@ -546,9 +545,9 @@ class DocumentosOrdenesComprasController extends Controller
     /**
      * Sube y guarda documentos relacionados con una factura.
      *
-     * @param Request $request -> debe contener:  
+     * @param Request $request -> debe contener:
      *  'orden_compra_id': int, 'tipo_documento': string, 'archivo_xml': file, 'archivo': file, 'idFactura': int
-     * @return response json 
+     * @return response json
      */
     public function subirDocumento(SubirDocumentoRequest $request)
     {
@@ -562,7 +561,7 @@ class DocumentosOrdenesComprasController extends Controller
         $docsFactura = new DocumentosFactura();
         $docsFactura->tipo_documento = $data['tipo_documento'];
 
-        
+
         foreach (['archivo_xml' => 'xml', 'archivo' => 'representacion_impresa'] as $campo => $columna) {
             if ($request->hasFile($campo)) {
                 $ext            = $request->file($campo)->getClientOriginalExtension();
@@ -575,7 +574,7 @@ class DocumentosOrdenesComprasController extends Controller
         $docsFactura->fecha = date('Y-m-d H:i:s') ?? now();
         $docsFactura->save();
 
-        //Si se sube un complemento de pago 
+        //Si se sube un complemento de pago
         if($data['tipo_documento'] ==  'complemento_pago'){
             //Mover a estatus carga complemento
              $this->actStatusOrdenSolicitud($data['orden_compra_id'], EstatusOrdenCompra::CARGA_COMPLEMENTO, EstatusSolicitud::CARGA_COMPLEMENTO);
@@ -584,7 +583,7 @@ class DocumentosOrdenesComprasController extends Controller
         // Si se sube un comprobante de pago
          if($data['tipo_documento'] ==  'comprobante_pago'){
              $orden = OrdenCompra::find($data["orden_compra_id"]);
-             
+
              $this->eventosComprobantePago($data["orden_compra_id"], $orden, $docsFactura->representacion_impresa);
          }
 
@@ -606,14 +605,14 @@ class DocumentosOrdenesComprasController extends Controller
             if($statusOrdenCompra === EstatusOrdenCompra::PAGADA){
                 $orden->pagado = 1;
             }
-            $orden->save(); 
+            $orden->save();
         }
         $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
 
         $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
         if ($solicitud) {
             $solicitud->estatus = $estatusSolicitud;
-            $solicitud->save(); 
+            $solicitud->save();
             $labels = EstatusSolicitud::labels();
             $label = $labels[$estatusSolicitud] ?? 'DESCONOCIDO';
             NotificationHelper::sendNotificationEstatusChange($solicitud->id, $label);
@@ -623,7 +622,7 @@ class DocumentosOrdenesComprasController extends Controller
 
 
     public function enviarCorreoPago($ordenCompra, $rutaPago)
-    {       
+    {
         $cotizacion = Cotizaciones::find($ordenCompra->cotizaciones_id);
         if (!$cotizacion) {
             throw new \Exception('No se encontró la cotización asociada');
@@ -658,7 +657,7 @@ class DocumentosOrdenesComprasController extends Controller
                 $correoProveedor = $contacto->correo;
             }
         }
-        
+
         $pdfContenido = $this->ordenCompraService->getDataOrdenCompra($cotizacion->solicitudes_compra_id);
         Mail::to($correoProveedor)->send(new PagoOrdenCompra($datos, $rutaPago, $pdfContenido['archivoPDF']));
     }
@@ -667,46 +666,40 @@ class DocumentosOrdenesComprasController extends Controller
         // Flujo compra contado
         if($orden->modo_pago == $this->mContado){
             // Si se sube un comprobante de pago se marca como pagada
-            $this->actStatusOrdenSolicitud($idOrdenCompra , EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+            $this->ordenCompraService->actStatusOrdenSolicitud($idOrdenCompra , EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
             // Una vez pagada se marca como en surtido
-            $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
+            $this->ordenCompraService->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
             // Se notifica el pago a proveedor
-            $this->enviarCorreoPago($orden, $rutaCompPago); 
+            $this->enviarCorreoPago($orden, $rutaCompPago);
 
         // Flujo Credito
         }else{
+            // $esEntregaCompleta = $this->ordenCompraService->esEntregaCompleta($idOrdenCompra) ?? false;
             // Si se sube un comprobante de pago se marca como pagada
-            $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
+            $this->ordenCompraService->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::PAGADA, EstatusSolicitud::PAGADA);
             // Una vez pagada se solicita la carga del complemento de pago
-            $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::CARGA_COMPLEMENTO ,EstatusSolicitud::CARGA_COMPLEMENTO);
+            $this->ordenCompraService->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::CARGA_COMPLEMENTO ,EstatusSolicitud::CARGA_COMPLEMENTO);
             // Se notifica el pago a proveedor
-            $this->enviarCorreoPago($orden, $rutaCompPago);  
+            $this->enviarCorreoPago($orden, $rutaCompPago);
         }
-          
+
     }
 
     private function eventosFacturaXml($idOrdenCompra, $orden){
-        //Flujo Orden Contado
-        if($orden->modo_pago == $this->mContado){
-            //Si no se ha pagado
-            if($orden->pagado != 1){
-                // Solicitar El Pago de la factura
-                $this->actStatusOrdenSolicitud($idOrdenCompra,EstatusOrdenCompra::SOLICITADO_PAGO, EstatusSolicitud::SOLICITADO_PAGO);
-            }else{
-                // Si ya se pago y se sube una factura se marca como finalizada
-                $this->actStatusOrdenSolicitud($idOrdenCompra,EstatusOrdenCompra::FINALIZADA, EstatusSolicitud::FINALIZADA);
-            }
-        //Flujo Facturas Crédito
-        }else{
-            //Si se sube una factura solicitar el pago
-            $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::SOLICITADO_PAGO, EstatusSolicitud::SOLICITADO_PAGO);
-            // $this->actStatusOrdenSolicitud($idOrdenCompra, EstatusOrdenCompra::FACTURADO, EstatusSolicitud::FACTURADO);
-        }
+        // Obtenemos si la orden ya cuenta con entrega completa (ajusta el nombre del campo o método según tu BD)
+        $esEntregaCompleta = $this->ordenCompraService->esEntregaCompleta($idOrdenCompra) ?? false;
+
+        // Reevaluamos el estatus centralizado para que verifique si ya se cumplen:
+        // Contado: Pagada + Entregada + Facturada -> Pasa a FINALIZADA
+        // Crédito: Entregada + Facturada -> Pasa a AUTORIZADO_A_PAGO
+        $this->ordenCompraService->actStatusOrdenSolicitud(
+            $idOrdenCompra,
+            $orden->estatus,
+            $orden->cotizacion->solicitud->estatus ?? 0,
+            $esEntregaCompleta
+        );
     }
 
-    private function eventosComplementoDePago(){
-
-    }
 
     public function queryComprobantes($idOrdenCompra){
         $rutasQuery = DB::table('com_documentos_ordenes_compra')
@@ -739,7 +732,7 @@ class DocumentosOrdenesComprasController extends Controller
 
     private function validarFacturadoTotalCompra( $totalCompra, $totalFacturaEntrante, $totalAcumuladoFacturas = 0){
         $totalFacturado = $totalAcumuladoFacturas + $totalFacturaEntrante;
-        return round($totalCompra) == round($totalFacturado);
+        return round($totalFacturado) >= round($totalCompra);
     }
 
 

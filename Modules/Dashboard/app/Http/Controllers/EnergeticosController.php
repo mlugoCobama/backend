@@ -21,8 +21,8 @@ class EnergeticosController extends Controller
     private $monthYear;
 
     private $meses = array(
-            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril', 
-            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto', 
+            1 => 'enero', 2 => 'febrero', 3 => 'marzo', 4 => 'abril',
+            5 => 'mayo', 6 => 'junio', 7 => 'julio', 8 => 'agosto',
             9 => 'septiembre', 10 => 'octubre', 11 => 'noviembre', 12 => 'diciembre'
         );
     public function __construct(GetMonthYearController $monthYear)
@@ -40,7 +40,7 @@ class EnergeticosController extends Controller
     // $anio = '2025';
     //$anioAnt = $this->monthYear->getYearPrev();
     public function index(string $sub_division, $mes, $anio, string $titular)
-    {   
+    {
         /**
          * Cuando el mes es diciembre (12 + 1)
          * Simulamos enero del año siguiente
@@ -60,7 +60,7 @@ class EnergeticosController extends Controller
          */
         do {
             $fechaMes = new DateTime("$anio-$mes-01");
-            $fechaMes->modify('-1 month'); 
+            $fechaMes->modify('-1 month');
             $mes = $fechaMes->format('m');
             $anio = $fechaMes->format('Y');
 
@@ -73,7 +73,7 @@ class EnergeticosController extends Controller
             $anioA = $fechaMesA->format('Y');
 
             $dataMes =  GaseraMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGaseras(' . $mes . ',' . $anio . ',' . '\'' . $titular . '\'' . ')'));
-            
+
 
             $intento++;
 
@@ -96,9 +96,9 @@ class EnergeticosController extends Controller
                     'data' => $data,
                 ]);
             }
-        } while (count($dataMes) <= 1 && $intento < $maxIntentos); 
+        } while (count($dataMes) <= 1 && $intento < $maxIntentos);
 
-        
+
         return response()->json([
             'success' => false,
             'message' => 'No se tiene información capturada en ningún mes.',
@@ -123,21 +123,21 @@ class EnergeticosController extends Controller
             ];
 
         return $data;
-        
+
     }
 
     public function getAnualEstacionEnergeticos($idEstacion, $anio){
-        
+
         $anioAnt = $anio - 1;
 
-        $totalAnioEstacion = DataAnualEnergeticoResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos($idEstacion ,$anio)"));
-        
-        $totalAnioAntEstacion = DataAnualEnergeticoResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos($idEstacion ,$anioAnt)"));
+        $totalAnioEstacion = DataAnualEnergeticoResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos(?,?)", [$idEstacion ,$anio]));
+
+        $totalAnioAntEstacion = DataAnualEnergeticoResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos(?,?)", [$idEstacion ,$anioAnt]));
 
         $anioAnt2 = $anio - 2;
 
-        $totalAnioAntEstacion2 = DataAnualEnergeticoResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos($idEstacion ,$anioAnt2)"));
-        
+        $totalAnioAntEstacion2 = DataAnualEnergeticoResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualEnergeticos(?,?)", [$idEstacion ,$anioAnt2]));
+
         $data = [
             'totalAnio' => $totalAnioEstacion,
             'totalAnioAnt' => $totalAnioAntEstacion,
@@ -165,7 +165,7 @@ class EnergeticosController extends Controller
      */
     public function store(Request $request)
     {
-        $datos = $request->all(); 
+        $datos = $request->all();
             $datos = $request->all();
 
             DB::connection('dashboard1')->beginTransaction();
@@ -188,7 +188,7 @@ class EnergeticosController extends Controller
                                 'uno' => (float) str_replace(",", "", $dato['UNO'] ?? 0),
                             ]);
                         /**
-                         * Si no contiene "isNew" actualiza el registro 
+                         * Si no contiene "isNew" actualiza el registro
                          * Usando como clave el id de sucursal y la fecha del periodo
                          */
                     } else {
@@ -224,7 +224,7 @@ class EnergeticosController extends Controller
                     'error' => $e->getMessage()
 
                 ]);
-            }       
+            }
     }
 
     /**

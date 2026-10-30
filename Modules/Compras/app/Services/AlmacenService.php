@@ -3,6 +3,7 @@
 namespace Modules\Compras\Services;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Modules\Compras\Models\AlmacenCompras;
 use Modules\Compras\Models\EntregaTecnicos;
 use Modules\Compras\Models\MovimientosAlmacen;
@@ -70,16 +71,19 @@ class AlmacenService
     {
         $itemAlmacen = AlmacenCompras::where('id', $idAlmacen)->first();
         if ($itemAlmacen) {
-            $existencia = $itemAlmacen->existencia + ($valorEntrante * $tipo); 
+            $existencia = $itemAlmacen->existencia + ($valorEntrante * $tipo);
         } else {
             $existencia = ($valorEntrante * $tipo);
         }
-        $itemAlmacen->existencia = $existencia; 
-        $itemAlmacen->fecha_actualizacion = Carbon::now()->format('Y-m-d'); 
-        $itemAlmacen->save(); 
+        $itemAlmacen->existencia = $existencia;
+        $itemAlmacen->fecha_actualizacion = Carbon::now()->format('Y-m-d');
+        $itemAlmacen->save();
 
         return $itemAlmacen;
     }
 
+    public  function getEntradasPendientes($tipo){
+        return DB::connection('dashboard')->select('CALL SP_Entradas_Pendientes(?)', [$tipo]);
+    }
 
 }

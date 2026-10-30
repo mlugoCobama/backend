@@ -123,7 +123,7 @@ class SolicitudesMacroController extends Controller
 
             $solicitud = $this->storeSolicitudCompra($data);
             // $this->storeDetalleSolicitudCompra($data['detalles'], $idSolicitud, $files);
-            $this->storeDetalleSolicitudCompra($data['detalles'], $solicitud['id'], $files, (int)$solicitud['destino'] );
+            $this->storeDetalleSolicitudCompra($data['detalles'],$solicitud['id'], $files, $solicitud['destino'] );
 
 
             $this->storeOrdenTrabajo($solicitud['id'], $data, $files["file_orden"] );
@@ -165,9 +165,9 @@ class SolicitudesMacroController extends Controller
         // $data = SolicitudesMacroResource::collection(DB::select("call SistemaTickets.SP_GetSolicitudMacro($id)"));
         $solicitudCompra = SolicitudesCompra::findOrFail($id);
         if($solicitudCompra->tipo == 2){
-            $user = UsersResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetDataAutotanque('.$solicitudCompra->usuario_destino.')'));
+            $user = UsersResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetDataAutotanque(?)', [$solicitudCompra->usuario_destino]));
         }else{
-            $user = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')'));
+            $user = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$solicitudCompra->usuario_destino]));
         }
 
         $data =  [

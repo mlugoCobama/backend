@@ -29,7 +29,7 @@ class MovimientoAlmacenResource extends JsonResource
             "id_almacen" => $this->id_almacen,
             "usuario_entrega" => $usuario_entrega['nombre_completo'],
             "usuario_recibe" => $usuario_recibe['nombre_completo'],
-        
+
         ];
     }
 
@@ -44,8 +44,8 @@ class MovimientoAlmacenResource extends JsonResource
             return self::$usuariosCache[$cacheKey];
         }
 
-        $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')'));
-        
+        $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$usuarioId]));
+
         if (count($usuario) > 0) {
             $nombreCompleto = trim($usuario[0]->firstname . ' ' . $usuario[0]->realname);
             $resultado = [

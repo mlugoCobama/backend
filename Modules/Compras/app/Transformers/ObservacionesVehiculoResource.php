@@ -23,7 +23,7 @@ class ObservacionesVehiculoResource extends JsonResource
     private function getNombreUsuario($usuarioId)
     {
         if (!empty($usuarioId)) {
-            $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' .  $usuarioId . ')'));
+            $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$usuarioId]));
             $nombreCompleto = trim($usuario[0]->firstname . ' ' . $usuario[0]->realname);
 
             if (count($usuario) > 0) {

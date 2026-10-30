@@ -96,7 +96,7 @@ class BalanzasController extends Controller
                     }
                 }
 
-                DB::select('call SP_ingresos_gastos('.$mes.', '.$anio.', '.$empresa.');');
+                DB::select('call SP_ingresos_gastos(?,?,?)', [$mes, $anio, $empresa]);
             } else {
                 $response = false;
                 $message = "Ya existe información captura de ese periodo";

@@ -3,11 +3,13 @@
 namespace Modules\Compras\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Modules\Compras\Services\AlmacenService;
+use Modules\Compras\Services\HomologadorService;
 use Modules\Compras\Transformers\AlmacenComprasResource;
 use Modules\Compras\Transformers\MovimientoAlmacenResource;
 use Modules\Macro\Models\Almacen;
@@ -26,7 +28,7 @@ class AlmacenComprasConrollerController extends Controller
      * Rcupera los detalles de las compras de ti
      */
     public function index()
-    {   
+    {
         $query = DB::table('com_almacen as ca')
         ->join('com_detalle_solicitud as cds', 'ca.com_detalle_solicitud_id', '=', 'cds.id')
         ->join('com_cat_unidades_medida as ccum', 'ccum.id', '=', 'cds.cat_unidades_medida_id')
@@ -52,7 +54,7 @@ class AlmacenComprasConrollerController extends Controller
             'cds.observaciones',
             'ccum.nombre as unidad',
             'cds.estatus_almacen'
-            
+
         ])
         ->get();
 
@@ -72,7 +74,7 @@ class AlmacenComprasConrollerController extends Controller
 
     public function store(Request $request)
     {
-        
+
         $data = $request->all();
         $tecnicoAsignado = $data['tecnico'];
 
@@ -97,7 +99,7 @@ class AlmacenComprasConrollerController extends Controller
             'status' => 'error',
         ], 500);
     }
-    
+
         return response()->json([
             'data' => $data,
             'message' => 'Movimientos generados correctamente',
@@ -107,7 +109,12 @@ class AlmacenComprasConrollerController extends Controller
 
     public function show($id)
     {
-        return view('compras::show');
+        $data =  $this->almacenService->getEntradasPendientes($id);
+        return response()->json([
+            'status' => 'success',
+            'data' => $data,
+            'message' => 'Entradas pendientes recuperadas correctamente'
+        ]);
     }
 
 
@@ -212,6 +219,23 @@ class AlmacenComprasConrollerController extends Controller
 
         $nuevoNro = $prefijo . str_pad($numero, 5, '0', STR_PAD_LEFT);
         return $nuevoNro;
+    }
+
+    public function pruebaHomologador(
+        Request $request,
+        HomologadorService $service
+    ) {
+        $datos = $request->validate([
+            'limite' => 'sometimes|integer|min:1|max:20000',
+            'umbral' => 'sometimes|numeric|min:0.50|max:1',
+        ]);
+
+        return response()->json(
+            $service->analizar(
+                (int) ($datos['limite'] ?? 20000),
+                (float) ($datos['umbral'] ?? 0.70),
+            )
+        );
     }
 
 }

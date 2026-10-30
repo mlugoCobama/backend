@@ -2,6 +2,9 @@
 
 namespace Modules\Compras\Services;
 
+use App\Enums\EstatusOrdenCompra;
+use App\Enums\EstatusSolicitud;
+use App\Helpers\NotificationHelper;
 use App\Mail\SolicitudSurtido;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -83,12 +86,12 @@ class OrdenCompraService{
     public function getDataOrdenCompra( $idSolicitudCompra ){
         $solicitudCompra = SolicitudesCompra::where('id', $idSolicitudCompra)->first();
         if($solicitudCompra->tipo == 2){
-            $user = UsersResource::collection(DB::connection('dashboard')->select("call SP_GetDataAutotanque($solicitudCompra->usuario_destino, $solicitudCompra->empresa )"));
+            $user = UsersResource::collection(DB::connection('dashboard')->select("call SP_GetDataAutotanque(?,?)", [$solicitudCompra->usuario_destino, $solicitudCompra->empresa ]));
         }else{
-            $user = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_destino . ')'));
+            $user = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$solicitudCompra->usuario_destino]));
         }
 
-        $userSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $solicitudCompra->usuario_solicita . ')');
+        $userSolicita = DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$solicitudCompra->usuario_solicita]);
 
         $cotizacion = Cotizaciones::where('solicitudes_compra_id', $idSolicitudCompra)->first();
 
@@ -149,7 +152,7 @@ class OrdenCompraService{
         $detallesSC = DetalleSolicitudCompraResource::collection((DetalleSolicitud::with('DetalleAutotanque.DatosVehiculo')->confirmadas()->where('solicitudes_compra_id', $cotizacion->solicitudes_compra_id)->get()));
         $solicitudCompra = SolicitudesCompra::where('id',$cotizacion->solicitudes_compra_id )->first();
         $unidadDestino = $solicitudCompra->tipo == 2 ? DatosVehiculo::find($solicitudCompra->usuario_destino) : null;
-        
+
         if($detallesSC->isEmpty()){
             throw new \Exception('No se encontraron detalles');
         }
@@ -163,7 +166,7 @@ class OrdenCompraService{
                 'detalles' => $detallesSC,
                 'unidadDestino' => $unidadDestino
             ];
-        
+
         $correoProveedor = $datos['proveedor']['datos_proveedor']['correo'];
         if(!empty($proveedorSeleccionado->contacto_id)){
             $contacto = ProveedorContacto::find($proveedorSeleccionado->contacto_id);
@@ -171,7 +174,7 @@ class OrdenCompraService{
                 $correoProveedor = $contacto->correo;
             }
         }
-        
+
 
         // Notification::route('mail', $datos['proveedor']['datos_proveedor']['correo'])
         //                     ->notify(new SolicitudSurtido($datos));
@@ -201,6 +204,125 @@ class OrdenCompraService{
         return round($totalConIva, 4); // devolver con 4 decimales
     }
 
-    
+
+
+
+    public function actStatusOrdenSolicitud(int $idOrdenCompra, int $statusOrdenCompra, int $statusSolicitud, bool $esEntregaCompleta = false)
+    {
+        $orden = OrdenCompra::with(['documentos', 'cotizacion'])->find($idOrdenCompra);
+
+        if (!$orden || !$orden->cotizacion) {
+            return;
+        }
+
+        $solicitud = SolicitudesCompra::find($orden->cotizacion->solicitudes_compra_id);
+
+        if (!$solicitud) {
+            return;
+        }
+
+        // Valida si faltan facturas (true si el conteo de XML es 0)
+        $faltanFacturas = $orden->documentos()
+            ->whereNotNull('ruta_xml_factura')
+            ->where('ruta_xml_factura', '!=', '')
+            ->count() == 0;
+
+        $estatusOrdenFinal = $statusOrdenCompra;
+        $estatusSolicitudFinal = $statusSolicitud;
+
+
+        if($statusOrdenCompra === EstatusOrdenCompra::PAGADA){
+            $estatusOrdenFinal = EstatusOrdenCompra::PAGADA;
+            $estatusSolicitudFinal = EstatusSolicitud::PAGADA;
+        }else{
+
+            //
+            // COMPRAS A CRÉDITO
+            // 1. COMPRAS DE CONTADO
+            // Regla: Se surte primero -> después se factura -> despues se paga -> port ultimo se carga complemento.
+            // No se puede autorizar a pago si no es una entrega completa o faltan facturas
+            // Si no es una entrega completa o faltan facturas se mantiene en surtido
+            // No se finaliza hasta que está pagada, entregada y facturada.
+            //
+            if ($orden->modo_pago == 2) {
+                if($esEntregaCompleta && !$faltanFacturas && $orden->pagado == 1){
+                    $estatusOrdenFinal = EstatusOrdenCompra::CARGA_COMPLEMENTO;
+                    $estatusSolicitudFinal = EstatusSolicitud::CARGA_COMPLEMENTO;
+
+                } elseif ($esEntregaCompleta && !$faltanFacturas) {
+                    $estatusOrdenFinal = EstatusOrdenCompra::AUTORIZADO_A_PAGO;
+                    $estatusSolicitudFinal = EstatusSolicitud::AUTORIZADO_A_PAGO;
+                } else {
+                    // Si falta algo, se mantiene en surtido o proceso pendiente
+                    $estatusOrdenFinal = EstatusOrdenCompra::EN_SURTIDO;
+                    $estatusSolicitudFinal = EstatusSolicitud::EN_SURTIDO;
+                }
+            }
+            //
+            // 2. COMPRAS DE CONTADO
+            // Regla: Se paga primero -> después se entrega -> por último se verifica factura.
+            // No se finaliza hasta que está pagada, entregada y facturada.
+            //
+            else {
+                if ($orden->pagado == 1 && $esEntregaCompleta && !$faltanFacturas) {
+                    $estatusOrdenFinal = EstatusOrdenCompra::FINALIZADA;
+                    $estatusSolicitudFinal = EstatusSolicitud::FINALIZADA;
+                } else {
+                    // Si aún no se paga, no se ha entregado o falta factura, se queda en surtido/proceso
+                    $estatusOrdenFinal = EstatusOrdenCompra::EN_SURTIDO;
+                    $estatusSolicitudFinal = EstatusSolicitud::EN_SURTIDO;
+                }
+            }
+
+
+        }
+
+        if ($statusOrdenCompra === EstatusOrdenCompra::EN_SURTIDO) {
+                $orden->surtido_solcitado = 1;
+        }
+
+        if ($statusOrdenCompra === EstatusOrdenCompra::PAGADA) {
+                $orden->pagado = 1;
+        }
+
+        // Guardar cambios en la Orden y la Solicitud
+        $orden->estatus = $estatusOrdenFinal;
+        $orden->save();
+
+        $solicitud->estatus = $estatusSolicitudFinal;
+        $solicitud->save();
+
+        $labels = EstatusSolicitud::labels();
+        $label = $labels[$estatusSolicitudFinal] ?? 'DESCONOCIDO';
+        NotificationHelper::sendNotificationEstatusChange($solicitud->id, $label);
+    }
+
+
+        public function esEntregaCompleta(int $ordenCompraId): bool
+        {
+            $orden = OrdenCompra::with('cotizacion')->find($ordenCompraId);
+
+            if (!$orden || !$orden->cotizacion) {
+                return false;
+            }
+
+            $solicitudId = $orden->cotizacion->solicitudes_compra_id;
+
+            $detalles = DetalleSolicitud::where('solicitudes_compra_id',$solicitudId)
+            ->with('almacenCompras')
+            ->confirmadas()
+            ->get();
+
+            if ($detalles->isEmpty()) {
+                return false;
+            }
+
+            return $detalles->every(function ($detalle) {
+                $existencia = optional( $detalle->almacenCompras)->existencia ?? 0;
+                return $existencia >= $detalle->cantidad;
+            });
+        }
+
+
 
 }

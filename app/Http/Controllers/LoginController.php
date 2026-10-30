@@ -87,7 +87,7 @@ class LoginController extends Controller
     }
 
     private function getUsuarioActivo($correo){
-        $data = DB::connection('intranet')->select("call SOPORTEZM.SP_GetUsuarioEmail('$correo')");
+        $data = DB::connection('intranet')->select("call SOPORTEZM.SP_GetUsuarioEmail(?)", [$correo]);
         return  UsersResource::collection($data);
     }
 

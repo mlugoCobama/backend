@@ -26,24 +26,18 @@ use Modules\Compras\Transformers\SeguimientoResource;
 //Utilities
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
+
 use App\Helpers\NotificationHelper;
 
 // Mailiables
-use App\Mail\SolicitudCotizacion;
-use App\Notifications\SolicitudCotizacionNotification;
 use Modules\Compras\Notifications\AutorizacionEmail;
-use Modules\Compras\Transformers\EmailAutorizarSolicitud;
+
 // Jobs
 use App\Jobs\EnviarCorreoSolicitudCotizacion;
-use App\Notifications\CambioEstatusSolicitudCompra;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 //Request validation
 use Modules\Compras\Http\Requests\StoreSolicitudCompraRequest;
 use Modules\Compras\Http\Requests\SendSolicitudCotizacionRequest;
-use Modules\Compras\Models\DatosVehiculo;
-use Modules\Compras\Models\ProveedorContacto;
 use Modules\Compras\Services\ComprasGeneralesService;
 use Modules\Compras\Services\CotizacionesService;
 use Normalizer;
@@ -600,7 +594,7 @@ class SolicitudesCompraController extends Controller
         if ($isRenault) {
             $intercompania = 7064;
         }
-        $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetGereneciaEmpresas(' . $intercompania . ')');
+        $data = DB::connection('intranet')->select('call SOPORTEZM.SP_GetGereneciaEmpresas(?)', [$intercompania]);
         $subCadena = 'gerencia';
         $autoNecesarias  = count($data);
         if ($autoNecesarias > 0) {

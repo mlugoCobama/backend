@@ -106,8 +106,8 @@ class AgenciasRenaultController extends Controller
         'Admin' => 'admin'
     ];
 
-    
-    
+
+
         private $relAgencias = [
             "Azcapotzalco" => 26,
             "Ecatepec" => 27,
@@ -126,16 +126,16 @@ class AgenciasRenaultController extends Controller
         $fmes = $date->format('m');
         $newPeriodo = "$fanio-$fmes-01";
         do{
-            $dataAnio = DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAgencias($anio, $sub_division)");
+            $dataAnio = DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAgencias(?,?)", [$anio, $sub_division]);
             (array)$arrDatos = $dataAnio;
 
             $arr_mesesDatos = array_map(function($registro) { return $registro->fecha; }, $arrDatos);
 
             $arr_mesesDatos1 = array_flip($arr_mesesDatos);
-            $periodoExiste = isset($arr_mesesDatos1[$newPeriodo]); 
+            $periodoExiste = isset($arr_mesesDatos1[$newPeriodo]);
 
             // $periodoExiste = in_array($newPeriodo, $arr_mesesDatos);
-            
+
             if($periodoExiste === false){
                 $anio = $anio - 1;
             }
@@ -158,10 +158,10 @@ class AgenciasRenaultController extends Controller
                     'message' => "No hay datos de este periodo en su lugar se muestran los de $nombreMes $anioRec",
                     'data' => $data
                 ]);
-                
+
         }else{
             $fecha = $periodoBuscado;
-            
+
             $data = $this->conjuntoDatos($fecha , $sub_division,  $dataAnio);
             $nombreMes = intval($mes) == 0 ? $this->meses[12] : $this->meses[intval($mes)];
             return response()->json(
@@ -184,13 +184,13 @@ class AgenciasRenaultController extends Controller
         $mesA = $fechaMesA->format('m');
         $anioA = $fechaMesA->format('Y');
 
-            $dataMes =  $this->getDataMesRenault($mes, $anio);  
+            $dataMes =  $this->getDataMesRenault($mes, $anio);
             $dataMesAnt =   $this->getDataMesRenault($mesA, $anioA);
             $dataAnioAnt =  $this->getDataMesRenault($mes, $anioAnt);
             $dataAnioAnt2 =  $this->getDataMesRenault($mes, ($anioAnt - 1));
             $totalAnio =  DataAnualAgenciasResource::collection($dataAnio);
             $totalAnioAnt = $this->getDataAnualAgencias($anioAnt, $sub_division);
-            $antInventarios = $this->getDataAntInventarios($mes, $anio, $sub_division);    
+            $antInventarios = $this->getDataAntInventarios($mes, $anio, $sub_division);
                 $data = [
                     'mes' => $dataMes,
                     'mesAnt' => $dataMesAnt,
@@ -200,31 +200,31 @@ class AgenciasRenaultController extends Controller
                     'totalAnioAnt2' => $dataAnioAnt2,
                     'antInventarios' => $antInventarios,
                     ];
-                        
+
         return $data;
 
     }
 
      private function getDataMesRenault(int $mes, int $anio)
      {
-         return NissanMesResource::collection(DB::select("call Dashboard.SP_GetDataMesRenault($mes, $anio)"));
+         return NissanMesResource::collection(DB::select("call Dashboard.SP_GetDataMesRenault(?, ?)", [$mes, $anio]));
      }
 
      private function getDataAnualAgencias(int $anio, string $subDivision)
      {
-         return DataAnualAgenciasResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAgencias($anio, $subDivision)"));
+         return DataAnualAgenciasResource::collection(DB::connection('dashboard')->select("call Dashboard.SP_GetDataAnualAgencias(?,?)", [$anio, $subDivision]));
      }
 
      private function getDataAntInventarios(int $mes, int $anio, string $subDivision)
      {
-         return DB::connection('dashboard')->select("call Dashboard.SP_GetDataAntSemestralInventarios($mes, $anio, $subDivision)");
+         return DB::connection('dashboard')->select("call Dashboard.SP_GetDataAntSemestralInventarios(?,?,?)", [$mes, $anio, $subDivision]);
      }
 
-    
+
     /**
      * Guarda los registros de la tabla captura Renault
      * ------------------------------------------------
-     * Tablas que afecta: 
+     * Tablas que afecta:
      * ordenes_unidades, ventas_post_venta, datos_generales
      * costos_financieros_prestamos, complementos, utilidad_area
      */
@@ -322,7 +322,7 @@ class AgenciasRenaultController extends Controller
 
        // Procesamiento del array a json
        $jsonData = $jsonData = $this->procesarArraytoJson($dataMesAgencias, $request, $fecha);
-        
+
         foreach ($jsonData as $agenciaId => $secciones) {
             foreach ($secciones as $seccion => $valores) {
                 $modelClass = match ($seccion) {
@@ -403,7 +403,7 @@ class AgenciasRenaultController extends Controller
 
      /**
       *  Estructura para devolver el array
-      */ 
+      */
     private $estructura = [
         "UNIDADES VENDIDAS" => [
             ['value' => "nuevos", 'colspan' => 1],
@@ -501,7 +501,7 @@ class AgenciasRenaultController extends Controller
         ],
 
     ];
-            //Relación campos devueltos por la bd y 
+            //Relación campos devueltos por la bd y
             //nombres visuales de los campos
     private $mapaCampos = [
         "nuevos" => "Nuevos",
@@ -554,7 +554,7 @@ class AgenciasRenaultController extends Controller
         "inventario_nuevos" => "Nuevos",
         "inventario_seminuevos" => "Refacciones",
         "inventario_refacciones" => "Seminuevos",
-        
+
         "inv_nuevo_101" => "Inv Nuevo 101",
         "inv_nuevo_201" => "Inv Nuevo 201",
         "inv_nuevo_301" => "Inv Nuevo 301",
@@ -572,13 +572,13 @@ class AgenciasRenaultController extends Controller
      */
     public function getDataGridAgencia($mes, $anio)
     {
-        $datos = DB::select('call Dashboard.SP_GetDataMesRenault(' . $mes . ',' . $anio . ')');
+        $datos = DB::select('call Dashboard.SP_GetDataMesRenault(?,?)', [$mes, $anio] );
         // Convierte $datos a un arreglo
         $datos = json_decode(json_encode($datos), true);
         $tamanioDatos = count($datos);
 
         if (count($datos) > 1) {
-            
+
             $resultado = [];
 
             foreach ($this->estructura as $seccion => $filas) {
@@ -588,7 +588,7 @@ class AgenciasRenaultController extends Controller
                     // $row = [$fila];
                     $row = [['value' => $nombreCampo, 'colspan' => 1]];
                     foreach ($datos as $dato) {
-                        //Se utiliza number_format para que cuando se trate de numero se separe por comas correctamente 
+                        //Se utiliza number_format para que cuando se trate de numero se separe por comas correctamente
 
                         $row[] = ['value' => number_format($dato[($fila['value'])] ?? '0'), 'colspan' => 1];
                     }

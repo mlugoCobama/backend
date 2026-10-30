@@ -36,7 +36,7 @@ class IngresosGastosController extends Controller
      */
     public function show(string $empresa_id, string $mes, string $anio)
     {
-        $balanza =  IngresosGastosResource::collection( DB::select('call SP_table_ingresos_gastos('.$mes.','.$anio.','.$empresa_id.')') );
+        $balanza =  IngresosGastosResource::collection( DB::select('call SP_table_ingresos_gastos(?,?,?)', [$mes, $anio, $empresa_id]) );
 
         if (count($balanza) > 0) {
             return response()->json([

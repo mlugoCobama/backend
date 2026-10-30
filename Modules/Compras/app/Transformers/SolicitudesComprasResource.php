@@ -76,7 +76,7 @@ class SolicitudesComprasResource extends JsonResource
             'total_facturas' => $this->total_facturas ?? 0,
             'vencido' => !Carbon::parse($this->fecha_entrega)->endOfDay()->isPast(),
         ];
-            
+
     }
 
     /**
@@ -91,11 +91,11 @@ class SolicitudesComprasResource extends JsonResource
         }
 
         if ($tipoSolicitud == 2) {
-            $usuario = UsersResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetDataAutotanque(' . $usuarioId . ',' . $empresa . ')'));
+            $usuario = UsersResource::collection(DB::connection('dashboard')->select('call SistemaTickets.SP_GetDataAutotanque(?,?)', [$usuarioId,$empresa]));
 
             $nombreCompleto = trim($usuario[0]->firstname . ' ' . $usuario[0]->realname . ' No. Serie:' . $usuario[0]->name);
         } else {
-            $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')'));
+            $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$usuarioId]));
 
             $nombreCompleto = trim($usuario[0]->firstname . ' ' . $usuario[0]->realname);
         }
@@ -140,7 +140,7 @@ class SolicitudesComprasResource extends JsonResource
             12 => ['estado' => 'PAGADO',                'claseEstado' => 'bg-success'],
             13 => ['estado' => 'CARGA COMPLEMENTO',     'claseEstado' => 'bg-secondary'],
             14 => ['estado' => 'FINALIZADO',            'claseEstado' => 'bg-dark'],
-            
+
         ];
 
         return $estados[$estatus] ?? ['estado' => 'DESCONOCIDO', 'claseEstado' => 'bg-secondary'];
@@ -197,7 +197,7 @@ class SolicitudesComprasResource extends JsonResource
     }
 
     private function setAgenciaName($intercompania){
-        $empresas = [710 => 'NISSAN UNIVERSIDAD', 7051 => 'NISSAN AZCAPOTZALCO', 
+        $empresas = [710 => 'NISSAN UNIVERSIDAD', 7051 => 'NISSAN AZCAPOTZALCO',
             712 => 'NISSAN CAMPESTRE', 700 => 'CORPORATIVO AUTOS SONI',
             240 => 'SERVIGAS DEL VALLE', 7064 => 'RENAULT AZCAPOTZALCO',
             7062 => 'RENAULT ECATEPEC', 7063 => 'RENAULT VALLEJO', 7061 => 'RENAULT PACHUCA',
@@ -222,5 +222,5 @@ class SolicitudesComprasResource extends JsonResource
 
 
 
-    
+
 }

@@ -7,34 +7,20 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Enums\EstatusOrdenCompra;
 use App\Enums\EstatusSolicitud;
-use App\Helpers\NotificationHelper;
 //Models
 use Modules\Compras\Models\OrdenCompra;
 use Modules\Compras\Models\DocumentosOrdenesCompra;
 use Modules\Compras\Models\SolicitudesCompra;
-use Modules\Compras\Models\CotizacionesProveedores;
-use Modules\Compras\Models\DetallesCotizacion;
-use Modules\Compras\Models\DetalleSolicitud;
-use Modules\Compras\Models\Proveedores;
 use Modules\Compras\Models\Cotizaciones;
 //Transformers
-use Modules\Compras\Transformers\DetallesCotizacionResource;
-use Modules\Compras\Transformers\DetalleSolicitudCompraResource;
 //Utilities
 use Illuminate\Support\Facades\DB;
 
-use Illuminate\Support\Facades\Notification;
 //Mailables
-// use App\Notifications\SolicitudSurtido;
-use App\Mail\SolicitudSurtido;
-use Illuminate\Support\Facades\Mail;
-use Modules\Compras\Models\DatosVehiculo;
-use Modules\Compras\Models\ProveedorContacto;
 use Modules\Compras\Services\CambioEstatusService;
 use Modules\Compras\Services\CotizacionesService;
 use Modules\Compras\Services\OrdenCompraService;
 use Modules\Compras\Transformers\OrdenCompraResource;
-use Modules\Compras\Transformers\UsersResource;
 
 class OrdenesComprasController extends Controller
 {
@@ -58,7 +44,7 @@ class OrdenesComprasController extends Controller
      ************************************************************/
     public function store(Request $request)
     {
-        
+
         try {
             DB::beginTransaction();
                 $data =  $request->all();
@@ -78,7 +64,7 @@ class OrdenesComprasController extends Controller
                     $this->ordenCompraService->storeOrden($data);
                     $this->cotizacionesService->cotizacionProveedorSeleccionada($data['id_cotizacion_prov']);
                 }
-            
+
                 $this->statusService->actStatusSolicitudToOrden($data['id_solicitud_compra'], $data);
 
             DB::commit();
@@ -256,11 +242,15 @@ class OrdenesComprasController extends Controller
             DB::beginTransaction();
 
             $orden = OrdenCompra::find($idOc);
-            $this->actStatusOrdenSolicitud( $orden->id, EstatusOrdenCompra::AUTORIZADA, EstatusSolicitud::AUTORIZADA);
+                //Actualizar la orden de a AUTORIZADO
+                $this->actStatusOrdenSolicitud( $orden->id, EstatusOrdenCompra::AUTORIZADA, EstatusSolicitud::AUTORIZADA);
 
+            // Si el modo de pago es de contado
             if($orden->modo_pago == 1){
-                $this->actStatusOrdenSolicitud( $orden->id, EstatusOrdenCompra::FACTURADO , EstatusSolicitud::FACTURADO);
+                // Si es de  contado solicitar pago
+                $this->actStatusOrdenSolicitud( $orden->id, EstatusOrdenCompra::SOLICITADO_PAGO , EstatusSolicitud::SOLICITADO_PAGO);
             }else{
+                // Si es a credito se mueve a surtido
                 $this->actStatusOrdenSolicitud($orden->id, EstatusOrdenCompra::EN_SURTIDO, EstatusSolicitud::EN_SURTIDO);
                 $this->enviarCorreoSurtido($orden->id);
             }
@@ -318,24 +308,11 @@ class OrdenesComprasController extends Controller
 
         $data = $request->all();
 
-        $orden = OrdenCompra::where('id', $data['id'])->first();
-        if ($orden) {
-            $orden->estatus = EstatusOrdenCompra::AUTORIZADO_A_PAGO;
-            $orden->modo_pago = $data['modo_pago'];
-            $orden->save();
-        }
+        $this->statusService->actStatusOrdenSolicitud($data['id'], EstatusOrdenCompra::SOLICITADO_PAGO, EstatusSolicitud::SOLICITADO_PAGO);
 
-        $cotizacion = Cotizaciones::where('id', $orden->cotizaciones_id)->first();
-
-        $solicitud = SolicitudesCompra::find($cotizacion->solicitudes_compra_id);
-        if ($solicitud) {
-            $solicitud->estatus = EstatusSolicitud::AUTORIZADO_A_PAGO;
-            $solicitud->save();
-            }
-
-        if($orden->modo_pago == 1){
-            $this->actStatusOrdenSolicitud( $data['id'], EstatusOrdenCompra::SOLICITADO_PAGO , EstatusSolicitud::SOLICITADO_PAGO);
-        }
+        // if($orden->modo_pago == 1){
+        //     $this->actStatusOrdenSolicitud( $data['id'], EstatusOrdenCompra::SOLICITADO_PAGO , EstatusSolicitud::SOLICITADO_PAGO);
+        // }
 
         return response()->json([
             'status' => 'success',
@@ -423,10 +400,6 @@ class OrdenesComprasController extends Controller
             $data = $request->all();
             $idSolicitudCompra = $data['idSolicitudCompra'];
             $idCotizacionProveedor = $data['idCotProv'];
-            $observaciones = $data['observaciones'];
-            $lugarEntrega = $data['entrega'];
-            $modoPago = $data['modoPago'];
-            $fechaEntrega = $data['fechaEntrega'];
 
             $cotizacion = Cotizaciones::where('solicitudes_compra_id', $idSolicitudCompra)->first();
             if ($cotizacion) {
@@ -435,7 +408,7 @@ class OrdenesComprasController extends Controller
                 $this->cotizacionesService->cotizacionProveedorSeleccionada($idCotizacionProveedor);
                 // Modificar la orden de compra que ya existía
                 $ordenCompra =  OrdenCompra::where('cotizaciones_id', $cotizacion->id)->first();
-                
+
                 if ($ordenCompra) {
                     $this->ordenCompraService->actualizarOrdenCompra($ordenCompra, $data);
                 }
@@ -446,7 +419,7 @@ class OrdenesComprasController extends Controller
                 'message' => 'El cambio se realizo correctamente',
                 'data' => []
             ]);
-            
+
         } catch (\Exception $e) {
             DB::rollback();
 

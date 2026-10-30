@@ -22,7 +22,7 @@ class CatEmpresasController extends Controller
      */
     public function index(int $mes, int $anio)
     {
-        $data =  ConsultaInfoEnergeticos::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos('.$mes.','.$anio.',1)') );
+        $data =  ConsultaInfoEnergeticos::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesEnergeticos(?,?,?)', [$mes,$anio, 1 ]) );
 
         return response()->json([
             'success' => true,
@@ -44,7 +44,7 @@ class CatEmpresasController extends Controller
      */
     public function show(string $id)
     {
-        $data =  EmpresasResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetEmpresasSubdivision('.$id.')') );
+        $data =  EmpresasResource::collection( DB::connection('dashboard')->select('call Dashboard.SP_GetEmpresasSubdivision(?)', [$id]) );
 
         return response()->json([
             'success' => true,

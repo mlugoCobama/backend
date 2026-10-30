@@ -52,7 +52,7 @@ class DispersionesTokaResource extends JsonResource
         if ($tipoSolicitud == 2) {
             $nombreCompleto = 'N/D';
         } else {
-            $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(' . $usuarioId . ')'));
+            $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$usuarioId]));
             $nombreCompleto = trim($usuario[0]->firstname . ' ' . $usuario[0]->realname);
         }
 
