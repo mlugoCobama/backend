@@ -24,6 +24,8 @@ use Modules\Nissan\Http\Controllers\VendedorController;
 
 // Route::prefix('nissan')->group(function () {
 Route::middleware(['auth:sanctum'])->prefix('nissan')->group(function () {
+
+    Route::apiResource('autos-test', NissanController::class)->names('autos-test');
     Route::apiResource('comisiones', ComisionesController::class)->names('comisiones');
     Route::apiResource('datos-venta', DatosVentaController::class)->names('datos-venta');
     Route::apiResource('vendedor', VendedorController::class)->names('vendedor');

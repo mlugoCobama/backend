@@ -37,11 +37,11 @@ class CatUnidadesMedidas extends Model
      | RELACIONES DE BASE DE DATOS
      |--------------------------------------------------------------------------
      */
-     /**
-     * Una unidad  de medida pertenece a  varios detalle de solicitud
+    /**
+     * Una unidad de medida tiene varios detalles de solicitud
      */
     public function DetalleSolicitud() {
-        $this->belongsTo(DetalleSolicitud::class);
+        return $this->hasMany(DetalleSolicitud::class, 'cat_unidades_medida_id');
     }
     
 }

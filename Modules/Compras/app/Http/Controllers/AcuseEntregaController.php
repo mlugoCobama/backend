@@ -207,13 +207,12 @@ public function store(Request $request)
      */
     public function getFile($id, $file)
     {
-        $path = storage_path("app/acuses/$id/$file");
+        $fileName = basename($file);
+        $path = storage_path("app/acuses/{$id}/{$fileName}");
         if (!File::exists($path)) {
             abort(404);
         }
-        $fileContent = File::get($path);
-        $type = File::mimeType($path);
-        return response($fileContent, 200)->header("Content-Type", $type);
+        return response()->file($path);
     }
 
     public function storeAcuse($ordenCompraId, $file, $validated){

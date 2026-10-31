@@ -133,6 +133,8 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::get('/toka/clientes', [TokaController::class, 'getClientesToka'])->name('Toka.getClientes');
 
     Route::get('/DispersionesDiesel/Plantilla/{id}/{noDipsersion}', [DispersionesDieselController::class, 'descargarDispersion']);
+    Route::post('/asignar-permisos-kanban', [UsuariosController::class, 'asignar']);
+    Route::post('/Cotizaciones/subir-doc-cotizacion-destiempo', [CotizacionesController::class, 'uploadOutTimeCotizacion']);
 
 });
 
@@ -155,7 +157,7 @@ Route::prefix('compras')->group(function(){
     Route::get('/descargar-expediente/{id}',[ExpedientesProveedoresController::class, 'downloadExpediente'])->name('ExpedientesProveedores.downloadExpediente');
     Route::get('/download-xml/{folder}/{id}/{file}', [DocumentosOrdenesComprasController::class, 'downloadXML'])->name('DocumentosOrdenesCompras.downloadXML');
 
-    Route::post('/subir-doc-cotizacion-destiempo', [CotizacionesController::class, 'uploadOutTimeCotizacion']);
+
 
     // Rutas de consulta de solicitudes sin autenticación
     Route::get('/SolicitudesNa/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudesNa');
@@ -181,11 +183,10 @@ Route::prefix('compras')->group(function(){
     Route::get('/reportes/gastos/detalle/{intercompania}', [ReportesComprasController::class, 'descargarDetalleEmpresa']);
     Route::get('/reportes/workflow/concentrado/{tipo}', [ReportesComprasController::class, 'getReporteEstatus']);
 
-    Route::post('/asignar-permisos-kanban', [UsuariosController::class, 'asignar']);
-
-
     Route::get('proveedores/export-excel',[ProveedoresController::class, 'exportExcel']);
 });
 
-Route::post('/all-permisos', [UsuariosController::class, 'getAllPermission'])->name('consultas.permisos');
-Route::post('/permisos/guardar', [UsuariosController::class, 'saveOrUpdatePermissions']);
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/all-permisos', [UsuariosController::class, 'getAllPermission'])->name('consultas.permisos');
+    Route::post('/permisos/guardar', [UsuariosController::class, 'saveOrUpdatePermissions']);
+});

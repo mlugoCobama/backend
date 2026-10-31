@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Queries\SqlServer\Comisiones\FacturasOrdenesQuery;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -12,11 +13,15 @@ class ImportarFacturasAccesorios extends Command
     protected $signature = 'facturas:importar {fechaInicio?} {fechaFin?}';
     protected $description = 'Importa facturas de accesorios desde múltiples conexiones AAAA-DD-MM';
 
-    public function handle()
+
+    protected $query;
+
+    public function handle(FacturasOrdenesQuery $query)
     {
+        $this->query = $query;
         $fechaInicio = $this->argument('fechaInicio') ?? Carbon::yesterday()->toDateString();
         $fechaFin = $this->argument('fechaFin') ?? Carbon::today()->toDateString();
-        
+
 
         $conexiones = [
             'renault',
@@ -28,15 +33,15 @@ class ImportarFacturasAccesorios extends Command
         // $conexiones = [
         //     'nissan_universidad' => 710,
         // ];
-        
-        
+
+
         $this->info('Iniciando Importacion de accesorios');
         Log::info('Iniciando Importacion de accesorios');
         foreach ($conexiones as $conexion) {
 
             // $this->info("Procesando conexión: {$conexion}");
             // Log::info("Procesando conexión: {$conexion}");
-            
+
             // $this->procesarConexion($conexion, $fechaInicio, $fechaFin);
 
             try {
@@ -74,7 +79,7 @@ class ImportarFacturasAccesorios extends Command
 
         $fechas = $this->formatDateToConnection($fechaInicio, $fechaFin, $conexion);
 
-        $facturas = $this->queryFacturas($origen, $fechas['fInicio'], $fechas['fFin']);
+        $facturas = $this->query->getFacturas($origen, $fechas['fInicio'], $fechas['fFin']);
 
         if ($facturas->isEmpty()) {
             return;
@@ -181,41 +186,6 @@ class ImportarFacturasAccesorios extends Command
         });
     }
 
-    private function queryFacturas($connection, $fechaInicio, $fechaFin)
-    {
-        $facturas = $connection->table('Re_EncabezadoPedido as REP')
-            ->join('empleados as E', 'REP.pedi_empl_clave', '=', 'E.empl_clave')
-            ->where('REP.pedi_status', 'FA')
-            ->whereBetween('REP.pedi_fechafactura', [$fechaInicio, $fechaFin])
-            ->select(
-                'REP.pedi_numeropedido',
-                'REP.pedi_numerofactura',
-                'REP.pedi_fechafactura',
-                'REP.pedi_empl_clave',
-                'REP.pedi_razonfactura',
-                'REP.pedi_ivafactura',
-                'REP.pedi_importetotal',
-                'E.empl_nombre',
-                'E.empl_apellidopaterno',
-                'E.empl_apellidomaterno',
-                'E.empl_agen_idagencia AS id_agencia'
-            )
-            ->get();
-
-        if ($facturas->isEmpty()) return collect([]);
-
-        $detalles = $connection->table('Re_DetallePedido as RDP')
-            ->join('Re_Productos as RP', 'RDP.depe_prod_claveproducto', '=', 'RP.prod_clave')
-            ->whereIn('RDP.depe_pedi_numeropedido', $facturas->pluck('pedi_numeropedido'))
-            ->get()
-            ->groupBy('depe_pedi_numeropedido');
-
-        return $facturas->map(function ($factura) use ($detalles) {
-            $factura->detalles = $detalles->get($factura->pedi_numeropedido, collect([]))->values();
-            return $factura;
-        });
-    }
-
     private function obtenerAgencia($conexion, $factura)
     {
         return match ($conexion) {
@@ -223,7 +193,7 @@ class ImportarFacturasAccesorios extends Command
             'nissan_universidad' => 710,
             'nissan_azcapotzalco' => 730,
             'nissan_campestre' => 714,
-            
+
             default => $factura->id_agencia
         };
     }
@@ -231,12 +201,12 @@ class ImportarFacturasAccesorios extends Command
     public function formatDateToConnection($fechaInicio, $fechaFin, $connection){
 
         return match ($connection) {
-                'nissan_universidad' =>  
+                'nissan_universidad' =>
                                         ['fInicio' => Carbon::parse($fechaInicio)->format('Y-d-m'),
                                         'fFin' => Carbon::parse($fechaFin)->format('Y-d-m')],
                 'renault' => ['fInicio' => Carbon::parse($fechaInicio)->format('Y-d-m'),
                                 'fFin' => Carbon::parse($fechaFin)->format('Y-d-m')],
-                
+
                 default => ['fInicio' => $fechaInicio, 'fFin' => $fechaFin]
         };
     }

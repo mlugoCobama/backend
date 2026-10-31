@@ -35,9 +35,7 @@ class CatUnidadesController extends Controller
      */
     public function index()
     {
-        $data = $this->dispersionDiesel->notificarDispersion('s' ,7);
-        // $data = VehiculosTanquesResources::collection(DB::select("call SistemaTickets.SP_GetDataAutotanques()"));
-        // $data =  $this->pvService->sincronizarGpsVehiculos();
+        $data = VehiculosTanquesResources::collection(DB::select("call SistemaTickets.SP_GetDataAutotanques()"));
         return response()->json(
             [
                 'status' => 'success',

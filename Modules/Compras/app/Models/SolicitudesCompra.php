@@ -114,10 +114,10 @@ class SolicitudesCompra extends Model
     }
 
     public function TipoMantenimiento(){
-        return $this->hasOne(CatTiposMantenimiento::class, 'id', 'com_cat_tipos_mantenimiento_id' );
+        return $this->belongsTo(CatTiposMantenimiento::class, 'com_cat_tipos_mantenimiento_id', 'id');
     }
 
     public function SistemaMantenimiento(){
-        return $this->hasOne(CatSistemasAuto::class, 'id', 'com_cat_sistemas_auto_id', );
+        return $this->belongsTo(CatSistemasAuto::class, 'com_cat_sistemas_auto_id', 'id');
     }
 }

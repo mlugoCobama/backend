@@ -35,14 +35,14 @@ class DetalleSolicitud extends Model
      |--------------------------------------------------------------------------
      */
     /**
-     * Un detalle tiene una unidad de medida
+     * Un detalle pertenece a una unidad de medida
      */
     public function unidadMedida()
     {
-        return $this->hasOne(CatUnidadesMedidas::class, 'id', 'cat_unidades_medida_id');
+        return $this->belongsTo(CatUnidadesMedidas::class, 'cat_unidades_medida_id', 'id');
     }
     /**
-     * Un detalle tiene varias detalles de cotizacion
+     * Un detalle tiene varios detalles de cotizacion
      */
     public function DetallesCotizacion()
     {
@@ -52,7 +52,7 @@ class DetalleSolicitud extends Model
      * Un detalle de solicitud pertenece a una solicitud de compra
      */
     public function SolicitudCompra(){
-        return $this->belongsTo(SolicitudesCompra::class, 'id');
+        return $this->belongsTo(SolicitudesCompra::class, 'solicitudes_compra_id', 'id');
     }
 
     public function DetalleAutotanque()

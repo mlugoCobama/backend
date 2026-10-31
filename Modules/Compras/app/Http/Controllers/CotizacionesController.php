@@ -107,13 +107,13 @@ class CotizacionesController extends Controller
         if ($cotizacion) {
             $data = CotizacionesProveedores::where('cotizaciones_id', $cotizacion->id)->with([
                 'proveedores_id:id,nombre,correo',
-                'proveedores_id.datosPago', 
+                'proveedores_id.datosPago',
                 'detalles:id,importe_unitario,detalle_solicitud_id,cotizaciones_proveedores_proveedores_id',
                 'detalles.detalle_solicitud'
                 ])
                 ->get(['id', 'proveedores_id', 'cotizaciones_id', 'ruta', 'seleccionado', 'autorizado', 'contacto_id']);
 
-            // Regreso el objeto data con los detalles y 
+            // Regreso el objeto data con los detalles y
             //data cotización con la información de la cotización.
             return response()->json([
                 'status' => 'success',
@@ -187,15 +187,13 @@ class CotizacionesController extends Controller
     */
     public function getFile($id, $file)
     {
-        $path = storage_path("app/cotizaciones/$id/$file");
+        $fileName = basename($file);
+        $path = storage_path("app/cotizaciones/{$id}/{$fileName}");
         if (!File::exists($path)) {
             abort(404);
         }
 
-        $fileContent = File::get($path);
-
-        $type = File::mimeType($path);
-        return response($fileContent, 200)->header("Content-Type", $type);
+        return response()->file($path);
     }
 
 
@@ -216,7 +214,7 @@ class CotizacionesController extends Controller
         $solicitudCompra->save();
 
         NotificationHelper::sendNotificationEstatusChange( $solicitudCompra->id, 'En cotización: Necesita autorización supero el limite establecido ($ 50,000)');
-        
+
         return response()->json([
             'status' => 'success',
             'message' => 'Actualizado con exito',
@@ -229,7 +227,7 @@ class CotizacionesController extends Controller
 
         if ($cotizacionProveedor) {
             $folderPath = 'cotizaciones/' . $cotizacionProveedor->cotizaciones_id;
-            $fileName = $cotizacionProveedor->proveedores_id . '.' . $file->getClientOriginalExtension();
+            $fileName = $cotizacionProveedor->proveedores_id.'_'.time(). '.' . $file->getClientOriginalExtension();
 
             $path = $file->storeAs($folderPath, $fileName);
 
@@ -257,7 +255,7 @@ class CotizacionesController extends Controller
             ]);
         }
         return response()->json([
-            "status" => "success",
+            "status" => "error",
             'data' => [],
             'message' => 'No contiene archivo'
         ]);

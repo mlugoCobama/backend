@@ -252,13 +252,12 @@ class DocumentosOrdenesComprasController extends Controller
      */
     public function getFile($id, $file)
     {
-        $path = storage_path("app/docsOrdenCompra/$id/$file");
+        $fileName = basename($file);
+        $path = storage_path("app/docsOrdenCompra/{$id}/{$fileName}");
         if (!File::exists($path)) {
             abort(404);
         }
-        $fileContent = File::get($path);
-        $type = File::mimeType($path);
-        return response($fileContent, 200)->header("Content-Type", $type);
+        return response()->file($path);
     }
 
 

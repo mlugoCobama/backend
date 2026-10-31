@@ -58,25 +58,25 @@ class SolicitudesCompraController extends Controller
      **************************************************************/
     public function index(int $intercompania, ?int $id = null)
     {
-        $usuariosCompra = explode(',', env('USERS_COMPRAS_COMPRAS'));
-        $isCompras = in_array($id, $usuariosCompra );
+        $usuariosCompra = config('compras.users.compras', []);
+        $isCompras = in_array($id, $usuariosCompra);
 
-        $usuariosAdmin = explode(',', env('USERS_COMPRAS_ADMIN'));
-        $isAdmin = in_array($id, $usuariosAdmin );
+        $usuariosAdmin = config('compras.users.admin', []);
+        $isAdmin = in_array($id, $usuariosAdmin);
 
-        $usuariosAdminz = explode(',', env('USERS_COMPRAS_ADMINZ'));
-        $isAdminz = in_array($id, $usuariosAdminz );
+        $usuariosAdminz = config('compras.users.adminz', []);
+        $isAdminz = in_array($id, $usuariosAdminz);
 
-        $usuariosRT = explode(',', env('USERS_COMPRAS_RT'));
-        $isRT = in_array($id, $usuariosRT );
+        $usuariosRT = config('compras.users.rt', []);
+        $isRT = in_array($id, $usuariosRT);
 
-        $usuariosComprasAutos = explode(',', env('USERS_COMPRAS_AUTOS'));
-        $isComprasAutos = in_array($id, $usuariosComprasAutos );
+        $usuariosComprasAutos = config('compras.users.autos', []);
+        $isComprasAutos = in_array($id, $usuariosComprasAutos);
 
-        $usuariosTG = explode(',', env('USERS_COMPRAS_TG'));
-        $isTG = in_array($id, $usuariosTG );
+        $usuariosTG = config('compras.users.tg', []);
+        $isTG = in_array($id, $usuariosTG);
 
-        $usuariosAutosExcepcion = explode(',', env('EXCEPCIONES_AUTOS'));
+        $usuariosAutosExcepcion = config('compras.excepciones.autos', []);
         $isExepcion = in_array($id, $usuariosAutosExcepcion);
 
         if($isRT){
@@ -191,10 +191,27 @@ class SolicitudesCompraController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $allowedFields = ['auto_admin', 'auto_gg', 'auto_macro', 'estatus', 'observaciones', 'motivo_revision'];
+        $campo = $request->input('campo');
+
+        if (!in_array($campo, $allowedFields, true)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Campo no permitido para actualización directa',
+                'data'    => []
+            ], 422);
+        }
+
         $solicitud = SolicitudesCompra::find($id);
-        $campo = $request->campo;
-        $valor = $request->value;
-        $solicitud->$campo = $valor;
+        if (!$solicitud) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'La solicitud no existe',
+                'data'    => []
+            ], 404);
+        }
+
+        $solicitud->$campo = $request->input('value');
         $solicitud->save();
 
         $this->validarCotizacion($id);
@@ -337,14 +354,14 @@ class SolicitudesCompraController extends Controller
     private function storeSolicitudCompra($data)
     {
 
-        $usuariosRT = explode(',', env('USERS_COMPRAS_RT'));
-        $isInfra = in_array($data["usuario_solicita"], $usuariosRT );
+        $usuariosRT = config('compras.users.rt', []);
+        $isInfra = in_array($data["usuario_solicita"], $usuariosRT);
 
-        $usuariosSopGas = explode(',', env('USERS_SOP_GAS'));
-        $isSopGas = in_array($data["usuario_solicita"], $usuariosSopGas );
+        $usuariosSopGas = config('compras.users.sop_gas', []);
+        $isSopGas = in_array($data["usuario_solicita"], $usuariosSopGas);
 
-        $usuariosComprasAutos = explode(',', env('USERS_COMPRAS_AUTOS'));
-        $isComprasAutos = in_array( $data["usuario_solicita"], $usuariosComprasAutos );
+        $usuariosComprasAutos = config('compras.users.autos', []);
+        $isComprasAutos = in_array($data["usuario_solicita"], $usuariosComprasAutos);
 
         $isAutos = $data["isAgencia"];
         $tipoSolicitud = match (true) { $isInfra => 3, $isAutos => 4, $isComprasAutos => 4,  default => 1};
@@ -723,9 +740,9 @@ public function actualizarSolicitudCompra(Request $request){
  */
 private function updateSolicitudCompra($data, $idSolicitud)
 {
-    $usuariosRT = explode(',', env('USERS_COMPRAS_RT'));
+    $usuariosRT = config('compras.users.rt', []);
     $isInfra = in_array($data["usuario_solicita"], $usuariosRT);
-    $usuariosSopGas = explode(',', env('USERS_SOP_GAS'));
+    $usuariosSopGas = config('compras.users.sop_gas', []);
     $isSopGas = in_array($data["usuario_solicita"], $usuariosSopGas);
 
 

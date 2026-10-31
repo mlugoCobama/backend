@@ -41,10 +41,10 @@ class DocumentosOrdenesCompra extends Model
      |--------------------------------------------------------------------------
      */
     /**
-     * Un documento de compra tiene un orden de compra
+     * Un documento de compra pertenece a una orden de compra
      */
     public function OrdenesCompra() {
-        $this->belongsTo(OrdenCompra::class);
+        return $this->belongsTo(OrdenCompra::class, 'orden_compra_id', 'id');
     }
     /**
      * Un documento (factura) tiene varios documentos

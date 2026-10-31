@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Queries\SqlServer\Comisiones\TomaUnidadesQuery;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -12,8 +13,12 @@ class ImportarTomaUnidades extends Command
     protected $signature = 'toma:importar {clave?} {anio?}';
     protected $description = 'Importa unidades usadas al módulo de toma de unidad parametros Anio y clave (US ó NU)' ;
 
-    public function handle()
+    protected $query;
+
+    public function handle(TomaUnidadesQuery $query)
     {
+
+        $this->query = $query;
         $anio = $this->argument('anio') ??  Carbon::now()->format('Y');
         $clave =  !empty($this->argument('clave')) ? strtoupper($this->argument('clave')) : 'US';
 
@@ -65,7 +70,7 @@ class ImportarTomaUnidades extends Command
         $origen  = DB::connection($conexion);
         $destino = DB::connection('autos');
 
-        $unidades = $this->queryUnidades($origen, $anio, $clave);
+        $unidades = $this->query->getTomaUnidades($origen, $anio, $clave);
 
         if ($unidades->isEmpty()) return;
 
@@ -74,7 +79,7 @@ class ImportarTomaUnidades extends Command
             foreach ($unidades as $unidad) {
 
             $agenciaId = $this->obtenerAgencia($conexion, $unidad);
-                
+
                 // Validar duplicado por número de inventario
                 $existe = $destino->table('com_toma_unidad')
                     ->where('no_serie', $unidad->vehi_serie)
@@ -107,23 +112,6 @@ class ImportarTomaUnidades extends Command
         });
     }
 
-    private function queryUnidades($connection, $anio, $clave)
-    {
-        return $connection->table('Vt_InventarioAutos as IA')
-            ->join('Vt_Modelos as M', 'M.mode_modeloid', '=', 'IA.vehi_mode_modeloid')
-            ->where('IA.vehi_clas_clave', $clave)
-            ->where('IA.vehi_anio', $anio)
-            ->select(
-                'IA.vehi_numeroinventario',
-                'IA.vehi_anio',
-                'IA.vehi_fechaasignacion',
-                'IA.vehi_serie',
-                'M.mode_descripcion',
-                'IA.vehi_idagencia AS id_agencia'
-            )
-            ->get();
-    }
-
     private function obtenerAgencia($conexion, $factura)
     {
         return match ($conexion) {
@@ -131,7 +119,7 @@ class ImportarTomaUnidades extends Command
             'nissan_universidad' => 710,
             'nissan_azcapotzalco' => 730,
             'nissan_campestre' => 714,
-            
+
             default => $factura->id_agencia
         };
     }

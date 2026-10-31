@@ -252,22 +252,22 @@ class ReportesService{
                 $proveedor = $detallesProcesados->firstWhere('proveedor', '!=', 'N/A')['proveedor'] ?? 'N/A';
 
                 // HEADER
-                // $rows[] = [
-                //     'Folio'         => $solicitud->folio,
-                //     'Folio_OC'      => $folioOC,
-                //     'Fecha'         => $fechaFormateada,
-                //     'Empresa'       => $empresaNombre,
-                //     'Destino'       => $destinoFormat['nombre'],
-                //     'Area'          => $destinoFormat['area'],
-                //     'Estado'        => $label,
-                //     'Cantidad'      => '',
-                //     'Descripcion'   => '',
-                //     'Observaciones' => '',
-                //     'Unidad'        => '',
-                //     'Precio'        => '',
-                //     'tipo'          => $sistemaMantenimiento,
-                //     'proveedor'     => $proveedor
-                // ];
+                $rows[] = [
+                    'Folio'         => $solicitud->folio,
+                    'Folio_OC'      => $folioOC,
+                    'Fecha'         => $fechaFormateada,
+                    'Empresa'       => $empresaNombre,
+                    'Destino'       => $destinoFormat['nombre'],
+                    'Area'          => $destinoFormat['area'],
+                    'Estado'        => $label,
+                    'Cantidad'      => '',
+                    'Descripcion'   => '',
+                    'Observaciones' => '',
+                    'Unidad'        => '',
+                    'Precio'        => '',
+                    'tipo'          => $sistemaMantenimiento,
+                    // 'proveedor'     => $proveedor
+                ];
 
                 // DETALLES
                 foreach ($detallesProcesados as $item) {
@@ -289,7 +289,7 @@ class ReportesService{
                         'Unidad'        => $detalle->unidadMedida->nombre ?? '',
                         'Precio'        => $precio,
                         'tipo'          => $sistemaMantenimiento,
-                        'proveedor'     => $proveedor
+                        // 'proveedor'     => $proveedor
                     ];
                 }
 

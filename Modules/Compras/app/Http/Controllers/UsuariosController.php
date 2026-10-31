@@ -56,8 +56,8 @@ class UsuariosController extends Controller
     public function show($id)
     {
 
-        $interExcepciones = explode(',', env('INTER_EXECPCIONES'));
-        $isExcepcion = in_array($id, $interExcepciones );
+        $interExcepciones = config('compras.excepciones.intercompania', []);
+        $isExcepcion = in_array($id, $interExcepciones);
 
         // if($isExcepcion){
         //     $idUser = auth()->id();

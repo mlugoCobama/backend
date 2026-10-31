@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Queries\SqlServer\Comisiones\VentasAutosNuevosQuery;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -26,11 +27,13 @@ class RecuperarVentasAgencias extends Command
      */
     protected $description = 'Recupera datos de venta de agencias de un periodo especifico (especifica inicio y fin en formato YYYY-MM-DD) ';
 
+    protected $query;
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(VentasAutosNuevosQuery $query)
     {
+        $this->query = $query;
         $conexiones = ['renault', 'nissan_campestre', 'nissan_azcapotzalco', 'nissan_universidad'];
         $fechaInicio = $this->argument('fechaInicio') ?? Carbon::yesterday()->toDateString();
         $fechaFin    = $this->argument('fechaFin')  ?? Carbon::today()->toDateString();
@@ -69,63 +72,7 @@ class RecuperarVentasAgencias extends Command
 
     private function sincronizarVentas($conexion, $fechaInicio, $fechaFin)
     {
-        $libroVentas = DB::connection($conexion)->select("
-            WITH RegistrosOrdenados AS (
-                SELECT *,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY saau_vehi_vehiculoid
-                        ORDER BY fechaalta DESC
-                    ) AS rn
-                FROM [SISTEMAS].[dbo].[Vt_SalidaAutos]
-                WHERE CAST(saau_fecha AS DATE) BETWEEN ? AND ?
-            ),
-            BonificacionesAgrupadas AS (
-                -- Sumamos todas las bonificaciones por cada documento (factura) antes del JOIN
-                SELECT
-                    prim_documento,
-                    SUM(prim_importe) AS total_prim_importe
-                FROM [SISTEMAS].[dbo].[vt_PrimBonif]
-                GROUP BY prim_documento
-            )
-            SELECT
-                CAST(fa.faau_fecha AS DATE) AS fecha_factura,
-                CAST(fa.faau_fechacancelacion AS DATE) AS fecha_cancelacion,
-                fa.faau_vend_clave,
-                fa.faau_nofactura,
-                fa.faau_razonfactura,
-                fa.faau_idagencia AS id_agencia,
-                vi.vehi_clas_clave,
-                vi.vehi_anio,
-                vi.vehi_numeroinventario,
-                vi.vehi_serie,
-                mo.mode_clave,
-                mo.mode_descripcion,
-                sa.saau_folio,
-                CAST(sa.saau_fecha AS DATE) AS fecha_salida,
-                fa.faau_form_TipoVenta,
-                sa.saau_vehi_vehiculoid,
-                fa.faau_iva,
-                fa.faau_total,
-                (fa.faau_total - (fa.faau_iva + fa.faau_isan)) AS Venta,
-                (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos) AS Costo,
-                -- Usamos ISNULL por si alguna factura no tiene bonificación
-                (ISNULL(bo.total_prim_importe, 0) / 1.16) AS bonificacion,
-                (((fa.faau_total - (fa.faau_iva + fa.faau_isan))) - (vi.vehi_CostoOperacion + vi.vehi_CostoEquipo + vi.vehi_CostoGastos)) + (ISNULL(bo.total_prim_importe, 0) / 1.16) AS Utilidad
-            FROM [SISTEMAS].[dbo].[Vt_FacturaAutos] fa
-            JOIN RegistrosOrdenados sa
-                ON fa.faau_vehi_vehiculoid = sa.saau_vehi_vehiculoid
-            JOIN [SISTEMAS].[dbo].[Vt_InventarioAutos] vi
-                ON fa.faau_vehi_vehiculoid = vi.vehi_vehiculoid
-            JOIN [SISTEMAS].[dbo].[Vt_Modelos] mo
-                ON mo.mode_modeloid = vi.vehi_mode_modeloid
-            -- Cambiamos el JOIN hacia la nueva CTE agrupada
-            LEFT JOIN BonificacionesAgrupadas bo
-                ON bo.prim_documento = fa.faau_nofactura
-            WHERE sa.rn = 1
-            AND fa.faau_fechacancelacion IS NULL
-            ORDER BY fa.faau_fecha, fa.faau_vend_clave",
-            [$fechaInicio, $fechaFin]
-        );
+        $libroVentas = $this->query->getVentasNuevos($conexion, $fechaInicio, $fechaFin);
 
         foreach ($libroVentas as $dato) {
             // $existe = DatosVenta::where('no_factura', $dato->faau_nofactura)->exists();

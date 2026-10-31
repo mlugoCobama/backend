@@ -40,17 +40,17 @@ class SolicitudesMacroController extends Controller
      */
     public function index(int $intercompania, ?int $id = null)
     {
-        $usuariosCompra = explode(',', env('USERS_MACRO_COMPRAS'));
-        $isCompras = in_array($id, $usuariosCompra );
+        $usuariosCompra = config('compras.users_macro.compras', []);
+        $isCompras = in_array($id, $usuariosCompra);
 
-        $usuariosMacro = explode(',', env('USERS_MACRO_MACRO'));
-        $isMacro = in_array($id, $usuariosMacro );
+        $usuariosMacro = config('compras.users_macro.macro', []);
+        $isMacro = in_array($id, $usuariosMacro);
 
-        $usuariosAdminz = explode(',', env('USERS_COMPRAS_ADMINZ'));
-        $isAdminz = in_array($id, $usuariosAdminz );
+        $usuariosAdminz = config('compras.users_macro.adminz', []);
+        $isAdminz = in_array($id, $usuariosAdminz);
 
-        $usuariosAdmin = explode(',', env('USERS_MACRO_ADMIN'));
-        $isAdmin = in_array($id, $usuariosAdmin );
+        $usuariosAdmin = config('compras.users_macro.admin', []);
+        $isAdmin = in_array($id, $usuariosAdmin);
 
         if( $isCompras){
             $query = $this->getSolictudesMacro(333, 1, 1, 1,'compras',$id);
@@ -245,8 +245,8 @@ class SolicitudesMacroController extends Controller
     {
     // Ejemplo: $codigoEntidad = 'GGA'
 
-        $interExcepciones = explode(',', env('INTER_EXECPCIONES'));
-        $isExcepcion = in_array($codigoEntidad, $interExcepciones );
+        $interExcepciones = config('compras.excepciones.intercompania', []);
+        $isExcepcion = in_array($codigoEntidad, $interExcepciones);
 
         if($isExcepcion){
             $codigoEntidad = substr($codigoEntidad, 0, 3);
@@ -281,7 +281,7 @@ class SolicitudesMacroController extends Controller
    */
     private function storeSolicitudCompra($data)
     {
-        $catNoAutoMacro = explode(',', env('EXCEPCIONES_MACRO'));
+        $catNoAutoMacro = config('compras.excepciones.macro', []);
         $noAutoMacro = in_array($data["empresa"], $catNoAutoMacro);
 
         $dataSolicitud = new SolicitudesCompra();
@@ -433,13 +433,12 @@ class SolicitudesMacroController extends Controller
      */
     public function getFile($id, $file)
     {
-        $path = storage_path("app/ordenesTrabajo/$id/$file");
+        $fileName = basename($file);
+        $path = storage_path("app/ordenesTrabajo/{$id}/{$fileName}");
         if (!File::exists($path)) {
             abort(404);
         }
-        $fileContent = File::get($path);
-        $type = File::mimeType($path);
-        return response($fileContent, 200)->header("Content-Type", $type);
+        return response()->file($path);
     }
 
 

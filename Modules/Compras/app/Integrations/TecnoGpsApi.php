@@ -12,8 +12,8 @@ class TecnoGpsApi{
 
     public function __construct()
     {
-        $this->baseUrl = env('TECNO_GPS_ROUTE');
-        $this->apiKey = env('TECNO_GPS_API_KEY');
+        $this->baseUrl = config('compras.tecno_gps.route', 'https://horus.tecno-gps.com.mx/api/v1/');
+        $this->apiKey = config('compras.tecno_gps.api_key', '');
     }
 
     /**

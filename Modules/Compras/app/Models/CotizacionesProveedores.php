@@ -53,14 +53,14 @@ class CotizacionesProveedores extends Model
      * Un registro pertenece a una cotización.
      */
     public function DatosCotizacion(){
-        $this->belongsTo(Cotizaciones::class);
+        return $this->belongsTo(Cotizaciones::class, 'cotizaciones_id', 'id');
     }
 
     /**
      * Un registro tiene varios detalles de cotización.
      */
     public function DetallesCotizacion(){
-        $this->hasMany(DetallesCotizacion::class);
+        return $this->hasMany(DetallesCotizacion::class, 'cotizaciones_proveedores_proveedores_id', 'id');
     }
 
     protected static function newFactory()
