@@ -31,7 +31,17 @@ class MovimientosAlmacen extends Model
         //return MovimientosAlmacenFactory::new();
     }
 
+    /**
+     * Un movimiento pertenece a una entrega
+     */
     public function entregaTecnico(){
-        return $this->hasMany(EntregaTecnicos::class, 'com_id_entrega_tecnico', 'id');
+        return $this->belongsTo(EntregaTecnicos::class, 'com_id_entrega_tecnico', 'id');
+    }
+
+    /**
+     * Un movimiento pertenece a una entrada de almacen
+     */
+    public function entrada(){
+        return $this->belongsTo(AlmacenCompras::class, 'com_almacen_id', 'id' );
     }
 }

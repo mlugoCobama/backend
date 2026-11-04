@@ -112,7 +112,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::get('/getTecnicos', [UsuariosController::class, 'getTecnicos'])->name('Usuarios.getTecnicos');
 
 
-    Route::get('/getExsitencias/{tipo}', [AlmacenComprasConrollerController::class, 'getAlmacenDisponible'])->name('Almacen.getAlmacenDisponible');
+    Route::get('/getExsitencias/{tipo}/{intercompania}', [AlmacenComprasConrollerController::class, 'getAlmacenDisponible'])->name('Almacen.getAlmacenDisponible');
     Route::get('/getMovimientos', [AlmacenComprasConrollerController::class, 'getSalidas'])->name('Almacen.getSalidas');
 
 

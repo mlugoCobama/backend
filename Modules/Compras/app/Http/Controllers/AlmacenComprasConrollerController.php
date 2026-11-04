@@ -8,10 +8,12 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Modules\Compras\Models\EntregaTecnicos;
 use Modules\Compras\Services\AlmacenService;
 use Modules\Compras\Services\HomologadorService;
 use Modules\Compras\Transformers\AlmacenComprasResource;
 use Modules\Compras\Transformers\MovimientoAlmacenResource;
+use Modules\Compras\Transformers\SalidasResource;
 use Modules\Macro\Models\Almacen;
 
 class AlmacenComprasConrollerController extends Controller
@@ -153,7 +155,7 @@ class AlmacenComprasConrollerController extends Controller
 
     }
 
-    public function getAlmacenDisponible( $tipo ){
+    public function getAlmacenDisponible( $tipo, $intercompania = null ){
         $almacen = DB::table('com_almacen as ca')
         ->join('com_detalle_solicitud as cds', 'ca.com_detalle_solicitud_id', '=', 'cds.id')
         ->join('com_cat_unidades_medida as ccum', 'ccum.id', '=', 'cds.cat_unidades_medida_id')
@@ -162,6 +164,9 @@ class AlmacenComprasConrollerController extends Controller
         ->where('cds.confirmado', 1)
         ->where('csc.tipo', $tipo)
         ->where('ca.existencia','>', 0)
+        ->when($intercompania, function ($query, $intercompania) {
+            return $query->where('csc.empresa', $intercompania);
+        })
         ->select([
             'ca.id',
             'csc.empresa',
@@ -197,12 +202,21 @@ class AlmacenComprasConrollerController extends Controller
                     ->join('com_detalle_solicitud as cds', 'ca.com_detalle_solicitud_id', '=', 'cds.id')
                     ->get();
 
+        $data = EntregaTecnicos::with('movimientosEntrega.entrada.detalle.unidadMedida')->get();
 
+// 'data2' =>  MovimientoAlmacenResource::collection($almacen),
         return  response()->json([
             'status' => 'success',
-            'data' => MovimientoAlmacenResource::collection($almacen),
+            'data' => SalidasResource::collection($data),
             'message' => "Movimientos recuperadas correctamente"
         ]);
+    }
+
+    public function getDetalleSalida($idSalida){
+
+        $data =  EntregaTecnicos::with('movimientosEntrega.entrada.detalle.unidadMedida')->where('id', $idSalida)->first();
+
+        return response();
     }
 
     function generarNumeroControl($intercompania, $tipoCompra)

@@ -108,6 +108,7 @@ public function store(Request $request)
         $this->ingresarAlmacen(json_encode($detallesEntrada),$userId);
         // guardar inventario solo si aplica
         if($requiereInventario && count($inventario)>0){
+
             $this->guardarInventario($inventario, $validated['intercompania']);
         }
 
@@ -300,7 +301,8 @@ public function store(Request $request)
                     $this->resguardoService->asignarRecurso($hardware->id,null,$activo['usuario_asignar']);
                 }else{
                     $equipoUsuario = $this->resguardoService->getPcUsuario($activo['usuario_asignar']);
-                    if($equipoUsuario){
+
+                    if(!empty($equipoUsuario)){
                         $this->resguardoService->asignarRecursoPc($equipoUsuario[0]->ucoip_hardware_id, $activo['detalleId']);
 
                     }

@@ -28,15 +28,27 @@ class AlmacenCompras extends Model
         //return AlmacenComprasFactory::new();
     }
 
-    
+    /**
+     * Relaciones
+     */
+
+    /**
+     * Una entrada de almacen pertence a un detalle
+     */
     public function detalle(){
         return $this->belongsTo(DetalleSolicitud::class, 'com_detalle_solicitud_id', 'id');
     }
 
+    /**
+     * Una entrada de almacen tiene muchos movimientos
+     */
     public function movimientos(){
         return $this->hasMany(DetalleSolicitud::class, 'com_detalle_solicitud_id', 'id');
     }
 
+    /**
+     * Una entrada de almacen tiene muchas salidas
+     */
     public function salidas(){
         return $this->hasMany(MovimientosAlmacen::class, 'com_almacen_id', 'id')->where('tipo', 's');
     }

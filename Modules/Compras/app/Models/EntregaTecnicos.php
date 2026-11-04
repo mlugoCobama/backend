@@ -26,4 +26,18 @@ class EntregaTecnicos extends Model
     {
         //return EntregaTecnicosFactory::new();
     }
+
+
+    /**
+     * ----------------------------------------
+     * Relaciones
+     * ----------------------------------------
+     */
+
+    /**
+     * Una entrega tiene varios movimientos
+     */
+    public function movimientosEntrega(){
+       return $this->hasMany(MovimientosAlmacen::class, 'com_id_entrega_tecnico', 'id');
+    }
 }
