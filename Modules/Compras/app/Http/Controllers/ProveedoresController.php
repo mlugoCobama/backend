@@ -226,7 +226,7 @@ class ProveedoresController extends Controller
      */
     public function getProveedores()
     {
-        $data = (Proveedores::active()->tipoCompras()->with('contactos')
+        $data = (Proveedores::active()->tipoCompras()->with('contactos')->orderBy('nombre', 'ASC')
             ->get(['id', 'nombre', 'servicios']));
 
         return response()->json([

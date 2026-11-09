@@ -66,7 +66,6 @@ class ActualizarEstatusComprasOrdenes extends Command
 
         $this->info('Borrando permisos de estados de solicitud...');
 
-        // Ejecutamos la consulta de borrado
         $deletedRows = DB::table('model_has_permissions')
             ->whereIn('permission_id', [249, 250])
             ->delete();
@@ -76,10 +75,8 @@ class ActualizarEstatusComprasOrdenes extends Command
 
         $this->info('Asignando permisos de carga de facturas...');
 
-        // Ejecutamos la consulta de borrado
         $userIds = [2567,2307,419,202,172,153,147,119,112,100,69,56,38];
-        // $permissionIds = [202, 491];
-        $permissionIds = [492,493];
+        $permissionIds = [202, 491];
         $modelType = 'App\Models\User';
 
         $dataToInsert = [];

@@ -14,8 +14,9 @@ use Modules\Compras\Http\Controllers\SolicitudesMacroController;
 use Modules\Compras\Http\Controllers\CatSistemasAutoController;
 use Modules\Compras\Http\Controllers\AcuseEntregaController;
 use Modules\Compras\Models\Cotizaciones;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Modules\Compras\Http\Controllers\AlmacenComprasConrollerController;
+use Modules\Compras\Http\Controllers\CatalogoPreciosController;
+use Modules\Compras\Http\Controllers\CatalogoProductosController;
 use Modules\Compras\Http\Controllers\UsuariosController;
 use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Http\Controllers\DetalleSolicitudController;
@@ -61,6 +62,12 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::resource('DispersionesDiesel', DispersionesDieselController::class);
     Route::resource('Tags', TagController::class);
     Route::resource('Compras', ComprasController::class);
+    Route::resource('CatalogoProductos', CatalogoProductosController::class);
+    Route::resource('CatalogoPrecios', CatalogoPreciosController::class);
+
+    
+    Route::post('CatalogoPrecios/Comparativa', [CatalogoPreciosController::class, 'obtenerPreciosComparativa']);
+
 
     Route::get( '/almacen/analisis-historial',[AlmacenComprasConrollerController::class, 'pruebaHomologador']);
     Route::get('/Solicitudes/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');

@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use App\Models\User;
 use Laravel\Sanctum\Sanctum;
 use App\Models\Sanctum\PersonalAccessToken;
+use Illuminate\Support\Str;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,5 +27,23 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
+
+        Str::macro('cleanText', function (?string $value): string {
+            if (empty($value)) {
+                return '';
+            }
+            
+            $value = preg_replace('/[\r\n\t]+/', ' ', $value);
+
+            $value = trim($value);
+
+            $value = preg_replace('/\s+/', ' ', $value);
+
+            if ($options['remove_special_chars'] ?? false) {
+                $value = preg_replace('/[^\w\s.,¡!¿?áéíóúÁÉÍÓÚñÑüÜ-]/u', '', $value);
+            }
+
+            return $value;
+        });
     }
 }

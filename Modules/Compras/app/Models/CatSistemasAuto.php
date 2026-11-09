@@ -17,8 +17,8 @@ class CatSistemasAuto extends Model
      */
     protected $fillable = [
        'categoria',
-       'sistema', 
-       'descripcion', 
+       'sistema',
+       'descripcion',
        'activo'
     ];
 
@@ -30,5 +30,9 @@ class CatSistemasAuto extends Model
 
     public function SolicitudesCompra(){
         return $this->hasMany(SolicitudesCompra::class);
+    }
+
+    public function subCategorias() {
+        return $this->hasMany(CatSubcategorias::class,'com_categoria_id', 'id');
     }
 }
