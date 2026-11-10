@@ -110,9 +110,9 @@ class EnergeticosController extends Controller
 
         $dataMesAnt =  GaseraMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGaseras(' . $mesA . ',' . $anioA . ',' . '\'' . $titular . '\'' . ')'));
         $dataAnioAnt =  GaseraMesResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataMesGaseras(' . $mes . ',' . $anioAnt . ',' . '\'' . $titular . '\'' . ')'));
-        $totalAnio = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anio . ',' . $sub_division . ')'));
-        $totalAnioAnt = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . $anioAnt . ',' . $sub_division . ')'));
-        $totalAnioAnt2 = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualDivision(' . ($anioAnt-1) . ',' . $sub_division . ')'));
+        $totalAnio = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualGaseras(' . $anio . ',' . $sub_division .',' . '\'' . $titular . '\'' . ')'));
+        $totalAnioAnt = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualGaseras(' . $anioAnt . ',' . $sub_division .',' . '\'' . $titular . '\'' . ')'));
+        $totalAnioAnt2 = DataAnualResource::collection(DB::connection('dashboard')->select('call Dashboard.SP_GetDataAnualGaseras(' . ($anioAnt-1) . ',' . $sub_division .',' . '\'' . $titular . '\'' . ')'));
             $data = [
                 'mes' => $dataMes,
                 'mesAnt' => $dataMesAnt,
