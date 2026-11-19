@@ -24,6 +24,7 @@ class DetalleSolicitud extends Model
         'confirmado',
         'estatus_almacen',
         'recuperable',
+        'com_producto_id'
     ];
     /**
      * Nombre de la tabla
@@ -34,6 +35,7 @@ class DetalleSolicitud extends Model
      | RELACIONES DE BASE DE DATOS
      |--------------------------------------------------------------------------
      */
+
     /**
      * Un detalle pertenece a una unidad de medida
      */
@@ -41,6 +43,7 @@ class DetalleSolicitud extends Model
     {
         return $this->belongsTo(CatUnidadesMedidas::class, 'cat_unidades_medida_id', 'id');
     }
+
     /**
      * Un detalle tiene varios detalles de cotizacion
      */
@@ -48,6 +51,7 @@ class DetalleSolicitud extends Model
     {
         return $this->hasMany(DetallesCotizacion::class);
     }
+
     /**
      * Un detalle de solicitud pertenece a una solicitud de compra
      */
@@ -55,22 +59,41 @@ class DetalleSolicitud extends Model
         return $this->belongsTo(SolicitudesCompra::class, 'solicitudes_compra_id', 'id');
     }
 
+    /**
+     * Un detalle puede pertencer a un autgotanque
+     */
     public function DetalleAutotanque()
     {
         // return $this->hasOne(DetalleAutotanque::class, 'id', 'com_detalle_solicitud_id');
         return $this->hasOne(DetalleAutotanque::class, 'com_detalle_solicitud_id', 'id');
     }
 
+    /**
+     * Un detalle de almacen pertence a un detalle de solicitud
+     */
     public function Almacen()
     {
         // return $this->hasOne(DetalleAutotanque::class, 'id', 'com_detalle_solicitud_id');
         return $this->hasOne(Almacen::class, 'com_detalle_solicitud_id', 'id');
     }
 
+    /**
+     * Un detalle de almacen pertence a un detalle de solicitud
+     */
     public function almacenCompras(){
-        return $this->hasOne(AlmacenCompras::class, 'com_detalle_solicitud_id', 'id');
+        return $this->hasOne(DetalleEntrega::class, 'com_detalle_solicitud_id', 'id');
     }
 
+    /**
+     * Un detalle pertence a un producto en el catalogo
+     */
+    public function productoCatalogo(){
+        return $this->belongsTo(Productos::class, 'com_producto_id', 'id');
+    }
+
+    /**
+     * Un detalle de solicitud pertence a una cotizacion seleccionada
+     */
     public function cotizacionSeleccionada()
     {
         return $this->hasOne(

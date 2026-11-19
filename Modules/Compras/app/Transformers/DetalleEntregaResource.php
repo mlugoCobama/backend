@@ -13,11 +13,11 @@ class DetalleEntregaResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id_detalle' => $this->id,
+            'id_detalle' => $this->id ?? null,
             'cant' =>  $this->cantidad,
-            'unidadMedida' => $this->entrada->detalle->unidadMedida->nombre ?? 'N/A',
-            'descripcion' =>  $this->entrada->detalle->descripcion ?? 'Descripcion no disponible',
-            'observaciones' =>  $this->entrada->detalle->observaciones ?? 'Descripcion no disponible',
+            'unidadMedida' => $this->entrada->detalle->unidadMedida->nombre ?? $this->almacenProducto->producto->unidadMedida->nombre ?? 'N/A',
+            'descripcion' =>  $this->entrada->detalle->descripcion ?? $this->almacenProducto->producto->descripcion_planta ?? 'Descripcion no disponible',
+            'observaciones' =>  $this->entrada->detalle->observaciones ?? $this->almacenProducto->producto->descripcion_proveedor ?? 'Sin Observaciones',
             'tipo' => $this->tipo,
 
 

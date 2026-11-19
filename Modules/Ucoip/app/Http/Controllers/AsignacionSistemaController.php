@@ -9,8 +9,10 @@ use Illuminate\Http\Response;
 use Modules\Ucoip\Models\SistemasUcoip;
 use Modules\Ucoip\Services\CifradoService;
 use App\Enums\EstatusAsignaciones;
+use Exception;
 use Modules\Ucoip\Models\Ucoip;
 use Modules\Ucoip\Services\PdfResponsivaService;
+use setasign\Fpdi\Fpdi;
 
 class AsignacionSistemaController extends Controller
 {

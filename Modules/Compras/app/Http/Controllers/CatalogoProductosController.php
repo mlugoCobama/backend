@@ -16,10 +16,10 @@ class CatalogoProductosController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
 
-        $data = CatSistemasAuto::where('tipo', 1)->with('subCategorias.productosActivos.unidadMedida')->get();
+        $data = CatSistemasAuto::where('tipo', $request->tipo)->with('subCategorias.productosActivos.unidadMedida')->get();
         return response()->json([
             'status' => 'success',
             'data' => $data,
@@ -72,7 +72,7 @@ class CatalogoProductosController extends Controller
                     ]
                 );
                 }
-                
+
             }
 
             DB::commit();
@@ -98,14 +98,11 @@ class CatalogoProductosController extends Controller
      */
     public function show($id)
     {
-        $precios = CatalogoPrecios::where('com_proveedores_id', $id)
-        ->get(['com_productos_id', 'precio']);
-
-        $mapaPrecios = $precios->keyBy('com_productos_id');
+        $prductos = CatSistemasAuto::with('subCategorias.productosActivos.unidadMedida')->find($id);
 
         return response()->json([
-            'estatus' => 'success',
-            'data' => $mapaPrecios,
+            'status' => 'success',
+            'data' => $prductos,
             'message' => 'Datos recuperados correctamente'
         ]);
     }
@@ -153,5 +150,5 @@ class CatalogoProductosController extends Controller
 
     }
 
-    
+
 }

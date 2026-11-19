@@ -6,6 +6,22 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCatPreciosRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+
+        if ($this->has('precios_data')) {
+            $preciosData = $this->input('precios_data');
+
+            if (is_string($preciosData)) {
+                $preciosData = json_decode($preciosData, true);
+            }
+
+            if (is_array($preciosData)) {
+                $this->merge($preciosData);
+            }
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      */
@@ -17,6 +33,10 @@ class StoreCatPreciosRequest extends FormRequest
             'productosArray.*.preciosProveedores'         => ['required', 'array'],
             'productosArray.*.preciosProveedores.*.proveedor_id' => ['required', 'exists:com_proveedores,id'],
             'productosArray.*.preciosProveedores.*.precio' => ['required', 'numeric', 'min:0'],
+
+            'productosArray.*.archivo'              => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,xlsx,xls'],
+            'archivos_proveedores'                  => ['nullable', 'array'],
+            'archivos_proveedores.*'                => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,xlsx,xls']
         ];
     }
 
@@ -27,7 +47,7 @@ class StoreCatPreciosRequest extends FormRequest
     {
         return true;
     }
-    
+
     /**
      * Get custom messages for validator errors.
      *
@@ -38,19 +58,23 @@ class StoreCatPreciosRequest extends FormRequest
         return [
             'productosArray.required' => 'El listado de productos es obligatorio.',
             'productosArray.array'    => 'El formato del listado de productos debe ser un arreglo.',
-            
+
             'productosArray.*.producto_id.required' => 'El producto es obligatorio.',
             'productosArray.*.producto_id.exists'   => 'El producto seleccionado no existe en la base de datos.',
-            
+
             'productosArray.*.preciosProveedores.required' => 'Debe especificar los precios de los proveedores para cada producto.',
             'productosArray.*.preciosProveedores.array'    => 'Los precios de los proveedores deben tener un formato de arreglo.',
-            
+
             'productosArray.*.preciosProveedores.*.proveedor_id.required' => 'El proveedor es obligatorio.',
             'productosArray.*.preciosProveedores.*.proveedor_id.exists'   => 'El proveedor seleccionado no existe en la base de datos.',
-            
+
             'productosArray.*.preciosProveedores.*.precio.required' => 'El precio es obligatorio.',
             'productosArray.*.preciosProveedores.*.precio.numeric'  => 'El precio debe ser un valor numérico.',
             'productosArray.*.preciosProveedores.*.precio.min'      => 'El precio no puede ser menor a 0.',
+
+            'archivos_proveedores.*.file'   => 'El archivo adjunto debe ser un documento válido.',
+            'archivos_proveedores.*.mimes'  => 'El archivo debe tener un formato permitido (PDF, Imágenes o Excel).',
+
         ];
     }
 }

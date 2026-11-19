@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Modules\Compras\Models\EntregaTecnicos;
+use Modules\Compras\Services\AlmacenProductosService;
 use Modules\Compras\Services\AlmacenService;
 use Modules\Compras\Services\HomologadorService;
 use Modules\Compras\Transformers\AlmacenComprasResource;
@@ -19,11 +20,14 @@ use Modules\Macro\Models\Almacen;
 class AlmacenComprasConrollerController extends Controller
 {
     protected $almacenService;
+    protected $almacenProductos;
 
     public function __construct(
-        AlmacenService $almacenService
+        AlmacenService $almacenService,
+        AlmacenProductosService $almacenProductos
     ){
         $this->almacenService = $almacenService;
+        $this->almacenProductos = $almacenProductos;
     }
 
     /**
@@ -187,24 +191,19 @@ class AlmacenComprasConrollerController extends Controller
         ]);
     }
 
-    public function getSalidas(){
-        $almacen = DB::table('com_movimientos_almacen as cma')
-                    ->select(
-                        'cma.fecha as fecha_movimiento',
-                        'cma.tipo as tipo_movimiento',
-                        'cma.cantidad',
-                        'cds.descripcion',
-                        'ca.id as id_almacen',
-                        'cma.id_usuario as usuario_entrega',
-                        'cma.id_usuario_entrega as usuario_recibe'
-                    )
-                    ->join('com_almacen as ca', 'cma.com_almacen_id', '=', 'ca.id')
-                    ->join('com_detalle_solicitud as cds', 'ca.com_detalle_solicitud_id', '=', 'cds.id')
-                    ->get();
+    public function getSalidas(Request $request){
 
-        $data = EntregaTecnicos::with('movimientosEntrega.entrada.detalle.unidadMedida')->get();
+        $data = EntregaTecnicos::with(
+            'movimientosEntrega.entrada.detalle.unidadMedida',
+            'movimientosEntrega.almacenProducto.producto.unidadMedida')
+            ->when($request->filled('intercompania'), function ($query) use ($request) {
+                return $query->where('empresa', $request->intercompania);
+            })
+            ->when($request->filled('tipo'), function ($query) use ($request) {
+                return $query->where('tipo', $request->tipo);
+            })
+            ->get();
 
-// 'data2' =>  MovimientoAlmacenResource::collection($almacen),
         return  response()->json([
             'status' => 'success',
             'data' => SalidasResource::collection($data),

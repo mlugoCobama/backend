@@ -46,6 +46,10 @@ class Productos extends Model
         return $this->belongsTo(CatUnidadesMedidas::class, 'com_cat_unidad_medida_id', 'id');
     }
 
+    public function almacenProducto(){
+        return $this->hasMany(AlmacenProducto::class, 'com_productos_id', 'id');
+    }
+
     /**
      *  ----------------------------------------
      * Scopes

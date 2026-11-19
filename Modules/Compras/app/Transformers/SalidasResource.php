@@ -28,7 +28,9 @@ class SalidasResource extends JsonResource
             'fecha' => $this->fecha,
             'usuario_entrega' => $usuario_entrega['nombre_completo'],
             'usuario_recibe' => $usuario_recibe['nombre_completo'],
-            'detalles' => DetalleEntregaResource::collection($this->movimientosEntrega)
+            'detalles' => DetalleEntregaResource::collection($this->movimientosEntrega),
+            'ruta' => $this->ruta_formato
+            // 'movimientosEntregas' => $this->movimientosEntrega
         ];
     }
 

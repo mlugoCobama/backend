@@ -20,8 +20,8 @@ class GlpiService{
     $userGlpi = GlpiUser::find($idUser);
 
     if($userGlpi){
-        $userGlpi->firstname = $nombres;
-        $userGlpi->realname = $apellidos;
+        // $userGlpi->firstname = $nombres;
+        // $userGlpi->realname = $apellidos;
         if(!empty($password)){
             $userGlpi->password = $this->hashPassword($password);
         }

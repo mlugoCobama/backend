@@ -38,51 +38,47 @@ class SolicitudesMacroController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(int $intercompania, ?int $id = null)
+    public function index(Request $request)
     {
         $usuariosCompra = config('compras.users_macro.compras', []);
-        $isCompras = in_array($id, $usuariosCompra);
+        $isCompras = in_array($request->id, $usuariosCompra);
 
         $usuariosMacro = config('compras.users_macro.macro', []);
-        $isMacro = in_array($id, $usuariosMacro);
+        $isMacro = in_array($request->id, $usuariosMacro);
 
         $usuariosAdminz = config('compras.users_macro.adminz', []);
-        $isAdminz = in_array($id, $usuariosAdminz);
+        $isAdminz = in_array($request->id, $usuariosAdminz);
 
         $usuariosAdmin = config('compras.users_macro.admin', []);
-        $isAdmin = in_array($id, $usuariosAdmin);
+        $isAdmin = in_array($request->id, $usuariosAdmin);
 
         if( $isCompras){
-            $query = $this->getSolictudesMacro(333, 1, 1, 1,'compras',$id);
-            // DB::select("call SistemaTickets.SP_GetSolicitudesMacro()")
+            $query = $this->getSolictudesMacro($request->intercompania, 1, 1, 1,'compras',$request->id, $request->mes, $request->anio);
             $data = SolicitudesMacroResource::collection($query);
             $tipo = 'compras';
         }
 
         if($isAdminz){
-            $query = $this->getSolictudesMacro(null, 1, 1, 1,'adminz',$id);
+            $query = $this->getSolictudesMacro(null, 1, 1, 1,'adminz',$request->id, $request->mes, $request->anio);
             $data = SolicitudesMacroResource::collection($query);
             $tipo = 'compras';
         }
 
         if($isMacro){
-            $query = $this->getSolictudesMacro(null, 1, 1, 0,'macro',$id);
-            // DB::select("call SistemaTickets.SP_GetSolicitudesMacroTaller()")
+            $query = $this->getSolictudesMacro($request->intercompania, 1, 1, 0,'macro',$request->id, $request->mes, $request->anio);
             $data = SolicitudesMacroResource::collection( $query );
             $tipo = 'macro';
         }
 
         if($isAdmin){
-            $query = $this->getSolictudesMacro(null, 0, 0, 0,'admin',$id);
-            // DB::select("call SistemaTickets.SP_GetSolicitudesMacroAdmin()")
+            $query = $this->getSolictudesMacro($request->intercompania, 0, 0, 0,'admin',$request->id, $request->mes, $request->anio);
             $data = SolicitudesMacroResource::collection($query);
             $tipo = 'macro';
         }
 
         if(!$isMacro && !$isCompras && !$isAdmin && !$isAdminz)
         {
-            $query = $this->getSolictudesMacro($intercompania, 0, 0, 0,'empresa',$id);
-            // DB::select("call SistemaTickets.SP_GetSolicitudesMacroGasera($intercompania)")
+            $query = $this->getSolictudesMacro($request->intercompania, 0, 0, 0,'empresa',$request->id, $request->mes, $request->anio);
             $data = SolicitudesMacroResource::collection( $query );
             $tipo = 'gasera';
         }
@@ -96,8 +92,9 @@ class SolicitudesMacroController extends Controller
         ]);
     }
 
-    public function getSolictudesMacro($intercompania, $ga, $gg, $jt, $tipo, $id){
-        return DB::select("call SistemaTickets.SP_GetSolicitudesComprasMacro(?, ?, ?, ?, ?, ?)",[$intercompania, $ga, $gg, $jt, $tipo, $id]);
+    public function getSolictudesMacro($intercompania, $ga, $gg, $jt, $tipo, $id, $mes, $anio ){
+        $mesFormateado =  sprintf("%02d", $mes);
+        return DB::select("call SistemaTickets.SP_GetSolicitudesComprasMacroMesAnio(?, ?, ?, ?, ?, ?, ?, ?)",[$intercompania, $ga, $gg, $jt, $tipo, $id, $mesFormateado, $anio ]);
     }
 
 

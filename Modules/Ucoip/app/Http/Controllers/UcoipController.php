@@ -90,27 +90,27 @@ class UcoipController extends Controller
             $ucoip = new Ucoip();
         }
 
-        $ucoip->ucoip =  $data['ucoip'];
+        // $ucoip->ucoip =  $data['ucoip'];
         if(!empty($data['password'])){
             $ucoip->contrasenia = $this->cifradoService->encrypt($data['password']);
         }
-        $ucoip->user_id =  $data['id'];
-        $ucoip->ucoip_cat_puestos =  $data['puesto_id'];
-        $ucoip->cat_empresa_id =  $this->matchEmpresa($data['intercompania'])->id ?? 15;
+        // $ucoip->user_id =  $data['id'];
+        // $ucoip->ucoip_cat_puestos =  $data['puesto_id'];
+        // $ucoip->cat_empresa_id =  $this->matchEmpresa($data['intercompania'])->id ?? 15;
         $ucoip->save();
 
         $this->glpiService->updateGlpiUser($data['id'], $data['nombre'], $data['apellidos'], $data['password'], $data['area_id'],$data['departamento_id'],$data['puesto_id'] );
 
-        $ultimoTitular = TitularesUcoip::where('ucoip_ucoip_id', $ucoip->id)->latest('id')->first();
+        // $ultimoTitular = TitularesUcoip::where('ucoip_ucoip_id', $ucoip->id)->latest('id')->first();
 
-            $nuevoNombre = trim($data['nombre'].' '.$data['apellidos']);
-            if (!$ultimoTitular) {
-                $this->storeTitular($ucoip->id, $data);
-            } elseif ($ultimoTitular->nombre_titular != $nuevoNombre) {
-                $ultimoTitular->fecha_fin = now();
-                $ultimoTitular->save();
-                $this->storeTitular($ucoip->id, $data);
-            }
+        //     $nuevoNombre = trim($data['nombre'].' '.$data['apellidos']);
+        //     if (!$ultimoTitular) {
+        //         $this->storeTitular($ucoip->id, $data);
+        //     } elseif ($ultimoTitular->nombre_titular != $nuevoNombre) {
+        //         $ultimoTitular->fecha_fin = now();
+        //         $ultimoTitular->save();
+        //         $this->storeTitular($ucoip->id, $data);
+        //     }
 
 
         return response()->json([

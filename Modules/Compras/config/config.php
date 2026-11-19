@@ -49,7 +49,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'tecno_gps' => [
-        'route'   => env('TECNO_GPS_ROUTE', 'https://horus.tecno-gps.com.mx/api/v1/'),
+        'route'   => env('TECNO_GPS_ROUTE', ''),
         'api_key' => env('TECNO_GPS_API_KEY', ''),
     ],
 ];

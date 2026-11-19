@@ -13,21 +13,19 @@ use Modules\Compras\Http\Controllers\CatUnidadesController;
 use Modules\Compras\Http\Controllers\SolicitudesMacroController;
 use Modules\Compras\Http\Controllers\CatSistemasAutoController;
 use Modules\Compras\Http\Controllers\AcuseEntregaController;
-use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Http\Controllers\AlmacenComprasConrollerController;
 use Modules\Compras\Http\Controllers\CatalogoPreciosController;
 use Modules\Compras\Http\Controllers\CatalogoProductosController;
 use Modules\Compras\Http\Controllers\UsuariosController;
-use Modules\Compras\Models\SolicitudesCompra;
 use Modules\Compras\Http\Controllers\DetalleSolicitudController;
 use Modules\Compras\Http\Controllers\CatTiposMantenimientoController;
 use Modules\Compras\Http\Controllers\ComprasController;
 use Modules\Compras\Http\Controllers\DispersionesDieselController;
-use Modules\Compras\Models\AcuseEntrega;
 use Modules\Compras\Http\Controllers\ReportesComprasController;
 use Modules\Compras\Http\Controllers\SyncController;
 use Modules\Compras\Http\Controllers\TagController;
 use Modules\Compras\Http\Controllers\TokaController;
+use Modules\Compras\Http\Controllers\AlmacenProductosController;
 
 /*
  *--------------------------------------------------------------------------
@@ -64,13 +62,19 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
     Route::resource('Compras', ComprasController::class);
     Route::resource('CatalogoProductos', CatalogoProductosController::class);
     Route::resource('CatalogoPrecios', CatalogoPreciosController::class);
+    Route::resource('AlmacenProductos', AlmacenProductosController::class);
 
-    
+    Route::post('AlmacenProductos/Existencias/Filtro', [AlmacenProductosController::class, 'getExistenciasAlmacen']);
+    Route::post('AlmacenProductos/Movimientos', [AlmacenProductosController::class, 'getMoviemientosAlmacen']);
+    Route::post('AlmacenProductos/Salidas/Subir/Acuse', [AlmacenProductosController::class, 'subirAcuse']);
+
+
     Route::post('CatalogoPrecios/Comparativa', [CatalogoPreciosController::class, 'obtenerPreciosComparativa']);
 
+    Route::post('/CatalogoProductos/tipo/{id}',[CatalogoProductosController::class, 'index'])->name('SolicitudesCompras.solicitudes');
 
     Route::get( '/almacen/analisis-historial',[AlmacenComprasConrollerController::class, 'pruebaHomologador']);
-    Route::get('/Solicitudes/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
+    Route::post('/Solicitudes/{intercompania}/{id}',[SolicitudesCompraController::class, 'index'])->name('SolicitudesCompras.solicitudes');
     Route::post('/enviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'enviarSolicitudCotizacion'])->name('SolicitudesCompra.enviarSolicitudCotizacion');
     Route::post('/reenviar-solicitud-cotizacion', [SolicitudesCompraController::class, 'reenviarCorreo'])->name('SolicitudesCompra.reenviarCorreo');
     Route::get('/SolicitudCompra/{id}',[SolicitudesCompraController::class, 'getSolicitud'])->name('SolicitudesCompras.getSolicitud');
@@ -83,7 +87,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
 
 
     Route::post('/SolicitudesCompras/Macro/actualiza-solicitud', [SolicitudesMacroController::class, 'actualizarSolicitudCompra'])->name('SolicitudesCompras.actualizarSolicitudCompraMacro');
-    Route::get('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
+    Route::post('/Solicitudes/Macro/{intercompania}/{id}',[SolicitudesMacroController::class, 'index'])->name('SolicitudesMacro.solicitudes');
 
 
     Route::get('/getProveedores',[ProveedoresController::class, 'getProveedores'])->name('Proveedores.getProveedores');
@@ -120,7 +124,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
 
 
     Route::get('/getExsitencias/{tipo}/{intercompania}', [AlmacenComprasConrollerController::class, 'getAlmacenDisponible'])->name('Almacen.getAlmacenDisponible');
-    Route::get('/getMovimientos', [AlmacenComprasConrollerController::class, 'getSalidas'])->name('Almacen.getSalidas');
+    Route::post('/getMovimientos', [AlmacenComprasConrollerController::class, 'getSalidas'])->name('Almacen.getSalidas');
 
 
     //*Rutas para el catalogo de vehiculos
@@ -146,6 +150,9 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
 });
 
 Route::prefix('compras')->group(function(){
+
+    Route::get('AlmacenProductos/Salida/Formato/{idSalida}', [AlmacenProductosController::class, 'generatePdf']);
+    Route::get('entregaRecursos/{id}/{archivo}', [AlmacenProductosController::class, 'getFile']);
     Route::resource('SyncFacturas', SyncController::class);
     Route::post('/confirmacion-sincronizacion', [SyncController::class, 'confirmar']);
     Route::get('/documentos/{id}/archivos',[SyncController::class, 'obtenerArchivos']);
@@ -154,6 +161,7 @@ Route::prefix('compras')->group(function(){
     Route::get('/get-seguimiento-solicitud/{idSolicitud}', [SolicitudesCompraController::class, 'getSeguimientoSolicitud'])->name('SolicitudesCompras.getSeguimientoSolicitud');
 
     //*Ruta para mostra archivos
+    Route::get('catalogosPrecios/{id}/{file}', [CatalogoPreciosController::class, 'getFile'])->name('CatPrecioProveedores.getFile');
     Route::get('expedientes/{id}/{file}', [ExpedientesProveedoresController::class, 'getFile'])->name('ExpedientesProveedores.getFile');
     Route::get('cotizaciones/{id}/{file}', [CotizacionesController::class, 'getFile'])->name('Cotizaciones.getFile');
     Route::get('docsOrdenCompra/{id}/{file}', [DocumentosOrdenesComprasController::class, 'getFile'])->name('DocumentosOrdenesCompras.getFile');

@@ -8,7 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Modules\Compras\Models\AcuseEntrega;
-use Modules\Compras\Models\AlmacenCompras;
+use Modules\Compras\Models\DetalleEntrega;
 
 use Modules\Compras\Models\Cotizaciones;
 use Modules\Compras\Models\OrdenCompra;
@@ -19,6 +19,7 @@ use App\Enums\EstatusSolicitud;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Modules\Compras\Models\DetalleSolicitud;
+use Modules\Compras\Services\AlmacenProductosService;
 use Modules\Compras\Services\OrdenCompraService;
 use Modules\Ucoip\Services\HardwareService;
 use Modules\Ucoip\Services\ResguardosService;
@@ -29,14 +30,17 @@ class AcuseEntregaController extends Controller
 protected $hardwareService;
 protected $resguardoService;
 protected $ocService;
+protected $almProService;
     public function __construct(
         HardwareService $hardwareService,
         ResguardosService $resguardoService,
         OrdenCompraService $ocService,
+        AlmacenProductosService $almProService
     ){
         $this->hardwareService = $hardwareService;
         $this->resguardoService = $resguardoService;
         $this->ocService =  $ocService;
+         $this->almProService =  $almProService;
     }
     /**
      * Display a listing of the resource.
@@ -105,10 +109,9 @@ public function store(Request $request)
         // guardar acuse
         $this->storeAcuse($ordenCompraId,$file,$validated);
         // ingresar almacén
-        $this->ingresarAlmacen(json_encode($detallesEntrada),$userId);
+        $this->ingresarAlmacen(json_encode($detallesEntrada), $userId, $validated['intercompania'] );
         // guardar inventario solo si aplica
-        if($requiereInventario && count($inventario)>0){
-
+        if($requiereInventario && count($inventario) > 0){
             $this->guardarInventario($inventario, $validated['intercompania']);
         }
 
@@ -150,7 +153,6 @@ public function store(Request $request)
         ->with('unidadMedida')
         ->with('almacenCompras.salidas')
                 ->confirmadas()
-                // ->pendientes()
                 ->get());
 
         $todasEnCero = $detalles->every(function ($detalle) {
@@ -231,12 +233,12 @@ public function store(Request $request)
         $acuse->save();
     }
 
-    public function ingresarAlmacen($dataDetalles,  $idUsuario){
+    public function ingresarAlmacen($dataDetalles,  $idUsuario, $intercompania = null){
         $datos = json_decode($dataDetalles, true);
         foreach ($datos as  $dato) {
-            $itemAlmacen = AlmacenCompras::where('com_detalle_solicitud_id', $dato['id'])->first();
+            $itemAlmacen = DetalleEntrega::where('com_detalle_solicitud_id', $dato['id'])->first();
             if(!$itemAlmacen){
-                $itemAlmacen = new AlmacenCompras();
+                $itemAlmacen = new DetalleEntrega();
             }
             $itemAlmacen->fecha_actualizacion = Carbon::now()->format('Y-m-d');
             $itemAlmacen->existencia = $this->calcularExistencia( $dato['id'], $dato['recibidos'], 1 );
@@ -248,12 +250,18 @@ public function store(Request $request)
             if($itemAlmacen->existencia == $itemAlmacen->cantidad){
                 $this->updateStatusAlmacen($dato['id'], 1);
             }
+
+
+            if($dato['producto_id'] && $intercompania){
+                $almProducto = $this->almProService->updateStockAlmPro($intercompania, $dato['producto_id'], $dato['cantidad'], 'e');
+                $this->almProService->storeMovimientoAlmacen($dato['cantidad'], $almProducto->id, 'e', $itemAlmacen->id, null, '',  $idUsuario);
+            }
         }
 
     }
 
     public function calcularExistencia( $idDetalle,  $valorEntrante, $tipo){
-        $itemAlmacen = AlmacenCompras::where('com_detalle_solicitud_id', $idDetalle)->first();
+        $itemAlmacen = DetalleEntrega::where('com_detalle_solicitud_id', $idDetalle)->first();
         if($itemAlmacen){
             $existencia = $itemAlmacen->existencia + ($valorEntrante * $tipo);
         }else{
@@ -277,7 +285,7 @@ public function store(Request $request)
     {
 
         foreach($inventario as $activo){
-            $almacen = AlmacenCompras::where('com_detalle_solicitud_id',$activo['detalleId'])->first();
+            $almacen = DetalleEntrega::where('com_detalle_solicitud_id',$activo['detalleId'])->first();
 
             $hardware = $this->hardwareService
             ->storeHardware([

@@ -23,6 +23,7 @@ class StoreSolicitudCompraRequest extends FormRequest
             'data.sistema' => 'nullable|integer',
             'data.tipoMantenimiento' => 'nullable|integer',
             'data.detalles' => 'required|array|min:1',
+            'data.detalles.*.id_producto' => 'nullable',
             'data.detalles.*.cantidad' => 'required|numeric|min:1',
             'data.detalles.*.descripcion' => 'required|string',
             'data.detalles.*.observaciones' => 'nullable|string',

@@ -5,8 +5,10 @@ namespace Modules\Compras\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Modules\Compras\Http\Requests\StoreCatPreciosRequest;
 use Modules\Compras\Models\CatalogoPrecios;
+use Modules\Compras\Models\Proveedores;
 
 class CatalogoPreciosController extends Controller
 {
@@ -49,6 +51,21 @@ class CatalogoPreciosController extends Controller
                             'precio' => $cotizacion['precio'],
                         ]
                     );
+                }
+            }
+
+            if ($request->hasFile('archivos_proveedores')) {
+                foreach ($request->file('archivos_proveedores') as $proveedorId => $file) {
+                    if ($file && $file->isValid()) {
+                        $extension = $file->getClientOriginalExtension();
+
+                        $nombreArchivo = "catalogo_precios_{$proveedorId}_" . time().'.'. $extension;
+                        $rutaCarpeta = "catalogosPrecios/$proveedorId";
+                        $path = $file->storeAs($rutaCarpeta, $nombreArchivo, 'public');
+                        Proveedores::where('id', $proveedorId)->update([
+                            'catalogo_precios' => $path
+                        ]);
+                    }
                 }
             }
 
@@ -111,9 +128,23 @@ class CatalogoPreciosController extends Controller
             ->whereIn('com_productos_id', $productosIds)
             ->get(['com_productos_id', 'com_proveedores_id', 'precio']);
 
+        $proveedores = Proveedores::whereIn('id', $proveedoresIds)->get(['id', 'catalogo_precios']);
+
         return response()->json([
             'success' => true,
-            'data' => $precios
+            'data' => ['precio' => $precios, 'proveedores' => $proveedores],
         ]);
+    }
+
+    public function getFile($id, $file)
+    {
+        $fileName = basename($file);
+
+        $path = storage_path("app/public/catalogosPrecios/{$id}/{$fileName}");
+        if (!File::exists($path)) {
+            abort(404);
+        }
+
+        return response()->file($path);
     }
 }

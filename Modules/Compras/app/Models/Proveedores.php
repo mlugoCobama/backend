@@ -31,7 +31,8 @@ class Proveedores extends Model
         'tiempo_entrega',
         'ti',
         'activo',
-        'tipo'
+        'tipo',
+        'catalogo_precios'
 
     ];
     /**

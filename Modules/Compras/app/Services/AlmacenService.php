@@ -4,7 +4,7 @@ namespace Modules\Compras\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Modules\Compras\Models\AlmacenCompras;
+use Modules\Compras\Models\DetalleEntrega;
 use Modules\Compras\Models\EntregaTecnicos;
 use Modules\Compras\Models\MovimientosAlmacen;
 
@@ -69,7 +69,7 @@ class AlmacenService
      */
     public function actualizarExistencia($idAlmacen,  $valorEntrante, $tipo)
     {
-        $itemAlmacen = AlmacenCompras::where('id', $idAlmacen)->first();
+        $itemAlmacen = DetalleEntrega::where('id', $idAlmacen)->first();
         if ($itemAlmacen) {
             $existencia = $itemAlmacen->existencia + ($valorEntrante * $tipo);
         } else {

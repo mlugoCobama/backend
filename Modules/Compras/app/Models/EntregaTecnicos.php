@@ -17,7 +17,10 @@ class EntregaTecnicos extends Model
         'folio',
         'usuario_entrega',
         'tecnico_id',
-        'fecha'
+        'fecha',
+        'empresa',
+        'tipo',
+        'ruta_formato'
     ];
 
     protected $table = 'com_entrega_almacen';

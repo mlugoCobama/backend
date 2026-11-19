@@ -39,6 +39,8 @@ class GlpiUser extends Model
     protected $connection =  'intranet';
     protected $table = 'glpi_users';
 
+    public $timestamps = false;
+
     protected static function newFactory(): GlpiUserFactory
     {
         //return GlpiUserFactory::new();

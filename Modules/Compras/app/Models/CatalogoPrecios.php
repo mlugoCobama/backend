@@ -21,4 +21,12 @@ class CatalogoPrecios extends Model
         'dias_entrega',
         'ultima_actualizacion'
     ];
+
+
+    /**
+     * Relaciones
+     */
+    public function proveedor(){
+        return $this->belongsTo(Proveedores::class, 'com_proveedores_id', 'id');
+    }
 }

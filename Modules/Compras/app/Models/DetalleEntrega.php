@@ -4,9 +4,9 @@ namespace Modules\Compras\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Modules\Compras\Database\Factories\AlmacenComprasFactory;
+use Modules\Compras\Database\Factories\DetalleEntregaFactory;
 
-class AlmacenCompras extends Model
+class DetalleEntrega extends Model
 {
     use HasFactory;
 
@@ -21,11 +21,13 @@ class AlmacenCompras extends Model
         'codigo_producto',
         'id_usuario'
     ];
-    protected $table =  'com_almacen';
 
-    protected static function newFactory(): AlmacenComprasFactory
+    protected $table =  'com_detalle_entrega';
+    // protected $table =  'com_almacen';
+
+    protected static function newFactory(): DetalleEntregaFactory
     {
-        //return AlmacenComprasFactory::new();
+        //return DetalleEntregaFactory::new();
     }
 
     /**

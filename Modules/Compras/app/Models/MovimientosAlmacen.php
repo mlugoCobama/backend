@@ -21,7 +21,8 @@ class MovimientosAlmacen extends Model
         'com_almacen_id',
         'id_usuario',
         'id_usuario_entrega',
-        'com_id_entrega_tecnico'
+        'com_id_entrega_tecnico',
+        'com_almacen_producto_id'
     ];
 
     protected $table = 'com_movimientos_almacen';
@@ -42,6 +43,10 @@ class MovimientosAlmacen extends Model
      * Un movimiento pertenece a una entrada de almacen
      */
     public function entrada(){
-        return $this->belongsTo(AlmacenCompras::class, 'com_almacen_id', 'id' );
+        return $this->belongsTo(DetalleEntrega::class, 'com_almacen_id', 'id' );
+    }
+
+    public function almacenProducto(){
+        return $this->belongsTo(AlmacenProducto::class, 'com_almacen_producto_id', 'id');
     }
 }
