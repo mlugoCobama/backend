@@ -86,6 +86,14 @@ class LoginController extends Controller
 
     }
 
+    public function permmisions(Request $request){
+        $id = $request->user()->id;
+        $permisos = $this->getPermisos($id);
+        return response()->json([
+            'permissions' => $permisos
+        ]);
+    }
+
     private function getUsuarioActivo($correo){
         $data = DB::connection('intranet')->select("call SOPORTEZM.SP_GetUsuarioEmail(?)", [$correo]);
         return  UsersResource::collection($data);

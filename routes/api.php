@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::middleware('auth:sanctum')->group( function () {
+    Route::get('/auth/permissions', [LoginController::class, 'permmisions']);
 });
 
 Route::apiResources([
