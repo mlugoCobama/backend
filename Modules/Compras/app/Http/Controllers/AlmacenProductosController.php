@@ -5,9 +5,12 @@ namespace Modules\Compras\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Modules\Compras\Models\AcuseEntrega;
+use Modules\Compras\Models\CatUnidadesMedidas;
 use Modules\Compras\Models\EntregaTecnicos;
+use Modules\Compras\Models\Productos;
 use Modules\Compras\Services\AlmacenProductosService;
 use Modules\Compras\Services\FormatoEntregaInsumosService;
 use Modules\Compras\Transformers\MovimientosAlamacenResource;
@@ -175,5 +178,86 @@ class AlmacenProductosController extends Controller
         }
 
         return response()->file($path);
+    }
+
+
+    public function importarProductos(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt'],
+        ]);
+
+        $path = $request->file('file')->getRealPath();
+        $handle = fopen($path, 'r');
+
+        if ($handle === false) {
+            return response()->json(['message' => 'No se pudo abrir el archivo']);
+        }
+
+        $header = fgetcsv($handle, 0, ',');
+        if (!$header) {
+            fclose($handle);
+            return response()->json(['message' => 'El archivo CSV está vacío']);
+        }
+
+        $header = array_map(function ($col) {
+            $col = preg_replace('/^\xEF\xBB\xBF/', '', (string) $col);
+            return trim($col);
+        }, $header);
+
+        $headerCount = count($header);
+
+        $unidadesMap = CatUnidadesMedidas::pluck('id', 'nombre')
+            ->mapWithKeys(fn ($id, $nombre) => [mb_strtolower(trim((string) $nombre)) => $id]);
+
+        $insertados = 0;
+
+        try {
+            DB::transaction(function () use ($handle, $header, $headerCount, $unidadesMap, &$insertados) {
+                while (($row = fgetcsv($handle, 0, ',')) !== false) {
+                    // Saltar filas completamente vacías
+                    if ($row === [null] || count(array_filter($row, fn ($v) => $v !== null && trim((string) $v) !== '')) === 0) {
+                        continue;
+                    }
+
+                    if (count($row) !== $headerCount) {
+                        throw new \RuntimeException('Una fila del CSV no coincide con el número de columnas del encabezado.');
+                    }
+
+                    $data = array_combine($header, $row);
+
+                    $unidadTexto = trim((string) ($data['unidad_medida'] ?? ''));
+                    $primeraPalabra = mb_strtolower(explode(' ', $unidadTexto)[0] ?? '');
+                    $unidadMedidaId = $unidadesMap[$primeraPalabra] ?? 11;
+
+                    $producto = new Productos();
+                    $producto->com_subcategoria_id = $data['com_subcategoria_id'] ?? null;
+                    $producto->clave_interna = trim((string) ($data['clave_interna'] ?? ''));
+                    $producto->cant_default = 1;
+                    $producto->com_cat_unidad_medida_id = $unidadMedidaId;
+                    $producto->descripcion_planta = trim((string) ($data['descripcion_planta'] ?? ''));
+                    $producto->descripcion_proveedor = trim((string) ($data['descripcion_proveedor'] ?? ''));
+                    $producto->observaciones = isset($data['observaciones']) && trim((string) $data['observaciones']) !== ''
+                        ? trim((string) $data['observaciones'])
+                        : '';
+                    $producto->save();
+
+                    $insertados++;
+                }
+            });
+        } catch (\Throwable $e) {
+            fclose($handle);
+            return response()->json([
+                'message' => 'Error al importar productos: ' . $e->getMessage(),
+            ]);
+        }
+
+        fclose($handle);
+
+        return response()->json([
+            'message' => 'Datos cargados correctamente',
+            'insertados' => $insertados,
+            'unidadesMap' => $unidadesMap
+        ]);
     }
 }

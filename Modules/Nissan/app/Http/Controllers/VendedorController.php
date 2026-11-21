@@ -64,7 +64,7 @@ class VendedorController extends Controller
         $vendedor->save();
 
         return response()->json([
-            'status' => 'success', 
+            'status' => 'success',
             'message' => 'Vendedor agregado correctamente',
             'data' => []
         ]);
@@ -87,7 +87,7 @@ class VendedorController extends Controller
             ->get();
 
         }
-        
+
 
         return response()->json([
             'status' => 'success',
@@ -123,7 +123,7 @@ class VendedorController extends Controller
         }
 
         return response()->json([
-            'status' => 'success', 
+            'status' => 'success',
             'message' => 'Vendedor actualizado correctamente',
             'data' => []
         ]);
@@ -141,7 +141,7 @@ class VendedorController extends Controller
         }
 
         return response()->json([
-            'status' => 'success', 
+            'status' => 'success',
             'message' => 'Vendedor borrado correctamente',
             'data' => []
         ]);

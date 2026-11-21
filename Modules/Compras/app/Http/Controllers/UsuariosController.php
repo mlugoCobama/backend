@@ -190,8 +190,8 @@ class UsuariosController extends Controller
                 'p.descripcion'
             )
             ->where('p.sistema', '<>', 2)
-            // ->orderBy('um.nombre', 'asc')
-            // ->orderBy('p.descripcion', 'asc')
+            ->orderBy('um.orden', 'asc')
+            ->orderBy('p.descripcion', 'asc')
             ;
 
         // Si hay usuario, hacemos LEFT JOIN para marcar permisos activos

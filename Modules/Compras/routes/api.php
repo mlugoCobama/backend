@@ -150,7 +150,7 @@ Route::middleware(['auth:sanctum'])->prefix('compras')->group(function () {
 });
 
 Route::prefix('compras')->group(function(){
-
+    Route::post('/productos/importar-csv', [AlmacenProductosController::class, 'importarProductos']);
     Route::get('AlmacenProductos/Salida/Formato/{idSalida}', [AlmacenProductosController::class, 'generatePdf']);
     Route::get('entregaRecursos/{id}/{archivo}', [AlmacenProductosController::class, 'getFile']);
     Route::resource('SyncFacturas', SyncController::class);
