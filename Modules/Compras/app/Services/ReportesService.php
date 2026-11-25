@@ -206,7 +206,6 @@ class ReportesService{
             ->where('estatus', '>', EstatusSolicitud::ESP_AUT_PLANTA)
             ->where('estatus', '<>', EstatusSolicitud::CANCELADA)
             ->where('activo', 1)
-            ->whereIn('com_cat_sistemas_auto_id', [38,39])
             ->where('tipo', $tipo)
             ->where('empresa', $empresa)
             ->whereHas('DetallesSolicitud', fn($q) => $q->where('confirmado', 1))
