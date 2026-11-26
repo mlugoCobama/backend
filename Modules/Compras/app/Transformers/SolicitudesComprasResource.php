@@ -95,7 +95,7 @@ class SolicitudesComprasResource extends JsonResource
             $nombreCompleto = trim($usuario[0]->firstname . ' ' . $usuario[0]->realname . ' No. Serie:' . $usuario[0]->name);
         } else {
             $usuario = UsersResource::collection(DB::connection('intranet')->select('call SOPORTEZM.SP_GetUsuarioId(?)', [$usuarioId]));
-            if($usuario){
+            if(count($usuario) > 0){
                 $nombreCompleto = trim(($usuario[0]->firstname)  . ' ' . ($usuario[0]->realname));
             }else{
                 $nombreCompleto = 'No asignado';
@@ -167,7 +167,7 @@ class SolicitudesComprasResource extends JsonResource
 
         if($tipoSolicitud == 2){
             $ordenTrabajo = OrdenTrabajo::where('com_solicitudes_compra_id', $idSolictud)->first();
-        return $ordenTrabajo->orden_trabajo ?? null;
+            return $ordenTrabajo->orden_trabajo ?? null;
         }
 
         return null;
